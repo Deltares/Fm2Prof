@@ -1,7 +1,8 @@
 ﻿import locale
 import numpy as np
 import collections
-import Functions as FE
+
+from fm2prof import Functions as FE
 
 def geometry_to_csv(cross_sections, chainages, file_path):
     with open(file_path, 'w') as f:
