@@ -1,0 +1,17 @@
+[forcing]
+Name                            = boundary_downstream
+Function                        = qhtable
+Quantity                        = qhbnd discharge
+Unit                            = m3/s
+Quantity                        = qhbnd waterlevel
+Unit                            = m
+0     -1
+8.14    -0.8
+26.83   -0.6
+50.75   -0.4
+81.94   -0.2
+118.81  0
+160.92  0.2
+207.97  0.4
+259.7   0.6
+315.89  0.8

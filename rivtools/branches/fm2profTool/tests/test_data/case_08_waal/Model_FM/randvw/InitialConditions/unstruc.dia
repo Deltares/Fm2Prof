@@ -1,0 +1,32 @@
+* Deltares, D-Flow FM Version 1.1.219.50507, Apr 03 2017, 22:21:35
+* File creation date: 14:28:34, 26-07-2017                                      
+** INFO   : Opened file : ISOCOLOUR.hls
+** INFO   : Using Local FileISOCOLOUR.hls
+** INFO   : Closed file : ISOCOLOUR.hls
+** INFO   : Opened file : ISOCOLOUR.hls
+** INFO   : Using Local FileISOCOLOUR.hls
+** INFO   : Closed file : ISOCOLOUR.hls
+** INFO   :  MAXIMUM NUMBER OF LINKS         :            2
+** INFO   :  MAXIMUM NUMBER OF NODES         :            0
+** INFO   :  RESOLUTION GRAPHICS SCREEN      :         1600         990
+** INFO   :  RESOLUTION TEXT     SCREEN      :          200          66
+** INFO   :  NUMBER OF COLOURS AVAILABLE     :          256
+** DEBUG  :            0  0.1000020     NOD(KMAX)
+** DEBUG  :            6  0.7000140     XK (KMAX), YK (KMAX), ZK (KMAX), KC (KMAX), NMK (KMAX), RNOD(KMAX)
+** DEBUG  :            6  9.9999998E-03 XS(NSMAX)
+** DEBUG  :            6  9.9999998E-03 YS(NSMAX)
+** DEBUG  :            6  9.9999998E-03 ZS(NSMAX)
+** DEBUG  :            6  9.9999998E-03 IPSAM
+** DEBUG  :            7  5.0000001E-02 xlan(maxlan)
+** DEBUG  :            7  5.0000001E-02 ylan(maxlan)
+** DEBUG  :            7  5.0000001E-02 zlan(maxlan)
+** DEBUG  :            8  2.5000000E-02 nclan(maxlan)
+** INFO   : Opened file : initial_waterlevel_19941202.xyz
+** DEBUG  :            8  9.6144997E-02 XS(NSMAX),YS(NSMAX),ZS(NSMAX)
+** DEBUG  :            9  9.6144997E-02 ipsam(NSMAX)
+** INFO   : Building kdtree...
+** DEBUG  :           10  0.1602420     sample_coords(NTREEDIM,N)
+** INFO   : done
+** INFO   : merged 1086 samples in .06 seconds.
+** INFO   : Delete kdtree...
+** INFO   : Closed file : initial_waterlevel_19941202.xyz

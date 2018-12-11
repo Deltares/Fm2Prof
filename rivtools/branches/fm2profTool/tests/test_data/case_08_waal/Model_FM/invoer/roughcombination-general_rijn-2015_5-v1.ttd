@@ -1,0 +1,821 @@
+# This file has been created by conversion from WAQUA using the matlab script by Jurjen de Jong 
+1 1 
+2 1 
+3 1 
+#============================================================================== 
+# 
+# Roughcombination : Ruwheids karakteristieken voor de ROUGHCOMBINATION method in Waqua 
+#               De r_code verwijst naar de r_code in de area-u en area-v files 
+# 
+#               De vegetatie waarden zijn afkomstig van het Handboek 
+#               Stromingsweerstand vegetatie in uiterwaarden Deel 1 en 2 
+#               Riza rapport 2003.028 en Riza rapport 2003.029 
+# 
+#               De handboek ruwheden kunnen vrijuit gebruikt worden. Het betreft de  codes: 
+#               101-122, 1201-1250, 1501-1510, 1601-1618, 1801-1807 
+# 
+#               De overige codes zijn : 
+#               - gekalibreerde waarden voor specifieke gebieden 
+#               - coderingen gebruikt in WBR vergunningen 
+#               - specifieke ruwheden voor projecten 
+#               Deze ruwheden zijn niet vrijuit in andere projecten te gebruiken. 
+# 
+#------------------------------------------------------------------------------ 
+# Versie 2015_5-v1 (12-04-2016):  - gebaseerd op Versie 0.88 van 'roughcombination.karak_5_vast' 
+#                                 - opschonen code: alle gekalibreerde waarden voor specifieke  
+#                                   gebieden worden in aparte files opgenomen  
+#        - overgang naar nieuwe naam volgens naamgevingsconventie 
+#        - toevoegen codering ivm vegetatielegger 
+#  
+#============================================================================== 
+# 
+# CODE 1-50      : Formulering voor bebouwing en hoogwatervrije terreinen 
+#                : Deze formulering vraagt geen invoer parameters in roughcombination 
+# 
+#============================================================================== 
+# 
+# CODE 51-100    : Niet gedefinieerd 
+# 
+#============================================================================== 
+# 
+# CODE 101-300   : Ruwheids formulering volgens de formule van White-Colebrook 
+# r_code         : de ruwheids code 
+# a              : k-Nikuradse (normaal of eb)           (0.0001 - 0.20 - 100.) 
+# b              : k-Nikuradse (vloed)                   (0.0001 - 0.20 - 100.) 
+# c              : geen betekenis 
+# d              : geen betekenis 
+# 
+101 51 0.20                                                           # default waarde 
+102 51 0.15                                                           # diepe bedding 
+103 51 0.15                                                           # ondiepe bedding 
+104 51 0.15                                                           # strang 
+105 51 0.20                                                           # nevengeul 
+106 51 0.05                                                           # plas/haven/slikkige oever 
+111 51 0.15                                                           # kribvakstrand/zandplaat/grindplaat 
+112 51 0.40                                                           # ruwe oever 
+113 51 0.30                                                           # steenbekleding 
+114 51 0.60                                                           # bebouwd/verhard terrein 
+115 51 1.00                                                           # bebouwd terrein 
+116 51 0.20                                                           # verhard terrein 
+121 51 0.20                                                           # akker 
+122 51 0.25                                                           # strooisel 
+131 51 0.63                                                           # vaste laag Nijmegen 
+132 51 0.34                                                           # vaste laag St. Andries 
+133 51 0.68                                                           # bodem kribben Erlecom 
+# 
+161 51 3.00                                                           # oever met begroeiing Brokx_kl 
+#                                          # dit is een Ruimte voor de Rivier maatregel 
+# 
+# CODE 171 t/m 175 : Codes gereserveerd voor de Duitse zijrivieren 
+#       Deze codes zijn opgenomen in het bestand 'roughcombination-rhein' 
+#         
+# CODE 180 t/m 185 : Codes gereserveerd voor de Markermeer-Gooimeer-Eemmeer-schematisatie 
+#       Deze codes zijn opgenomen in het bestand 'roughcombination-markermeer' 
+# 
+# De volgende codes zijn toegevoegd voor de Vegetatielegger 
+201 51 0.15                                                           # water 
+202 51 0.60                                                           # verhard 
+# 
+#r_code =  299  a =  0.20    b =  0.25      # eb en vloed (voorbeeld) 
+# 
+#============================================================================== 
+# 
+# CODE 301-500   : Ruwheids formulering volgens de formule van Manning 
+# r_code         : de ruwheids code 
+# a              : Manning (normaal of eb)              (0.001 - 0.0263 - 100.) 
+# b              : Manning (vloed)                      (0.001 - 0.0263 - 100.) 
+# c              : geen betekenis 
+# d              : geen betekenis 
+# 
+301 53 0.0263                                                         # default waarde 
+302 53 0.0263                                                         # diepe meerbodem 
+303 53 0.0283                                                         # ondiepe meerbodem 
+304 53 0.024                                                          # diep getijdewater 
+305 53 0.022                                                          # ondiep getijdewater 
+# 
+# 
+# CODE 307 t/m 315 : Codes gereserveerd voor de Noordzee 
+#       Deze codes zijn opgenomen in het bestand 'roughcombination-noordzee' 
+# 
+# CODE 320 t/m 400 : Codes gereserveerd voor de Rijn-Maasmonding schematisatie 
+#       Deze codes zijn opgenomen in het bestand 'roughcombination-rmm' 
+# 
+# CODE 401 t/m 410 : Codes gereserveerd voor de IJsselmeer-IJsselVechtDelta en Overijsselsche Vecht-schematisatie 
+#       Deze codes zijn opgenomen in het bestand 'roughcombination-ym_ijvd_ov' 
+# 
+# CODE 411 t/m 415 : Codes gereserveerd voor de Markermeer-Gooimeer-Eemmeer-schematisatie 
+#       Deze codes zijn opgenomen in het bestand 'roughcombination-markermeer' 
+# 
+# CODE 416 t/m 420 : Codes gereserveerd voor de Veluwerandmeren-schematisatie 
+#       Deze codes zijn opgenomen in het bestand 'roughcombination-vrm' 
+# 
+# CODE 421 t/m 423 : Codes gereserveerd voor de Volkerak-Zoommeer-schematisatie 
+#       Deze codes zijn opgenomen in het bestand 'roughcombination-vozo' 
+# 
+# CODE 424 t/m 429 : Codes gereserveerd voor de Oosterschelde-schematisatie 
+#       Deze codes zijn opgenomen in het bestand 'roughcombination-oosterschelde' 
+# 
+# CODE 430 t/m 432 : Codes gereserveerd voor de Veerse Meer-schematisatie 
+#       Deze codes zijn opgenomen in het bestand 'roughcombination-veersemeer' 
+# 
+# CODE 433 t/m 473 : Codes gereserveerd voor de Westerschelde-schematisatie 
+#       Deze codes zijn opgenomen in het bestand 'roughcombination-westerschelde' 
+# 
+# CODE 474 t/m 477 : Codes gereserveerd voor de Grevelingen-schematisatie 
+#       Deze codes zijn opgenomen in het bestand 'roughcombination-grevelingen' 
+# 
+#r_code =  499  a =  0.0263  b =  0.0283    # eb en vloed (voorbeeld) 
+# 
+#============================================================================== 
+# 
+# CODE 501-600   : Chezy waarde 
+# r_code         : de ruwheids code 
+# a              : Chezy (normale of eb)                    (0.01 - 45. - 100.) 
+# b              : Chezy (vloed)                            (0.01 - 45. - 100.) 
+# c              : geen betekenis 
+# d              : geen betekenis 
+# 
+501 52 45.0                                                           # default waarde 
+#r_code =  599  a = 45.0     b = 40.0       # eb en vloed (voorbeeld) 
+# 
+#============================================================================== 
+# 
+# CODE 601-900   : Ruwheids methode voor het zomerbed van een rivier 
+# r_code         : de ruwheids code 
+# a              : alfa (normaal of eb)                    (0.001 - 0.1 -   1.) 
+# b              : beta (normaal of eb)                      (0.1 - 2.5 - 100.) 
+# c              : alfa (vloed) (alleen voor testen)       (0.001 - 0.1 -   1.) 
+# d              : beta (vloed) (alleen voor testen)         (0.1 - 2.5 - 100.) 
+# 
+601 101 0.1 2.5                                                       #  zomerbed default 
+# 
+# CODE 611 t/m 700 : Codes gereserveerd voor de Rijntakken-schematisatie 
+#       Deze codes zijn opgenomen in het bestand 'roughcombination-rijn' 
+# 
+# CODE 701 t/m 750 : Codes gereserveerd voor de Maas-schematisatie 
+#       Deze codes zijn opgenomen in het bestand 'roughcombination-maas' 
+# 
+# CODE 751 t/m 760 : Codes gereserveerd voor de Duitse Rhein 
+#       Deze codes zijn opgenomen in het bestand 'roughcombination-rhein'               
+# 
+# CODE 800 t/m 850 : Codes gereserveerd voor de IJsselmeer-IJsselVechtDelta en Overijsselsche Vecht-schematisatie 
+#       Deze codes zijn opgenomen in het bestand 'roughcombination-ym_ijvd_ov' 
+# 
+# CODE 851 t/m 860 : Codes gereserveerd voor de Rijn-Maasmonding-schematisatie 
+#       Deze codes zijn opgenomen in het bestand 'roughcombination-rmm'     
+# 
+#============================================================================== 
+# 
+# CODE 901-1200  : Niet gedefinieerd 
+# 
+#============================================================================== 
+# 
+# CODE 1201-1400 : Ruwheids formulering voor door- en overstroomde vegetatie 
+# r_code         : de ruwheids code 
+# a              : de vegetatie hoogte                     (0.001 - 0.2 -  50.) 
+# b              : de vegetatie dichtheid                 (0.0001 - 0.2 - 100.) 
+# c              : drag coefficient                          (0.1 - 1.8 -  10.) 
+# d              : k-Nikuradse (onderlaag begroeiing)      (0.001 - 0.2 - 100.) 
+# 
+1201 152 0.06 45. 1.8 0.1                                             # productiegrasland 
+1202 152 0.10 12. 1.8 0.1                                             # natuuurlijk gras/hooiland 
+1203 152 0.20 15. 1.8 0.1                                             # verruigd grasland 
+1211 152 0.30 3. 1.8 0.1                                              # akkerdistelruigte 
+1212 152 0.56 0.23 1.8 0.1                                            # droge ruigte 
+1213 152 0.50 0.56 1.8 0.1                                            # dauwbraamruigte 
+1214 152 0.95 0.13 1.8 0.1                                            # wilgenroosje ruigte 
+1215 152 2.00 0.16 1.8 0.1                                            # rietruigte 
+1221 152 0.35 0.25 1.8 0.1                                            # natte ruigte homogeen 
+1222 152 0.30 1.2 1.8 0.1                                             # zegge homogeen 
+1223 152 1.00 0.4 1.8 0.1                                             # rietgras homogeen 
+1224 152 0.50 1.2 1.8 0.1                                             # biezen homogeen 
+1225 152 1.50 0.35 1.8 0.1                                            # lisdodde homogeen 
+1226 152 2.50 0.37 1.8 0.1                                            # riet homogeen 
+1231 152 6.00 0.13 1.5 0.4                                            # zachthoutstruweel 
+1232 152 3.00 0.041 1.5 0.4                                           # griend 
+1233 152 5.00 0.17 1.5 0.4                                            # doornstruweel 
+1241 152 10.00 0.011 1.5 0.3                                          # productiebos hardhout 
+1242 152 10.00 0.010 1.5 0.3                                          # productiebos zachthout 
+1243 152 10.00 0.016 1.5 0.3                                          # productiebos naaldhout 
+1244 152 10.00 0.023 1.5 0.4                                          # hardhoutooibos 
+1245 152 10.00 0.028 1.5 0.6                                          # zachthoutooibos 
+1246 152 3.00 0.024 1.5 0.2                                           # boomgaard laagstam 
+1247 152 6.00 0.01 1.5 0.2                                            # boomgaard hoogstam 
+1250 152 0.15 0.15 1.8 0.1                                            # pioniervegetatie 
+# 
+# Aanvullingen voor wbr08 van DON van 1300-1379 
+# 
+1301 152 1.00 0.130 1.5 0.4                                           # zachthoutstruweel, hoogte 1.00 m 
+1305 152 2.00 0.130 1.5 0.4                                           # zachthoutstruweel, hoogte 2.00 m 
+1311 152 5.00 0.130 1.5 0.4                                           # zachthoutstruweel, hoogte 5.00 m 
+1316 152 8.00 0.130 1.5 0.4                                           # zachthoutstruweel, hoogte 8.00 m 
+1362 152 0.50 0.041 1.5 0.4                                           # griend, hoogte 0.50 m 
+1365 152 1.50 0.041 1.5 0.4                                           # griend, hoogte 1.50 m 
+1379 152 0.20 0.041 1.5 0.4                                           # griend, hoogte 0.20 m 
+# 
+# Einde aanvullingen voor wbr08 van DON van 1300-1379 
+# 
+#============================================================================== 
+# 
+# CODE 1401-1500 : Niet gedefinieerd 
+# 
+#============================================================================== 
+# 
+# CODE 1501-1600 : Ruwheids formulering voor door- en overstroomde bomen 
+# r_code         : de ruwheids code 
+# a              : de vegetatie hoogte                        (0.5 - 10. - 50.) 
+# b              : drag coefficient                           (0.1 - 1.5 - 10.) 
+# c              : geen betekenis 
+# d              : geen betekenis 
+# In area file staat de dichtheid ( (de som van alle diameters) / celgrootte) 
+# 
+1501 251 1.00 1.5                                                     # individule bomen 
+1502 251 2.00 1.5                                                     # individule bomen 
+1503 251 3.00 1.5                                                     # individule bomen 
+1504 251 4.00 1.5                                                     # individule bomen 
+1505 251 5.00 1.5                                                     # individule bomen 
+1506 251 6.00 1.5                                                     # individule bomen 
+1507 251 7.00 1.5                                                     # individule bomen 
+1508 251 8.00 1.5                                                     # individule bomen 
+1509 251 9.00 1.5                                                     # individule bomen 
+1510 251 10.00 1.5                                                    # individule bomen 
+# 
+#============================================================================== 
+# 
+# CODE 1601-1700 : Ruwheids formulering voor door- en overstroomde heggen 
+# r_code         : de ruwheids code 
+# a              : de vegetatie hoogte                        (0.5 - 2.0 - 10.) 
+# b              : de vegetatie dichtheid                    (0.01 - 0.6 - 10.) 
+# c              : drag coefficient                           (0.1 - 1.5 - 10.) 
+# d              : overlaat coefficient                       (0.1 - 1.2 - 10.) 
+# 
+1601 202 1.00 0.20 1.5 1.2                                            # heggen zeer open 
+1602 202 1.00 0.60 1.5 1.2                                            # heggen open 
+1603 202 1.00 1.00 1.5 1.2                                            # heggen dicht 
+1604 202 2.00 0.20 1.5 1.2                                            # heggen zeer open 
+1605 202 2.00 0.60 1.5 1.2                                            # heggen open 
+1606 202 2.00 1.00 1.5 1.2                                            # heggen dicht 
+1607 202 3.00 0.20 1.5 1.2                                            # heggen zeer open 
+1608 202 3.00 0.60 1.5 1.2                                            # heggen open 
+1609 202 3.00 1.00 1.5 1.2                                            # heggen dicht 
+1610 202 4.00 0.20 1.5 1.2                                            # heggen zeer open 
+1611 202 4.00 0.60 1.5 1.2                                            # heggen open 
+1612 202 4.00 1.00 1.5 1.2                                            # heggen dicht 
+1613 202 5.00 0.20 1.5 1.2                                            # heggen zeer open 
+1614 202 5.00 0.60 1.5 1.2                                            # heggen open 
+1615 202 5.00 1.00 1.5 1.2                                            # heggen dicht 
+1616 202 6.00 0.20 1.5 1.2                                            # heggen zeer open 
+1617 202 6.00 0.60 1.5 1.2                                            # heggen open 
+1618 202 6.00 1.00 1.5 1.2                                            # heggen dicht 
+# 
+#============================================================================== 
+# 
+# CODE 1701-1800 : Niet gedefinieerd 
+# 
+#============================================================================== 
+# 
+# CODE 1801-1999 : Ruwheids combinatie voor r_codes van 101-600 en 1201-1300 
+#                  Combinatie van enkelvoudige code met een combinatie dan: 
+#                             a = enkelvoudige code 
+#                             b = combinatie code 
+#                  Combinatie van 2 combinaties mogelijk vanaf simona2007-01 versie 
+# r_code         : de ruwheids code 
+# a              : de r_code van de eerste ruwheid            (1 - 1221 - 1300) 
+# b              : de r_code van de tweede ruwheid            (1 -  106 - 1900) 
+# c              : het percentage van de eerste r_code   (0.001 - 0.75 - 0.999) 
+# d              : het percentage van de tweede r_code   (0.001 - 0.25 - 0.999) 
+# 
+1801 2 1221 106 0.75 0.25                                             # 75% natte ruigte 
+                                                                      # 25% water 
+1802 2 1245 1801 0.05 0.95                                            #  5% zachthoutooibos 
+                                                                      # 95% (natte ruigte met 25% water) 
+1803 2 1222 122 0.75 0.25                                             # 75% zegge 
+                                                                      # 25% strooisel 
+1804 2 1223 106 0.75 0.25                                             # 75% rietgras 
+                                                                      # 25% water 
+1805 2 1224 106 0.75 0.25                                             # 75% biezen 
+                                                                      # 25% water 
+1806 2 1225 106 0.75 0.25                                             # 75% lisdodde 
+                                                                      # 25% water 
+1807 2 1226 122 0.75 0.25                                             # 75% riet 
+                                                                      # 25% strooisel 
+# 
+# 1808 uit rough.karak_wbr08 van DON 
+# 1809 uit rough.karak_hr2006_pkb 
+# 
+1808 2 1245 1231 0.50 0.50                                            # 50% zachthoutooibos 
+                                                                      # 50% zachthoutstruweel 
+1809 2 1203 1245 0.90 0.10                                            # 90% verruigd grasland 
+                                                                      # 10% zachthoutooibos 
+# 
+# combinaties uit de vegetatie opname van DON 2004 
+# 
+1811 2 1250 1245 0.95 0.05                                            # 95% pioniervegetatie 
+                                                                      #  5% zachthoutooibos 
+1812 2 1202 1245 0.80 0.20                                            # 80% natuurlijk gras/hooiland 
+                                                                      # 20% zachthoutooibos 
+1813 2 1203 1231 0.80 0.20                                            # 80% verruigd grasland 
+                                                                      # 20% zachthoutstruweel 
+1814 2 1223 1231 0.95 0.05                                            # 95% rietgras homogeen 
+                                                                      #  5% zachthoutstruweel 
+1815 2 1226 1231 0.70 0.30                                            # 70% riet homogeen 
+                                                                      # 30% zachthoutstruweel 
+1816 2 1231 1245 0.80 0.20                                            # 80% zachthoutstruweel 
+                                                                      # 20% zachthoutooibos 
+1817 2 1221 1245 0.95 0.05                                            # 95% natte ruigte homogeen 
+                                                                      #  5% zachthoutooibos 
+1818 2 1221 1231 0.70 0.30                                            # 70% natte ruigte homogeen 
+                                                                      # 30% zachthoutstruweel 
+1819 2 1212 1231 0.90 0.10                                            # 90% droge ruigte 
+                                                                      # 10% zachthoutstruweel 
+# 
+# combinaties uit de Atkis gegevens van de BFG, Duitse Rhein 
+# 
+1820 2 1202 1241 0.75 0.25                                            # 75% natuurlijk gras/hooiland 
+                                                                      # 25% produktiebos hardhout 
+1821 2 1201 1241 0.75 0.25                                            # 75% produktiegrasland 
+                                                                      # 25% produktiebos hardhout 
+1822 2 121 1233 0.95 0.05                                             # 95% akker 
+                                                                      #  5% doornstruweel 
+1823 2 1202 1244 0.25 0.75                                            # 25% natuurlijk gras/hooiland 
+                                                                      # 75% hardhoutooibos 
+# 
+# Codes uit rough.karak_wbr08 van DON: 
+#                1850,1851,1852,1853,1854,1859,1860,1862,1863,1864 
+#                1865,1866,1867,1868,1872,1879,1880,1881,1882,1887 
+#                1888,1889,1890,1891 
+# Codes uit rough.karak_hr2006_pkb van PKB: 
+#                1850,1851,1852,1853,1854,1860,1861,1862,1863,1865 
+#                1866,1867,1868,1870,1871,1874,1875,1876,1877 
+#                1879,1880,1881 
+# 
+1850 2 1222 1231 0.80 0.20                                            # 80% zegge 
+                                                                      # 20% zachthoustruweel 
+1851 2 1202 1245 0.50 0.50                                            # 50% natuurlijk gras/hooiland 
+                                                                      # 50% zachthoutooibos 
+1852 2 1202 1231 0.95 0.05                                            # 95% natuurlijk gras/hooiland 
+                                                                      #  5% zachthoutstruweel 
+1853 2 1202 1231 0.75 0.25                                            # 75% natuurlijk gras/hooiland 
+                                                                      # 25% zachthoutstruweel 
+1854 2 1202 1231 0.90 0.10                                            # 90% natuurlijk gras/hooiland 
+                                                                      # 10% zachthoutstruweel 
+# Toegevoegd t.b.v. maatregel ma_overdm_a1 (email Jan Bremer) 
+# CODE 1855-1893 : Nieuw tbv project Over de Maas (NB hoogste code in b) 
+# 
+1855 2 1202 1212 0.90 0.10                                            # 90% natuurlijk gras/hooiland 
+                                                                      # 10% droge ruigte 
+1856 2 1231 1855 0.05 0.95                                            #  5% zachthoutstruweel 
+                                                                      # 95% 1855 
+1857 2 1202 1223 0.75 0.25                                            # 75% natuurlijk gras/hooiland 
+                                                                      # 25% rietgras homogeen 
+1858 2 1245 1857 0.05 0.95                                            #  5% zachthoutooibos 
+                                                                      # 95% 1857 
+1892 2 1226 106 0.75 0.25                                             # 75% riet homogeen 
+                                                                      # 25% plas/haven/slikkige oever 
+1893 2 1245 1892 0.20 0.80                                            # 20% zachthoutooibos 
+                                                                      # 80% 1892 
+# 
+1859 2 1212 1231 0.85 0.15                                            # 85% droge ruigte 
+                                                                      # 15% zachthoutstruweel 
+1860 2 111 1212 0.40 0.60                                             # 40% kribvak 
+                                                                      # 60% droge ruigte 
+1862 2 1245 1853 0.20 0.80                                            # 20% zachthoutooibos 
+                                                                      # 60% natuurlijk gras/hooiland 
+                                                                      # 20% zachthoutstruweel 
+1863 2 1860 1862 0.50 0.50                                            # 20% kribvak 
+                                                                      # 30% droge ruigte 
+                                                                      # 10% zachthoutooibos 
+                                                                      # 30% natuurlijk gras/hooiland 
+                                                                      # 10% zachthoutstruweel 
+1864 2 1202 1231 0.70 0.30                                            # 70% natuurlijk gras/hooiland 
+                                                                      # 30% zachthoutstruweel 
+1865 2 106 1231 0.83 0.17                                             # 83% slikkige oever 
+                                                                      # 17% zachthoutstruweel 
+1866 2 1245 1223 0.50 0.50                                            # 50% zachthoutooibos 
+                                                                      # 50% rietgras 
+1867 2 1865 1866 0.75 0.25                                            # 61% slikkige oever 
+                                                                      # 13% zachthoutstruweel 
+                                                                      # 13% zachthoutooibos 
+                                                                      # 13% rietgras 
+1868 2 111 1867 0.60 0.40                                             # 60% kribvak 
+                                                                      # 25% slikkige oever 
+                                                                      #  5% zachthoutstruweel 
+                                                                      #  5% zachthoutooibos 
+                                                                      #  5% rietgras 
+1869 2 1203 1231 0.95 0.05                                            # 95% verruigd grasland 
+                                                                      #  5% zachthoutstruweel 
+1870 2 1202 1231 0.99 0.01                                            # 99% natuurlijk gras/hooiland 
+                                                                      #  1% zachthoutstruweel 
+1871 2 1202 1231 0.975 0.025                                          # 97,5% natuurlijk gras/hooiland 
+                                                                      #  2,5% zachthoutstruweel 
+1872 2 1202 1231 0.98 0.02                                            # 98% natuurlijk gras/hooiland 
+                                                                      #  2% zachthoutstruweel 
+1874 2 1212 1231 0.20 0.80                                            # 20% droge ruigte 
+                                                                      # 80% zachthoutstruweel 
+1875 2 1212 1231 0.95 0.05                                            # 95% droge ruigte 
+                                                                      #  5% zachthoutstruweel 
+1876 2 1231 1801 0.25 0.75                                            # 25% zachthoutstruweel 
+                                                                      # 75% (natte ruigte met 25% water) 
+1877 2 1231 1803 0.20 0.80                                            # 20% zachthoutstruweel 
+                                                                      # 80% (zegge met 25% strooisel) 
+1879 2 114 1231 0.90 0.10                                             # 90% bebouwd/verhard terrein 
+                                                                      # 10% zachthoutstruweel 
+1880 2 1222 1223 0.50 0.50                                            # 50% zegge 
+                                                                      # 50% rietgras 
+1881 2 1202 1231 0.85 0.15                                            # 85% natuurlijk gras/hooiland 
+                                                                      # 15% zachthoustruweel 
+1882 2 1203 1231 0.975 0.025                                          # 97,5% verruigd grasland 
+                                                                      #  2,5% zachthoutstruweel 
+1886 2 1203 1231 0.90 0.10                                            # 90% verruigd grasland 
+                                                                      # 10% zachthoustruweel 
+1887 2 1202 1212 0.50 0.50                                            # 50% natuurlijk gras/hooiland 
+                                                                      # 50% droge ruigte 
+1888 2 1231 1887 0.05 0.95                                            #  5% zachthoutstruweel 
+                                                                      # 47,5% natuurlijk gras/hooiland 
+                                                                      # 47,5% droge ruigte 
+1889 2 1231 1887 0.10 0.90                                            # 10% zachthoutstruweel 
+                                                                      # 45% natuurlijk gras/hooiland 
+                                                                      # 45% droge ruigte 
+1890 2 1202 1231 0.50 0.50                                            # 50% natuurlijk gras/hooiland 
+                                                                      # 50% zachthoutstruweel 
+1891 2 1203 1231 0.97 0.03                                            # 97% verruigd grasland 
+                                                                      #  3% zachthoutstruweel 
+1906 2 1202 1245 0.90 0.10                                            # 90% natuurlijk gras/hooiland 
+                                                                      # 10% zachthoutooibos 
+1907 2 111 1231 0.88 0.12                                             # 88% kribvakstrand/zandplaat 
+                                                                      # 12% zachthoutstruweel 
+1908 2 111 1231 0.80 0.20                                             # 80% kribvakstrand/zandplaat 
+                                                                      # 20% zachthoutstruweel 
+1909 2 1245 1804 0.20 0.80                                            # 20% zachthoutooibos 
+                                                                      # 80% (rietgras met 25% water) 
+1910 2 1202 1245 0.95 0.05                                            # 95% natuurlijk gras/hooiland 
+                                                                      #  5% zachthoutooibos 
+1911 2 1212 1231 0.80 0.20                                            # 80% droge ruigte 
+                                                                      # 20% zachthoutstruweel 
+1912 2 1202 1231 0.80 0.20                                            # 80% natuurlijk gras/hooiland 
+                                                                      # 20% zachthoutstruweel 
+1913 2 106 1226 0.75 0.25                                             # 75% water 
+                                                                      # 25% riet homogeen 
+1914 2 111 1912 0.40 0.60                                             # 40% kribvakstrand 
+                                                                      # 48% natuurlijk gras/hooiland 
+                                                                      # 12% zachthoutstruweel 
+1915 2 106 1222 0.40 0.60                                             # 40% water 
+                                                                      # 60% zegge homogeen 
+1916 2 1226 1915 0.50 0.50                                            # 50% riet homogeen 
+                                                                      # 20% water 
+                                                                      # 30% zegge homogeen 
+1917 2 1202 1212 0.95 0.05                                            # 95% natuurlijk grasland/hooiland 
+                                                                      #  5% droge ruigte 
+1918 2 1213 1231 0.90 0.10                                            # 90% dauwbraamruigte 
+                                                                      # 10% zachthoutstruweel 
+1919 2 1215 1231 0.95 0.05                                            # 95% rietruigte 
+                                                                      #  5% zachthoutstruweel 
+1920 2 1215 1231 0.90 0.10                                            # 90% rietruigte 
+                                                                      # 10% zachthoutstruweel 
+1921 2 1801 1245 0.80 0.20                                            # 80% natte ruigte met 25% water 
+                                                                      # 20% zachthoutooibos 
+1922 2 1212 1245 0.80 0.20                                            # 80% droge ruigte 
+                                                                      # 20% zachthoutooibos 
+                                                     
+1933 2 1801 1231 0.95 0.05                                            # 95% natte ruigte met 25% water 
+                                                                      #  5% zachthoutstruweel                                                       
+1934 2 1801 1231 0.90 0.10                                            # 90% natte ruigte met 25% water 
+                                                                      # 10% zachthoutstruweel  
+1935 2 1801 1231 0.80 0.20                                            # 80% natte ruigte met 25% water 
+                                                                      # 20% zachthoutstruweel                                                     
+1936 2 1803 1231 0.95 0.05                                            # 95% zegge met 25% strooisel 
+                                                                      #  5% zachthoutstruweel                                                      
+1937 2 1803 1231 0.90 0.10                                            # 90% zegge met 25% strooisel 
+                                                                      # 10% zachthoutstruweel                                                        
+1938 2 1807 1231 0.95 0.05                                            # 95% riet met 25% strooisel 
+                                                                      #  5% zachthoutstruweel      
+1939 2 1807 1231 0.90 0.10                                            # 90% riet met 25% strooisel 
+                                                                      # 10% zachthoutstruweel    
+1940 2 1807 1231 0.80 0.20                                            # 80% riet met 25% strooisel 
+                                                                      # 20% zachthoutstruweel       
+1941 2 1202 1212 0.70 0.30                                            # 70% natuurlijk grasland 
+                                                                      # 30% droge ruigte                                                           
+#------------------------------------------------------------------------------- 
+# VEGETATIELEGGER 
+#------------------------------------------------------------------------------- 
+# Geaggregeerde klassen - Koen Volleberg - 15-06-2012 
+# Aangepast voor vegetatieverdeling 2012 (Bas van Dongen, Arcadis, 04-01-2015) 
+#  
+# tussenstappen voor Homogene klassen 
+1970 2 1201 1202 0.561757253 0.438242747                              # Gras 1 (prod. gras & nat. gras) 
+1971 2 111 121 0.07415936 0.92584064                                  # Gras 2 (zand en akker) 
+1972 2 1212 1804 0.87552542 0.12447458                                # Ruigte 1 
+1973 2 1242 1244 0.212045693 0.787954307                              # Bos 1 
+1974 2 1245 1246 0.846018535 0.153981465                              # Bos 2 
+1975 2 1973 1974 0.578653494 0.421346506                              # Bos 3 
+1976 2 1970 1971 0.731872562 0.268127438                              # Gras 3 (prod. gras, nat. gras, zand en akker) 
+# 
+# Homogene klassen 
+# 
+1981 2 1250 1976 0.036775031 0.963224969                              # gras en akker 
+1982 2 1807 1972 0.126268683 0.873731317                              # riet en ruigte 
+1983 2 1975 1247 0.972225202 0.027774798                              # bos 
+1984 2 1231 1233 0.597832635 0.402167365                              # struweel 
+# 
+# tussenstappen voor Mengklassen 
+1989 2 1981 1982 0.50 0.50                                            # 50% gras en akker 
+                                                                      # 50% riet en ruigte 
+1993 2 1981 1982 0.25 0.75                                            # 25% gras en akker 
+                                                                      # 75% riet en ruigte 
+# 
+# Mengklassen (op basis van verdelingspercentages interventiewaarden) 
+#                                                                       _    
+1996 2 1981 1984 0.80 0.20                                            # 80% gras en akker   | Mengklasse 90/10 
+                                                                      # 20% struweel       _|  
+1997 2 1989 1984 0.60 0.40                                            # 30% gras en akker   | 
+                                                                      # 30% riet en ruigte  | Mengklasse 70/30  
+                                                                      # 40% struweel       _| 
+1998 2 1993 1984 0.40 0.60                                            # 10% gras en akker   | 
+                                                                      # 30% riet en ruigte  | Mengklasse 50/50 
+                                                                      # 60% struweel       _| 
+ 
+# 
+#============================================================================== 
+# 
+# Einde roughcombination 
+# 
+#============================================================================== 
+#============================================================================== 
+# 
+# Roughcombination : Rough karakteristieken voor de ROUGHCOMBINATION method in Waqua 
+#               De r_code verwijst naar de r_code in de area-u en area-v files 
+# 
+#               De vegetatie waarden zijn afkomstig van het Handboek 
+#               Stromingsweerstand vegetatie in uiterwaarden Deel 1 en 2 
+#               Riza rapport 2003.028 en Riza rapport 2003.029 
+# 
+#               De handboek ruwheden kunnen vrijuit gebruikt worden. Het betreft de  codes: 
+#               101-122, 1201-1250, 1501-1510, 1601-1618, 1801-1807 
+# 
+#               De overige codes zijn : 
+#               - gecalibreerde waarden voor specifieke gebieden 
+#               - coderingen gebruikt in WBR vergunningen 
+#               - specifieke ruwheden voor projecten 
+#               Deze ruwheden zijn niet vrijuit in andere projecten te gebruiken. 
+# 
+#============================================================================== 
+# 
+# Versie 2015_5-v1 (12-05-2015):  - gebaseerd op Versie 0.74 van 'roughcombination.karak_5_fQ_Rijn' 
+#                                 - opschonen code: alle gekalibreerde waarden voor specifieke  
+#                                   gebieden worden in aparte files opgenomen  
+#        - overgang naar nieuwe naam volgens naamgevingsconventie 
+#        - toevoegen codering ivm vegetatielegger 
+# 
+#************************************************************************************* 
+# 
+#   zomerbedruwheden Rijntakken, 5e generatie, afvoerafhankelijk 
+# 
+#************************************************************************************* 
+# 
+#============================================================================== 
+# 
+# CODE 611-700   : Ruwheids methode voor het zomerbed van een rivier 
+# r_code         : de ruwheids code 
+# a              : alfa (normaal of eb)                    (0.001 - 0.1 -   1.) 
+# b              : beta (normaal of eb)                      (0.1 - 2.5 - 100.) 
+# c              : alfa (vloed) (alleen voor testen)       (0.001 - 0.1 -   1.) 
+# d              : beta (vloed) (alleen voor testen)         (0.1 - 2.5 - 100.) 
+# 
+#======================================================================================= 
+# 
+# DUITSE RHEIN 
+# 
+#======================================================================================= 
+611 DISCHARGE Q-LobithPannkop
+611 2700 101 0.0231 2.5                                               #  emmerich - lobith 
+611 4450 101 0.0272 2.5                                                
+611 11800 101 0.0787 2.5                                               
+# 
+# In de calibratie van de Duitse Rhein is onderstaande waarde gecalibreerd voor traject 611 
+# In de lopende projecten hanteren we de Nederlandse calibratie waarde 
+# Op termijn moet dit op elkaar worden afgestemd. 
+# Verschil wordt veroorzaakt doordat er een verschil is tussen de Nederlandse en 
+# de Duitse methodiek om de afvoer van een hoog water vast te stellen 
+# Verschil in afvoer bij een zelfde waterstand kan alleen met een verschillende ruwheid 
+# r_code =  611  a =  0.0084  b = 2.5        #  emmerich - lobith a is van Duitse Rhein model 
+# 
+#======================================================================================= 
+#  
+# BOVENRIJN 
+# 
+#======================================================================================= 
+612 DISCHARGE Q-LobithPannkop
+612 2700 101 0.0231 2.5                                               #  lobith - pankop 
+612 4450 101 0.0272 2.5                                                
+612 11800 101 0.0787 2.5                                               
+#======================================================================================= 
+#  
+# WAAL 
+# 
+#======================================================================================= 
+613 DISCHARGE Q-PannkopNijmegen
+613 1850 101 0.0598 2.5                                               #  pankop - erlecom 
+613 3000 101 0.0611 2.5                                                
+613 7450 101 0.0790 2.5                                                
+#---------------------------------------------------------------------------------------- 
+614 DISCHARGE Q-PannkopNijmegen
+614 1850 101 0.0598 2.5                                               #  erlecom - nijmegen 
+614 3000 101 0.0611 2.5                                                
+614 7450 101 0.0790 2.5                                                
+#---------------------------------------------------------------------------------------- 
+615 DISCHARGE Q-NijmegenTielWl
+615 1850 101 0.0667 2.5                                               #  nijmegen - dodewaard 
+615 3000 101 0.0845 2.5                                                
+615 7450 101 0.0737 2.5                                                
+#---------------------------------------------------------------------------------------- 
+616 DISCHARGE Q-NijmegenTielWl
+616 1850 101 0.0667 2.5                                               #  dodewaard - tiel 
+616 3000 101 0.0845 2.5                                                
+616 7450 101 0.0737 2.5                                                
+#---------------------------------------------------------------------------------------- 
+617 DISCHARGE Q-TielWlZaltb_waq
+617 1850 101 0.0945 2.5                                               #  tiel - sint andries 
+617 3000 101 0.1091 2.5                                                
+617 7450 101 0.0892 2.5                                                
+#---------------------------------------------------------------------------------------- 
+618 DISCHARGE Q-TielWlZaltb_waq
+618 1850 101 0.0945 2.5                                               #  sint andries - zaltbommel 
+618 3000 101 0.1091 2.5                                                
+618 7450 101 0.0892 2.5                                                
+#---------------------------------------------------------------------------------------- 
+619 DISCHARGE Q-Zaltb_waqVuren
+619 1850 101 0.0700 2.5                                               #  zaltbommel - vuren 
+619 3000 101 0.1072 2.5                                                
+619 7450 101 0.1086 2.5                                                
+#---------------------------------------------------------------------------------------- 
+620 DISCHARGE Q-VurenHardxv_waq
+620 1850 101 0.0131 2.5                                               #  vuren - hardinkxveld 
+620 3000 101 0.0659 2.5                                                
+620 7450 101 0.1355 2.5                                                
+#======================================================================================= 
+#  
+# PANNERDENSCH KANAAL 
+# 
+#======================================================================================= 
+631 DISCHARGE Q-PannkopIJsselkop
+631 850 101 0.0171 2.5                                                #  pankop - pannerden 
+631 1450 101 0.0013 2.5                                                
+631 4250 101 0.1028 2.5                                                
+#---------------------------------------------------------------------------------------- 
+632 DISCHARGE Q-PannkopIJsselkop
+632 850 101 0.0171 2.5                                                #  pannerden - looveer 
+632 1450 101 0.0013 2.5                                                
+632 4250 101 0.1028 2.5                                                
+#---------------------------------------------------------------------------------------- 
+633 DISCHARGE Q-PannkopIJsselkop
+633 850 101 0.0171 2.5                                                #  looveer - ijsselkop 
+633 1450 101 0.0013 2.5                                                
+633 4250 101 0.1028 2.5                                                
+#======================================================================================= 
+#  
+# NEDERRIJN - LEK 
+# 
+#======================================================================================= 
+634 DISCHARGE Q-IJsselkopDrielbo
+634 475 101 0.0841 2.5                                                #  ijsselkop - arnhem 
+634 850 101 0.1686 2.5                                                 
+634 2500 101 0.0846 2.5                                                
+#----------------------------------------------------------------------------------------  
+635 DISCHARGE Q-IJsselkopDrielbo
+635 475 101 0.0841 2.5                                                #  arnhem - drielbov 
+635 850 101 0.1686 2.5                                                 
+635 2500 101 0.0846 2.5                                                
+#---------------------------------------------------------------------------------------- 
+636 DISCHARGE Q-DrielbovDrielben
+636 475 101 0.0941 2.5                                                #  drielbov - drielben 
+636 850 101 0.0780 2.5                                                 
+636 2500 101 0.5088 2.5                                                
+#---------------------------------------------------------------------------------------- 
+637 DISCHARGE Q-DrielbeAmerongbo
+637 475 101 0.0152 2.5                                                #  drielben - grebbe 
+637 850 101 0.0494 2.5                                                 
+637 2500 101 0.1551 2.5                                                
+#---------------------------------------------------------------------------------------- 
+638 DISCHARGE Q-DrielbeAmerongbo
+638 475 101 0.0152 2.5                                                #  grebbe - amerongenbov 
+638 850 101 0.0494 2.5                                                 
+638 2500 101 0.1551 2.5                                                
+#---------------------------------------------------------------------------------------- 
+639 DISCHARGE Q-AmeronbeCulmbbrg
+639 475 101 0.0131 2.5                                                #  amerongenbov - amerongenben 
+639 850 101 0.0179 2.5                                                 
+639 2500 101 0.0010 2.5                                                
+#---------------------------------------------------------------------------------------- 
+640 DISCHARGE Q-AmeronbeCulmbbrg
+640 475 101 0.0131 2.5                                                #  amerongenben - culemborg 
+640 850 101 0.0620 2.5                                                 
+640 2500 101 0.2329 2.5                                                
+#---------------------------------------------------------------------------------------- 
+641 DISCHARGE Q-CulmbbrgHagestbo
+641 475 101 0.0010 2.5                                                #  culemborg - hagesteinbov 
+641 850 101 0.0458 2.5                                                 
+641 2500 101 0.0653 2.5                                                
+#---------------------------------------------------------------------------------------- 
+642 DISCHARGE Q-CulmbbrgHagestbo
+642 475 101 0.0090 2.5                                                #  hagesteinbov - hagesteinben 
+642 850 101 0.0018 2.5                                                 
+642 2500 101 0.0010 2.5                                                
+#---------------------------------------------------------------------------------------- 
+643 DISCHARGE Q-HagestbeSchoonh
+643 475 101 0.0090 2.5                                                #  hagesteinben - schoonhoven 
+643 850 101 0.0225 2.5                                                 
+643 2500 101 0.0928 2.5                                                
+#---------------------------------------------------------------------------------------- 
+644 DISCHARGE Q-SchoonhKrimpadLk
+644 475 101 0.0250 2.5                                                #  schoonhoven - krimpenadlek 
+644 800 101 0.0140 2.5                                                 
+644 2400 101 0.0382 2.5                                                
+#======================================================================================= 
+#  
+# IJSSEL 
+# 
+#======================================================================================= 
+651 DISCHARGE Q-IJsselkpDoesbbrg
+651 370 101 0.0109 2.5                                                #  ijsselkop - westervoort 
+651 625 101 0.0050 2.5                                                 
+651 1780 101 0.0793 2.5                                                
+#---------------------------------------------------------------------------------------- 
+652 DISCHARGE Q-IJsselkpDoesbbrg
+652 370 101 0.0109 2.5                                                #  westervoort - de steeg 
+652 625 101 0.0050 2.5                                                 
+652 1780 101 0.0793 2.5                                                
+#---------------------------------------------------------------------------------------- 
+653 DISCHARGE Q-IJsselkpDoesbbrg
+653 370 101 0.0109 2.5                                                #  de steeg - doesburg 
+653 625 101 0.0050 2.5                                                 
+653 1780 101 0.0793 2.5                                                
+#---------------------------------------------------------------------------------------- 
+654 DISCHARGE Q-DoesbbrgZutphen
+654 400 101 0.0562 2.5                                                #  doesburg - zutphen 
+654 675 101 0.0060 2.5                                                 
+654 1850 101 0.1669 2.5                                                
+#---------------------------------------------------------------------------------------- 
+655 DISCHARGE Q-ZutphenOlst
+655 400 101 0.0848 2.5                                                #  zutphen - eefde beneden 
+655 675 101 0.0222 2.5                                                 
+655 1850 101 0.0555 2.5                                                
+#---------------------------------------------------------------------------------------- 
+656 DISCHARGE Q-ZutphenOlst
+656 400 101 0.0848 2.5                                                #  eefde beneden - deventer 
+656 675 101 0.0222 2.5                                                 
+656 1850 101 0.0555 2.5                                                
+#---------------------------------------------------------------------------------------- 
+657 DISCHARGE Q-ZutphenOlst
+657 400 101 0.0848 2.5                                                #  deventer - olst 
+657 675 101 0.0222 2.5                                                 
+657 1850 101 0.0555 2.5                                                
+#---------------------------------------------------------------------------------------- 
+658 DISCHARGE Q-OlstKaterveer
+658 440 101 0.0612 2.5                                                #  olst - wijhe 
+658 730 101 0.0223 2.5                                                 
+658 1900 101 0.0527 2.5                                                
+#---------------------------------------------------------------------------------------- 
+659 DISCHARGE Q-OlstKaterveer
+659 440 101 0.0612 2.5                                                #  wijhe - katerveer 
+659 730 101 0.0223 2.5                                                 
+659 1900 101 0.0527 2.5                                                
+#---------------------------------------------------------------------------------------- 
+660 DISCHARGE Q-KatervrKampnbohv
+660 440 101 0.0353 2.5                                                #  katerveer - kampen 
+660 730 101 0.0273 2.5                                                 
+660 1900 101 0.0285 2.5                                                
+#---------------------------------------------------------------------------------------- 
+661 DISCHARGE Q-KatervrKampnbohv
+661 440 101 0.0051 2.5                                                #  kampen - keteldiep 
+661 730 101 0.0139 2.5                                                 
+661 1900 101 0.0182 2.5                                                
+#---------------------------------------------------------------------------------------- 
+662 DISCHARGE Q-KampnbohvKamprhk
+662 440 101 0.0051 2.5                                                #  keteldiep - eindeijssel 
+662 730 101 0.0139 2.5                                                 
+662 1900 101 0.0182 2.5                                                
+#======================================================================================= 
+# 
+# vaste lagen en bodemkribben 
+# 
+#======================================================================================= 
+671 DISCHARGE Q-PannkopNijmegen
+671 1850 101 0.0628 2.5                                               #  binnenbocht vaste laag Nijmegen, alfa = 1.05 * alfa traject 614 
+671 3000 101 0.0641 2.5                                                
+671 7450 101 0.0830 2.5                                                
+#---------------------------------------------------------------------------------------- 
+672 DISCHARGE Q-TielWlZaltb_waq
+672 1850 101 0.1295 2.5                                               #  binnenbocht vaste laag St. Andries,alfa = 1.37 * alfa traject 617 
+672 3000 101 0.1495 2.5                                                
+672 7450 101 0.1222 2.5                                                
+#---------------------------------------------------------------------------------------- 
+673 DISCHARGE Q-PannkopNijmegen
+673 1850 101 0.0759 2.5                                               #  binnenbocht bodem kribben Erlecom, alfa = 1.27 * alfa traject 613 
+673 3000 101 0.0776 2.5                                                
+673 7450 101 0.1003 2.5                                                
+# 
+#============================================================================== 
+# 
+# Einde roughcombination 
+# 
+#============================================================================== 

@@ -1,0 +1,247 @@
+** INFO   : @(#)Deltares, SOBEKSIM Version 5.00.023.41702, Sep  3 2015, 09:43:35
+** INFO   : Simulation started .....
+** INFO   : 
+** INFO   : Sobek Parameters
+** INFO   : 
+** INFO   : [GENERAL]
+** INFO   : version = pluv2.70
+** INFO   : language = 1
+** INFO   : dlgfunctionality = -1
+** INFO   : newfeature = false
+** INFO   : 
+** INFO   : [NETWORKOPTIONS]
+** INFO   : minumumlength = 1
+** INFO   : networkchanged = -1
+** INFO   : pluviusnetworkinformation = 0
+** INFO   : 
+** INFO   : [INITIALCONDITIONS]
+** INFO   : initialemptywells = false
+** INFO   : initialsalinity = 0.0
+** INFO   : 
+** INFO   : [RUNOFFOPTIONS]
+** INFO   : continueatlargenegativeqlat = -1
+** INFO   : fixedqlatatreach = -1
+** INFO   : lowertimestepslargeqlat = 0
+** INFO   : multiplestormevents = 0
+** INFO   : splitqlatatreach = 0
+** INFO   : 
+** INFO   : [RESULTSNODES]
+** INFO   : freeboard = false
+** INFO   : levelfromstreetlevel = false
+** INFO   : runoff = false
+** INFO   : salinity = false
+** INFO   : dispersion = -1
+** INFO   : density = false
+** INFO   : timewateronstreet = false
+** INFO   : totalarea = false
+** INFO   : totalwidth = false
+** INFO   : volume = true
+** INFO   : volumesonstreet = false
+** INFO   : waterdepth = false
+** INFO   : waterlevel = true
+** INFO   : wateronstreet = false
+** INFO   : lateralonnodes = false
+** INFO   : lateral1d2d = false
+** INFO   : volumeerror = false
+** INFO   : 
+** INFO   : [RESULTSBRANCHES]
+** INFO   : chezy = false
+** INFO   : discharge = true
+** INFO   : froude = false
+** INFO   : levelsoutputonpipes = 0
+** INFO   : riversubsectionparameters = false
+** INFO   : sedimentfrijlink = false
+** INFO   : sedimentvanrijn = false
+** INFO   : velocity = false
+** INFO   : wind = false
+** INFO   : waterlevelslope = false
+** INFO   : dispersion = false
+** INFO   : energyheadmethod = 11
+** INFO   : infiltrationpipes = false
+** INFO   : twind = false
+** INFO   : fwind = false
+** INFO   : 
+** INFO   : [RESULTSSTRUCTURES]
+** INFO   : crestlevelopeningsheight = -1
+** INFO   : crestlevel = false
+** INFO   : crestwidth = false
+** INFO   : discharge = true
+** INFO   : gateloweredgelevel = false
+** INFO   : head = false
+** INFO   : openingsarea = false
+** INFO   : openingswidth = -1
+** INFO   : pressuredifference = false
+** INFO   : thresholdforspillcountinhours = 24
+** INFO   : velocity = false
+** INFO   : waterlevel = true
+** INFO   : waterleveloncrest = false
+** INFO   : 
+** INFO   : [RESULTSPUMPS]
+** INFO   : pumpresults = false
+** INFO   : 
+** INFO   : [RESULTSGENERAL]
+** INFO   : actualvalue = true
+** INFO   : delwaqnostaggeredgrid = -1
+** INFO   : meanvalue = false
+** INFO   : maximumvalue = false
+** INFO   : reducedidresults = 0
+** INFO   : sobeksimstamp = true
+** INFO   : zero2drainevap2delwaq = 0
+** INFO   : flowanalysistimeseries = false
+** INFO   : 
+** INFO   : [RESULTSGRID]
+** INFO   : 1dflowdischargemeasuringsection = 0
+** INFO   : 
+** INFO   : [SEDIMENT]
+** INFO   : d50 = .0005
+** INFO   : d90 = .001
+** INFO   : levelaffectedbysediment = .3
+** INFO   : depthusedforsediment = 0.3
+** INFO   : 
+** INFO   : [TIMESTEPESTIMATION]
+** INFO   : fromavailablevolumes = -1
+** INFO   : 
+** INFO   : [SPECIALS]
+** INFO   : designfactordlg = 1
+** INFO   : 
+** INFO   : [INDICATION]
+** INFO   : velocityreachsegments = 0.5
+** INFO   : velocitystructures = 0.75
+** INFO   : 
+** INFO   : [NUMERICALPARAMETERS]
+** INFO   : accelerationtermfactor = 1
+** INFO   : accurateversusspeed = 3
+** INFO   : courantnumber = 1.0
+** INFO   : dtminimum = 0.001
+** INFO   : epsilonvaluevolume = 0.0001
+** INFO   : epsilonvaluewaterdepth = 0.0001
+** INFO   : lowertimestepslargeqlat = 0
+** INFO   : maxdegree = 6
+** INFO   : maxiterations = 8
+** INFO   : minimumsurfaceatstreet = 0.1
+** INFO   : minimumsurfaceinnode = 0.1
+** INFO   : minumumlength = 1
+** INFO   : minumumtimestepnegativeqlat = 1
+** INFO   : relaxationfactor = 1.0
+** INFO   : rho = 1000
+** INFO   : structureinertiadampingfactor = 1.0
+** INFO   : theta = 1.0
+** INFO   : thresholdvalueflooding = 0.01
+** INFO   : thresholdvaluefloodingfls = 0.001
+** INFO   : usetimestepreducerstructures = false
+** INFO   : useomp = false
+** INFO   : 
+** INFO   : [SIMULATIONOPTIONS]
+** INFO   : 1dmor = 0
+** INFO   : allowablelargertimestep = 0
+** INFO   : asciifileuvcomponent = 0
+** INFO   : cflcheckalllinks = false
+** INFO   : channel = true
+** INFO   : checkfuru2 = d:\sobek\testdir\furu.out
+** INFO   : communicationwithsrw = 0
+** INFO   : conveyancetableused = -1
+** INFO   : conveyanceused = -1
+** INFO   : convtabyzprof = -1
+** INFO   : correctionforculverts = -1
+** INFO   : debug = false
+** INFO   : debugtime = false
+** INFO   : dispmaxfactor = 0.45
+** INFO   : dumpinput = false
+** INFO   : maxadjacentedges = 20
+** INFO   : missingvalue = -999.999
+** INFO   : newrtccoupling = -1
+** INFO   : newrtcwriteformat = -1
+** INFO   : noadvec = 0
+** INFO   : nonegativeqlatwhenthereisnowater = -1
+** INFO   : noreduce = 0
+** INFO   : nosurfacelevelcheck = 1
+** INFO   : onlinedelft3dflow = 0
+** INFO   : onlineplot = false
+** INFO   : onlinerunoff = 0
+** INFO   : onlinewq = 0
+** INFO   : percentallowablevolumeerror = 1
+** INFO   : preissmannminclosedmanholes = 0.001
+** INFO   : river = false
+** INFO   : riverstucturesallowed = -1
+** INFO   : rtcinuse = 0
+** INFO   : runoffinuse = 0
+** INFO   : salinity = 0
+** INFO   : sewer = false
+** INFO   : simulationsynchron = 0
+** INFO   : simulationtimefromevents = 0
+** INFO   : siphonupstreamthresholdswitchoff = 0.1
+** INFO   : steadycalculation = 0
+** INFO   : structuredynamicsfactor = 1
+** INFO   : structurestabilityfactor = 0
+** INFO   : thresholdforsummerdike = 0.4
+** INFO   : timersoutputfrequency = 1
+** INFO   : treat2dfrictiontermsameas1d = 0
+** INFO   : typedikelvl = 0
+** INFO   : use1d2dnode = -1
+** INFO   : use1d2drestartinputfile = 0
+** INFO   : use1d2drestartoutputfile = 0
+** INFO   : use1drestartinputfile = 0
+** INFO   : use1drestartoutputfile = 0
+** INFO   : use2dwindfrictsameas1dformulation = -1
+** INFO   : usecgsolver = 0
+** INFO   : useconservativememoryallocation = -1
+** INFO   : useextrafrictiondepth1d = -1
+** INFO   : usefls = 0
+** INFO   : usegridassurface = -1
+** INFO   : userestart = false
+** INFO   : usetimers = false
+** INFO   : usevariableteta = false
+** INFO   : volumecheck = false
+** INFO   : volumecorrection = false
+** INFO   : waterqualityinuse = false
+** INFO   : iadvec1d = 1
+** INFO   : limtyphu1d = 1
+** INFO   : momdilution1d = 1
+** INFO   : writesamples = false
+** INFO   : use1d2dcoupling = false
+** INFO   : allowablevolumeerror = 10.0
+** INFO   : allowabletimesteplimiter = 30
+** INFO   : morphology = false
+** INFO   : allowcrestlevelbelowbottom = false
+** INFO   : useenergyheadstructures = false
+** INFO   : strucflowdirectionaccuracyfactor = 1.0
+** INFO   : manholelosses = false
+** INFO   : skipstructimestepreduction = false
+** INFO   : manhloss = 0
+** INFO   : strucalfa = 0.9
+** INFO   : depthsbelowbobs = false
+** INFO   : readsamples = false
+** INFO   : 
+** INFO   : [STEADYSTATE]
+** INFO   : computesteadystate = false
+** INFO   : dtsteady = 7200
+** INFO   : epsmaxu = 1e-6
+** INFO   : ntendcontrolsteady = 200
+** INFO   : ntintcontrolsteady = 20
+** INFO   : ntmaxsteady = 1500
+** INFO   : 
+** INFO   : [ADVANCEDOPTIONS]
+** INFO   : extraresistancegeneralstructure = 0.0
+** INFO   : transitionheightsd = 0.5
+** INFO   : nonegativeqlatwhenthereisnowater = true
+** INFO   : maxvolfact = 0.9
+** INFO   : laterallocation = 0
+** INFO   : maxloweringcrossatculvert = 0.0
+** INFO   : calculatedelwaqoutput = false
+** INFO   : 
+** INFO   : [OBSERVATIONPOINTS]
+** INFO   : interpolationtype = nearest
+** INFO   : 
+** INFO   : [RESULTSWATERBALANCE]
+** INFO   : 1d2dflows = false
+** INFO   : 
+** INFO   : [SALINITY]
+** INFO   : diffusionatboundaries = true
+** INFO   : saltcomputation = false
+** INFO   : 
+
+****************************************
+Info Messages :   241
+****************************************
+
+** Normal End of Sobeksim

@@ -1,0 +1,18 @@
+[forcing]
+Name                            = boundary_waterlevel_out_2
+Function                        = qhtable
+Quantity                        = qhbnd discharge
+Unit                            = m3/s
+Quantity                        = qhbnd waterlevel
+Unit                            = m
+0	-1
+1.779244028	-0.8
+5.633794006	-0.6
+11.04433933	-0.4
+17.7921667	-0.2
+25.73996101	0
+34.7891196	0.2
+44.86344806	0.4
+55.90124824	0.6
+67.85090909	0.8
+80.67       1.0

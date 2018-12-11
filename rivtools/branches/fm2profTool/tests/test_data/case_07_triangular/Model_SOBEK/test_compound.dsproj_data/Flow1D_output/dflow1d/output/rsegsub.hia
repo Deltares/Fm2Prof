@@ -1,0 +1,23 @@
+[General]
+FileType=DelftIO HIA file
+DioVersion=Deltares, DELFTIO Version 1.09.00.7334, Jun 29 2017, 18:57:10
+HiaVersion=1.00
+ 
+[DioCheck]
+NumberOfParameters=15
+NumberOfLocations=36
+T0=2001.01.01 00:00:00
+TimeStepUnit=Second
+TimeStepMultiplyer=60
+ 
+[Long Parameters]
+1=Discharge main (m3/s)
+2=Discharge floodp 1 (m3/s)
+3=Discharge floodp 2 (m3/s)
+5=Chezy floodp 1 (m1/2/s)
+6=Chezy floodp 2 (m1/2/s)
+14=Hydr radius floodp 1 (m)
+15=Hydr radius floodp 2 (m)
+ 
+[Long Locations]
+ 
