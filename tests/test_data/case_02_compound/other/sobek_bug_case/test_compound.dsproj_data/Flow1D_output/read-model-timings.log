@@ -1,0 +1,14 @@
+ nr.     times     cpu time      cpu    wall clock      wc  level routine name
+        called    in seconds      %     in seconds       %    2
+    1          1  1.154404E+00  100.00  1.201000E+00    100.00      ReadFiles                               
+    2          1  4.679871E-02    4.05  4.499984E-02           3.75 ReadNetwork                             
+    3          1  2.027893E-01   17.57  1.880000E-01          15.65 ReadCsDefs                              
+    4          1  4.681396E-02    4.06  4.200006E-02           3.50 ReadCsLocs                              
+    5          1  0.000000E+00    0.00  5.000114E-03           0.42 ReadStructures                          
+    6          1  1.559448E-02    1.35  9.999990E-03           0.83 ReadBoundLocs                           
+    7          1  0.000000E+00    0.00  3.999949E-03           0.33 ReadLatLocs                             
+    8          1  0.000000E+00    0.00  5.000114E-03           0.42 ReadObsPoints                           
+    9          1  1.559448E-02    1.35  4.999876E-03           0.42 ReadRetentions                          
+   10          1  4.679871E-02    4.05  5.900002E-02           4.91 ReadInitData                            
+   11          1  7.800140E-01   67.57  8.130000E-01          67.69 ReadRoughness                           
+   12          1  0.000000E+00    0.00  2.000093E-03           0.17 ReadBoundData                           
