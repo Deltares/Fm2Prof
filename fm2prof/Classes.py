@@ -30,9 +30,9 @@ import scipy.optimize as so
 from time import time
 import seaborn as sns
 
-import common
-import Functions as FE
-from lib import polysimplify as PS
+from fm2prof import common
+from fm2prof import Functions as FE
+from fm2prof.lib import polysimplify as PS
 
 import os
 import matplotlib.font_manager as font_manager

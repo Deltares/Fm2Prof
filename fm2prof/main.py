@@ -27,14 +27,18 @@ import datetime
 import seaborn as sns
 import itertools
 
-import Functions as FE
-import Classes as CE
-import sobek_export
+from fm2prof import Functions as FE
+from fm2prof import Classes as CE
+from fm2prof import sobek_export
 
 import os
 # endregion
 
-def run(dataDir, mapFile, cssFile, chainageFile):
+def runfile(dataDir, mapFile, cssFile, chainageFile):
+    """
+    Runs the desired emulation from 2d to 1d given the mapfile and the cross section file.
+    TODO: datadir should be optional ?(to know where to direct the output)
+    """ 
     # region FILES
     directory = dataDir
     map_file = mapFile
@@ -98,11 +102,13 @@ def run(dataDir, mapFile, cssFile, chainageFile):
     sobek_export.roughness_to_csv(cross_sections, chainages, directory + 'Output\\roughness.csv')
 
 def main():
+    # hardcoded for now, it should be introduced through command line (or call directly to runfile method)
     dirname = os.path.dirname(__file__)
-    directory = os.path.join(dirname, '..\\..\\fm2prof_test_cases\\case_01_rectangle\\')
+    directory = os.path.join(dirname, '..\\tests\\test_data\\case_01_rectangle\\')
     map_file = directory + 'Data\\FM\\50x25_mesh\\FlowFM_fm2prof_map.nc'
     css_file = directory + 'Data\\cross_section_locations.xyz'
     chainage_file = directory + 'Data\\cross_section_chainages.txt'
-    run(directory, map_file, css_file, chainage_file)
+    print("Running with hardcoded path from: {0}".format(directory))
+    runfile(directory, map_file, css_file, chainage_file)
 
 main()
