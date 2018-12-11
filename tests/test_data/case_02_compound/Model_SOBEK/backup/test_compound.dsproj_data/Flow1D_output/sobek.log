@@ -1,0 +1,235 @@
+** INFO   : Start of SOBEK computation
+** INFO   : Reading Network ...
+** INFO   : Reading Network Done
+** INFO   : Reading Cross Section Definitions ...
+** INFO   : Reading Cross Section Definitions Done
+** INFO   : Reading Cross Section Locations ...
+** INFO   : Reading Cross Section Locations Done
+** INFO   : Reading Structures ...
+** INFO   : Reading Structures Done
+** INFO   : Reading Boundary Locations ...
+** INFO   : Reading Boundary Locations Done
+** INFO   : Reading Lateral Locations ...
+** INFO   : Reading Lateral Locations Done
+** INFO   : Reading Observation Points ...
+** INFO   : Reading Observation Points Done
+** INFO   : Reading Retentions ...
+** INFO   : Reading Retentions Done
+** INFO   : Reading Initial Data ...
+** INFO   : Initial Water Level/Depth Loaded
+** INFO   : Initial Discharge Data Loaded
+** INFO   : Windshielding Data Loaded
+** INFO   : Reading Initial Data Done
+** INFO   : Reading Roughness ...
+** INFO   : Reading Roughness Done
+** INFO   : Reading Boundary/Lateral Data ...
+** INFO   : Reading Boundary/Lateral Done
+** INFO   : @(#)Deltares, SOBEKSIM Version 5.00.024.47781, Sep 26 2016, 15:29:45
+** INFO   : Simulation started .....
+** INFO   : 
+** INFO   : Sobek Parameters
+** INFO   : 
+** INFO   : [INITIALCONDITIONS]
+** INFO   : initialemptywells = false
+** INFO   : initialsalinity = 0.0
+** INFO   : 
+** INFO   : [RESULTSNODES]
+** INFO   : density = false
+** INFO   : freeboard = false
+** INFO   : lateral1d2d = false
+** INFO   : lateralonnodes = false
+** INFO   : levelfromstreetlevel = false
+** INFO   : runoff = false
+** INFO   : salinity = false
+** INFO   : timewateronstreet = false
+** INFO   : totalarea = false
+** INFO   : totalwidth = false
+** INFO   : volume = true
+** INFO   : volumeerror = false
+** INFO   : volumesonstreet = false
+** INFO   : waterdepth = false
+** INFO   : waterlevel = true
+** INFO   : wateronstreet = false
+** INFO   : 
+** INFO   : [RESULTSBRANCHES]
+** INFO   : chezy = false
+** INFO   : discharge = true
+** INFO   : dispersion = false
+** INFO   : energyheadmethod = 11
+** INFO   : froude = false
+** INFO   : fwind = false
+** INFO   : infiltrationpipes = false
+** INFO   : levelsoutputonpipes = 0
+** INFO   : riversubsectionparameters = 0
+** INFO   : sedimentfrijlink = false
+** INFO   : sedimentvanrijn = false
+** INFO   : twind = false
+** INFO   : velocity = false
+** INFO   : wind = false
+** INFO   : waterlevelslope = false
+** INFO   : 
+** INFO   : [RESULTSSTRUCTURES]
+** INFO   : crestlevel = false
+** INFO   : crestwidth = false
+** INFO   : discharge = true
+** INFO   : gateloweredgelevel = false
+** INFO   : head = false
+** INFO   : openingsarea = false
+** INFO   : pressuredifference = false
+** INFO   : velocity = false
+** INFO   : waterlevel = true
+** INFO   : waterleveloncrest = false
+** INFO   : openingswidth = -1
+** INFO   : thresholdforspillcountinhours = 24
+** INFO   : 
+** INFO   : [RESULTSPUMPS]
+** INFO   : pumpresults = false
+** INFO   : 
+** INFO   : [RESULTSWATERBALANCE]
+** INFO   : 1d2dflows = false
+** INFO   : 
+** INFO   : [RESULTSGENERAL]
+** INFO   : actualvalue = true
+** INFO   : delwaqnostaggeredgrid = 0
+** INFO   : flowanalysistimeseries = false
+** INFO   : meanvalue = false
+** INFO   : maximumvalue = false
+** INFO   : sobeksimstamp = true
+** INFO   : reducedidresults = 0
+** INFO   : 
+** INFO   : [SEDIMENT]
+** INFO   : d50 = 0.0005
+** INFO   : d90 = 0.001
+** INFO   : depthusedforsediment = 0.3
+** INFO   : 
+** INFO   : [SPECIALS]
+** INFO   : designfactordlg = 1.0
+** INFO   : 
+** INFO   : [INDICATION]
+** INFO   : velocityreachsegments = 0.5
+** INFO   : velocitystructures = 0.75
+** INFO   : 
+** INFO   : [NUMERICALPARAMETERS]
+** INFO   : accelerationtermfactor = 1
+** INFO   : accurateversusspeed = 3
+** INFO   : courantnumber = 1.0
+** INFO   : dtminimum = 0.001
+** INFO   : epsilonvaluevolume = 0.0001
+** INFO   : epsilonvaluewaterdepth = 0.0001
+** INFO   : floodingdividedbydrying = 10.0
+** INFO   : gravity = 9.81
+** INFO   : maxdegree = 6
+** INFO   : maxiterations = 8
+** INFO   : maxtimestep = 0
+** INFO   : minimumsurfaceatstreet = 0.1
+** INFO   : minimumsurfaceinnode = 0.1
+** INFO   : minumumlength = 1.0
+** INFO   : relaxationfactor = 1.0
+** INFO   : rho = 1000
+** INFO   : structureinertiadampingfactor = 1.0
+** INFO   : theta = 1.0
+** INFO   : thresholdvaluedrying = 0.001000
+** INFO   : thresholdvalueflooding = 0.01
+** INFO   : useomp = false
+** INFO   : usetimestepreducerstructures = false
+** INFO   : lowertimestepslargeqlat = 0
+** INFO   : minumumtimestepnegativeqlat = 1
+** INFO   : thresholdvaluefloodingfls = 0.001
+** INFO   : 
+** INFO   : [SIMULATIONOPTIONS]
+** INFO   : allowablelargertimestep = 0
+** INFO   : allowabletimesteplimiter = 30
+** INFO   : allowablevolumeerror = 10.0
+** INFO   : allowcrestlevelbelowbottom = false
+** INFO   : cflcheckalllinks = false
+** INFO   : channel = true
+** INFO   : debug = false
+** INFO   : debugtime = false
+** INFO   : depthsbelowbobs = false
+** INFO   : dispmaxfactor = 0.45
+** INFO   : dumpinput = false
+** INFO   : iadvec1d = 1
+** INFO   : jchecknans = 0
+** INFO   : junctionadvection = 0
+** INFO   : laboratorytest = false
+** INFO   : laboratorytimestep = 1
+** INFO   : laboratorytotalstep = 1
+** INFO   : limtyphu1d = 1
+** INFO   : logginglevel = info
+** INFO   : manhloss = 0
+** INFO   : manholelosses = false
+** INFO   : missingvalue = -999.999
+** INFO   : momdilution1d = 1
+** INFO   : morphology = false
+** INFO   : nosupercriticalinflow = false
+** INFO   : originalculvert = 0
+** INFO   : onlineplot = false
+** INFO   : percentallowableolumeerror = 1.0
+** INFO   : preissmannminclosedmanholes = 0.001
+** INFO   : qdrestart = 0
+** INFO   : river = true
+** INFO   : sewer = false
+** INFO   : siphonupstreamthresholdswitchoff = 0.1
+** INFO   : strucalfa = 0.9
+** INFO   : strucflowdirectionaccuracyfactor = 1.0
+** INFO   : structuredynamicsfactor = 1.0
+** INFO   : structurestabilityfactor = 0
+** INFO   : thresholdforsummerdike = 0.4
+** INFO   : timersoutputfrequency = 1
+** INFO   : use1d2dcoupling = false
+** INFO   : useenergyheadstructures = false
+** INFO   : userestart = false
+** INFO   : usetimers = false
+** INFO   : usevariableteta = false
+** INFO   : usewlevstatefile = false
+** INFO   : volumecheck = false
+** INFO   : volumecorrection = false
+** INFO   : waterqualityinuse = false
+** INFO   : writenetcdf = false
+** INFO   : 1dmor = 0
+** INFO   : communicationwithsrw = 0
+** INFO   : conveyancetableused = -1
+** INFO   : conveyanceused = -1
+** INFO   : convtabyzprof = -1
+** INFO   : correctionforculverts = -1
+** INFO   : nonegativeqlatwhenthereisnowater = -1
+** INFO   : nlineplot = 0
+** INFO   : percentallowablevolumeerror = 1
+** INFO   : riverstucturesallowed = -1
+** INFO   : runoffinuse = 0
+** INFO   : salinity = 0
+** INFO   : skipstructimestepreduction = false
+** INFO   : 
+** INFO   : [STEADYSTATE]
+** INFO   : computesteadystate = false
+** INFO   : dtsteady = 7200
+** INFO   : epsmaxu = 1e-6
+** INFO   : ntendcontrolsteady = 200
+** INFO   : ntintcontrolsteady = 20
+** INFO   : ntmaxsteady = 1500
+** INFO   : 
+** INFO   : [ADVANCEDOPTIONS]
+** INFO   : calculatedelwaqoutput = false
+** INFO   : extraresistancegeneralstructure = 0.0
+** INFO   : laterallocation = 0
+** INFO   : maxloweringcrossatculvert = 0.0
+** INFO   : maxvolfact = 0.9
+** INFO   : nonegativeqlatwhenthereisnowater = true
+** INFO   : transitionheightsd = 0.5
+** INFO   : 
+** INFO   : [SALINITY]
+** INFO   : saltcomputation = false
+** INFO   : diffusionatboundaries = true
+** INFO   : 
+** INFO   : [OBSERVATIONS]
+** INFO   : interpolationtype = nearest
+** INFO   : 
+** INFO   : [OBSERVATIONPOINTS]
+** INFO   : interpolationtype = linear
+** INFO   : 
+
+****************************************
+Info Messages :      229
+****************************************
+
+** Normal End of Sobeksim
