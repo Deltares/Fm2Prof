@@ -15,7 +15,7 @@ class SystemTests(unittest.TestCase):
     
     def test_runbasecase(self):
         directory = TestUtils.get_test_dir("case_01_rectangle")       
-        map_file = directory + '\\Data\\FM\\50x25_mesh\\FlowFM_fm2prof_map.nc'
-        css_file = directory + '\\Data\\cross_section_locations.xyz'
-        chainage_file = directory + '\\Data\\cross_section_chainages.txt'
+        map_file = directory + 'Data\\FM\\50x25_mesh\\FlowFM_fm2prof_map.nc'
+        css_file = directory + 'Data\\cross_section_locations.xyz'
+        chainage_file = directory + 'Data\\cross_section_chainages.txt'
         main.runfile(directory, map_file,css_file, chainage_file)
