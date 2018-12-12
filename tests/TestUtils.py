@@ -7,7 +7,7 @@ def get_test_dir(dirName):
     """
     directory = os.path.dirname(__file__)
     try:
-        directory = os.path.join(directory, "test_data\\{0}".format(dirName))
+        directory = os.path.join(directory, "test_data\\{0}\\".format(dirName))
     except:
         print("An error occurred trying to find {0}".format(dirName))
     return directory
