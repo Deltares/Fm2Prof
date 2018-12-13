@@ -1,9 +1,0 @@
-[boundary]
-quantity=qhbnd
-locationfile=randvw/BoundaryConditions/Hardinxveld.pli
-forcingfile=randvw/BoundaryConditions/series_qh_hardinxveld.bc
-
-[boundary]
-quantity=dischargebnd
-locationfile=randvw/BoundaryConditions/PanKop.pli
-forcingfile=randvw/BoundaryConditions/series_q_pankop_wave.bc
