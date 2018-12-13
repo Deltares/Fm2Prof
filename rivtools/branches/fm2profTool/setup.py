@@ -22,6 +22,6 @@ setup(
         #"Django==1.11.5",
         "netCDF4==1.2.9",
         "scipy==1.0.0b1",
-        "scikit_learn==0.19.0"
+        "scikit_learn==0.19.0",
     ],
 )
