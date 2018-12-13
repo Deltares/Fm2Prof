@@ -34,13 +34,13 @@ from fm2prof import sobek_export
 import os
 # endregion
 
-def runfile(dataDir, mapFile, cssFile, chainageFile):
+def runfile(mapFile, cssFile, chainageFile, outputDir):
     """
     Runs the desired emulation from 2d to 1d given the mapfile and the cross section file.
     TODO: datadir should be optional ?(to know where to direct the output)
     """ 
     # region FILES
-    directory = dataDir
+    output_directory = outputDir
     map_file = mapFile
     css_file = cssFile
     chainage_file = chainageFile
@@ -98,8 +98,8 @@ def runfile(dataDir, mapFile, cssFile, chainageFile):
     chainages = None
 
     # export all cross-sections
-    sobek_export.geometry_to_csv(cross_sections, chainages, directory + 'Output\\geometry.csv')
-    sobek_export.roughness_to_csv(cross_sections, chainages, directory + 'Output\\roughness.csv')
+    sobek_export.geometry_to_csv(cross_sections, chainages, output_directory + '\\geometry.csv')
+    sobek_export.roughness_to_csv(cross_sections, chainages, output_directory + '\\roughness.csv')
 
 def main():
     # hardcoded for now, it should be introduced through command line (or call directly to runfile method)
@@ -109,6 +109,9 @@ def main():
     css_file = directory + 'Data\\cross_section_locations.xyz'
     chainage_file = directory + 'Data\\cross_section_chainages.txt'
     print("Running with hardcoded path from: {0}".format(directory))
-    runfile(directory, map_file, css_file, chainage_file)
+    output_directory = dirname + '\\bin\\'
+    if not os.path.exists(output_directory):
+        os.mkdir(output_directory)
+    runfile(map_file, css_file, chainage_file, output_directory)
 
 main()

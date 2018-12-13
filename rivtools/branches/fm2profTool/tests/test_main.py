@@ -18,4 +18,7 @@ class SystemTests(unittest.TestCase):
         map_file = directory + 'Data\\FM\\50x25_mesh\\FlowFM_fm2prof_map.nc'
         css_file = directory + 'Data\\cross_section_locations.xyz'
         chainage_file = directory + 'Data\\cross_section_chainages.txt'
-        main.runfile(directory, map_file,css_file, chainage_file)
+        output_directory = directory + 'Output'
+        if not os.path.exists(output_directory):
+            os.mkdir(output_directory)
+        main.runfile(map_file,css_file, chainage_file, output_directory)
