@@ -5,7 +5,8 @@ from setuptools import setup, find_packages
 
 setup(
     name="fm2prof",
-    packages=find_packages(exclude=('tests')),
+    packages=(find_packages(exclude=('tests'))),
+    # package_dir={'fm2prof': 'fm2prof'},
     version='1.0.0',
     description='Functions used for the emulation/reduction of 2D models to 1D models for Delft3D FM (D-Hydro).',
     license='LICENSE.txt',
