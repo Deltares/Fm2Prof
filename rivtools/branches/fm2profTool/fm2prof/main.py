@@ -41,6 +41,13 @@ def runfile(mapFile, cssFile, chainageFile, outputDir):
     """ 
     # region FILES
     output_directory = outputDir
+    if not os.path.exists(output_directory):
+        try:
+            os.mkdir(output_directory)
+        except:
+            print("The output directory {0}, could not be found neither created.".format(output_directory))
+            exit(1)
+
     map_file = mapFile
     css_file = cssFile
     chainage_file = chainageFile
@@ -101,18 +108,49 @@ def runfile(mapFile, cssFile, chainageFile, outputDir):
     sobek_export.geometry_to_csv(cross_sections, chainages, output_directory + '\\geometry.csv')
     sobek_export.roughness_to_csv(cross_sections, chainages, output_directory + '\\roughness.csv')
 
-def main(argv):
-    
-    # directory = os.path.join(dirname, '..\\tests\\test_data\\case_01_rectangle\\')
-    # map_file = directory + 'Data\\FM\\50x25_mesh\\FlowFM_fm2prof_map.nc'
-    # css_file = directory + 'Data\\cross_section_locations.xyz'
-    # chainage_file = directory + 'Data\\cross_section_chainages.txt'
-    # print("Running with hardcoded path from: {0}".format(directory))
-    dirname = os.path.dirname(__file__)
-    output_directory = dirname + '\\bin\\'
-    if not os.path.exists(output_directory):
-        os.mkdir(output_directory)
-    
-    # runfile(map_file, css_file, chainage_file, output_directory)
+def __report_expected_arguments(reason):
+    print("Error: {0}".format(reason))
+    print('main.py -i <map_file> -i <css_file> -i <chainage_file> -o <outputdir>')
+    sys.exit(1)
 
-main(sys.argv[1:])
+def __is_input(argument):
+    # Argument array has two elements
+    # argument[0] = type
+    # argument[1] = value
+    argType = argument[0]
+    return argType in ("-i", "--ifile")
+
+def __is_output(argument):
+    # Argument array has two elements
+    # argument[0] = type
+    # argument[1] = value
+    argType = argument[0]
+    return argType in ("-o", "--ofile")
+
+def main(argv):
+    # First try to pars the arguments
+    try:
+        opts, args = getopt.getopt(argv,"hi:o:",["ifile=","ofile="])
+    except getopt.GetoptError:
+        __report_expected_arguments("Arguments could not be retrieved.")
+   
+    # Check if number of arguments match the expectation.
+    if len(opts) != 4:
+        __report_expected_arguments("Not all arguments were given.")
+    
+    # Check if input parameters are in expected order
+    if not __is_input(opts[0]) or not __is_input(opts[1]) or not __is_input(opts[2]):
+        __report_expected_arguments("The first three arguments should be input files.\n Given: {0}\n{1}\n{2}\n".format(opts[0], opts[1], opts[2]))
+    
+    # Check if output parameter is in expected placement
+    if not __is_output(opts[3]):
+        __report_expected_arguments("The last argument should be the output directory.")
+
+    map_file = opts[0][1]
+    css_file = opts[1][1]
+    chainage_file = opts[2][1]
+    output_directory = opts[3][1]
+    runfile(map_file, css_file, chainage_file, output_directory)
+
+if __name__ == '__main__':
+    main(sys.argv[1:])
