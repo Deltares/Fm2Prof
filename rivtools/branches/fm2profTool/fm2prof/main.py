@@ -109,9 +109,8 @@ def runfile(mapFile, cssFile, chainageFile, outputDir):
     sobek_export.roughness_to_csv(cross_sections, chainages, output_directory + '\\roughness.csv')
 
 def __report_expected_arguments(reason):
-    print("Error: {0}".format(reason))
     print('main.py -i <map_file> -i <css_file> -i <chainage_file> -o <outputdir>')
-    sys.exit(1)
+    sys.exit("Error: {0}".format(reason))
 
 def __is_input(argument):
     # Argument array has two elements
@@ -128,6 +127,10 @@ def __is_output(argument):
     return argType in ("-o", "--ofile")
 
 def main(argv):
+    """
+    Main class, should contain three input arguments and one output.
+    Otherwise the execution will end with an error.
+    """
     # First try to pars the arguments
     try:
         opts, args = getopt.getopt(argv,"hi:o:",["ifile=","ofile="])

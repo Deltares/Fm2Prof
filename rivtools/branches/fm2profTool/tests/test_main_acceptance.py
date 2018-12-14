@@ -14,7 +14,7 @@ def test_run_case_01():
     output_directory = __check_and_create_test_case_output_dir(caseName)
 
     # set the rest of the files
-    directory = TestUtils.get_test_dir(caseName)       
+    directory = TestUtils.get_external_test_data_dir(caseName)       
     map_file = directory + 'Data\\FM\\50x25_mesh\\FlowFM_fm2prof_map.nc'
     css_file = directory + 'Data\\cross_section_locations.xyz'
     chainage_file = directory + 'Data\\cross_section_chainages.txt'
@@ -28,15 +28,6 @@ def test_run_case_01():
     # 4. Verify there is output generated:
     assert os.listdir(output_directory), "There is no output generated for {0}".format(caseName)
 
-
-
-# region // Helpers
-
-# High level acceptance tests, these are the ones who are only meant to generate output files
-# for the testers to verify (in Teamcity) whether the runs generate the expected files or not.
-def __run_main_with_arguments(map_file, css_file, chainage_file, output_directory):
-    pythonCall = "fm2prof\\main.py -i {0} -i {1} -i {2} -o {3}".format(map_file, css_file, chainage_file, output_directory)
-    os.system("python {0}".format(pythonCall))
 
 def __check_and_create_test_root_output_dir():
     """
