@@ -480,6 +480,7 @@ class CrossSection:
 
         #plt.gca().set_aspect('equal', adjustable='box')
         sns.despine()
+        return fig
     
     def _calc_chezy(self, depth, manning):
         return depth**(1/float(6)) / manning
@@ -722,6 +723,7 @@ class CrossSection:
         plt.xlabel('Width [m]')
         plt.legend(loc=2)
         sns.despine()
+        return fig
 
         #hRight = fig.add_subplot(gs[1])
         #hRight.plot(self.extra_area_percentage, self._css_z, linewidth=2, color=colors[6])
@@ -782,6 +784,7 @@ class CrossSection:
         plt.legend(loc=2)
         hVolume.set_ylabel('Total volume [million $\mathrm{m^3}$]')
         plt.setp(hVolume.get_xticklabels(), visible=False)
+        return fig
 
     def _plot_fm(self, fm_data):
         fig = plt.figure(figsize=(20, 10))
@@ -792,6 +795,7 @@ class CrossSection:
         h3dPlot.scatter(self.location[0], self.location[1], np.max(fm_data['z']), c='k', marker='^', s=40)
         plt.gca().invert_zaxis()
         plt.title('Delft FM points attributed to cross-section')
+        return fig
 
 
 class LoggerClass:
