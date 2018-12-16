@@ -117,6 +117,11 @@ class Fm2ProfRunner :
                 self.__generate_output(output_dir, volumePlot, "volume", "cross_section_{0}".format(name))
                 self.__generate_output(output_dir, roughnessPlot, "roughness", "cross_section_{0}".format(name))
                 self.__generate_output(output_dir, zwFig, "z_width", "cross_section_{0}".format(name))
+            
+            # Close all figures:
+            css._close_figure(volumePlot)
+            css._close_figure(roughnessPlot)
+            css._close_figure(zwFig)
 
             self.__logger.write('cross-section {0} generated in {1} seconds'.format(css.name, (datetime.datetime.now()-starttime).total_seconds()))
             cross_sections.append(css)

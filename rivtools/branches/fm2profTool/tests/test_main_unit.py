@@ -3,9 +3,9 @@ import os, sys, getopt, shutil
 import TestUtils
 from fm2prof import main
 
-class TestMainMethodTest:
+class TestMainMethod_UnitTest:
     @classmethod
-    def setup_class(MainMethodTest):
+    def setup_class(MainMethod_UnitTest):
         """
         Sets up the necessary data for MainMethodTest
         """
@@ -22,7 +22,7 @@ class TestMainMethodTest:
             os.mkdir(outputtestdir)
 
     @classmethod
-    def teardown_class(MainMethodTest):
+    def teardown_class(MainMethod_UnitTest):
         """
         Cleans up the directory
         """
