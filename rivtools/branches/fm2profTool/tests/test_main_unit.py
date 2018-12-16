@@ -34,7 +34,6 @@ class TestMainMethodTest:
         if os.path.exists(outputtestdir):
             os.rmdir(outputtestdir)
 
-
     @pytest.mark.unittest
     def test_main_fails_when_not_giving_arguments(self):
         # 1. Set up test data
