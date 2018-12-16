@@ -796,7 +796,9 @@ class CrossSection:
         plt.gca().invert_zaxis()
         plt.title('Delft FM points attributed to cross-section')
         return fig
-
+    
+    def _close_figure(self, figure):
+        plt.close(figure)
 
 class LoggerClass:
     def __init__(self):
