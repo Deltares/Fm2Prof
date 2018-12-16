@@ -34,79 +34,133 @@ from fm2prof import sobek_export
 import os, sys, getopt
 # endregion
 
-def runfile(mapFile, cssFile, chainageFile, outputDir):
-    """
-    Runs the desired emulation from 2d to 1d given the mapfile and the cross section file.
-    TODO: datadir should be optional ?(to know where to direct the output)
-    """ 
-    # region FILES
-    output_directory = outputDir
-    if not os.path.exists(output_directory):
-        try:
-            os.mkdir(output_directory)
-        except:
-            print("The output directory {0}, could not be found neither created.".format(output_directory))
-            exit(1)
+class Fm2ProfRunner :  
+    __logger = None
+    
+    __showFigures = False
+    __saveFigures = False
 
-    map_file = mapFile
-    css_file = cssFile
-    chainage_file = chainageFile
-    # endregion
+    __output_dir = None
 
-    cross_sections = list()
+    def __init__(self, output_dir, showFigures = False, saveFigures = False):
+        """
+        Initializes the private variables for the Fm2ProfRunner
+        """
+        self.__logger = CE.LoggerClass()
+        self.__showFigures = showFigures
+        self.__saveFigures = saveFigures
+        self.__output_dir = output_dir
 
-    # Read FM model data
-    (time_dependent_data, time_independent_data, edge_data, node_coordinates, css_xy, css_names, css_length) = FE.read_fm2prof_input(map_file, css_file)
-    print('finished reading FM and cross-sectional data data')
+    def set_output_directory(self, output_dir):
+        """
+        Sets the output directory where all generated files from the runs will be stored.
+        If this is not set nothing will be saved.
+        """
+        self.__output_dir = output_dir
 
-    # Initiate classes
-    logger = CE.LoggerClass()
+    def run_with_files(self, mapFile, cssFile, chainageFile):
+        """
+        Runs the desired emulation from 2d to 1d given the mapfile and the cross section file.
+        """ 
+        if not self.__is_output_directory_set():
+            return
 
-    # generate all cross-sections
-    for index, name in enumerate(css_names):
-        starttime = datetime.datetime.now()
-        #logger.write('%s :: cross-section %s' % (datetime.datetime.strftime(starttime, '%I:%M%p'), name))
+        # region FILES
+        map_file = mapFile
+        css_file = cssFile
+        chainage_file = chainageFile
+        # endregion
 
-        css = CE.CrossSection(name=name, length=css_length[css_names.index(name)], location=css_xy[css_names.index(name)])
+        #Just a shortener
+        output_dir = self.__output_dir
 
-        # Retrieve FM data for cross-section
-        fm_data = FE.retrieve_for_class(css.name,
-                                        time_independent_data,
-                                        edge_data,
-                                        time_dependent_data)
+        cross_sections = list()
 
-        #logger.write('T+ %.2f :: retrieved data for css %s' % ((datetime.datetime.now()-starttime).total_seconds(), name))
+        # Read FM model data
+        (time_dependent_data, time_independent_data, edge_data, node_coordinates, css_xy, css_names, css_length) = FE.read_fm2prof_input(map_file, css_file)
+        self.__logger.write('finished reading FM and cross-sectional data data')
 
-        # Build cross-section
-        css.build_from_fm(fm_data=fm_data)
-        #logger.write('T+ %.2f :: cross-section derived, starting correction.....' % (datetime.datetime.now()-starttime).total_seconds())
+        # generate all cross-sections
+        for index, name in enumerate(css_names):
+            starttime = datetime.datetime.now()
+            self.__logger.write('%s :: cross-section %s' % (datetime.datetime.strftime(starttime, '%I:%M%p'), name))
 
-        # Delta-h correction
-        css.calculate_correction()
-        #css._plot_volume(relative_error=True)
-        #logger.write('T+ %.2f :: correction finished' % (datetime.datetime.now()-starttime).total_seconds())
+            css = CE.CrossSection(name=name, length=css_length[css_names.index(name)], location=css_xy[css_names.index(name)])
 
-        # Reduce number of points in cross-section
-        css.reduce_points(n=20, verbose=False)
+            # Retrieve FM data for cross-section
+            fm_data = FE.retrieve_for_class(css.name,
+                                            time_independent_data,
+                                            edge_data,
+                                            time_dependent_data)
 
-        # assign roughness
-        css.assign_roughness(fm_data)
-        #css._plot_roughness(fm_data, True)
+            self.__logger.write('T+ %.2f :: retrieved data for css %s' % ((datetime.datetime.now()-starttime).total_seconds(), name))
 
-        #css._plot_zw()
-        #plt.show()
+            # Build cross-section
+            css.build_from_fm(fm_data=fm_data)
+            self.__logger.write('T+ %.2f :: cross-section derived, starting correction.....' % (datetime.datetime.now()-starttime).total_seconds())
 
-        logger.write('cross-section {0} generated in {1} seconds'.format(css.name, (datetime.datetime.now()-starttime).total_seconds()))
-        cross_sections.append(css)
+            # Delta-h correction
+            css.calculate_correction()
+            volumePlot = css._plot_volume(relative_error=True)
+            self.__logger.write('T+ %.2f :: correction finished' % (datetime.datetime.now()-starttime).total_seconds())
 
-    FE.interpolate_roughness(cross_sections)
+            # Reduce number of points in cross-section
+            css.reduce_points(n=20, verbose=False)
 
-    #chainages = FE._read_css_chainages(chainage_file)
-    chainages = None
+            # assign roughness
+            css.assign_roughness(fm_data)
+            roughnessPlot = css._plot_roughness(fm_data, True)
+            zwFig = css._plot_zw()
+            
+            # Save figures if applies
+            if self.__saveFigures:
+                self.__generate_output(output_dir, volumePlot, "volume", "cross_section_{0}".format(name))
+                self.__generate_output(output_dir, roughnessPlot, "roughness", "cross_section_{0}".format(name))
+                self.__generate_output(output_dir, zwFig, "z_width", "cross_section_{0}".format(name))
 
-    # export all cross-sections
-    sobek_export.geometry_to_csv(cross_sections, chainages, output_directory + '\\geometry.csv')
-    sobek_export.roughness_to_csv(cross_sections, chainages, output_directory + '\\roughness.csv')
+            self.__logger.write('cross-section {0} generated in {1} seconds'.format(css.name, (datetime.datetime.now()-starttime).total_seconds()))
+            cross_sections.append(css)
+
+        FE.interpolate_roughness(cross_sections)
+
+        #chainages = FE._read_css_chainages(chainage_file)
+        chainages = None
+
+        # export all cross-sections
+        sobek_export.geometry_to_csv(cross_sections, chainages, output_dir + '\\geometry.csv')
+        sobek_export.roughness_to_csv(cross_sections, chainages, output_dir + '\\roughness.csv')
+
+    def __is_output_directory_set(self):
+        """
+        Verifies if the output directory has been set and exists or not.
+        Returns:
+            True - the output_dir is set and exists.
+            False - the output_dir is not set or does not exist.
+        """
+        if self.__output_dir is None:
+            print("The output directory must be set before running.")
+            return False
+
+        if not os.path.exists(self.__output_dir):
+            try:
+                os.mkdir(self.__output_dir)
+            except:
+                print("The output directory {0}, could not be found neither created.".format(self.__output_dir))
+                return False
+        
+        return True
+
+    def __generate_output(self, output_directory, fig, figType, name):
+        if not self.__saveFigures:
+            return
+        
+        plotLocation = output_directory + '\\{0}_{1}.png'.format(name, figType)
+        fig.savefig(plotLocation)
+        self.__logger.write('Saved {0} for {1} plot in {2}.'.format(name, figType, plotLocation))
+        
+        return
+
+# region // Main helpers
 
 def __report_expected_arguments(reason):
     print('main.py -i <map_file> -i <css_file> -i <chainage_file> -o <outputdir>')
@@ -125,6 +179,8 @@ def __is_output(argument):
     # argument[1] = value
     argType = argument[0]
     return argType in ("-o", "--ofile")
+
+# endregion
 
 def main(argv):
     """
@@ -153,7 +209,10 @@ def main(argv):
     css_file = opts[1][1]
     chainage_file = opts[2][1]
     output_directory = opts[3][1]
-    runfile(map_file, css_file, chainage_file, output_directory)
+    
+    # Run with the given arguments
+    runner = Fm2ProfRunner(output_directory)
+    runner.run_with_files(map_file, css_file, chainage_file)
 
 if __name__ == '__main__':
     main(sys.argv[1:])
