@@ -1,8 +1,11 @@
-﻿import locale
+﻿""" Input/output """
+
+import locale
 import numpy as np
 import collections
-
 from fm2prof import Functions as FE
+
+""" SOBEK 3 file formats """
 
 def geometry_to_csv(cross_sections, chainages, file_path):
     with open(file_path, 'w') as f:
@@ -16,7 +19,6 @@ def geometry_to_csv(cross_sections, chainages, file_path):
                 chainage = None
 
             _write_geometry(f, section, chainage)
-
 def roughness_to_csv(cross_sections, chainages, file_path):
     with open(file_path, 'w') as f:
         # write header
@@ -82,7 +84,6 @@ def _write_geometry(write_object, cross_section, chainage=None):
     for index, width in enumerate(cross_section.total_width):
         flow_width = cross_section.flow_width[index]
         write_object.write(cross_section.name + ',,' + 'geom' + ',' + z_format.format(z_value[index]) + ',' + str(width) + ',' + str(flow_width) + ',,,,,,,,,,,,,,' + '\n')
-
 def _write_roughness(write_object, cross_section, type, chainage=None):
     # note, the chainage is currently set to the X-coordinate of the cross-section (straight channel)
     # note, the channel naming strategy must be discussed, currently set to 'Channel' for all cross-sections
@@ -110,3 +111,22 @@ def _write_roughness(write_object, cross_section, type, chainage=None):
 
         if np.isnan(chezy) == False:
             write_object.write('Channel1' + ',' + str(chainage) + ',' + 'Chezy' + ',' + plain + ',' + 'Waterlevel' + ',' + 'Linear' + ',' + 'Same' + ',,,,' + str(level) + ',' + str(chezy) + ',,,,,' + '\n')
+
+
+""" Non-FM files """
+
+def volumes_to_csv(cross_sections, chainages, file_path):
+    """Write to file the volume/waterlevel information"""
+    with open(file_path, 'w') as f:
+        # Write header
+        f.write("id, z, Total volume 1D, Total volume 2D\n")
+
+        # Construct array and append to file
+        for css in cross_sections:
+            for i in range(len(css._css_z)):
+                f.write('{}, {}, {}, {}\n'.format(css.name, 
+                                                  css._css_z[i], 
+                                                  css._css_total_volume_corrected[i], 
+                                                  css._fm_total_volume[i]))
+
+            
