@@ -46,7 +46,7 @@ class Fm2ProfRunner :
         """
         Initializes the private variables for the Fm2ProfRunner
         """
-        self.__logger = CE.LoggerClass()
+        self.__logger = CE.Logger(output_dir)
         self.__showFigures = showFigures
         self.__saveFigures = saveFigures
         self.__output_dir = output_dir
@@ -83,7 +83,7 @@ class Fm2ProfRunner :
         # generate all cross-sections
         for index, name in enumerate(css_names):
             starttime = datetime.datetime.now()
-            self.__logger.write('%s :: cross-section %s' % (datetime.datetime.strftime(starttime, '%I:%M%p'), name))
+            self.__logger.write('{} :: cross-section {}'.format(datetime.datetime.strftime(starttime, '%I:%M%p'), name))
 
             css = CE.CrossSection(name=name, length=css_length[css_names.index(name)], location=css_xy[css_names.index(name)])
 
@@ -101,31 +101,22 @@ class Fm2ProfRunner :
 
             # Delta-h correction
             css.calculate_correction()
-            volumePlot = css._plot_volume(relative_error=True)
             self.__logger.write('T+ %.2f :: correction finished' % (datetime.datetime.now()-starttime).total_seconds())
 
             # Reduce number of points in cross-section
             css.reduce_points(n=20, verbose=False)
+            self.__logger.write('T+ %.2f :: simplified cross-section to .. points' % (datetime.datetime.now()-starttime).total_seconds())
 
             # assign roughness
             css.assign_roughness(fm_data)
-            roughnessPlot = css._plot_roughness(fm_data, True)
-            zwFig = css._plot_zw()
-            
-            # Save figures if applies
-            if self.__saveFigures:
-                self.__generate_output(output_dir, volumePlot, "volume", "cross_section_{0}".format(name))
-                self.__generate_output(output_dir, roughnessPlot, "roughness", "cross_section_{0}".format(name))
-                self.__generate_output(output_dir, zwFig, "z_width", "cross_section_{0}".format(name))
-            
-            # Close all figures:
-            css._close_figure(volumePlot)
-            css._close_figure(roughnessPlot)
-            css._close_figure(zwFig)
+            self.__logger.write('T+ %.2f :: computed roughness' % (datetime.datetime.now()-starttime).total_seconds())
 
-            self.__logger.write('cross-section {0} generated in {1} seconds'.format(css.name, (datetime.datetime.now()-starttime).total_seconds()))
+            # Append new cross-section to list of cross-sections
             cross_sections.append(css)
+            self.__logger.write('cross-section {0} generated in {1} seconds'.format(css.name, (datetime.datetime.now()-starttime).total_seconds()))
 
+        # The roughness tables in 1D model require the same discharges on the rows. 
+        # This function interpolates to get the roughnesses at the correct discharges
         FE.interpolate_roughness(cross_sections)
 
         #chainages = FE._read_css_chainages(chainage_file)
@@ -134,6 +125,7 @@ class Fm2ProfRunner :
         # export all cross-sections
         sobek_export.geometry_to_csv(cross_sections, chainages, output_dir + '\\geometry.csv')
         sobek_export.roughness_to_csv(cross_sections, chainages, output_dir + '\\roughness.csv')
+        sobek_export.volumes_to_csv(cross_sections, chainages, output_dir + '\\volumes.csv')
 
     def __is_output_directory_set(self):
         """
