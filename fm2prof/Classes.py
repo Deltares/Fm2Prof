@@ -32,7 +32,7 @@ import seaborn as sns
 
 from fm2prof import common
 from fm2prof import Functions as FE
-from fm2prof.lib import polysimplify as PS
+from .lib import polysimplify as PS
 
 import os
 import matplotlib.font_manager as font_manager
@@ -559,10 +559,10 @@ class CrossSection:
             font_list = font_manager.createFontList(font_files)
             font_manager.fontManager.ttflist.extend(font_list)
 
-            vitamin_c_palette = ["#004358", "#FD7400", "#1F8A70", "#FFE11A", "#BEDB39"]
+            #vitamin_c_palette = ["#004358", "#FD7400", "#1F8A70", "#FFE11A", "#BEDB39"]
 
-            sns.set_context("paper", rc={"text.usetex": True, "lines.linewidth": 4})
-            sns.set("paper", font="Linux Libertine O", font_scale=2.5, style='whitegrid', palette=vitamin_c_palette)
+            #sns.set_context("paper", rc={"text.usetex": True, "lines.linewidth": 4})
+            #sns.set("paper", font="Linux Libertine O", font_scale=2.5, style='whitegrid', palette=vitamin_c_palette)
 
             # Set color palette
 
@@ -800,10 +800,14 @@ class CrossSection:
     def _close_figure(self, figure):
         plt.close(figure)
 
-class LoggerClass:
-    def __init__(self):
-        pass
+class Logger:
+    def __init__(self, outputdir):
+        self._outputdir = outputdir
+        with open('{}/{}.log'.format(outputdir, 'fm2prof'), 'w') as f:
+            pass
 
-    @staticmethod
-    def write(arg):
+    
+    def write(self, arg):
+        with open('{}/{}.log'.format(self._outputdir, 'fm2prof'), 'a') as f:
+            f.write("{}\n".format(arg))
         print(arg)
