@@ -1,4 +1,4 @@
-﻿#! /usr/bin/env python
+#! /usr/bin/env python
 """
 This module contains functions used for the emulation/reduction of 2D models to 
 1D models for Delft3D FM (D-Hydro).
@@ -26,6 +26,7 @@ pd.options.mode.chained_assignment = None  # default='warn'
 import datetime
 import seaborn as sns
 import itertools
+import configparser
 
 from fm2prof import Functions as FE
 from fm2prof import Classes as CE
@@ -40,17 +41,105 @@ class Fm2ProfRunner :
     __showFigures = False
     __saveFigures = False
 
-    __output_dir = None
-
-    def __init__(self, output_dir, showFigures = False, saveFigures = False):
+#    __output_dir = None    
+    def __init__(self, IniFile, showFigures = False, saveFigures = False):
         """
         Initializes the private variables for the Fm2ProfRunner
         """
-        self.__logger = CE.Logger(output_dir)
+        #self.__logger = CE.Logger(output_dir)
         self.__showFigures = showFigures
         self.__saveFigures = saveFigures
-        self.__output_dir = output_dir
+        self.__IniFile = IniFile
 
+    def run(self):
+        InputParam_dict = self.read_inifile(self)
+        self.run_with_files(self.__mapFile, self.__cssFile, self.__chainageFile, InputParam_dict)
+
+    def read_inifile(self,IniFile):
+        """
+        Read ini file
+        """
+        config = configparser.ConfigParser()
+        config.read(self.__IniFile)
+        
+        d = {}
+        for section in config.sections():
+            d[section] = {}
+            for option in config.options(section):
+                d[section][option] = config.get(section, option).split('#')[0].strip()
+        
+
+        self.ExtractOutputDir(d) # output directory path
+        InputParam_dict = self.ExtractInputParameters(d) # dictionary which contains all input parameter values
+        self.ExtractInputFiles(d)
+        
+        return InputParam_dict
+
+    def ExtractInputParameters(self,D):
+        """
+        Extract InputParameters and convert values either integer or float from string
+        """
+        ip = D['InputParameters']
+        for sub in ip:
+            try:
+                if abs(int(ip[sub])-float(ip[sub])) < 1e-6: # if integer
+                    ip[sub] = int(ip[sub])
+                else: # if float
+                    ip[sub] = float(ip[sub])
+            except ValueError:
+                ip[sub] = float(ip[sub])
+        return ip
+        
+    def ExtractInputFiles(self,D):
+        """
+        Extract input file information from the dictionary
+        """
+        for p in D['InputFiles']:
+            if 'FM_netCDFile'.lower() in p:
+                self.__mapFile = D['InputFiles'][p]
+            elif 'CrossSectionLocationFile'.lower() in p:
+                self.__cssFile = D['InputFiles'][p]
+            elif 'gebiedsvakken'.lower() in p:
+                self.__gebiedsvakken = D['InputFiles'][p]
+            elif 'SectionFractionFile'.lower() in p:
+                self.__sectie = D['InputFiles'][p]
+        
+        self.__chainageFile = 'tests/external_test_data/case_08_waal/Data/cross_section_chainages.txt' ## it's a dummy; remove it later
+    
+    def ExtractOutputDir(self, D):
+        """
+        Extract output directory infomation from the dictionary
+        """
+        
+        if '..' not in D['OutputDirectory']['outputdir']:
+            outputdir = os.path.join(os.getcwd(), D['OutputDirectory']['outputdir'])
+        else:
+            outputdir = D['OutputDirectory']['outputdir'].replace('/','\\')
+
+        casename = D['OutputDirectory']['casename']
+        
+        if casename == '': # if casename is empty -> use default CaseNameXX
+            casename = self.NewCaseName('CaseName',outputdir)
+        elif os.path.isdir(os.path.join(outputdir, casename)):
+            casename = self.NewCaseName(casename,outputdir)
+            
+        D['OutputDirectory']['casename'] = casename
+        output_dir =  os.path.join(outputdir, D['OutputDirectory']['casename'])
+        
+        self.__output_dir = output_dir.replace("\\","/")
+        
+    def NewCaseName(self,casename,outputdir):
+        """
+        Update casename if already exists
+        """
+        casenum = 1
+        casename_tmp = casename + '{:02d}'.format(casenum)
+        while os.path.isdir(os.path.join(outputdir, casename_tmp)):
+            casenum += 1
+            casename_tmp = 'CaseName' + '{:02d}'.format(casenum)
+            
+        return casename_tmp
+    
     def set_output_directory(self, output_dir):
         """
         Sets the output directory where all generated files from the runs will be stored.
@@ -58,7 +147,7 @@ class Fm2ProfRunner :
         """
         self.__output_dir = output_dir
 
-    def run_with_files(self, mapFile, cssFile, chainageFile):
+    def run_with_files(self, mapFile,cssFile,chainageFile, InputParam_dict):
         """
         Runs the desired emulation from 2d to 1d given the mapfile and the cross section file.
         """ 
@@ -66,13 +155,15 @@ class Fm2ProfRunner :
             return
 
         # region FILES
-        map_file = mapFile
-        css_file = cssFile
-        chainage_file = chainageFile
+        map_file = self.__mapFile
+        css_file = self.__cssFile
+        # chainage_file = chainageFile
         # endregion
 
-        #Just a shortener
+        # Just a shortener
         output_dir = self.__output_dir
+        # Add a log file
+        self.__logger = CE.Logger(output_dir)
 
         cross_sections = list()
 
@@ -85,7 +176,7 @@ class Fm2ProfRunner :
             starttime = datetime.datetime.now()
             self.__logger.write('{} :: cross-section {}'.format(datetime.datetime.strftime(starttime, '%I:%M%p'), name))
 
-            css = CE.CrossSection(name=name, length=css_length[css_names.index(name)], location=css_xy[css_names.index(name)])
+            css = CE.CrossSection(InputParam_dict, name=name, length=css_length[css_names.index(name)], location=css_xy[css_names.index(name)])
 
             # Retrieve FM data for cross-section
             fm_data = FE.retrieve_for_class(css.name,
@@ -140,8 +231,9 @@ class Fm2ProfRunner :
 
         if not os.path.exists(self.__output_dir):
             try:
-                os.mkdir(self.__output_dir)
+                os.makedirs(self.__output_dir)
             except:
+                
                 print("The output directory {0}, could not be found neither created.".format(self.__output_dir))
                 return False
         
@@ -156,6 +248,11 @@ class Fm2ProfRunner :
         self.__logger.write('Saved {0} for {1} plot in {2}.'.format(name, figType, plotLocation))
         
         return
+    
+
+
+
+
 
 # region // Main helpers
 
@@ -202,14 +299,6 @@ def main(argv):
     if not __is_output(opts[3]):
         __report_expected_arguments("The last argument should be the output directory.")
 
-    map_file = opts[0][1]
-    css_file = opts[1][1]
-    chainage_file = opts[2][1]
-    output_directory = opts[3][1]
-    
-    # Run with the given arguments
-    runner = Fm2ProfRunner(output_directory)
-    runner.run_with_files(map_file, css_file, chainage_file)
 
 if __name__ == '__main__':
     main(sys.argv[1:])

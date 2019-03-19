@@ -56,7 +56,7 @@ class CrossSection:
     Use this class to derive cross-sections from fm_data (2D model results). See docs how to acquire fm_data and how
     to prepare a proper 2D model.
     """
-    def __init__(self, name=str, length=float, location=tuple):
+    def __init__(self, InputParam_dict, name=str, length=float, location=tuple):
         # Initialisation of attributes
         self.name = name
         self.length = length
@@ -100,12 +100,7 @@ class CrossSection:
         self._set_plotstyle(style=3)
 
         # PARAMETERS
-        self.parameters = {'number_of_css_points': 20,  # number of points in cross-section
-                           'velocity_threshold': 0.01,  # absolute velocity threshold in m/s
-                           'relative_threshold': 0.03,  # relative velocity threshold (% of mean flow velocity)
-                           'min_depth_storage': 0.02,   # minimum depth for storage identification
-                           'plassen_timesteps': 10,     # number of timesteps that are used for identifying plassen
-                           }
+        self.parameters = InputParam_dict
 
     def optimisation_function(self, opt_in):
         """
@@ -119,7 +114,7 @@ class CrossSection:
         :return:
         """
         (crest_level, extra_volume) = opt_in
-        transition_height = 0.5
+        transition_height = self.parameters['transitionheight_sd']
         predicted_volume = self._css_total_volume+FE.get_extra_total_area(self._css_z, crest_level, transition_height)*extra_volume
         return FE.return_volume_error(predicted_volume, self._fm_total_volume)
 
