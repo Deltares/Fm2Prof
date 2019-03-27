@@ -56,12 +56,17 @@ class CrossSection:
     Use this class to derive cross-sections from fm_data (2D model results). See docs how to acquire fm_data and how
     to prepare a proper 2D model.
     """
-    def __init__(self, InputParam_dict, name=str, length=float, location=tuple):
-        # Initialisation of attributes
-        self.name = name
-        self.length = length
-        self.location = location
-        self.z = np.array([])
+    def __init__(self, InputParam_dict, name=str, length=float, location=tuple, branchid="not defined", chainage=0):
+        
+        # Cross-section meta data
+        self.name = name                # cross-section id
+        self.length = length            # 'vaklengte'
+        self.location = location        # (x,y) 
+        self.branch = branchid          # name of 1D branch for cross-section
+        self.chainage = chainage        # offset from beginning of branch
+        
+        # Cross-section geometry
+        self.z = np.array([])           
         self.total_width = np.array([])
         self.flow_width = np.array([])
         self.alluvial_width = 0.
@@ -69,6 +74,15 @@ class CrossSection:
         self.alluvial_friction_table = np.array([])
         self.nonalluvial_friction_table = np.array([])
         self.roughness_sections = np.array([])
+
+        # delta h corrections ("summerdike option")
+        self.crest_level = 0
+        self.floodplain_base = 0.0 # in cross-section def. WAQ2PROF did crest - some fixed value. how to do here?
+        self.transition_height = 0.5 # note" 'to avoid numerical osscilation'. might need minimal value. fixed or variable? Test!
+        self.extra_flow_area = 0.0
+        self.extra_total_volume = 0.0
+        self.extra_area_percentage = list()
+        self.extra_total_area = 0
 
         # These attributes are used for non-reduced sets
         self._css_z = 0
@@ -85,15 +99,6 @@ class CrossSection:
         # flags
         self._css_is_corrected = False
         self._css_is_reduced = False
-
-        # delta h corrections
-        self.crest_level = 0
-        self.floodplain_base = 0.0 # in cross-section def. WAQ2PROF did crest - some fixed value. how to do here?
-        self.transition_height = 0.5 # note" 'to avoid numerical osscilation'. might need minimal value. fixed or variable? Test!
-        self.extra_flow_area = 0.0
-        self.extra_total_volume = 0.0
-        self.extra_area_percentage = list()
-        self.total_area = 0
 
         # DEFAULTS
         self.color_palette = 'Tableau20'
@@ -321,7 +326,7 @@ class CrossSection:
         self.crest_level = crest_level
         self.transition_height = transition_height
         self.extra_total_volume = extra_volume
-        self.total_area = extra_volume / self.length
+        self.extra_total_area = extra_volume / self.length
         self.extra_area_percentage = extra_area_percentage
         self._css_is_corrected = True
 
