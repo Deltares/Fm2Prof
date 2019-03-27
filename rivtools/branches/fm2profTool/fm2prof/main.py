@@ -17,7 +17,8 @@ matplotlib (1.5.1)
 
 Contact: K.D. Berends (koen.berends@deltares.nl, k.d.berends@utwente.nl)
 """
-
+__version__ = 1.0
+__revision__ = 2
 # region // imports
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -154,29 +155,35 @@ class Fm2ProfRunner :
         if not self.__is_output_directory_set():
             return
 
-        # region FILES
+        # shorter local variables
         map_file = self.__mapFile
         css_file = self.__cssFile
-        # chainage_file = chainageFile
-        # endregion
-
-        # Just a shortener
         output_dir = self.__output_dir
+
         # Add a log file
         self.__logger = CE.Logger(output_dir)
+        self.__logger.write('FM2PROF version {}\n=============================='.format(__version__))
+        self.__logger.write('reading FM and cross-sectional data data')
 
+        # Create an empty list. New cross-sections will be appended to this list. 
         cross_sections = list()
 
         # Read FM model data
-        (time_dependent_data, time_independent_data, edge_data, node_coordinates, css_xy, css_names, css_length) = FE.read_fm2prof_input(map_file, css_file)
+        (time_dependent_data, time_independent_data, edge_data, node_coordinates, cssdata) = FE.read_fm2prof_input(map_file, css_file)
         self.__logger.write('finished reading FM and cross-sectional data data')
 
         # generate all cross-sections
-        for index, name in enumerate(css_names):
+        for index, name in enumerate(cssdata['id']):
             starttime = datetime.datetime.now()
             self.__logger.write('{} :: cross-section {}'.format(datetime.datetime.strftime(starttime, '%I:%M%p'), name))
 
-            css = CE.CrossSection(InputParam_dict, name=name, length=css_length[css_names.index(name)], location=css_xy[css_names.index(name)])
+            cssindex = cssdata['id'].index(name)
+            css = CE.CrossSection(InputParam_dict, 
+                                 name=name, 
+                                 length=cssdata['length'][cssindex], 
+                                 location=cssdata['xy'][cssindex],
+                                 branchid=cssdata['branchid'][cssindex],
+                                 chainage=cssdata['chainage'][cssindex])
             self.__logger.write('T+ %.2f :: initiated new cross-section %s' % ((datetime.datetime.now()-starttime).total_seconds(), name))
 
             # Retrieve FM data for cross-section
@@ -211,31 +218,28 @@ class Fm2ProfRunner :
         # This function interpolates to get the roughnesses at the correct discharges
         FE.interpolate_roughness(cross_sections)
 
-        #chainages = FE._read_css_chainages(chainage_file)
+        
         chainages = None
 
         # export all cross-sections
+        sobek_export.export_crossSectionLocations(cross_sections, 
+            file_path=os.path.join(output_dir, 'CrossSectionLocations.ini'))
         sobek_export.export_geometry(cross_sections, 
-                                     chainages, 
-                                     file_path=output_dir + '\\CrossSectionDefinitions.ini',
+                                     file_path=os.path.join(output_dir, 'CrossSectionDefinitions.ini'),
                                      fmt='dflow1d')
         sobek_export.export_geometry(cross_sections, 
-                                     chainages, 
                                      file_path=output_dir + '\\geometry.csv',
                                      fmt='sobek3')
         sobek_export.export_geometry(cross_sections, 
-                                     chainages, 
                                      file_path=output_dir + '\\geometry_test.csv',
                                      fmt='testformat')
         sobek_export.export_roughness(cross_sections, 
-                                      chainages, 
                                       output_dir + '\\roughness.csv',
                                       fmt='sobek3')
         sobek_export.export_roughness(cross_sections, 
-                                      chainages, 
                                       output_dir + '\\roughness_test.csv',
                                       fmt='testformat')
-        sobek_export.export_volumes(cross_sections, chainages, output_dir + '\\volumes.csv')
+        sobek_export.export_volumes(cross_sections, output_dir + '\\volumes.csv')
         self.__logger.write('Exported output files, FM2PROF finished')
 
 
