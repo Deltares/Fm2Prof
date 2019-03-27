@@ -88,10 +88,10 @@ class CrossSection:
 
         # delta h corrections
         self.crest_level = 0
-        self.floodplain_base = float # in cross-section def. WAQ2PROF did crest - some fixed value. how to do here?
+        self.floodplain_base = 0.0 # in cross-section def. WAQ2PROF did crest - some fixed value. how to do here?
         self.transition_height = 0.5 # note" 'to avoid numerical osscilation'. might need minimal value. fixed or variable? Test!
-        self.extra_flow_area = float
-        self.extra_total_volume = 0
+        self.extra_flow_area = 0.0
+        self.extra_total_volume = 0.0
         self.extra_area_percentage = list()
         self.total_area = 0
 

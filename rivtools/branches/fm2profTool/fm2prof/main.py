@@ -177,12 +177,13 @@ class Fm2ProfRunner :
             self.__logger.write('{} :: cross-section {}'.format(datetime.datetime.strftime(starttime, '%I:%M%p'), name))
 
             css = CE.CrossSection(InputParam_dict, name=name, length=css_length[css_names.index(name)], location=css_xy[css_names.index(name)])
+            self.__logger.write('T+ %.2f :: initiated new cross-section %s' % ((datetime.datetime.now()-starttime).total_seconds(), name))
 
             # Retrieve FM data for cross-section
-            fm_data = FE.retrieve_for_class(css.name,
-                                            time_independent_data,
-                                            edge_data,
-                                            time_dependent_data)
+            fm_data = FE.get_fm2d_data_for_css(css.name,
+                                               time_independent_data,
+                                               edge_data,
+                                               time_dependent_data)
 
             self.__logger.write('T+ %.2f :: retrieved data for css %s' % ((datetime.datetime.now()-starttime).total_seconds(), name))
 
@@ -204,7 +205,7 @@ class Fm2ProfRunner :
 
             # Append new cross-section to list of cross-sections
             cross_sections.append(css)
-            self.__logger.write('cross-section {0} generated in {1} seconds'.format(css.name, (datetime.datetime.now()-starttime).total_seconds()))
+            self.__logger.write('cross-section {} generated in {:.2f} seconds'.format(css.name, (datetime.datetime.now()-starttime).total_seconds()))
 
         # The roughness tables in 1D model require the same discharges on the rows. 
         # This function interpolates to get the roughnesses at the correct discharges
@@ -214,9 +215,29 @@ class Fm2ProfRunner :
         chainages = None
 
         # export all cross-sections
-        sobek_export.geometry_to_csv(cross_sections, chainages, output_dir + '\\geometry.csv')
-        sobek_export.roughness_to_csv(cross_sections, chainages, output_dir + '\\roughness.csv')
-        sobek_export.volumes_to_csv(cross_sections, chainages, output_dir + '\\volumes.csv')
+        sobek_export.export_geometry(cross_sections, 
+                                     chainages, 
+                                     file_path=output_dir + '\\CrossSectionDefinitions.ini',
+                                     fmt='dflow1d')
+        sobek_export.export_geometry(cross_sections, 
+                                     chainages, 
+                                     file_path=output_dir + '\\geometry.csv',
+                                     fmt='sobek3')
+        sobek_export.export_geometry(cross_sections, 
+                                     chainages, 
+                                     file_path=output_dir + '\\geometry_test.csv',
+                                     fmt='testformat')
+        sobek_export.export_roughness(cross_sections, 
+                                      chainages, 
+                                      output_dir + '\\roughness.csv',
+                                      fmt='sobek3')
+        sobek_export.export_roughness(cross_sections, 
+                                      chainages, 
+                                      output_dir + '\\roughness_test.csv',
+                                      fmt='testformat')
+        sobek_export.export_volumes(cross_sections, chainages, output_dir + '\\volumes.csv')
+        self.__logger.write('Exported output files, FM2PROF finished')
+
 
     def __is_output_directory_set(self):
         """
