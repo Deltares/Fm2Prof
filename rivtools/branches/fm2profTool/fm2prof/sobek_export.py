@@ -5,117 +5,33 @@ import numpy as np
 import collections
 from fm2prof import Functions as FE
 
-""" SOBEK 3 file formats """
 
-def geometry_to_csv(cross_sections, chainages, file_path):
+
+def export_geometry(cross_sections, chainages, file_path, fmt='sobek3'):
     with open(file_path, 'w') as f:
-        # write header
-        f.write('id,Name,Data_type,level,Total width,Flow width,Profile_type,branch,chainage,width main channel,width floodplain 1,width floodplain 2,width sediment transport,Use Summerdike,Crest level summerdike,Floodplain baselevel behind summerdike,Flow area behind summerdike,Total area behind summerdike,Use groundlayer,Ground layer depth\n')
+        if fmt == 'sobek3':
+            """ SOBEK 3 style csv """
+            _write_geometry_sobek3(f, cross_sections, chainages)
+        elif fmt == 'dflow1d':
+            """ DFM 1D style """
+            _write_geometry_fm1d(f, cross_sections, chainages)
+        elif fmt == 'testformat':
+            """ test format for system tests, only has geometry (no summerdike) """
+            _write_geometry_testformat(f, cross_sections, chainages)
 
-        for index, section in enumerate(cross_sections):
-            if chainages is not None:
-                chainage = chainages[index]
-            else:
-                chainage = None
-
-            _write_geometry(f, section, chainage)
-def roughness_to_csv(cross_sections, chainages, file_path):
+def export_roughness(cross_sections, chainages, file_path, fmt='sobek3'):
     with open(file_path, 'w') as f:
-        # write header
-        f.write('Name,Chainage,RoughnessType,SectionType,Dependance,Interpolation,Pos/neg,R_pos_constant,Q_pos,R_pos_f(Q),H_pos,R_pos__f(h),R_neg_constant,Q_neg,R_neg_f(Q),H_neg,R_neg_f(h)\n')
+        if fmt == 'sobek3':
+            """ SOBEK 3 style csv """
+            _write_roughness_sobek3(f, cross_sections, chainages)
+        elif fmt == 'fm1d':
+            """ DFM 1D style """
+            _write_roughness_fm1d(f, cross_sections, chainages)
+        elif fmt == 'testformat':
+            """ test format for system tests, only has geometry (no summerdike) """
+            _write_roughness_testformat(f, cross_sections, chainages)
 
-        try:
-
-            for index, section in enumerate(cross_sections):
-                if chainages is not None:
-                    chainage = chainages[index]
-                else:
-                    chainage = None
-
-                _write_roughness(f, section, 'alluvial', chainage)
-
-            for index, section in enumerate(cross_sections):
-                if chainages is not None:
-                    chainage = chainages[index]
-                else:
-                    chainage = None
-
-                _write_roughness(f, section, 'nonalluvial', chainage)
-        except IndexError:
-            return None
-
-def _write_geometry(write_object, cross_section, chainage=None):
-    # write meta
-    # note, the chainage is currently set to the X-coordinate of the cross-section (straight channel)
-    # note, the channel naming strategy must be discussed, currently set to 'Channel' for all cross-sections
-    if chainage is None:
-        chainage = cross_section.location[0]
-    else:
-        chainage = float(chainage)
-
-    total_width = cross_section.total_width[-1]
-
-    b_summerdike = '0'
-    crest_level = ''
-    floodplain_base = ''
-    total_area = ''
-
-    if cross_section.extra_total_volume > 0:
-        b_summerdike = '1'
-        crest_level = str(cross_section.crest_level)
-        total_area = str(cross_section.total_area)
-
-        # check for nan, because a channel with only one roughness value (ideal case) will not have this value
-        if np.isnan(cross_section.floodplain_base) == False:
-            floodplain_base = str(cross_section.floodplain_base)
-
-    write_object.write(cross_section.name + ',,' + 'meta' + ',,,,' + 'ZW' + ',' + 'Channel1' + ',' + str(chainage) + ',' + str(cross_section.alluvial_width) + ',' + str(cross_section.nonalluvial_width) + ',,,' + b_summerdike + ',' + crest_level + ',' + floodplain_base + ',' + total_area + ',' + total_area + ',,,,,,' + '\n')
-
-    # this is to avoid the unique z-value error in sobek, the added 'error' depends on the total_width, this is to make sure the order or points is correct
-    z_format = '{:.8f}'
-    increment = np.array(range(1, cross_section.z.size + 1)) * 1e-5
-    z_value = cross_section.z + increment
-
-    # sort z_value
-    # TODO: CHECK (this was due to an old bug, check whether still applicable)
-    # z_value = np.sort(z_value)
-
-    # write geometry information
-    for index, width in enumerate(cross_section.total_width):
-        flow_width = cross_section.flow_width[index]
-        write_object.write(cross_section.name + ',,' + 'geom' + ',' + z_format.format(z_value[index]) + ',' + str(width) + ',' + str(flow_width) + ',,,,,,,,,,,,,,' + '\n')
-def _write_roughness(write_object, cross_section, type, chainage=None):
-    # note, the chainage is currently set to the X-coordinate of the cross-section (straight channel)
-    # note, the channel naming strategy must be discussed, currently set to 'Channel' for all cross-sections
-    if chainage is None:
-        chainage = cross_section.location[0]
-    else:
-        chainage = float(chainage)
-
-    waterlevels = cross_section.alluvial_friction_table[0]
-
-    # round off to 2 decimals
-    waterlevels = np.ceil(waterlevels * 100) / 100
-
-    if type == 'alluvial':
-        table = cross_section.alluvial_friction_table
-        plain = 'Main'
-    elif type == 'nonalluvial':
-        table = cross_section.nonalluvial_friction_table
-        plain = 'FloodPlain1'
-    else:
-        raise Exception('choose either alluvial or nonalluvial')
-
-    for index, level in enumerate(waterlevels):
-        chezy = table[1].iloc[index]
-
-        if np.isnan(chezy) == False:
-            write_object.write('Channel1' + ',' + str(chainage) + ',' + 'Chezy' + ',' + plain + ',' + 'Waterlevel' + ',' + 'Linear' + ',' + 'Same' + ',,,,' + str(level) + ',' + str(chezy) + ',,,,,' + '\n')
-
-
-""" Non-FM files """
-
-def volumes_to_csv(cross_sections, chainages, file_path):
+def export_volumes(cross_sections, chainages, file_path):
     """Write to file the volume/waterlevel information"""
     with open(file_path, 'w') as f:
         # Write header
@@ -129,4 +45,169 @@ def volumes_to_csv(cross_sections, chainages, file_path):
                                                   css._css_total_volume_corrected[i], 
                                                   css._fm_total_volume[i]))
 
+
+""" test file formats """
+def _write_geometry_testformat(fid, cross_sections, chainages):
+    # write header
+    fid.write('chainage,z,total width,flow width\n')
+    for index, cross_section in enumerate(cross_sections):
+        if chainages is not None:
+            chainage = float(chainages[index])
+        else:
+            chainage = cross_section.location[0]
+
+        for i in range(len(cross_section.z)):
+            fid.write('{}, {}, {}, {}\n'.format(chainage,
+                                                cross_section.z[i],
+                                                cross_section.total_width[i],
+                                                cross_section.flow_width[i]))
+
+def _write_roughness_testformat(fid, cross_sections, chainages):
+    # write header
+    fid.write('chainage,type,waterlevel,chezy roughness\n')
+
+    for roughnesstype in ('alluvial', 'nonalluvial'):
+        for index, cross_section in enumerate(cross_sections):
+            if chainages is not None:
+                chainage = float(chainages[index])
+            else:
+                chainage = cross_section.location[0]
+
             
+            waterlevels = cross_section.alluvial_friction_table[0]
+            
+            if roughnesstype == 'alluvial':
+                table = cross_section.alluvial_friction_table
+            elif roughnesstype == 'nonalluvial':
+                table = cross_section.nonalluvial_friction_table
+                
+
+            for index, level in enumerate(waterlevels):
+                chezy = table[1].iloc[index]
+                if np.isnan(chezy) == False:
+                    fid.write('{}, {}, {}, {}\n'.format(chainage, roughnesstype, level, chezy))
+
+
+""" FM 1D file formats """
+def _write_geometry_fm1d(fid, cross_sections, chainages):
+    """ FM1D uses a configuration 'Delft' file style format """
+    
+    # Write general secton
+    fid.write('[General]\nmajorVersion\t\t\t= 1\nminorversion\t\t\t= 0\nfileType\t\t\t\t= crossDef\n\n')
+
+    for index, css in enumerate(cross_sections):
+        z = ["{:.4f}".format(iz) for iz in css.z]
+        fw = ["{:.4f}".format(iz) for iz in css.flow_width]
+        tw = ["{:.4f}".format(iz) for iz in css.total_width]
+
+        # check for nan, because a channel with only one roughness value (ideal case) will not have this value
+        if np.isnan(css.floodplain_base) == False:
+            floodplain_base = str(css.floodplain_base)
+        else:
+            floodplain_base = 0
+
+        fid.write("[Definition]\n")
+        fid.write("\tid\t\t\t\t\t= {}\n".format(css.name) +\
+                "\ttype\t\t\t\t= tabulated\n" +\
+                "\tthalweg\t\t\t\t= 0.000\n" +\
+                "\tnumLevels\t\t\t= {}\n".format(len(z)) +\
+                "\tlevels\t\t\t\t= {}\n".format(' '.join(z))+\
+                "\tflowWidths\t\t\t= {}\n".format(' '.join(fw))+\
+                "\ttotalWidths\t\t\t= {}\n".format(' '.join(tw))+\
+                "\tsd_crest\t\t\t= {:.4f}\n".format(css.crest_level)+\
+                "\tsd_flowArea\t\t\t= {}\n".format(css.extra_flow_area)+\
+                "\tsd_totalArea\t\t= {:.4f}\n".format(css.extra_total_volume)+\
+                "\tsd_baseLevel\t\t= {}\n".format(css.floodplain_base)+\
+                "\tmain\t\t\t\t= {}\n".format(css.alluvial_width)+\
+                "\tfloodPlain1\t\t\t= {}\n".format(css.nonalluvial_width)+\
+                "\tfloodPlain2\t\t\t= 0.0\n"+\
+                "\tgroundlayerUsed\t\t= 0\n"+\
+                "\tgroundLayer\t\t\t= 0.000\n\n"
+                )
+
+def _write_roughness_fm1d(fid, cross_sections, chainages):
+    raise NotImplementedError()
+
+""" SOBEK 3 file formats """
+def _write_geometry_sobek3(fid, cross_sections, chainages):
+    # write meta
+    # note, the chainage is currently set to the X-coordinate of the cross-section (straight channel)
+    # note, the channel naming strategy must be discussed, currently set to 'Channel' for all cross-sections
+    
+    # write header
+    fid.write('id,Name,Data_type,level,Total width,Flow width,Profile_type,branch,chainage,width main channel,width floodplain 1,width floodplain 2,width sediment transport,Use Summerdike,Crest level summerdike,Floodplain baselevel behind summerdike,Flow area behind summerdike,Total area behind summerdike,Use groundlayer,Ground layer depth\n')
+
+    for index, cross_section in enumerate(cross_sections):
+        if chainages is not None:
+            chainage = float(chainages[index])
+        else:
+            chainage = cross_section.location[0]
+
+        total_width = cross_section.total_width[-1]
+
+        b_summerdike = '0'
+        crest_level = ''
+        floodplain_base = ''
+        total_area = ''
+
+        if cross_section.extra_total_volume > 0:
+            b_summerdike = '1'
+            crest_level = str(cross_section.crest_level)
+            total_area = str(cross_section.total_area)
+
+            # check for nan, because a channel with only one roughness value (ideal case) will not have this value
+            if np.isnan(cross_section.floodplain_base) == False:
+                floodplain_base = str(cross_section.floodplain_base)
+
+        fid.write(cross_section.name + ',,' + 'meta' + ',,,,' + 'ZW' + ',' + 'Channel1' + ',' + str(chainage) + ',' + str(cross_section.alluvial_width) + ',' + str(cross_section.nonalluvial_width) + ',,,' + b_summerdike + ',' + crest_level + ',' + floodplain_base + ',' + total_area + ',' + total_area + ',,,,,,' + '\n')
+
+        # this is to avoid the unique z-value error in sobek, the added 'error' depends on the total_width, this is to make sure the order or points is correct
+        z_format = '{:.8f}'
+        increment = np.array(range(1, cross_section.z.size + 1)) * 1e-5
+        z_value = cross_section.z + increment
+
+        # sort z_value
+        # TODO: CHECK (this was due to an old bug, check whether still applicable)
+        # z_value = np.sort(z_value)
+
+        # write geometry information
+        for index, width in enumerate(cross_section.total_width):
+            flow_width = cross_section.flow_width[index]
+            fid.write(cross_section.name + ',,' + 'geom' + ',' + z_format.format(z_value[index]) + ',' + str(width) + ',' + str(flow_width) + ',,,,,,,,,,,,,,' + '\n')
+
+def _write_roughness_sobek3(fid, cross_sections, chainages):
+    # note, the chainage is currently set to the X-coordinate of the cross-section (straight channel)
+    # note, the channel naming strategy must be discussed, currently set to 'Channel' for all cross-sections
+    
+    # write header
+    fid.write('Name,Chainage,RoughnessType,SectionType,Dependance,Interpolation,Pos/neg,R_pos_constant,Q_pos,R_pos_f(Q),H_pos,R_pos__f(h),R_neg_constant,Q_neg,R_neg_f(Q),H_neg,R_neg_f(h)\n')
+
+    for roughnesstype in ('alluvial', 'nonalluvial'):
+        for index, cross_section in enumerate(cross_sections):
+            if chainages is not None:
+                chainage = float(chainages[index])
+            else:
+                chainage = cross_section.location[0]
+
+            waterlevels = cross_section.alluvial_friction_table[0]
+
+            # round off to 2 decimals
+            waterlevels = np.ceil(waterlevels * 100) / 100
+
+            if roughnesstype == 'alluvial':
+                table = cross_section.alluvial_friction_table
+                plain = 'Main'
+            elif roughnesstype == 'nonalluvial':
+                table = cross_section.nonalluvial_friction_table
+                plain = 'FloodPlain1'
+            else:
+                raise Exception('choose either alluvial or nonalluvial')
+
+            for index, level in enumerate(waterlevels):
+                chezy = table[1].iloc[index]
+
+                if np.isnan(chezy) == False:
+                    fid.write('Channel1' + ',' + str(chainage) + ',' + 'Chezy' + ',' + plain + ',' + 'Waterlevel' + ',' + 'Linear' + ',' + 'Same' + ',,,,' + str(level) + ',' + str(chezy) + ',,,,,' + '\n')
+
+
+           

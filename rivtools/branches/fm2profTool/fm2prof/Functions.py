@@ -47,6 +47,11 @@ __status__ = "Prototype"
 def read_fm2prof_input(res_file, css_file):
     """
     Reads input files for 'FM2PROF'. See documentation for file format descriptions.
+    
+    Data is saved in three major structures:
+        time_independent_data: holds bathymetry information
+        time_dependent_data: waterlevels, roughnesses and velocities
+        edge_data: the nodes that relate to edges
 
     :param res_file: str, path to FlowFM map netcfd file (*_map.nc)
     :param css_file: str, path to cross-section definition file
@@ -70,8 +75,10 @@ def read_fm2prof_input(res_file, css_file):
 
     return time_dependent_data, time_independent_data, edge_data, node_coordinates, css_xy, css_names, css_length
 
-
-def retrieve_for_class(classname, dti, edge_data, dtd):
+def get_fm2d_data_for_css(classname, dti, edge_data, dtd):
+    """
+    create a dictionary that holds all the 2D data for the cross-section with name 'classname'
+    """
     x = dti['x'][dti['sclass'] == classname]
     y = dti['y'][dti['sclass'] == classname]
     area = dti['area'][dti['sclass'] == classname]
@@ -99,7 +106,6 @@ def retrieve_for_class(classname, dti, edge_data, dtd):
 
     return {'x': x, 'y': y, 'bedlevel': bedlevel, 'bedlevel_full': bedlevel_full, 'waterdepth': waterdepth, 'waterlevel': waterlevel, 'velocity': velocity, 'area': area, 'chezy': chezy, 'edge_nodes': edge_nodes, 'face_nodes': face_nodes, 'face_nodes_full': face_nodes_full, 'area_full': area_full}
 
-
 def mirror(array, reverse_sign=False):
     """
     Mirrors array
@@ -112,7 +118,6 @@ def mirror(array, reverse_sign=False):
         return np.append(np.flipud(array)*-1, array)
     else:
         return np.append(np.flipud(array), array)
-
 
 def get_centre_values(location, x, y, waterdepth, waterlevel):
     nn = NearestNeighbors(n_neighbors=1, algorithm='ball_tree').fit(np.array([x, y]).T)
@@ -127,13 +132,11 @@ def get_centre_values(location, x, y, waterdepth, waterlevel):
 
     return centre_depth, centre_level
 
-
 def get_extra_total_area(waterlevel, crest_level, transition_height, hysteresis=False):
     """
     releases extra area dependent on waterlevel using a logistic (sigmoid) function
     """
     return 1/(1+np.e**(np.log(0.00001)/(transition_height)*(waterlevel-(crest_level+0.5*transition_height))))
-
 
 def return_volume_error(predicted, measured, gof='rmse'):
     error = np.array(predicted - measured)/np.maximum(np.array(measured), np.ones(len(measured)))
@@ -163,9 +166,12 @@ def interpolate_roughness(cross_section_list):
 
 # region // protected functions
 def _read_fm_model(file_path):
+    """input: FM2D map file"""
+
+    # Open results file for reading
     res_fid = netCDF4.Dataset(file_path, 'r')
 
-    # Time-invariant variables from Delft3D
+    # Time-invariant variables from FM 2D
     df = pd.DataFrame(columns=['x'], data=np.array(res_fid.variables['mesh2d_face_x']))
     df['y'] = np.array(res_fid.variables['mesh2d_face_y'])
     df['area'] = np.array(res_fid.variables['mesh2d_flowelem_ba'])
@@ -196,7 +202,6 @@ def _read_fm_model(file_path):
     
     return df, edge_data, df_node, time_dependent
 
-
 def _read_css_xyz(file_path, delimiter = ','):
     with open(file_path, 'r') as fid:
         xyout = list()
@@ -225,7 +230,6 @@ def _get_class_tree(xy, c):
     neigh.fit(X, y)
     return neigh
 
-
 def _construct_range(xp_list, step):
     xp_flat = [item for item in xp_list]
 
@@ -233,7 +237,6 @@ def _construct_range(xp_list, step):
     max_xp = np.max(xp_flat) + 0.3
 
     return np.arange(min_xp, max_xp, step)
-
 
 def _interpolate_roughness_css(cross_section, alluvial_range, nonalluvial_range):
     # change nan's to zeros
