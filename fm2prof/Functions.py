@@ -62,10 +62,10 @@ def read_fm2prof_input(res_file, css_file):
     (time_independent_data, edge_data, node_coordinates, time_dependent_data) = _read_fm_model(res_file)
 
     # Load locations and names of cross-sections
-    (css_xy, css_names, css_length) = _read_css_xyz(css_file)
+    cssdata = _read_css_xyz(css_file)
 
     # Create a class identifier to map points to cross-sections
-    neigh = _get_class_tree(css_xy, css_names)
+    neigh = _get_class_tree(cssdata['xy'], cssdata['id'])
 
     # Expand time-independent dataset with cross-section names
     time_independent_data['sclass'] = neigh.predict(np.array([time_independent_data['x'], time_independent_data['y']]).T)
@@ -73,7 +73,7 @@ def read_fm2prof_input(res_file, css_file):
     # Assign cross-section names to edge coordinates as well
     edge_data['coordinates']['sclass'] = neigh.predict(np.array([edge_data['coordinates']['x'], edge_data['coordinates']['y']]).T)
 
-    return time_dependent_data, time_independent_data, edge_data, node_coordinates, css_xy, css_names, css_length
+    return time_dependent_data, time_independent_data, edge_data, node_coordinates, cssdata
 
 def get_fm2d_data_for_css(classname, dti, edge_data, dtd):
     """
@@ -204,24 +204,22 @@ def _read_fm_model(file_path):
 
 def _read_css_xyz(file_path, delimiter = ','):
     with open(file_path, 'r') as fid:
-        xyout = list()
-        classout = list()
-        lengthout = list()
+        inputdata = dict(xy=list(), id=list(), length=list(), branchid=list(), chainage=list())
         for line in fid:
-            (x, y, z, length) = line.split(delimiter)
-            xyout.append((float(x), float(y)))
-            classout.append(str(z).strip())
-            lengthout.append(float(length))
-        return xyout, classout, lengthout
+            try:
+                (x, y, z, length, branchid, chainage) = line.split(delimiter)
+            except ValueError:
+                # revert to legacy format
+                (x, y, z, length) = line.split(delimiter)
+                branchid = 'not defined'
+                chainage = 0
 
-def _read_css_chainages(file_path, delimiter=','):
-    chainages = list()
-
-    with open(file_path, 'r') as fid:
-        reader = csv.reader(fid)
-        chainages = list(reader)
-
-    return chainages[0]
+            inputdata['xy'].append((float(x), float(y)))
+            inputdata['id'].append(str(z).strip())
+            inputdata['length'].append(float(length))
+            inputdata['branchid'].append(branchid)
+            inputdata['chainage'].append(float(chainage))
+        return inputdata
 
 def _get_class_tree(xy, c):
     X = xy
