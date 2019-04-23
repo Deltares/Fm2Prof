@@ -17,8 +17,10 @@ matplotlib (1.5.1)
 
 Contact: K.D. Berends (koen.berends@deltares.nl, k.d.berends@utwente.nl)
 """
-__version__ = 1.0
+
+__version__ = 1.1
 __revision__ = 2
+
 # region // imports
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -43,13 +45,10 @@ class Fm2ProfRunner :
     __saveFigures = False
 
 #    __output_dir = None    
-    def __init__(self, IniFile, showFigures = False, saveFigures = False):
+    def __init__(self, IniFile):
         """
         Initializes the private variables for the Fm2ProfRunner
         """
-        #self.__logger = CE.Logger(output_dir)
-        self.__showFigures = showFigures
-        self.__saveFigures = saveFigures
         self.__IniFile = IniFile
 
     def run(self):
