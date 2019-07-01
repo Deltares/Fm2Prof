@@ -4,7 +4,7 @@ import sys, os
 import shutil
 
 import TestUtils
-from fm2prof.main import Fm2ProfRunner
+from fm2prof.main import Fm2ProfRunner, IniFile
 
 _root_output_dir = None
 
@@ -76,22 +76,25 @@ def __check_and_create_test_case_output_dir(base_output_dir, caseName):
 
 @pytest.mark.acceptance
 @pytest.mark.parametrize("case_name, map_file, css_file, chainage_file", _test_scenarios, ids=_test_scenarios_ids)
-def test_run_with_files(case_name, map_file, css_file, chainage_file):       
+def test_Fm2Prof_run_with_files(case_name, map_file, css_file, chainage_file):       
+    
     # 1. Set up test data.
+    iniFilePath = None
+    iniFile = IniFile(iniFilePath)
     test_data_dir = TestUtils.get_external_test_data_dir(case_name)
-    output_directory = __check_and_create_test_case_output_dir(__get_base_output_dir(), case_name)
-    map_file = os.path.join(test_data_dir, map_file)
-    css_file = os.path.join(test_data_dir, css_file)
-    chainage_file = os.path.join(test_data_dir, chainage_file)
+    iniFile._output_directory = __check_and_create_test_case_output_dir(__get_base_output_dir(), case_name)
+    iniFile._map_file = os.path.join(test_data_dir, map_file)
+    iniFile._css_file = os.path.join(test_data_dir, css_file)
+    iniFile._chainage_file = os.path.join(test_data_dir, chainage_file)
 
     # Create the runner and set the saving figures variable to true
-    runner = Fm2ProfRunner(output_directory, saveFigures=True)
+    runner = Fm2ProfRunner(iniFilePath)
 
     # 2. Verify precondition (no output generated)
-    assert os.path.exists(output_directory) and not os.listdir(output_directory)
+    assert os.path.exists(iniFile._output_directory) and not os.listdir(iniFile._output_directory)
 
     # 3. Run file:
-    runner.run_with_files(map_file, css_file, chainage_file)
+    runner.run_with_files(iniFile)
 
     # 4. Verify there is output generated:
-    assert os.listdir(output_directory), "There is no output generated for {0}".format(case_name)
+    assert os.listdir(iniFile._output_directory), "There is no output generated for {0}".format(case_name)
