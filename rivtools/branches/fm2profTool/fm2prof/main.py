@@ -38,29 +38,44 @@ from fm2prof import sobek_export
 import os, sys, getopt
 # endregion
 
-class Fm2ProfRunner :  
+class IniFile:
     __logger = None
+    __filePath = None
+    # region Public parameters
+    _mapFile = None
+    _cssFile = None
+    _output_dir = None
+    _chainageFile = None
+    _gebiedsVakken = None
+    _sectie = None
+    _inputParam_dict = None
+    # endregion
+
+    def __init__(self, filePath: str):
+        """
+        Initializes the object Ini File which contains the path locations of all
+        parameters needed by the Fm2ProfRunner
+        
+        Arguments:
+            filePath {str} -- File path where the IniFile is located
+        """
+        self.__filePath = filePath
+        if not(filePath is None or not filePath):
+            self._read_inifile(filePath)
     
-    __showFigures = False
-    __saveFigures = False
-
-#    __output_dir = None    
-    def __init__(self, IniFile):
+    def _read_inifile(self, filePath : str):
         """
-        Initializes the private variables for the Fm2ProfRunner
+        Reads the inifile and extract all its parameters for later usage by the 
+        Fm2ProfRunner
+        
+        Arguments:
+            filePath {str} -- File path where the IniFile is located
         """
-        self.__IniFile = IniFile
-
-    def run(self):
-        InputParam_dict = self.read_inifile(self)
-        self.run_with_files(self.__mapFile, self.__cssFile, self.__chainageFile, InputParam_dict)
-
-    def read_inifile(self,IniFile):
-        """
-        Read ini file
-        """
+        if filePath is None or not filePath:
+            raise Exception('No ini file was specified and no data could be read.')
+        
         config = configparser.ConfigParser()
-        config.read(self.__IniFile)
+        config.read(filePath)
         
         d = {}
         for section in config.sections():
@@ -70,16 +85,15 @@ class Fm2ProfRunner :
         
 
         self.ExtractOutputDir(d) # output directory path
-        InputParam_dict = self.ExtractInputParameters(d) # dictionary which contains all input parameter values
+        self._inputParam_dict = self.ExtractInputParameters(d) # dictionary which contains all input parameter values
         self.ExtractInputFiles(d)
-        
-        return InputParam_dict
 
     def ExtractInputParameters(self,D):
         """
         Extract InputParameters and convert values either integer or float from string
         """
-        ip = D['InputParameters']
+        inputParametersKey = 'InputParameters'
+        ip = D[inputParametersKey]
         for sub in ip:
             try:
                 if abs(int(ip[sub])-float(ip[sub])) < 1e-6: # if integer
@@ -94,41 +108,44 @@ class Fm2ProfRunner :
         """
         Extract input file information from the dictionary
         """
-        for p in D['InputFiles']:
+        inputFilesKey = 'InputFiles'
+        for p in D[inputFilesKey]:
             if 'FM_netCDFile'.lower() in p:
-                self.__mapFile = D['InputFiles'][p]
+                self._mapFile = D[inputFilesKey][p]
             elif 'CrossSectionLocationFile'.lower() in p:
-                self.__cssFile = D['InputFiles'][p]
+                self._cssFile = D[inputFilesKey][p]
             elif 'gebiedsvakken'.lower() in p:
-                self.__gebiedsvakken = D['InputFiles'][p]
+                self._gebiedsvakken = D[inputFilesKey][p]
             elif 'SectionFractionFile'.lower() in p:
-                self.__sectie = D['InputFiles'][p]
+                self._sectie = D[inputFilesKey][p]
         
-        self.__chainageFile = 'tests/external_test_data/case_08_waal/Data/cross_section_chainages.txt' ## it's a dummy; remove it later
+        self._chainageFile = 'tests/external_test_data/case_08_waal/Data/cross_section_chainages.txt' ## it's a dummy; remove it later
     
     def ExtractOutputDir(self, D):
         """
         Extract output directory infomation from the dictionary
         """
-        
-        if '..' not in D['OutputDirectory']['outputdir']:
-            outputdir = os.path.join(os.getcwd(), D['OutputDirectory']['outputdir'])
+        outputDirectoryKey = 'OutputDirectory'
+        outputDirKey = 'outputdir'
+        casenameKey = 'casename'
+        if '..' not in D[outputDirectoryKey][outputDirKey]:
+            outputdir = os.path.join(os.getcwd(), D[outputDirectoryKey][outputDirKey])
         else:
-            outputdir = D['OutputDirectory']['outputdir'].replace('/','\\')
+            outputdir = D[outputDirectoryKey][outputDirKey].replace('/','\\')
 
-        casename = D['OutputDirectory']['casename']
+        casename = D[outputDirectoryKey][casenameKey]
         
         if casename == '': # if casename is empty -> use default CaseNameXX
             casename = self.NewCaseName('CaseName',outputdir)
         elif os.path.isdir(os.path.join(outputdir, casename)):
             casename = self.NewCaseName(casename,outputdir)
             
-        D['OutputDirectory']['casename'] = casename
-        output_dir =  os.path.join(outputdir, D['OutputDirectory']['casename'])
+        D[outputDirectoryKey][casenameKey] = casename
+        output_dir =  os.path.join(outputdir, D[outputDirectoryKey][casenameKey])
         
-        self.__output_dir = output_dir.replace("\\","/")
-        
-    def NewCaseName(self,casename,outputdir):
+        self._output_dir = output_dir.replace("\\","/")
+
+    def NewCaseName(self, casename : str, outputdir : str):
         """
         Update casename if already exists
         """
@@ -139,7 +156,33 @@ class Fm2ProfRunner :
             casename_tmp = 'CaseName' + '{:02d}'.format(casenum)
             
         return casename_tmp
-    
+  
+
+class Fm2ProfRunner :  
+    __logger = None    
+    _iniFile = None
+    __showFigures = False
+    __saveFigures = False
+
+#    __output_dir = None    
+    def __init__(self, iniFilePath : str):
+        """
+        Initializes the private variables for the Fm2ProfRunner        
+
+        Arguments:
+            iniFilePath {str} -- File path where the IniFile is located
+        """
+        self.__iniFile = IniFile(iniFilePath)
+
+    def run(self):
+        """
+        Runs the Fm2Prof functionality.
+        """
+        if self.__iniFile is None:
+            self.__logger.write('No ini file was specified and the run cannot go further.')
+            return
+        self.run_with_files(self.__iniFile)
+      
     def set_output_directory(self, output_dir):
         """
         Sets the output directory where all generated files from the runs will be stored.
@@ -147,17 +190,20 @@ class Fm2ProfRunner :
         """
         self.__output_dir = output_dir
 
-    def run_with_files(self, mapFile,cssFile,chainageFile, InputParam_dict):
+    def run_with_files(self, iniFile : IniFile):
+        """Runs the desired emulation from 2d to 1d given the mapfile and the cross section file.
+        
+        Arguments:
+            iniFile {IniFile} -- Object containing all the information needed to execute the program
         """
-        Runs the desired emulation from 2d to 1d given the mapfile and the cross section file.
-        """ 
         if not self.__is_output_directory_set():
             return
 
         # shorter local variables
-        map_file = self.__mapFile
-        css_file = self.__cssFile
-        output_dir = self.__output_dir
+        map_file = iniFile._mapFile
+        css_file = iniFile._cssFile
+        output_dir = iniFile._output_dir
+        inputParam_dict = iniFile._inputParam_dict
 
         # Add a log file
         self.__logger = CE.Logger(output_dir)
@@ -177,7 +223,7 @@ class Fm2ProfRunner :
             self.__logger.write('{} :: cross-section {}'.format(datetime.datetime.strftime(starttime, '%I:%M%p'), name))
 
             cssindex = cssdata['id'].index(name)
-            css = CE.CrossSection(InputParam_dict, 
+            css = CE.CrossSection(inputParam_dict, 
                                  name=name, 
                                  length=cssdata['length'][cssindex], 
                                  location=cssdata['xy'][cssindex],
@@ -241,7 +287,6 @@ class Fm2ProfRunner :
         sobek_export.export_volumes(cross_sections, output_dir + '\\volumes.csv')
         self.__logger.write('Exported output files, FM2PROF finished')
 
-
     def __is_output_directory_set(self):
         """
         Verifies if the output directory has been set and exists or not.
@@ -249,13 +294,13 @@ class Fm2ProfRunner :
             True - the output_dir is set and exists.
             False - the output_dir is not set or does not exist.
         """
-        if self.__output_dir is None:
+        if self.__iniFile._output_dir is None:
             print("The output directory must be set before running.")
             return False
 
-        if not os.path.exists(self.__output_dir):
+        if not os.path.exists(self.__iniFile._output_dir):
             try:
-                os.makedirs(self.__output_dir)
+                os.makedirs(self.__iniFile._output_dir)
             except:
                 
                 print("The output directory {0}, could not be found neither created.".format(self.__output_dir))
@@ -273,10 +318,6 @@ class Fm2ProfRunner :
         
         return
     
-
-
-
-
 
 # region // Main helpers
 
