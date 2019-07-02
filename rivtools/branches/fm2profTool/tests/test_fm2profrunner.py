@@ -83,25 +83,4 @@ def test_Fm2ProfRunner_When_No_FilePath_Then_No_Exception_Is_Risen():
     try:
         fm2ProfRunner = Fm2ProfRunner(iniFilePath)
     except:
-        pytest.fail('No exception expected.')        
-
-@pytest.mark.unittest
-def test_IniFile_When_No_FilePath_Then_No_Exception_Is_Risen():
-    """ 1. Set up initial test data """
-    iniFilePath = ''
-
-    """ 2. Run test """
-    try:
-        iniFile = IniFile(iniFilePath)
-    except:
-        pytest.fail('No exception expected.')    
-
-@pytest.mark.unittest
-def test_IniFile_ReadIniFile_When_No_FilePath_Then_No_Exception_Is_Risen():
-    """ 1. Set up initial test data """
-    iniFilePath = ''
-    iniFile = IniFile(iniFilePath)
-
-    """ 2. Run test """
-    with pytest.raises(Exception) as e_info:
-        iniFile._read_inifile(iniFilePath)
+        pytest.fail('No exception expected.') 

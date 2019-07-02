@@ -82,19 +82,32 @@ def test_Fm2Prof_run_with_files(case_name, map_file, css_file, chainage_file):
     iniFilePath = None
     iniFile = IniFile(iniFilePath)
     test_data_dir = TestUtils.get_external_test_data_dir(case_name)
-    iniFile._output_directory = __check_and_create_test_case_output_dir(__get_base_output_dir(), case_name)
+    iniFile._output_dir = __check_and_create_test_case_output_dir(__get_base_output_dir(), case_name)
     iniFile._map_file = os.path.join(test_data_dir, map_file)
     iniFile._css_file = os.path.join(test_data_dir, css_file)
     iniFile._chainage_file = os.path.join(test_data_dir, chainage_file)
+    iniFile._inputParam_dict = {
+            "number_of_css_points"  :	20,        
+            "transitionheight_sd"	:	0.25,
+            "velocity_threshold"	:	0.01,	
+            "relative_threshold"	:	0.03,	
+            "min_depth_storage"	    :	0.02,	
+            "plassen_timesteps"	    :	10,	
+            "storagemethod_wli"	    :	1,		
+            "bedlevelcriterium"	    :	0.1,
+            "SDstorage"			    :	1,	
+            "Frictionweighing"	    :	0,		
+            "sectionsmethod"		:	1		
+        }
 
     # Create the runner and set the saving figures variable to true
     runner = Fm2ProfRunner(iniFilePath)
 
     # 2. Verify precondition (no output generated)
-    assert os.path.exists(iniFile._output_directory) and not os.listdir(iniFile._output_directory)
+    assert os.path.exists(iniFile._output_dir) and not os.listdir(iniFile._output_dir)
 
     # 3. Run file:
-    runner.run_with_files(iniFile)
+    runner.run_inifile(iniFile)
 
     # 4. Verify there is output generated:
-    assert os.listdir(iniFile._output_directory), "There is no output generated for {0}".format(case_name)
+    assert os.listdir(iniFile._output_dir), "There is no output generated for {0}".format(case_name)
