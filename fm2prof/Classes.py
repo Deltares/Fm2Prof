@@ -56,8 +56,30 @@ class CrossSection:
     Use this class to derive cross-sections from fm_data (2D model results). See docs how to acquire fm_data and how
     to prepare a proper 2D model.
     """
-    def __init__(self, InputParam_dict, name=str, length=float, location=tuple, branchid="not defined", chainage=0):
+    __cs_parameter_css_points = 'number_of_css_points'
+    __cs_parameter_transitionheight_sd = 'transitionheight_sd'
+    __cs_parameter_velocity_threshold = 'velocity_threshold'
+    __cs_parameter_relative_threshold = 'relative_threshold'
+    __cs_parameter_min_depth_storage = 'min_depth_storage'
+    __cs_parameter_plassen_timesteps = 'plassen_timesteps'
+    __cs_parameter_storagemethod_wli = 'storagemethod_wli'
+    __cs_parameter_bedlevelcriterium = 'bedlevelcriterium'
+    __cs_parameter_SDstorage = 'SDstorage'
+    __cs_parameter_Frictionweighing = 'Frictionweighing'
+    __cs_parameter_sectionsmethod = 'sectionsmethod'
+
+    def __init__(self, InputParam_dict, name : str, length : float, location : tuple, branchid = "not defined", chainage=0):
+        """                
+        Arguments:
+            InputParam_dict {Dictionary} -- [description]
+            name {str} -- [description]
+            length {float} -- [description]
+            location {tuple} -- [description]
         
+        Keyword Arguments:
+            branchid {str} -- [description] (default: {"not defined"})
+            chainage {int} -- [description] (default: {0})
+        """
         # Cross-section meta data
         self.name = name                # cross-section id
         self.length = length            # 'vaklengte'
@@ -119,7 +141,7 @@ class CrossSection:
         :return:
         """
         (crest_level, extra_volume) = opt_in
-        transition_height = self.parameters['transitionheight_sd']
+        transition_height = self.parameters[self.__cs_parameter_transitionheight_sd]
         predicted_volume = self._css_total_volume+FE.get_extra_total_area(self._css_z, crest_level, transition_height)*extra_volume
         return FE.return_volume_error(predicted_volume, self._fm_total_volume)
 
@@ -149,8 +171,8 @@ class CrossSection:
 
         # this creates a series
         # for waal, 2 steps = 32 hours
-        plassen_mask = (waterdepth.T.iloc[self.parameters['plassen_timesteps']] > 0) & \
-                       (np.abs(waterdepth.T.iloc[self.parameters['plassen_timesteps']] - waterdepth.T.iloc[0]) <= 0.01)
+        plassen_mask = (waterdepth.T.iloc[self.parameters[self.__cs_parameter_plassen_timesteps]] > 0) & \
+                       (np.abs(waterdepth.T.iloc[self.parameters[self.__cs_parameter_plassen_timesteps]] - waterdepth.T.iloc[0]) <= 0.01)
 
         self.plassen_mask = plassen_mask
 
@@ -172,11 +194,11 @@ class CrossSection:
 
         # Masks for wet and flow cells
         flow_mask = (waterdepth > 0) & \
-                    (velocity > self.parameters['velocity_threshold']) & \
-                    (velocity > self.parameters['relative_threshold']*np.mean(velocity))
+                    (velocity > self.parameters[self.__cs_parameter_velocity_threshold]) & \
+                    (velocity > self.parameters[self.__cs_parameter_relative_threshold]*np.mean(velocity))
         
         # shallow flows should not be used for identifying storage (cells with small velocities are uncorrectly seen as storage)
-        waterdepth_correction = (waterdepth > 0) & (waterdepth < self.parameters['min_depth_storage'])
+        waterdepth_correction = (waterdepth > 0) & (waterdepth < self.parameters[self.__cs_parameter_min_depth_storage])
 
         # combine flow and depth mask to avoid assigning shallow flows to storage
         flow_mask = reduce(np.logical_or, [(flow_mask == True), (waterdepth_correction == True)])

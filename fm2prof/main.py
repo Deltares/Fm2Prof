@@ -42,8 +42,8 @@ class IniFile:
     __logger = None
     __filePath = None
     # region Public parameters
-    _mapFile = None
-    _cssFile = None
+    _map_file = None
+    _css_file = None
     _output_dir = None
     _chainageFile = None
     _gebiedsVakken = None
@@ -111,15 +111,13 @@ class IniFile:
         inputFilesKey = 'InputFiles'
         for p in D[inputFilesKey]:
             if 'FM_netCDFile'.lower() in p:
-                self._mapFile = D[inputFilesKey][p]
+                self._map_file = D[inputFilesKey][p]
             elif 'CrossSectionLocationFile'.lower() in p:
-                self._cssFile = D[inputFilesKey][p]
+                self._css_file = D[inputFilesKey][p]
             elif 'gebiedsvakken'.lower() in p:
                 self._gebiedsvakken = D[inputFilesKey][p]
             elif 'SectionFractionFile'.lower() in p:
                 self._sectie = D[inputFilesKey][p]
-        
-        self._chainageFile = 'tests/external_test_data/case_08_waal/Data/cross_section_chainages.txt' ## it's a dummy; remove it later
     
     def ExtractOutputDir(self, D):
         """
@@ -160,11 +158,10 @@ class IniFile:
 
 class Fm2ProfRunner :  
     __logger = None    
-    _iniFile = None
+    __iniFile = None
     __showFigures = False
     __saveFigures = False
 
-#    __output_dir = None    
     def __init__(self, iniFilePath : str):
         """
         Initializes the private variables for the Fm2ProfRunner        
@@ -181,7 +178,7 @@ class Fm2ProfRunner :
         if self.__iniFile is None:
             self.__logger.write('No ini file was specified and the run cannot go further.')
             return
-        self.run_with_files(self.__iniFile)
+        self.run_inifile(self.__iniFile)
       
     def set_output_directory(self, output_dir):
         """
@@ -190,18 +187,18 @@ class Fm2ProfRunner :
         """
         self.__output_dir = output_dir
 
-    def run_with_files(self, iniFile : IniFile):
+    def run_inifile(self, iniFile : IniFile):
         """Runs the desired emulation from 2d to 1d given the mapfile and the cross section file.
         
         Arguments:
             iniFile {IniFile} -- Object containing all the information needed to execute the program
         """
-        if not self.__is_output_directory_set():
+        if not self.__is_output_directory_set(iniFile):
             return
 
         # shorter local variables
-        map_file = iniFile._mapFile
-        css_file = iniFile._cssFile
+        map_file = iniFile._map_file
+        css_file = iniFile._css_file
         output_dir = iniFile._output_dir
         inputParam_dict = iniFile._inputParam_dict
 
@@ -287,23 +284,25 @@ class Fm2ProfRunner :
         sobek_export.export_volumes(cross_sections, output_dir + '\\volumes.csv')
         self.__logger.write('Exported output files, FM2PROF finished')
 
-    def __is_output_directory_set(self):
+    def __is_output_directory_set(self, iniFile : IniFile):
         """
         Verifies if the output directory has been set and exists or not.
+        Arguments:
+            iniFile {IniFile} -- [description]
         Returns:
             True - the output_dir is set and exists.
             False - the output_dir is not set or does not exist.
         """
-        if self.__iniFile._output_dir is None:
+        if iniFile is None or iniFile._output_dir is None:
             print("The output directory must be set before running.")
             return False
 
-        if not os.path.exists(self.__iniFile._output_dir):
+        if not os.path.exists(iniFile._output_dir):
             try:
-                os.makedirs(self.__iniFile._output_dir)
+                os.makedirs(iniFile._output_dir)
             except:
                 
-                print("The output directory {0}, could not be found neither created.".format(self.__output_dir))
+                print("The output directory {0}, could not be found neither created.".format(iniFile._output_dir))
                 return False
         
         return True
