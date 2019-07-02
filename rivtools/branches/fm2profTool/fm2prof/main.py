@@ -24,6 +24,7 @@ __revision__ = 2
 # region // imports
 import matplotlib.pyplot as plt
 import pandas as pd
+import numbers
 
 pd.options.mode.chained_assignment = None  # default='warn'
 import datetime
@@ -34,6 +35,8 @@ import configparser
 from fm2prof import Functions as FE
 from fm2prof import Classes as CE
 from fm2prof import sobek_export
+
+from typing import Mapping, Sequence
 
 import os, sys, getopt
 # endregion
@@ -77,75 +80,94 @@ class IniFile:
         config = configparser.ConfigParser()
         config.read(filePath)
         
-        d = {}
+        ini_file_params = {}
         for section in config.sections():
-            d[section] = {}
+            ini_file_params[section] = {}
             for option in config.options(section):
-                d[section][option] = config.get(section, option).split('#')[0].strip()
+                ini_file_params[section][option] = config.get(section, option).split('#')[0].strip()
         
 
-        self.ExtractOutputDir(d) # output directory path
-        self._inputParam_dict = self.ExtractInputParameters(d) # dictionary which contains all input parameter values
-        self.ExtractInputFiles(d)
+        self.extract_output_dir(ini_file_params) # output directory path
+        self._inputParam_dict = self._extract_input_parameters(ini_file_params) # dictionary which contains all input parameter values
+        self.extract_input_files(ini_file_params)
 
-    def ExtractInputParameters(self,D):
+    def _extract_input_parameters(self, inifile_parameters : Mapping[str, str]):
         """
         Extract InputParameters and convert values either integer or float from string
+        Returns:
+            Dictionary of mapped parameters to a either integer or float
+        Arguments:
+            inifile_parameters {Mapping[str, str]} -- Collection of parameters as read in the original file
         """
         inputParametersKey = 'InputParameters'
-        ip = D[inputParametersKey]
-        for sub in ip:
+        if inifile_parameters is None:
+            return None
+
+        input_parameters = inifile_parameters[inputParametersKey]
+        for sub in input_parameters:
+            parameter_value = input_parameters[sub]
             try:
-                if abs(int(ip[sub])-float(ip[sub])) < 1e-6: # if integer
-                    ip[sub] = int(ip[sub])
+                if isinstance(parameter_value, numbers.Integral): # if integer
+                    input_parameters[sub] = int(parameter_value)
                 else: # if float
-                    ip[sub] = float(ip[sub])
+                    input_parameters[sub] = float(parameter_value)
             except ValueError:
-                ip[sub] = float(ip[sub])
-        return ip
+                input_parameters[sub] = None
+        return input_parameters
         
-    def ExtractInputFiles(self,D):
+    def extract_input_files( self, inifile_parameters : Mapping[str, str]):
         """
         Extract input file information from the dictionary
+        
+        Arguments:
+            inifile_parameters {Mapping[str, str]} -- Collection of parameters as read in the original file
         """
+
         inputFilesKey = 'InputFiles'
-        for p in D[inputFilesKey]:
+        for p in inifile_parameters[inputFilesKey]:
             if 'FM_netCDFile'.lower() in p:
-                self._map_file = D[inputFilesKey][p]
+                self._map_file = inifile_parameters[inputFilesKey][p]
             elif 'CrossSectionLocationFile'.lower() in p:
-                self._css_file = D[inputFilesKey][p]
+                self._css_file = inifile_parameters[inputFilesKey][p]
             elif 'gebiedsvakken'.lower() in p:
-                self._gebiedsvakken = D[inputFilesKey][p]
+                self._gebiedsvakken = inifile_parameters[inputFilesKey][p]
             elif 'SectionFractionFile'.lower() in p:
-                self._sectie = D[inputFilesKey][p]
+                self._sectie = inifile_parameters[inputFilesKey][p]
     
-    def ExtractOutputDir(self, D):
+    def extract_output_dir(self, inifile_parameters : Mapping[str, str]):
         """
         Extract output directory infomation from the dictionary
+        
+        Arguments:
+            inifile_parameters {Mapping[str, str]} -- Collection of parameters as read in the original file
         """
         outputDirectoryKey = 'OutputDirectory'
         outputDirKey = 'outputdir'
         casenameKey = 'casename'
-        if '..' not in D[outputDirectoryKey][outputDirKey]:
-            outputdir = os.path.join(os.getcwd(), D[outputDirectoryKey][outputDirKey])
+        if '..' not in inifile_parameters[outputDirectoryKey][outputDirKey]:
+            outputdir = os.path.join(os.getcwd(), inifile_parameters[outputDirectoryKey][outputDirKey])
         else:
-            outputdir = D[outputDirectoryKey][outputDirKey].replace('/','\\')
+            outputdir = inifile_parameters[outputDirectoryKey][outputDirKey].replace('/','\\')
 
-        casename = D[outputDirectoryKey][casenameKey]
+        casename = inifile_parameters[outputDirectoryKey][casenameKey]
         
         if casename == '': # if casename is empty -> use default CaseNameXX
-            casename = self.NewCaseName('CaseName',outputdir)
+            casename = self.get_new_case_name('CaseName',outputdir)
         elif os.path.isdir(os.path.join(outputdir, casename)):
-            casename = self.NewCaseName(casename,outputdir)
+            casename = self.get_new_case_name(casename,outputdir)
             
-        D[outputDirectoryKey][casenameKey] = casename
-        output_dir =  os.path.join(outputdir, D[outputDirectoryKey][casenameKey])
+        inifile_parameters[outputDirectoryKey][casenameKey] = casename
+        output_dir =  os.path.join(outputdir, inifile_parameters[outputDirectoryKey][casenameKey])
         
         self._output_dir = output_dir.replace("\\","/")
 
-    def NewCaseName(self, casename : str, outputdir : str):
+    def get_new_case_name(self, casename : str, outputdir : str):
         """
         Update casename if already exists
+        
+        Arguments:
+            casename {str} -- Given case name.
+            outputdir {str} -- Target parent directory
         """
         casenum = 1
         casename_tmp = casename + '{:02d}'.format(casenum)
@@ -180,13 +202,6 @@ class Fm2ProfRunner :
             return
         self.run_inifile(self.__iniFile)
       
-    def set_output_directory(self, output_dir):
-        """
-        Sets the output directory where all generated files from the runs will be stored.
-        If this is not set nothing will be saved.
-        """
-        self.__output_dir = output_dir
-
     def run_inifile(self, iniFile : IniFile):
         """Runs the desired emulation from 2d to 1d given the mapfile and the cross section file.
         
@@ -307,7 +322,7 @@ class Fm2ProfRunner :
         
         return True
 
-    def __generate_output(self, output_directory, fig, figType, name):
+    def __generate_output(self, output_directory : str, fig, figType : str, name : str):
         if not self.__saveFigures:
             return
         
