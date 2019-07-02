@@ -44,14 +44,11 @@ import os, sys, getopt
 class IniFile:
     __logger = None
     __filePath = None
+
     # region Public parameters
-    _map_file = None
-    _css_file = None
     _output_dir = None
-    _chainageFile = None
-    _gebiedsVakken = None
-    _sectie = None
-    _inputParam_dict = None
+    _input_file_paths = None
+    _input_parameters = None
     # endregion
 
     def __init__(self, filePath: str):
@@ -88,8 +85,8 @@ class IniFile:
         
 
         self.extract_output_dir(ini_file_params) # output directory path
-        self._inputParam_dict = self._extract_input_parameters(ini_file_params) # dictionary which contains all input parameter values
-        self.extract_input_files(ini_file_params)
+        self._input_parameters = self._extract_input_parameters(ini_file_params) # dictionary which contains all input parameter values
+        self._input_file_paths = self._extract_input_files(ini_file_params)
 
     def _extract_input_parameters(self, inifile_parameters : Mapping[str, str]):
         """
@@ -115,7 +112,7 @@ class IniFile:
                 input_parameters[sub] = None
         return input_parameters
         
-    def extract_input_files( self, inifile_parameters : Mapping[str, str]):
+    def _extract_input_files( self, inifile_parameters : Mapping[str, str]):
         """
         Extract input file information from the dictionary
         
@@ -124,15 +121,11 @@ class IniFile:
         """
 
         inputFilesKey = 'InputFiles'
-        for p in inifile_parameters[inputFilesKey]:
-            if 'FM_netCDFile'.lower() in p:
-                self._map_file = inifile_parameters[inputFilesKey][p]
-            elif 'CrossSectionLocationFile'.lower() in p:
-                self._css_file = inifile_parameters[inputFilesKey][p]
-            elif 'gebiedsvakken'.lower() in p:
-                self._gebiedsvakken = inifile_parameters[inputFilesKey][p]
-            elif 'SectionFractionFile'.lower() in p:
-                self._sectie = inifile_parameters[inputFilesKey][p]
+        file_parameters = {}
+        for file_parameter in inifile_parameters[inputFilesKey]:
+            new_key = file_parameter.lower()
+            file_parameters[new_key] = inifile_parameters[inputFilesKey][file_parameter]
+        return file_parameters
     
     def extract_output_dir(self, inifile_parameters : Mapping[str, str]):
         """
@@ -184,6 +177,11 @@ class Fm2ProfRunner :
     __showFigures = False
     __saveFigures = False
 
+    __map_file_key = 'fm_netcdfile'
+    __css_file_key = 'crosssectionlocationfile'    
+    __gebiedsvakken_key = 'gebiedsvakken'
+    __sectie_key = 'sectionfractionfile'
+
     def __init__(self, iniFilePath : str):
         """
         Initializes the private variables for the Fm2ProfRunner        
@@ -212,10 +210,10 @@ class Fm2ProfRunner :
             return
 
         # shorter local variables
-        map_file = iniFile._map_file
-        css_file = iniFile._css_file
+        map_file = iniFile._input_file_paths.get(self.__map_file_key)
+        css_file = iniFile._input_file_paths.get(self.__css_file_key)
         output_dir = iniFile._output_dir
-        inputParam_dict = iniFile._inputParam_dict
+        inputParam_dict = iniFile._input_parameters
 
         # Add a log file
         self.__logger = CE.Logger(output_dir)
