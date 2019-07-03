@@ -2,6 +2,7 @@ import unittest
 import pytest
 import sys
 import os
+import numbers
 
 import shutil
 import TestUtils
@@ -94,7 +95,9 @@ def test_IniFile_extract_input_parameters_When_Parameters_Are_Given_Then_Maps_As
 
     # 4. Verify final expectations
     assert new_parameters is not None
-    assert new_parameters[parameter_name] == expected_value
+    retievedValue = new_parameters[parameter_name]
+    assert retievedValue == expected_value
+    assert isinstance(retievedValue, numbers.Integral) == isinstance(expected_value, numbers.Integral)
 
 @pytest.mark.unittest
 def test_IniFile_extract_input_files_When_No_Input_Parameters_Key_Returns_EmptyDict():
@@ -322,7 +325,6 @@ def test_IniFile_read_ini_file_sets_input_parameters():
         assert read_param_value == expected_value, 'Expected value does not match for key {}'.format(expected_input_param)
 
 @pytest.mark.systemtest
-@pytest.mark.developtest
 def test_IniFile_read_ini_file_sets_input_file_paths():
     # 1. Set initial test data
     test_data_dir = TestUtils.get_test_data_dir('IniFile')

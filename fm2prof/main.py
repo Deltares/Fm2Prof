@@ -24,7 +24,6 @@ __revision__ = 2
 # region // imports
 import matplotlib.pyplot as plt
 import pandas as pd
-import numbers
 
 pd.options.mode.chained_assignment = None  # default='warn'
 import datetime
@@ -112,10 +111,11 @@ class IniFile:
         for sub in input_parameters:
             parameter_value = input_parameters.get(sub)
             try:
-                if isinstance(parameter_value, numbers.Integral): # if integer
+                float_value = float(parameter_value)
+                if float_value.is_integer(): # if integer
                     input_parameters[sub] = int(parameter_value)
                 else: # if float
-                    input_parameters[sub] = float(parameter_value)
+                    input_parameters[sub] = float_value
             except ValueError:
                 input_parameters[sub] = None
         return input_parameters
