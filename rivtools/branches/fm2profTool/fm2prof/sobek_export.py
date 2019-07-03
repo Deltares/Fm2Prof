@@ -86,7 +86,10 @@ def _write_roughness_testformat(fid, cross_sections):
                 
 
             for index, level in enumerate(waterlevels):
-                chezy = table[1].iloc[index]
+                try:
+                    chezy = table[1].iloc[index]
+                except IndexError:
+                    break
                 if np.isnan(chezy) == False:
                     fid.write('{}, {}, {}, {}\n'.format(cross_section.chainage, roughnesstype, level, chezy))
 
@@ -197,10 +200,13 @@ def _write_roughness_sobek3(fid, cross_sections):
                 raise Exception('choose either alluvial or nonalluvial')
 
             for index, level in enumerate(waterlevels):
-                chezy = table[1].iloc[index]
+                try:
+                    chezy = table[1].iloc[index]
+                except IndexError:
+                    break
 
                 if np.isnan(chezy) == False:
-                    fid.write('Channel1' + ',' + str(cross_section.chainage) + ',' + 'Chezy' + ',' + plain + ',' + 'Waterlevel' + ',' + 'Linear' + ',' + 'Same' + ',,,,' + str(level) + ',' + str(chezy) + ',,,,,' + '\n')
+                    fid.write(str(cross_section.branch) + ',' + str(cross_section.chainage) + ',' + 'Chezy' + ',' + plain + ',' + 'Waterlevel' + ',' + 'Linear' + ',' + 'Same' + ',,,,' + str(level) + ',' + str(chezy) + ',,,,,' + '\n')
 
 
            
