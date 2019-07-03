@@ -45,6 +45,12 @@ class IniFile:
     __logger = None
     __filePath = None
 
+    # region Private parameter
+    __input_files_key = 'InputFiles'
+    __input_parameters_key = 'InputParameters'
+    __output_directory_key = 'OutputDirectory'
+    # endregion
+
     # region Public parameters
     _output_dir = None
     _input_file_paths = None
@@ -83,8 +89,8 @@ class IniFile:
             for option in config.options(section):
                 ini_file_params[section][option] = config.get(section, option).split('#')[0].strip()
         
-
-        self.extract_output_dir(ini_file_params) # output directory path
+        # Extract parameters
+        self._output_dir = self._extract_output_dir(ini_file_params) # output directory path
         self._input_parameters = self._extract_input_parameters(ini_file_params) # dictionary which contains all input parameter values
         self._input_file_paths = self._extract_input_files(ini_file_params)
 
@@ -96,13 +102,15 @@ class IniFile:
         Arguments:
             inifile_parameters {Mapping[str, str]} -- Collection of parameters as read in the original file
         """
-        inputParametersKey = 'InputParameters'
         if inifile_parameters is None:
             return None
 
-        input_parameters = inifile_parameters[inputParametersKey]
+        input_parameters = inifile_parameters.get(self.__input_parameters_key)
+        if input_parameters is None:
+            return None
+
         for sub in input_parameters:
-            parameter_value = input_parameters[sub]
+            parameter_value = input_parameters.get(sub)
             try:
                 if isinstance(parameter_value, numbers.Integral): # if integer
                     input_parameters[sub] = int(parameter_value)
@@ -115,60 +123,87 @@ class IniFile:
     def _extract_input_files( self, inifile_parameters : Mapping[str, str]):
         """
         Extract input file information from the dictionary
-        
+        Returns:
+            new Mapping[str,str] containing a normalized key (file name parameter) and its value.
         Arguments:
             inifile_parameters {Mapping[str, str]} -- Collection of parameters as read in the original file
         """
-
-        inputFilesKey = 'InputFiles'
         file_parameters = {}
-        for file_parameter in inifile_parameters[inputFilesKey]:
+        input_files_parameters = inifile_parameters.get(self.__input_files_key)
+        if input_files_parameters is None:
+            return file_parameters
+
+        for file_parameter in input_files_parameters:
             new_key = file_parameter.lower()
-            file_parameters[new_key] = inifile_parameters[inputFilesKey][file_parameter]
+            file_parameters[new_key] = input_files_parameters.get(file_parameter)
+        
         return file_parameters
     
-    def extract_output_dir(self, inifile_parameters : Mapping[str, str]):
+    def _extract_output_dir(self, inifile_parameters : Mapping[str, str]):
         """
         Extract output directory infomation from the dictionary
         
         Arguments:
             inifile_parameters {Mapping[str, str]} -- Collection of parameters as read in the original file
         """
-        outputDirectoryKey = 'OutputDirectory'
-        outputDirKey = 'outputdir'
-        casenameKey = 'casename'
-        if '..' not in inifile_parameters[outputDirectoryKey][outputDirKey]:
-            outputdir = os.path.join(os.getcwd(), inifile_parameters[outputDirectoryKey][outputDirKey])
-        else:
-            outputdir = inifile_parameters[outputDirectoryKey][outputDirKey].replace('/','\\')
-
-        casename = inifile_parameters[outputDirectoryKey][casenameKey]
+        output_parameters = inifile_parameters.get(self.__output_directory_key)
+        if output_parameters is None:
+            return None
         
-        if casename == '': # if casename is empty -> use default CaseNameXX
-            casename = self.get_new_case_name('CaseName',outputdir)
-        elif os.path.isdir(os.path.join(outputdir, casename)):
-            casename = self.get_new_case_name(casename,outputdir)
-            
-        inifile_parameters[outputDirectoryKey][casenameKey] = casename
-        output_dir =  os.path.join(outputdir, inifile_parameters[outputDirectoryKey][casenameKey])
-        
-        self._output_dir = output_dir.replace("\\","/")
+        # Get outputdir parameter
+        output_dir_key = 'outputdir'
+        output_dir = output_parameters.get(output_dir_key, '')        
+        output_dir = self._get_valid_output_dir(output_dir)        
 
-    def get_new_case_name(self, casename : str, outputdir : str):
+        # Get casename parameter
+        case_name_key = 'casename'
+        case_name = output_parameters.get(case_name_key, '')
+        case_name = self._get_valid_case_name(case_name, output_dir)
+
+        output_dir =  os.path.join(output_dir, case_name)
+        
+        return output_dir.replace("\\","/")
+
+    def _get_valid_output_dir(self, output_dir : str ):
+        """Returns a valid output directory path
+        Reteurns :
+            valid directory path.
+        Arguments:
+            output_dir {str} -- Relative path to the output directory.
         """
-        Update casename if already exists
+        if not output_dir:
+            return os.getcwd()
+        tmp_output_dir = output_dir.replace('/','\\')
+        if '..' not in tmp_output_dir:
+            return os.path.join(os.getcwd(), tmp_output_dir)
+        return tmp_output_dir
+
+    def _get_valid_case_name(self, case_name : str, output_dir : str):
+        """
+        Returns a valid case name to avoid duplication of directories
         
         Arguments:
-            casename {str} -- Given case name.
-            outputdir {str} -- Target parent directory
+            case_name {str} -- Given case name.
+            output_dir {str} -- Target parent directory
         """
-        casenum = 1
-        casename_tmp = casename + '{:02d}'.format(casenum)
-        while os.path.isdir(os.path.join(outputdir, casename_tmp)):
-            casenum += 1
-            casename_tmp = 'CaseName' + '{:02d}'.format(casenum)
+        case_num = 1
+        default_name = 'CaseName'
+        # If no case name was given, assign default.
+        if not case_name:
+            case_name = default_name
+
+        # Set an index to the case
+        case_name_tmp = case_name + '{:02d}'.format(case_num)
+        relative_path = case_name_tmp # by default use the current directory
+        if output_dir:
+            relative_path = os.path.join(output_dir, case_name_tmp)
+        
+        # Ensure the case name is unique.
+        while os.path.isdir(relative_path):
+            case_num += 1
+            case_name_tmp = case_name + '{:02d}'.format(case_num)
             
-        return casename_tmp
+        return case_name_tmp
   
 
 class Fm2ProfRunner :  
