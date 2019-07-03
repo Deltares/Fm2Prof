@@ -204,18 +204,18 @@ def _read_fm_model(file_path):
 
 def _read_css_xyz(file_path, delimiter = ','):
     with open(file_path, 'r') as fid:
-        inputdata = dict(xy=list(), id=list(), length=list(), branchid=list(), chainage=list())
+        inputdata = dict(xy=list(), id=list(), branchid=list(), length=list(), chainage=list())
         for line in fid:
             try:
-                (x, y, z, length, branchid, chainage) = line.split(delimiter)
+                (x, y, branchid, length, chainage) = line.split(delimiter)
             except ValueError:
                 # revert to legacy format
-                (x, y, z, length) = line.split(delimiter)
+                (x, y, length) = line.split(delimiter)
                 branchid = 'not defined'
                 chainage = 0
 
             inputdata['xy'].append((float(x), float(y)))
-            inputdata['id'].append(str(z).strip())
+            inputdata['id'].append(branchid + '_' + str(round(float(chainage))))
             inputdata['length'].append(float(length))
             inputdata['branchid'].append(branchid)
             inputdata['chainage'].append(float(chainage))
