@@ -202,8 +202,9 @@ class IniFile:
         while os.path.isdir(relative_path):
             case_num += 1
             case_name_tmp = case_name + '{:02d}'.format(case_num)
+            relative_path = os.path.join(output_dir, case_name_tmp)
             
-        return case_name_tmp
+        return relative_path
   
 
 class Fm2ProfRunner :  
