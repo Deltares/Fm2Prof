@@ -277,7 +277,7 @@ class CrossSection:
             flow_width = np.insert(flow_width, 0, 0)
 
             depth = level_t0 - lowest_z
-            wet_area = self.calculate_wet_area(fm_data, depth)
+            wet_area = self.calculate_wet_area(fm_data, depth, plassen_mask)
             volume = wet_area * depth
 
             total_volume = np.insert(total_volume, 0, volume)
