@@ -75,7 +75,7 @@ def __check_and_create_test_case_output_dir(base_output_dir, caseName):
 # endregion   
 
 @pytest.mark.integrationtest
-def test_Fm2ProfRunner_When_No_FilePath_Then_No_Exception_Is_Risen():
+def test_When_No_FilePath_Then_No_Exception_Is_Risen():
     """ 1. Set up initial test data """
     iniFilePath = ''
 
@@ -86,7 +86,7 @@ def test_Fm2ProfRunner_When_No_FilePath_Then_No_Exception_Is_Risen():
         pytest.fail('No exception expected.') 
         
 @pytest.mark.integrationtest
-def test_Fm2ProfRunner_Given_IniFile_Then_No_Exception_Is_Risen():
+def test_Given_IniFile_Then_No_Exception_Is_Risen():
     #1. Set up initial test data
     ini_file_name = 'fm2prof.ini'
     test_data_dir = TestUtils.get_test_data_dir('IniFile')
