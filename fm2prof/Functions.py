@@ -203,6 +203,8 @@ def _read_fm_model(file_path):
     return df, edge_data, df_node, time_dependent
 
 def _read_css_xyz(file_path, delimiter = ','):
+    if not file_path or not os.path.exists(file_path):
+        raise IOError('No file path for Cross Section location file was given, or could not be found at {}'.format(file_path))
     with open(file_path, 'r') as fid:
         inputdata = dict(xy=list(), id=list(), branchid=list(), length=list(), chainage=list())
         for line in fid:
