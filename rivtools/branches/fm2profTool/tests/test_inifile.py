@@ -14,12 +14,12 @@ _root_output_dir = None
 
 @pytest.mark.unittest
 def test_when_no_file_path_then_no_exception_is_risen():
-    """ 1. Set up initial test data """
+    # 1. Set up initial test data
     iniFilePath = ''
 
-    """ 2. Run test """
+    # 2. Run test
     try:
-        iniFile = IniFile(iniFilePath)
+        IniFile(iniFilePath)
     except:
         pytest.fail('No exception expected.')
 
@@ -37,7 +37,7 @@ def test_when_non_existent_file_path_then_io_exception_is_risen():
 
     # 4. Verify final expectations
     error_message = str(e_info.value)
-    assert error_message == expected_error, 'Expected exception message {}, retrieved {}'.format(reason, exception_message)
+    assert error_message == expected_error, 'Expected exception message {}, retrieved {}'.format(expected_error, error_message)
 
 @pytest.mark.unittest
 def test_read_inifile_when_no_file_path_then_io_exception_is_risen():
@@ -54,7 +54,7 @@ def test_read_inifile_when_no_file_path_then_io_exception_is_risen():
 
     # 4. Verify final expectations
     error_message = str(e_info.value)
-    assert error_message == expected_error, 'Expected exception message {}, retrieved {}'.format(reason, exception_message)
+    assert error_message == expected_error, 'Expected exception message {}, retrieved {}'.format(expected_error, error_message)
 
 @pytest.mark.unittest
 def test_extract_input_parameters_when_no_input_parameters_key_returns_none():
