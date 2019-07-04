@@ -3,9 +3,9 @@ import os, sys, getopt, shutil
 import TestUtils
 from fm2prof import main
 
-class TestMainMethod_UnitTest:
+class Test_Main:
     @classmethod
-    def setup_class(MainMethod_UnitTest):
+    def setup_class(Main):
         """
         Sets up the necessary data for MainMethodTest
         """
@@ -22,7 +22,7 @@ class TestMainMethod_UnitTest:
             os.mkdir(outputtestdir)
 
     @classmethod
-    def teardown_class(MainMethod_UnitTest):
+    def teardown_class(Main):
         """
         Cleans up the directory
         """
@@ -35,7 +35,7 @@ class TestMainMethod_UnitTest:
             os.rmdir(outputtestdir)
 
     @pytest.mark.unittest
-    def test_main_fails_when_not_giving_arguments(self):
+    def test_when_not_giving_arguments_then_systemexit_is_risen_with_expected_message(self):
         # 1. Set up test data
         mainArgs = ['']
         
@@ -52,7 +52,7 @@ class TestMainMethod_UnitTest:
         assert pytest_wrapped_e.value.code == expectedMssg
 
     @pytest.mark.unittest
-    def test_main_fails_when_not_giving_correct_input_arguments(self):
+    def test_when_not_giving_correct_input_args_systemexit_is_risen_with_expected_message(self):
         # 1. Set up test data
         mainArgs = ['-o', 'test1']
         opts, args = getopt.getopt(mainArgs,"hi:o:",["ifile=","ofile="])
@@ -69,7 +69,7 @@ class TestMainMethod_UnitTest:
         assert pytest_wrapped_e.value.code == expectedMssg
 
     @pytest.mark.unittest
-    def test_main_does_not_SystemExit_when_giving_correct_arguments(self):
+    def test_when_giving_correct_arguments_then_does_not_raise_systemexit(self):
         # 1. Set up test data
         outputtestdir = TestUtils.get_test_data_dir('output_test_main_unit')
         mainArgs = ['-i', 'test1', '-i','test2','--i', 'test3', '--o', outputtestdir]
@@ -93,7 +93,7 @@ class TestMainMethod_UnitTest:
             pass
     
     @pytest.mark.integrationtest
-    def test_main_when_non_existent_input_file_then_raises_io_exception(self):
+    def test_when_giving_non_existent_input_file_then_raises_io_exception(self):
         # 1. Set up test data
         file_path = 'test1'
         mainArgs = ['-i', file_path]
@@ -110,7 +110,7 @@ class TestMainMethod_UnitTest:
         assert exception_message == reason, 'Expected exception message {}, retrieved {}'.format(reason, exception_message)
     
     @pytest.mark.integrationtest
-    def test_main_when_existent_input_file_then_does_not_raise_io_exception(self):
+    def test_when_giving_existent_input_file_then_does_not_raise_io_exception(self):
         # 1. Set up test data
         test_dir = TestUtils.get_test_data_dir('main_test_data')
         file_name = 'test_ini_file.ini'
