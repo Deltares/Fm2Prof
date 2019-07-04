@@ -205,8 +205,9 @@ def _read_fm_model(file_path):
 def _read_css_xyz(file_path, delimiter = ','):
     if not file_path or not os.path.exists(file_path):
         raise IOError('No file path for Cross Section location file was given, or could not be found at {}'.format(file_path))
+    
     with open(file_path, 'r') as fid:
-        inputdata = dict(xy=list(), id=list(), branchid=list(), length=list(), chainage=list())
+        input_data = dict(xy=list(), id=list(), branchid=list(), length=list(), chainage=list())
         for line in fid:
             try:
                 (x, y, branchid, length, chainage) = line.split(delimiter)
@@ -216,12 +217,12 @@ def _read_css_xyz(file_path, delimiter = ','):
                 branchid = 'not defined'
                 chainage = 0
 
-            inputdata['xy'].append((float(x), float(y)))
-            inputdata['id'].append(branchid + '_' + str(round(float(chainage))))
-            inputdata['length'].append(float(length))
-            inputdata['branchid'].append(branchid)
-            inputdata['chainage'].append(float(chainage))
-        return inputdata
+            input_data['xy'].append((float(x), float(y)))
+            input_data['id'].append(branchid + '_' + str(round(float(chainage))))
+            input_data['length'].append(float(length))
+            input_data['branchid'].append(branchid)
+            input_data['chainage'].append(float(chainage))
+        return input_data
 
 def _get_class_tree(xy, c):
     X = xy
