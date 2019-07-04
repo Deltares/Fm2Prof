@@ -56,31 +56,33 @@ class IniFile:
     _input_parameters = None
     # endregion
 
-    def __init__(self, filePath: str):
+    def __init__(self, file_path: str):
         """
         Initializes the object Ini File which contains the path locations of all
         parameters needed by the Fm2ProfRunner
         
         Arguments:
-            filePath {str} -- File path where the IniFile is located
+            file_path {str} -- File path where the IniFile is located
         """
-        self.__filePath = filePath
-        if not(filePath is None or not filePath):
-            self._read_inifile(filePath)
+        self.__filePath = file_path
+        if not(file_path is None or not file_path):
+            self._read_inifile(file_path)
     
-    def _read_inifile(self, filePath : str):
+    def _read_inifile(self, file_path : str):
         """
         Reads the inifile and extract all its parameters for later usage by the 
         Fm2ProfRunner
         
         Arguments:
-            filePath {str} -- File path where the IniFile is located
+            file_path {str} -- File path where the IniFile is located
         """
-        if filePath is None or not filePath:
-            raise Exception('No ini file was specified and no data could be read.')
+        if file_path is None or not file_path:
+            raise IOError('No ini file was specified and no data could be read.')
+        if not os.path.exists(file_path):
+            raise IOError('The given file path {} could not be found.'.format(file_path))
         
         config = configparser.ConfigParser()
-        config.read(filePath)
+        config.read(file_path)
         
         ini_file_params = {}
         for section in config.sections():
@@ -371,7 +373,7 @@ class Fm2ProfRunner :
 # region // Main helpers
 
 def __report_expected_arguments(reason):
-    print('main.py -i <map_file> -i <css_file> -i <chainage_file> -o <outputdir>')
+    print('main.py -i <ini_file>')
     sys.exit("Error: {0}".format(reason))
 
 def __is_input(argument):
@@ -390,10 +392,12 @@ def __is_output(argument):
 
 # endregion
 
-def main(argv):
-    """
-    Main class, should contain three input arguments and one output.
+def main(argv):    
+    """ Main class, should contain three input arguments and one output.
     Otherwise the execution will end with an error.
+    
+    Arguments:
+        argv {[str]} -- default input from command line
     """
     # First try to pars the arguments
     try:
@@ -402,16 +406,17 @@ def main(argv):
         __report_expected_arguments("Arguments could not be retrieved.")
    
     # Check if number of arguments match the expectation.
-    if len(opts) != 4:
+    if len(opts) != 1:
         __report_expected_arguments("Not all arguments were given.")
     
     # Check if input parameters are in expected order
-    if not __is_input(opts[0]) or not __is_input(opts[1]) or not __is_input(opts[2]):
-        __report_expected_arguments("The first three arguments should be input files.\n Given: {0}\n{1}\n{2}\n".format(opts[0], opts[1], opts[2]))
+    if not __is_input(opts[0]):
+        __report_expected_arguments("The first argument should be an input file.\n Given: {0}\n".format(opts[0]))
     
-    # Check if output parameter is in expected placement
-    if not __is_output(opts[3]):
-        __report_expected_arguments("The last argument should be the output directory.")
+    # Run Fm2Prof with given arguments
+    ini_file_path = opts[0][1]
+    runner = Fm2ProfRunner(ini_file_path)
+    runner.run()
 
 
 if __name__ == '__main__':

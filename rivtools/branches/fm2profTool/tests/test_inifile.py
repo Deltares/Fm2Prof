@@ -13,7 +13,7 @@ _root_output_dir = None
 
 
 @pytest.mark.unittest
-def test_When_No_FilePath_Then_No_Exception_Is_Risen():
+def test_when_no_file_path_then_no_exception_is_risen():
     """ 1. Set up initial test data """
     iniFilePath = ''
 
@@ -23,20 +23,41 @@ def test_When_No_FilePath_Then_No_Exception_Is_Risen():
     except:
         pytest.fail('No exception expected.')
 
+@pytest.mark.unittest
+def test_when_non_existent_file_path_then_io_exception_is_risen():
+    # 1. Set up initial test data
+    ini_file_path = 'nonexistent_ini_file.ini'
+
+    # 2. Set expectations
+    expected_error = 'The given file path {} could not be found.'.format(ini_file_path)
+
+    # 3. Run test
+    with pytest.raises(IOError) as e_info:
+        IniFile(ini_file_path)
+
+    # 4. Verify final expectations
+    error_message = str(e_info.value)
+    assert error_message == expected_error, 'Expected exception message {}, retrieved {}'.format(reason, exception_message)
 
 @pytest.mark.unittest
-def test_ReadIniFile_When_No_FilePath_Then_No_Exception_Is_Risen():
-    """ 1. Set up initial test data """
+def test_read_inifile_when_no_file_path_then_io_exception_is_risen():
+    # 1. Set up initial test data """
     iniFilePath = ''
     iniFile = IniFile(iniFilePath)
 
-    """ 2. Run test """
-    with pytest.raises(Exception) as e_info:
+    # 2. Set expectations
+    expected_error = 'No ini file was specified and no data could be read.'
+
+    # 3. Run test
+    with pytest.raises(IOError) as e_info:
         iniFile._read_inifile(iniFilePath)
 
+    # 4. Verify final expectations
+    error_message = str(e_info.value)
+    assert error_message == expected_error, 'Expected exception message {}, retrieved {}'.format(reason, exception_message)
 
 @pytest.mark.unittest
-def test_extract_input_parameters_When_No_Input_Parameters_Key_Returns_None():
+def test_extract_input_parameters_when_no_input_parameters_key_returns_none():
     # 1. Set up initial test data
     iniFilePath = None
     iniFile = IniFile(iniFilePath)
@@ -53,7 +74,7 @@ def test_extract_input_parameters_When_No_Input_Parameters_Key_Returns_None():
     assert new_parameters is None
 
 @pytest.mark.unittest
-def test_extract_input_parameters_When_No_Parameters_No_Exception_Is_Risen():
+def test_extract_input_parameters_when_no_parameters_no_exception_is_risen():
         # 1. Set up initial test data
     iniFilePath = None
     iniFile = IniFile(iniFilePath)
@@ -75,7 +96,7 @@ _test_scenarios_input_parameters = [
 
 @pytest.mark.unittest
 @pytest.mark.parametrize("value_as_string, expected_value", _test_scenarios_input_parameters)
-def test_extract_input_parameters_When_Parameters_Are_Given_Then_Maps_As_Expected(value_as_string, expected_value):
+def test_extract_input_parameters_when_parameters_are_given_then_maps_as_expected(value_as_string, expected_value):
     # 1. Set up initial test data
     iniFilePath = None
     iniFile = IniFile(iniFilePath)
@@ -100,7 +121,7 @@ def test_extract_input_parameters_When_Parameters_Are_Given_Then_Maps_As_Expecte
     assert isinstance(retievedValue, numbers.Integral) == isinstance(expected_value, numbers.Integral)
 
 @pytest.mark.unittest
-def test_extract_input_files_When_No_Input_Parameters_Key_Returns_EmptyDict():
+def test_extract_input_files_when_no_input_parameters_key_returns_empty_dict():
     # 1. Set up initial test data
     iniFilePath = None
     iniFile = IniFile(iniFilePath)
@@ -143,7 +164,7 @@ def test_extract_input_files_gets_filenames():
     assert new_parameters[file_key] == file_value
 
 @pytest.mark.unittest
-def test_extract_output_dir_no_outputdir_key_returns_None():
+def test_extract_output_dir_no_outputdir_key_returns_none():
     # 1. Set initial test data
     ini_file_path = None
     iniFile = IniFile(ini_file_path)
