@@ -50,6 +50,18 @@ __maintainer__ = "Koen Berends"
 __email__ = "koen.berends@deltares.nl"
 __status__ = "Prototype"
 
+class FmModelData:
+    time_dependent_data = None
+    time_independent_data = None
+    edge_data = None
+    node_coordinates = None
+    css_data = {}
+    def __init__(self, arg_list : list):
+        if not arg_list:
+            raise Exception('FM model data was not read correctly.')
+        if len(arg_list) != 5:
+            raise Exception ('Fm model data expects 5 arguments but only {} were given'.format(len(arg_list)))
+        (self.time_dependent_data, self.time_independent_data, self.edge_data, self.node_coordinates, self.css_data) = arg_list
 
 class CrossSection:
     """
