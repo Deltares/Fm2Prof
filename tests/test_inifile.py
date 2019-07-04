@@ -194,6 +194,47 @@ def test_extract_output_dir_gets_correct_path(param_output_dir_value, param_case
     assert expected_value in new_output_dir_value
 
 
+@pytest.mark.integrationtest
+def test_extract_output_dir_returns_new_values_for_existent_dirs():
+     # 1. Set initial test data
+    ini_file_path = None
+    iniFile = IniFile(ini_file_path)
+    repeated_iterations = 5
+    case_name = 'dummyCaseName'
+    output_dir = 'IniFileTests'
+    output_dir_list = []
+    output_parameters = {
+        'outputdir' : output_dir,
+        'casename' : case_name
+    }
+    
+    inifile_parameters = {
+        'OutputDirectory' : output_parameters
+    }
+
+    # 2. Verify initial expectations
+    if os.path.isdir(output_dir):
+        shutil.rmtree(output_dir)
+    
+    # 3. Run test
+    try:
+        for idx in range(0, repeated_iterations):
+            new_output_dir = iniFile._extract_output_dir(inifile_parameters)
+            os.makedirs(new_output_dir)
+            output_dir_list.append(new_output_dir)
+    except:
+        if os.path.isdir(output_dir):
+            shutil.rmtree(output_dir)
+        pytest.fail('Test failed while trying to get valid case names.')
+    
+    # 4. Verify final expectations
+    if os.path.isdir(output_dir):
+        shutil.rmtree(output_dir)
+    assert output_dir_list
+    set_output_dir_list = set(output_dir_list)
+    assert len(output_dir_list) == repeated_iterations    
+    assert len(set_output_dir_list) == repeated_iterations
+
 _test_scenarios_case_names = [
     ('','', 'CaseName01'),
     (None, None, 'CaseName01'),
@@ -220,7 +261,7 @@ def test_get_valid_case_name_returns_expected_values(case_name, output_dir, expe
     assert new_case_name == expected_value
 
 
-@pytest.mark.develop
+@pytest.mark.integrationtest
 def test_get_valid_case_name_returns_new_values_for_existent_dirs():
      # 1. Set initial test data
     ini_file_path = None
@@ -243,11 +284,13 @@ def test_get_valid_case_name_returns_new_values_for_existent_dirs():
             os.mkdir(relative_dir)
             case_names.append(new_case_name)
     except:
-        shutil.rmtree(output_dir)
+        if os.path.isdir(output_dir):
+            shutil.rmtree(output_dir)
         pytest.fail('Test failed while trying to get valid case names.')
     
     # 4. Verify final expectations
-    shutil.rmtree(output_dir)
+    if os.path.isdir(output_dir):
+        shutil.rmtree(output_dir)
     assert case_names
     assert len(case_names) == repeated_iterations
     set_case_names = set(case_names)
