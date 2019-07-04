@@ -8,29 +8,6 @@ from fm2prof.main import Fm2ProfRunner, IniFile
 
 _root_output_dir = None
 
-# Test data to be used
-_test_scenarios_ids = [ 
-    'case_01_rectangle',
-    'case_02_compound',
-    'case_03_threestage',
-    'case_04_storage',
-    'case_05_dyke', 
-    'case_06_plassen',
-    'case_07_triangular',
-    'case_08_waal'
-]
-
-_test_scenarios = [
-    ('case_01_rectangle', 'Data\\FM\\50x25_mesh\\FlowFM_fm2prof_map.nc', 'Data\\cross_section_locations.xyz', 'Data\\cross_section_chainages.txt'),
-    ('case_02_compound', 'Data\\FM\\50x25_mesh\\FlowFM_fm2prof_map.nc', 'Data\\cross_section_locations.xyz', 'Data\\cross_section_chainages.txt'),
-    ('case_03_threestage', 'Data\\FM\\FlowFM_fm2prof_map.nc', 'Data\\cross_section_locations.xyz', 'Data\\cross_section_chainages.txt'),
-    ('case_04_storage', 'Data\\FM\\FlowFM_fm2prof_map.nc', 'Data\\cross_section_locations.xyz', 'Data\\cross_section_chainages.txt'),
-    ('case_05_dyke', 'Data\\FM\\FlowFM_fm2prof_map.nc', 'Data\\cross_section_locations.xyz', 'Data\\cross_section_chainages.txt'),
-    ('case_06_plassen', 'Data\\FM\\FlowFM_fm2prof_map.nc', 'Data\\cross_section_locations.xyz', 'Data\\cross_section_chainages.txt'),
-    ('case_07_triangular', 'Data\\FM\\FlowFM_fm2prof_map.nc', 'Data\\cross_section_locations.xyz', 'Data\\cross_section_chainages.txt'),
-    ('case_08_waal', 'Data\\FM\\FlowFM_fm2prof_map.nc', 'Data\\cross_section_locations.xyz', 'Data\\cross_section_chainages.txt')
-]
-
 # region // Helpers
 def __get_base_output_dir():
     """
@@ -75,7 +52,7 @@ def __check_and_create_test_case_output_dir(base_output_dir, caseName):
 # endregion   
 
 @pytest.mark.integrationtest
-def test_When_No_FilePath_Then_No_Exception_Is_Risen():
+def test_when_no_file_path_then_no_exception_is_risen():
     """ 1. Set up initial test data """
     iniFilePath = ''
 
@@ -86,7 +63,7 @@ def test_When_No_FilePath_Then_No_Exception_Is_Risen():
         pytest.fail('No exception expected.') 
         
 @pytest.mark.integrationtest
-def test_Given_IniFile_Then_No_Exception_Is_Risen():
+def test_given_inifile_then_no_exception_is_risen():
     #1. Set up initial test data
     ini_file_name = 'fm2prof.ini'
     test_data_dir = TestUtils.get_test_data_dir('IniFile')
@@ -100,6 +77,3 @@ def test_Given_IniFile_Then_No_Exception_Is_Risen():
         fm2ProfRunner = Fm2ProfRunner(ini_file_path)
     except:
         pytest.fail('No exception expected.') 
-    
-    #4. Verify final expectations
-    # verify that in the output folder there has been generated x files.
