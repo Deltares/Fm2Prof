@@ -20,15 +20,22 @@ _test_scenarios_ids = [
     'case_08_waal'
 ]
 
+""" To use excluding markups the following command line can be used:
+- Include only tests that are acceptance that ARE NOT slow:
+    pytest tests -m "acceptance and not slow"
+- Include only tests that are both acceptance AND slow:
+    pytest tests -m "acceptance and slow"
+ """
+
 _test_scenarios = [
-    ('case_01_rectangle', 'Data\\FM\\50x25_mesh\\FlowFM_fm2prof_map.nc', 'Data\\cross_section_locations.xyz', 'Data\\cross_section_chainages.txt'),
-    ('case_02_compound', 'Data\\FM\\50x25_mesh\\FlowFM_fm2prof_map.nc', 'Data\\cross_section_locations.xyz', 'Data\\cross_section_chainages.txt'),
-    ('case_03_threestage', 'Data\\FM\\FlowFM_fm2prof_map.nc', 'Data\\cross_section_locations.xyz', 'Data\\cross_section_chainages.txt'),
-    ('case_04_storage', 'Data\\FM\\FlowFM_fm2prof_map.nc', 'Data\\cross_section_locations.xyz', 'Data\\cross_section_chainages.txt'),
-    ('case_05_dyke', 'Data\\FM\\FlowFM_fm2prof_map.nc', 'Data\\cross_section_locations.xyz', 'Data\\cross_section_chainages.txt'),
-    ('case_06_plassen', 'Data\\FM\\FlowFM_fm2prof_map.nc', 'Data\\cross_section_locations.xyz', 'Data\\cross_section_chainages.txt'),
-    ('case_07_triangular', 'Data\\FM\\FlowFM_fm2prof_map.nc', 'Data\\cross_section_locations.xyz', 'Data\\cross_section_chainages.txt'),
-    ('case_08_waal', 'Data\\FM\\FlowFM_fm2prof_map.nc', 'Data\\cross_section_locations.xyz', 'Data\\cross_section_chainages.txt')
+    pytest.param('case_01_rectangle', 'Data\\FM\\50x25_mesh\\FlowFM_fm2prof_map.nc', 'Data\\cross_section_locations.xyz', 'Data\\cross_section_chainages.txt'),
+    pytest.param('case_02_compound', 'Data\\FM\\50x25_mesh\\FlowFM_fm2prof_map.nc', 'Data\\cross_section_locations.xyz', 'Data\\cross_section_chainages.txt'),
+    pytest.param('case_03_threestage', 'Data\\FM\\FlowFM_fm2prof_map.nc', 'Data\\cross_section_locations.xyz', 'Data\\cross_section_chainages.txt'),
+    pytest.param('case_04_storage', 'Data\\FM\\FlowFM_fm2prof_map.nc', 'Data\\cross_section_locations.xyz', 'Data\\cross_section_chainages.txt'),
+    pytest.param('case_05_dyke', 'Data\\FM\\FlowFM_fm2prof_map.nc', 'Data\\cross_section_locations.xyz', 'Data\\cross_section_chainages.txt'),
+    pytest.param('case_06_plassen', 'Data\\FM\\FlowFM_fm2prof_map.nc', 'Data\\cross_section_locations.xyz', 'Data\\cross_section_chainages.txt'),
+    pytest.param('case_07_triangular', 'Data\\FM\\FlowFM_fm2prof_map.nc', 'Data\\cross_section_locations.xyz', 'Data\\cross_section_chainages.txt'),
+    pytest.param('case_08_waal', 'Data\\FM\\FlowFM_fm2prof_map.nc', 'Data\\cross_section_locations.xyz', 'Data\\cross_section_chainages.txt', marks = pytest.mark.slow)
 ]
 
 # region // Helpers
@@ -75,8 +82,11 @@ def __check_and_create_test_case_output_dir(base_output_dir, caseName):
 # endregion   
 
 @pytest.mark.acceptance
-@pytest.mark.parametrize("case_name, map_file, css_file, chainage_file", _test_scenarios, ids=_test_scenarios_ids)
-def test_run_with_files(case_name, map_file, css_file, chainage_file):       
+@pytest.mark.parametrize(
+    ("case_name", "map_file", "css_file", "chainage_file"), 
+    _test_scenarios, 
+    ids=_test_scenarios_ids)
+def test_run_ini_file(case_name, map_file, css_file, chainage_file):       
     
     # 1. Set up test data.
     iniFilePath = None
