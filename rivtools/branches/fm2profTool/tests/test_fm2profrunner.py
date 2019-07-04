@@ -84,20 +84,22 @@ def test_Fm2ProfRunner_When_No_FilePath_Then_No_Exception_Is_Risen():
         fm2ProfRunner = Fm2ProfRunner(iniFilePath)
     except:
         pytest.fail('No exception expected.') 
-
+        
 @pytest.mark.integrationtest
-@pytest.mark.developtest
-def test_Fm2ProfRunner_When_FilePath_Is_Given_Then_No_Exception_Is_Risen():
-    # 1. Set up initial test data
+def test_Fm2ProfRunner_Given_IniFile_Then_No_Exception_Is_Risen():
+    #1. Set up initial test data
     ini_file_name = 'fm2prof.ini'
-    test_directory = TestUtils.get_test_data_dir('IniFile')
-    ini_file_path = os.path.join(test_directory, ini_file_name)
-
-    # 2. Verify initial expectations
-    assert os.path.exists(ini_file_path)
-
-    # 2. Run test
+    test_data_dir = TestUtils.get_test_data_dir('IniFile')
+    ini_file_path = os.path.join(test_data_dir, ini_file_name)
+    
+    #2. Verify the initial expectations
+    assert os.path.exists(ini_file_path), "Test File {} was not found".format(ini_file_path)
+    
+    #3. Run test
     try:
         fm2ProfRunner = Fm2ProfRunner(ini_file_path)
     except:
         pytest.fail('No exception expected.') 
+    
+    #4. Verify final expectations
+    # verify that in the output folder there has been generated x files.
