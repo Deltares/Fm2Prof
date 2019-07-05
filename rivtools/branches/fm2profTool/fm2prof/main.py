@@ -286,8 +286,7 @@ class Fm2ProfRunner :
             return cross_sections
 
         # Preprocess css from fm_model_data so it's easier to handle it.
-        css_data = fm_model_data.css_data_dict     
-        css_data_list = self.__get_ordered_css_list(css_data)
+        css_data_list = fm_model_data.css_data_list
 
         for css_data in css_data_list:
             generated_cross_section = self._generate_cross_section(css_data, input_param_dict, fm_model_data)
@@ -296,21 +295,6 @@ class Fm2ProfRunner :
 
         return cross_sections
     
-    def __get_ordered_css_list(self, css_data_dict : Mapping[str,str]):
-        """Returns an ordered list where every element represents a Cross Section structure
-        
-        Arguments:
-            css_data_dict {Mapping[str,str]} -- Dictionary ordered by the keys
-        
-        Returns:
-            {list} -- List where every element contains a dictionary to create a Cross Section.
-        """
-        number_of_css = len(css_data_dict.get('id'))
-        css_dict_keys = css_data_dict.keys()
-        css_dict_values = css_data_dict.values()
-        css_data_list = [dict(zip(css_dict_keys, [value[idx] for value in css_dict_values if idx < len(value)])) for idx in range(number_of_css)]
-        return css_data_list
-
     def _generate_cross_section(self, css_data : Mapping[str, str], input_param_dict : Mapping[str,str], fm_model_data : CE.FmModelData):
         """Generates a cross section and configures its values based on the input parameter dictionary
         
