@@ -80,28 +80,52 @@ class IniFile:
             raise IOError('No ini file was specified and no data could be read.')
         if not os.path.exists(file_path):
             raise IOError('The given file path {} could not be found.'.format(file_path))
-        
-        config = configparser.ConfigParser()
-        config.read(file_path)
-        
+               
         ini_file_params = {}
-        for section in config.sections():
-            ini_file_params[section] = {}
-            for option in config.options(section):
-                ini_file_params[section][option] = config.get(section, option).split('#')[0].strip()
+        
+        try:
+            ini_file_params = self.get_inifile_params(file_path)
+        except Exception as e_info:
+            raise Exception('It was not possible to extract ini parameters from the file {}. Exception thrown: {}'.format(file_path, str(e_info)))
         
         # Extract parameters
         self._output_dir = self._extract_output_dir(ini_file_params) # output directory path
         self._input_parameters = self._extract_input_parameters(ini_file_params) # dictionary which contains all input parameter values
         self._input_file_paths = self._extract_input_files(ini_file_params)
 
-    def _extract_input_parameters(self, inifile_parameters : Mapping[str, str]):
-        """
-        Extract InputParameters and convert values either integer or float from string
-        Returns:
-            Dictionary of mapped parameters to a either integer or float
+    @staticmethod
+    def get_inifile_params(file_path : str):
+        """Extracts the parameters from an ini file.
+        
         Arguments:
-            inifile_parameters {Mapping[str, str]} -- Collection of parameters as read in the original file
+            file_path {str} -- Ini file location
+        
+        Returns:
+            {array} -- List of sections containing list of options
+        """
+        ini_file_params = {}
+        comment_delimter = '#'
+        
+        # Create config parser (external class)
+        config = configparser.ConfigParser()
+        config.read(file_path)
+        
+        # Extract all sections and options
+        for section in config.sections():
+            ini_file_params[section] = {}
+            for option in config.options(section):
+                ini_file_params[section][option] = config.get(section, option).split(comment_delimter)[0].strip()
+        
+        return ini_file_params
+
+    def _extract_input_parameters(self, inifile_parameters : Mapping[str, list]):
+        """ Extract InputParameters and convert values either integer or float from string
+       
+        Arguments:
+            inifile_parameters {Mapping[str, list} -- Collection of parameters as read in the original file
+        
+        Returns:
+            {Mapping[str, number]} -- Dictionary of mapped parameters to a either integer or float
         """
         if inifile_parameters is None:
             return None
@@ -122,13 +146,14 @@ class IniFile:
                 input_parameters[sub] = None
         return input_parameters
         
-    def _extract_input_files( self, inifile_parameters : Mapping[str, str]):
-        """
-        Extract input file information from the dictionary
-        Returns:
-            new Mapping[str,str] containing a normalized key (file name parameter) and its value.
+    def _extract_input_files( self, inifile_parameters : Mapping[str, list]):
+        """ Extract input file information from the dictionary
+
         Arguments:
-            inifile_parameters {Mapping[str, str]} -- Collection of parameters as read in the original file
+            inifile_parameters {Mapping[str, list]} -- Collection of parameters as read in the original file
+        
+        Returns:
+            {Mapping[str, str]} -- new dict containing a normalized key (file name parameter) and its value.
         """
         file_parameters = {}
         input_files_parameters = inifile_parameters.get(self.__input_files_key)
@@ -141,12 +166,14 @@ class IniFile:
         
         return file_parameters
     
-    def _extract_output_dir(self, inifile_parameters : Mapping[str, str]):
-        """
-        Extract output directory infomation from the dictionary
+    def _extract_output_dir(self, inifile_parameters : Mapping[str, list]):
+        """Extract output directory infomation from the dictionary
         
         Arguments:
-            inifile_parameters {Mapping[str, str]} -- Collection of parameters as read in the original file
+            inifile_parameters {Mapping[str, list]} --  Collection of parameters as read in the original file
+        
+        Returns:
+            {str} -- Normalized output dir path
         """
         output_parameters = inifile_parameters.get(self.__output_directory_key)
         if output_parameters is None:
@@ -167,11 +194,13 @@ class IniFile:
         return output_dir.replace("\\","/")
 
     def _get_valid_output_dir(self, output_dir : str ):
-        """Returns a valid output directory path
-        Reteurns :
-            valid directory path.
+        """Gets a normalized output directory path.
+        
         Arguments:
             output_dir {str} -- Relative path to the output directory.
+        
+        Returns:
+            {str} -- Valid output directory path.
         """
         if not output_dir:
             return os.getcwd()
@@ -181,12 +210,14 @@ class IniFile:
         return tmp_output_dir
 
     def _get_valid_case_name(self, case_name : str, output_dir : str):
-        """
-        Returns a valid case name to avoid duplication of directories
+        """Gets a valid case name to avoid duplication of directories
         
         Arguments:
-            case_name {str} -- Given case name.
-            output_dir {str} -- Target parent directory
+            case_name {str} -- Given current case name
+            output_dir {str} -- Target output directory path
+        
+        Returns:
+            {str} -- Unique case name
         """
         case_num = 1
         default_name = 'CaseName'
@@ -275,11 +306,15 @@ class Fm2ProfRunner :
         FE.interpolate_roughness(cross_sections)
         self._export_cross_sections(cross_sections, output_dir)
 
-    def _generate_cross_section_list(self, input_param_dict : Mapping[str,str], fm_model_data : CE.FmModelData):
-        """Generates cross sections based on the given fm_model_data
-        
+    def _generate_cross_section_list(self, input_param_dict : Mapping[str, list], fm_model_data : CE.FmModelData):
+        """ Generates cross sections based on the given fm_model_data
+
         Arguments:
+            input_param_dict {Mapping[str, list]} -- Dictionary of parameters read from IniFile
             fm_model_data {CE.FmModelData} -- Class with all necessary data for generating Cross Sections
+        
+        Returns:
+            {list} -- List of generated cross sections
         """
         cross_sections = list()
         if not fm_model_data or not input_param_dict:
@@ -295,17 +330,18 @@ class Fm2ProfRunner :
 
         return cross_sections
     
-    def _generate_cross_section(self, css_data : Mapping[str, str], input_param_dict : Mapping[str,str], fm_model_data : CE.FmModelData):
+    def _generate_cross_section(self, css_data : dict, input_param_dict :  Mapping[str, list], fm_model_data : CE.FmModelData):
         """Generates a cross section and configures its values based on the input parameter dictionary
         
         Arguments:
-            css_name {str} -- Name for the new Cross Section
-            input_param_dict {Mapping[str,str]} -- Dictionary with input parameters
+            css_data {dict} -- Dictionary of data for the current cross section
+            input_param_dict {Mapping[str,list]} -- Dictionary with input parameters
             fm_model_data {CE.FmModelData} -- Data to assign to t he new cross section
         
         Raises:
+            Exception: If no css_data is given.
             Exception: If no input_param_dict is given.
-            Exception: If no fm_model_data is given
+            Exception: If no fm_model_data is given.
         
         Returns:
             {CE.CrossSection} -- New Cross Section
@@ -370,9 +406,8 @@ class Fm2ProfRunner :
         """Creates a cross section with the given input param dictionary.
         
         Arguments:
-            css_name {str} -- Name for the new cross section.
-            input_param_dict {Mapping[str, str]} -- Dictionary with parameters for Cross Section.
             css_data {Mapping[str, str]} -- FM Model data for cross section.
+            input_param_dict {Mapping[str, str]} -- Dictionary with parameters for Cross Section.            
         
         Returns:
             {CE.CrossSection} -- New cross section object.
@@ -405,7 +440,7 @@ class Fm2ProfRunner :
                 branchid = css_data_branch_id,
                 chainage = css_data_chainage)
         except Exception as e_info:
-            self.__set_logger_message('Exception thrown while creating cross-section {}, message: {}'.format(name, str(e_info)))
+            self.__set_logger_message('Exception thrown while creating cross-section {}, message: {}'.format(css_data_id, str(e_info)))
             return None
 
         return css

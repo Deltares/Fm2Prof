@@ -39,24 +39,6 @@ class Test_IniFile:
         error_message = str(e_info.value)
         assert error_message == expected_error, 'Expected exception message {}, retrieved {}'.format(expected_error, error_message)
 
-class Test_read_inifile:
-    @pytest.mark.unittest
-    def test_read_inifile_when_no_file_path_then_io_exception_is_risen(self):
-        # 1. Set up initial test data """
-        iniFilePath = ''
-        iniFile = IniFile(iniFilePath)
-
-        # 2. Set expectations
-        expected_error = 'No ini file was specified and no data could be read.'
-
-        # 3. Run test
-        with pytest.raises(IOError) as e_info:
-            iniFile._read_inifile(iniFilePath)
-
-        # 4. Verify final expectations
-        error_message = str(e_info.value)
-        assert error_message == expected_error, 'Expected exception message {}, retrieved {}'.format(expected_error, error_message)
-
 class Test_extract_input_parameters:
 
     _test_scenarios_input_parameters = [
@@ -286,7 +268,7 @@ class Test_gets_valid_case_name:
         assert new_case_name == expected_value
 
     @pytest.mark.integrationtest
-    def test_get_when_dirs_exist_then_returns_new_valid_case_name(self):
+    def test_when_dirs_exist_then_returns_new_valid_case_name(self):
         # 1. Set initial test data
         ini_file_path = None
         iniFile = IniFile(ini_file_path)
@@ -361,7 +343,25 @@ class Test_get_valid_output_dir:
         # 3. Verify final expectations
         assert expected_value == new_output_dir
 
-class Test_read_ini_file:
+class Test_readini_file:
+
+    @pytest.mark.unittest
+    def test_when_no_file_path_then_io_exception_is_risen(self):
+        # 1. Set up initial test data """
+        iniFilePath = ''
+        iniFile = IniFile(iniFilePath)
+
+        # 2. Set expectations
+        expected_error = 'No ini file was specified and no data could be read.'
+
+        # 3. Run test
+        with pytest.raises(IOError) as e_info:
+            iniFile._read_inifile(iniFilePath)
+
+        # 4. Verify final expectations
+        error_message = str(e_info.value)
+        assert error_message == expected_error, 'Expected exception message {}, retrieved {}'.format(expected_error, error_message)
+
     @pytest.mark.systemtest
     def test_when_inifile_contains_output_dir_then_sets_output_dir(self):
         # 1. Set initial test data
@@ -456,3 +456,91 @@ class Test_read_ini_file:
             assert read_param_value is not None, 'Key {} was not read or could not be found in {}'.format(expected_input_file, ini_file._input_file_paths)
             assert read_param_value == expected_value, 'Expected value does not match for key {}'.format(expected_input_file)
 
+    @pytest.mark.systemtest
+    def test_when_inifile_is_not_valid_then_raises_exception(self):
+        # 1. Set initial test data
+        test_data_dir = TestUtils.get_test_data_dir('IniFile')
+        ini_file_path = os.path.join(test_data_dir, 'invalid_ini_file.ini')
+        ini_file = IniFile(None)
+
+        # 2. Verify initial expectations
+        assert ini_file != None
+        assert os.path.exists(ini_file_path), "Test file was not found."
+        expected_error = 'It was not possible to extract ini parameters from the file {}.'.format(ini_file_path)
+
+        # 3. Run test
+        with pytest.raises(Exception) as e_info:
+            ini_file._read_inifile(ini_file_path)
+        
+        # 4. Verify final expectations
+        assert ini_file != None
+        assert expected_error in str(e_info.value)
+        
+class Test_get_inifile_params:
+
+    @pytest.mark.unittest
+    def test_when_no_file_path_then_no_exception_is_risen_and_returns_empty_dictionary(self):
+        # 1. Set up initial test data """
+        ini_file_path = ''
+        return_value = None
+
+        # 2. Set up expecations
+        expected_return_value = {}
+
+        # 3. Run test
+        try:
+            return_value = IniFile.get_inifile_params(ini_file_path)
+        except Exception as e_info:
+            pytest.fail('No exception expected but was thrown: {}'.format(str(e_info)))
+
+        # 4. Verify final expectations
+        assert return_value == expected_return_value
+
+    @pytest.mark.unittest
+    def test_when_given_invalid_inifile_then_exception_is_risen(self):
+        # 1. Set up initial test data """
+        test_data_dir = TestUtils.get_test_data_dir('IniFile')
+        ini_file_path = os.path.join(test_data_dir, 'invalid_ini_file.ini')
+        return_value = None
+
+        # 2. Set up expecations
+        expected_return_value = None
+
+        # 3. Run test
+        with pytest.raises(Exception):
+            return_value = IniFile.get_inifile_params(ini_file_path)
+
+        # 4. Verify final expectations
+        assert return_value == expected_return_value
+
+    @pytest.mark.systemtest
+    def test_when_given_valid_inifile_then_gets_expected_values(self):
+        # 1. Set initial test data
+        test_data_dir = TestUtils.get_test_data_dir('IniFile')
+        ini_file_path = os.path.join(test_data_dir, 'valid_dummy_inifile.ini')
+        return_dict = None
+
+        # 2. Set initial expectations
+        assert os.path.exists(ini_file_path), "Test file was not found."
+        expected_section_zero = {
+            'option_zero_zero': 'string', 
+            'option_zero_one': '4.2'}
+        expected_section_one = {
+            'option_one_zero': '42', 
+            'option_one_two': 'string'}
+        expected_section_two = {}
+        expected_dict = {
+            'section_zero': expected_section_zero,
+            'section_one': expected_section_one,
+            'section_two': expected_section_two
+        }
+
+        # 3. Run test
+        try:
+            return_dict = IniFile.get_inifile_params(ini_file_path)
+        except:
+            pytest.fail('Test failed while reading an ini file.')
+        
+        # 4. Verify final expectations
+        assert return_dict is not None
+        assert return_dict == expected_dict, 'Expected {}, but returned {}'.format(expected_dict, return_dict)
