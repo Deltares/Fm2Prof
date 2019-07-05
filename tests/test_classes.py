@@ -66,5 +66,34 @@ class Test_FmModelData:
         assert return_fm_model_data.time_independent_data == time_independent_data
         assert return_fm_model_data.edge_data == edge_data
         assert return_fm_model_data.node_coordinates == node_coordinates
-        assert return_fm_model_data.css_data_dict == css_data
+        assert return_fm_model_data.css_data_list == []
 
+    @pytest.mark.unittest
+    def test_when_given_data_dictionary_then_data_list_is_set(self):
+        # 1. Set up test data
+        time_dependent_data = 'arg1'
+        time_independent_data = 'arg2'
+        edge_data = 'arg3'
+        node_coordinates = 'arg4'
+        dummy_key = 'dummyKey'
+        dummy_values = [0, 1]
+        css_data_dict = {
+            dummy_key : dummy_values,
+        }
+        
+        arg_list = [time_dependent_data, time_independent_data, edge_data, node_coordinates, css_data_dict]
+        return_fm_model_data = None
+        
+        # 2. Set expectations
+        expected_css_data_list = [{dummy_key : 0}, {dummy_key : 1}]
+
+        #  3. Run test
+        try:
+            return_fm_model_data = CE.FmModelData(arg_list)
+        except:
+            pytest.fail('No exception expected but was thrown')
+        
+        # 4. Verify final expectations
+        assert return_fm_model_data is not None
+        assert return_fm_model_data.css_data_list != css_data_dict
+        assert return_fm_model_data.css_data_list == expected_css_data_list
