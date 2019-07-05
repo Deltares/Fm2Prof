@@ -352,7 +352,7 @@ class CrossSection:
         #transition_height = opt['x'][1]
         extra_volume = opt['x'][1]
 
-        transition_height = 0.5
+        #transition_height = 0.5
         extra_area_percentage = FE.get_extra_total_area(self._css_z, crest_level, transition_height)
 
         # Write to attributes
@@ -519,7 +519,7 @@ class CrossSection:
     def _calc_chezy(self, depth, manning):
         return depth**(1/float(6)) / manning
 
-    def reduce_points(self, n=20, method='visvalingam_whyatt', verbose=True):
+    def reduce_points(self, n, method='visvalingam_whyatt', verbose=True):
         """
         Reduces the number of points from _css attributes to a preset maximum.
 
@@ -539,9 +539,13 @@ class CrossSection:
 
         #points = np.array([[self._css_z[i], self._css_total_width[i], self._css_flow_width[i]] for i in range(n_before_reduction)])
         points = np.array([[self._css_z[i], self._css_total_width[i]] for i in range(n_before_reduction)])
+        reduced_index = n_before_reduction - 1 # default is the same value as it came
         if method.lower() == 'visvalingam_whyatt':
-            simplifier = PS.VWSimplifier(points)
-            reduced_index = simplifier.from_number_index(n)
+            try:
+                simplifier = PS.VWSimplifier(points)
+                reduced_index = simplifier.from_number_index(n)
+            except Exception as e:
+                print('Exception thrown while using polysimplify: {}'.format(str(e)))
 
         # Write to attributes
         #self.z = np.array(self._css_z)

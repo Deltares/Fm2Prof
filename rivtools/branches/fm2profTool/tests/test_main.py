@@ -125,8 +125,8 @@ class Test_Main:
         try:
             main.main(mainArgs)
         except IOError:
-            pytest.fail('Unexpected IOError exception.')
-    
+            pytest.fail('Unexpected IOError exception.')    
+
 # region // Helpers
 
 # High level acceptance tests, these are the ones who are only meant to generate output files
