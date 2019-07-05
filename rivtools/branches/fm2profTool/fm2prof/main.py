@@ -336,7 +336,7 @@ class Fm2ProfRunner :
         Arguments:
             css_data {dict} -- Dictionary of data for the current cross section
             input_param_dict {Mapping[str,list]} -- Dictionary with input parameters
-            fm_model_data {CE.FmModelData} -- Data to assign to t he new cross section
+            fm_model_data {CE.FmModelData} -- Data to assign to the new cross section
         
         Raises:
             Exception: If no css_data is given.
@@ -358,24 +358,52 @@ class Fm2ProfRunner :
 
         if fm_model_data is None:
             raise Exception('No FM data given for new cross section {}'.format(css_name))
-
-        # define fm_model_data variables
-        time_independent_data = fm_model_data.time_independent_data
-        edge_data = fm_model_data.edge_data
-        time_dependent_data = fm_model_data.time_dependent_data
-        
+      
         # time stamp start
         start_time = datetime.datetime.now()
         time_stamp = datetime.datetime.strftime(start_time, '%I:%M%p')        
         self.__set_logger_message('{} :: cross-section {}'.format(time_stamp, css_name))
 
         # Create cross section
-        created_css = self._get_new_cross_section(css_data = css_data, input_param_dict = input_param_dict) 
+        created_css = self._get_new_cross_section(
+            css_data = css_data, 
+            input_param_dict = input_param_dict) 
         self.__set_logger_message('T+ %.2f :: initiated new cross-section %s' % (self.__get_time_stamp_seconds(start_time), css_name))
+        
+        self._set_fm_data_to_cross_section(
+            cross_section = created_css,
+            input_param_dict = input_param_dict,
+            fm_model_data = fm_model_data,
+            start_time = start_time )
+        
+        self.__set_logger_message('cross-section {} generated in {:.2f} seconds'.format(css_name, self.__get_time_stamp_seconds(start_time)))
+        return created_css
 
+    def _set_fm_data_to_cross_section(self, 
+        cross_section : CE.CrossSection, 
+        input_param_dict : Mapping[str, list], 
+        fm_model_data : CE.FmModelData, 
+        start_time : datetime):
+        """Sets extra FM data to the given Cross Section
+        
+        Arguments:
+            cross_section {CE.CrossSection} -- Given Cross Section.
+            input_param_dict {Mapping[str, list]} -- Dictionary with input parameters.
+            fm_model_data {CE.FmModelData} -- Data to assign to the new cross section.
+            start_time {datetime} -- Timestamp to be used in the logger.
+        """
+        
+        if cross_section is None or fm_model_data is None:
+            return
+
+        # define fm_model_data variables
+        time_independent_data = fm_model_data.time_independent_data
+        edge_data = fm_model_data.edge_data
+        time_dependent_data = fm_model_data.time_dependent_data
+        css_name = cross_section.name
         try:            
             # Retrieve FM data for cross-section
-            fm_data = FE.get_fm2d_data_for_css(created_css.name,
+            fm_data = FE.get_fm2d_data_for_css(cross_section.name,
                                                 time_independent_data,
                                                 edge_data,
                                                 time_dependent_data)
@@ -383,24 +411,21 @@ class Fm2ProfRunner :
             self.__set_logger_message('T+ %.2f :: retrieved data for css %s' % (self.__get_time_stamp_seconds(start_time), css_name))
 
             # Build cross-section
-            created_css.build_from_fm(fm_data=fm_data)
+            cross_section.build_from_fm(fm_data=fm_data)
             self.__set_logger_message('T+ %.2f :: cross-section derived, starting correction.....' % (self.__get_time_stamp_seconds(start_time)))
 
             # Delta-h correction
-            self._calculate_css_correction(input_param_dict, created_css, start_time)
+            self._calculate_css_correction(input_param_dict, cross_section, start_time)
 
             # Reduce number of points in cross-section
-            self._reduce_css_points(input_param_dict, created_css, start_time)
+            self._reduce_css_points(input_param_dict, cross_section, start_time)
 
             # assign roughness
-            created_css.assign_roughness(fm_data)
+            cross_section.assign_roughness(fm_data)
             self.__set_logger_message('T+ %.2f :: computed roughness' % (self.__get_time_stamp_seconds(start_time)))
         
         except Exception as e_info:
             self.__set_logger_message('Exception while setting cross-section {} details, {}'.format(css_name, str(e_info)))
-
-        self.__set_logger_message('cross-section {} generated in {:.2f} seconds'.format(css_name, self.__get_time_stamp_seconds(start_time)))
-        return created_css
 
     def _get_new_cross_section(self, css_data : Mapping[str, str], input_param_dict : Mapping[str, str]):
         """Creates a cross section with the given input param dictionary.
