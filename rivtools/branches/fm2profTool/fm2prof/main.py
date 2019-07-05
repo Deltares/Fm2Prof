@@ -37,7 +37,7 @@ from fm2prof import sobek_export
 
 from typing import Mapping, Sequence
 
-import os, sys, getopt
+import os, sys, getopt, shutil
 # endregion
 
 class IniFile:
@@ -478,10 +478,11 @@ class Fm2ProfRunner :
             output_dir {str} -- target directory where to export all the cross sections
         """
         if not cross_sections:
+            return            
+
+        if not output_dir or not os.path.exists(output_dir):
             return
-        
-        if not output_dir:
-            output_dir = 'exported_cross_sections'
+
         # File paths
         css_location_ini_file = os.path.join(output_dir, 'CrossSectionLocations.ini')
         css_definitions_ini_file = os.path.join(output_dir, 'CrossSectionDefinitions.ini')
@@ -494,17 +495,20 @@ class Fm2ProfRunner :
 
         csv_volumes_file = output_dir + '\\volumes.csv'
 
-        # export all cross-sections         
-        sobek_export.export_crossSectionLocations(cross_sections, file_path= css_location_ini_file )
-        
-        sobek_export.export_geometry(cross_sections, file_path = css_definitions_ini_file, fmt='dflow1d')
-        sobek_export.export_geometry(cross_sections, file_path = csv_geometry_file, fmt = 'sobek3')
-        sobek_export.export_geometry(cross_sections, file_path = csv_geometry_test_file, fmt='testformat')
-        
-        sobek_export.export_roughness(cross_sections, file_path = csv_roughness_file , fmt='sobek3')
-        sobek_export.export_roughness(cross_sections, file_path = csv_roughness_test_file, fmt='testformat')
-        
-        sobek_export.export_volumes(cross_sections, file_path = csv_volumes_file)
+        # export all cross-sections   
+        try:      
+            sobek_export.export_crossSectionLocations(cross_sections, file_path= css_location_ini_file )
+            
+            sobek_export.export_geometry(cross_sections, file_path = css_definitions_ini_file, fmt='dflow1d')
+            sobek_export.export_geometry(cross_sections, file_path = csv_geometry_file, fmt = 'sobek3')
+            sobek_export.export_geometry(cross_sections, file_path = csv_geometry_test_file, fmt='testformat')
+            
+            sobek_export.export_roughness(cross_sections, file_path = csv_roughness_file , fmt='sobek3')
+            sobek_export.export_roughness(cross_sections, file_path = csv_roughness_test_file, fmt='testformat')
+            
+            sobek_export.export_volumes(cross_sections, file_path = csv_volumes_file)
+        except Exception as e_info:
+            self.__set_logger_message('An error was produced, not all output files might be exported. {}'.format(str(e_info)))
         
         self.__set_logger_message('Exported output files, FM2PROF finished')
 
