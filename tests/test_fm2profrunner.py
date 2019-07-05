@@ -236,8 +236,6 @@ class Test_generate_cross_section_list:
         assert return_css.branch == expected_data_branch_id, 'Expected branch {} but was {}'.format( expected_data_branch_id, return_css.branch)
         assert return_css.chainage == expected_data_data_chainage, 'Expected chainage {} but was {}'.format( expected_data_data_chainage, return_css.chainage)
 
-
-
 class Test_generate_cross_section:
     
     @pytest.mark.unittest
@@ -429,8 +427,7 @@ class Test_set_fm_data_to_cross_section:
     def test_when_given_correct_values_then_fm_data_set_to_css(self):
         pytest.fail('To do. This test should verify fm_data is set, the CS is built, Delta-h corrected, reduced number of points, assigned roughness.')
 
-class Test_get_new_cross_section:
-    
+class Test_get_new_cross_section:    
     @pytest.mark.unittest
     @pytest.mark.parametrize('css_data', [(None), ({})])
     def test_when_not_given_css_data_then_returns_none(self, css_data):
@@ -573,12 +570,11 @@ class Test_export_cross_sections:
             e_message = str(e)
             pytest.fail('No exception was expected, but given: {}'.format(e_message))
 
-    @pytest.mark.integration
+    @pytest.mark.unittest
     @pytest.mark.parametrize("output_dir", [(None), ([]), ('') ])
-    def test_when_no_output_dir_then_exports_to_default_output_dir(self, output_dir):
+    def test_when_no_output_dir_then_does_not_raise(self, output_dir):
         # 1. Set up test data
         runner = Fm2ProfRunner(None)
-        default_output_dir = 'exported_cross_sections'
         input_params = {}
         css_name = 'dummy_name'
         css_length = 0
@@ -586,21 +582,43 @@ class Test_export_cross_sections:
         test_css = CS(input_params, css_name,css_length, css_location)
         cross_sections = [test_css]
 
-        # 2. verify initial expectations
-        if os.path.exists(default_output_dir):
-            shutil.rmtree(default_output_dir)
-    
-        # 3. run test
+        # 2. run test
         try:
             runner._export_cross_sections(cross_sections, output_dir)
         except Exception as e:
             e_message = str(e)
             pytest.fail('No exception was expected, but given: {}'.format(e_message))
+
+    @pytest.mark.integrationtest
+    def test_when_given_invalid_parameters_then_does_not_raise(self):
+        # 1. Set up test data
+        runner = Fm2ProfRunner(None)
+        output_dir = 'dummy_dir'
+        input_params = {}
+        css_name = 'dummy_name'
+        css_length = 0
+        css_location = (0,0)
+        test_css = CS(input_params, css_name,css_length, css_location)
+        cross_sections = [test_css]
+        # 2. Set initial expectations        
+        if not os.path.exists(output_dir):
+            os.mkdir(output_dir)
+        assert os.path.exists(output_dir)
+
+        # 3. run test
+        try:
+            runner._export_cross_sections(cross_sections, output_dir)
+        except Exception as e:
+            e_message = str(e)
+            shutil.rmtree(output_dir)
+            pytest.fail('No exception expected but was thrown {}'.format(e_message))
         
-        # 4. Verify final expectations
-        assert os.path.exists(default_output_dir)
-        assert os.listdir(default_output_dir)
-        shutil.rmtree(default_output_dir)
+        # 4. Clean up directory
+        shutil.rmtree(output_dir)
+    
+    @pytest.mark.unittest
+    def test_when_given_valid_parameters_then_css_are_exported(self):
+        pytest.fail('To do.')
 
 class Test_calculate_css_correction:
     
@@ -613,8 +631,7 @@ class Test_calculate_css_correction:
         # 1. Set up test data
         runner = Fm2ProfRunner(None)
         input_param_dict = {
-            'sdstorage':'1',
-
+            'sdstorage':'1'
         }
         css_name = 'dummy_name'
         css_length = 0
