@@ -290,7 +290,8 @@ class Fm2ProfRunner :
       
         for name in css_data_name_list:
             generated_cross_section = self._generate_cross_section(name, input_param_dict, fm_model_data)
-            cross_sections.append(generated_cross_section)
+            if generated_cross_section is not None:
+                cross_sections.append(generated_cross_section)
 
         return cross_sections
     
@@ -340,7 +341,7 @@ class Fm2ProfRunner :
                                                 edge_data,
                                                 time_dependent_data)
             
-            self.__set_logger_message('T+ %.2f :: retrieved data for css %s' % (self.__get_time_stamp_seconds(start_time), created_css.name))
+            self.__set_logger_message('T+ %.2f :: retrieved data for css %s' % (self.__get_time_stamp_seconds(start_time), css_name))
 
             # Build cross-section
             created_css.build_from_fm(fm_data=fm_data)
@@ -359,7 +360,7 @@ class Fm2ProfRunner :
         except Exception as e_info:
             self.__set_logger_message('Exception while setting cross-section {} details, {}'.format(css_name, str(e_info)))
 
-        self.__set_logger_message('cross-section {} generated in {:.2f} seconds'.format(created_css.name, self.__get_time_stamp_seconds(start_time)))
+        self.__set_logger_message('cross-section {} generated in {:.2f} seconds'.format(css_name, self.__get_time_stamp_seconds(start_time)))
         return created_css
 
     def _get_new_cross_section(self, name:str, input_param_dict : Mapping[str, str], css_data : Mapping[str, str]):
@@ -403,12 +404,16 @@ class Fm2ProfRunner :
             or css_data_chainage is None):
             return None
 
-        css = CE.CrossSection(input_param_dict, 
-            name=name, 
-            length=css_data_length[css_index], 
-            location=css_data_location[css_index],
-            branchid=css_data_branch_id[css_index],
-            chainage=css_data_chainage[css_index])
+        try:
+            css = CE.CrossSection(input_param_dict, 
+                name=name, 
+                length=css_data_length[css_index], 
+                location=css_data_location[css_index],
+                branchid=css_data_branch_id[css_index],
+                chainage=css_data_chainage[css_index])
+        except Exception as e_info:
+            self.__set_logger_message('Exception thrown while creating cross-section {}, message: {}'.format(name, str(e_info)))
+            return None
 
         return css
 

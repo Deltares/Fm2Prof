@@ -141,26 +141,102 @@ class Test_generate_cross_section_list:
     def test_when_given_correct_parameters_then_returns_list_with_expected_css(self):
         # 1. Set up test data
         runner = Fm2ProfRunner(None)
-        fm_model_data_args = (0,1,2,3,4)
-        fm_model_data = FMD(fm_model_data_args)
-        input_param_dict = {
-            'DummyKey' : 'dummyValue'
-        }
-        return_value = None
-        
+        input_param_dict = {'dummyKey' : 'dummyValue'}
+        test_number_of_css = 2
+        test_css_name = 'dummy_css'
+        css_data_length = 42
+        css_data_location = (4,2)
+        css_data_branch_id = 420
+        css_data_chainage = 4.2
+        id_key = 'id'
+        length_key = 'length'
+        xy_key = 'xy'
+        branchid_key = 'branchid'
+        chainage_key = 'chainage'
+        id_keys = [];  length_values =[]; xy_values = []; branchid_values =[]; chainage_values =[]
+        for i in range(test_number_of_css):
+            valid_mult = i + 1
+            id_keys.append(test_css_name + '_' + str(i))
+            length_values.append(css_data_length * valid_mult)
+            xy_values.append(tuple([valid_mult * x for x in css_data_location]))
+            branchid_values.append(css_data_branch_id * valid_mult)
+            chainage_values.append(css_data_chainage * valid_mult)
+        css_data = {
+            id_key      : id_keys,
+            length_key  : length_values,
+            xy_key      : xy_values,
+            branchid_key:branchid_values,
+            chainage_key:chainage_values }
+
+        fmd_arg_list = (None, None, None, None, css_data)
+        fm_model_data = FMD(fmd_arg_list)
         # 2. Verify initial expectations
         assert runner is not None
 
         # 3. Run test
         try:
-            return_value = runner._generate_cross_section_list(input_param_dict, fm_model_data)
+            return_css_list = runner._generate_cross_section_list(input_param_dict, fm_model_data)
         except Exception as e_info:
             pytest.fail('Exception {} was given while generating cross sections'.format(str(e_info)))
 
         # 4. Verify final expectations
-        assert return_value is not None
-        assert len(return_value) == 0
-        pytest.fail('To Do')
+        assert return_css_list is not None
+        assert len(return_css_list) == test_number_of_css
+        for idx in range(len(return_css_list)):
+            valid_mult = idx + 1
+            expected_name = test_css_name + '_' + str(idx)
+            expected_data_length = css_data_length * valid_mult
+            expected_data_location = tuple([valid_mult * x for x in css_data_location])
+            expected_data_branch_id = css_data_branch_id * valid_mult
+            expected_data_data_chainage = css_data_chainage * valid_mult
+            return_css = return_css_list[idx]
+            assert return_css.name == expected_name, 'Expected name {} but was {}'.format( expected_name, return_css.name)
+            assert return_css.length == expected_data_length, 'Expected length {} but was {}'.format( expected_data_length, return_css.length)
+            assert return_css.location == expected_data_location, 'Expected location {} but was {}'.format( expected_data_location, return_css.location)
+            assert return_css.branch == expected_data_branch_id, 'Expected branch {} but was {}'.format( expected_data_branch_id, return_css.branch)
+            assert return_css.chainage == expected_data_data_chainage, 'Expected chainage {} but was {}'.format( expected_data_data_chainage, return_css.chainage)
+
+    @pytest.mark.integrationtest
+    def test_when_given_correct_parameters_then_returns_list_with_only_valid_css(self):
+        # 1. Set up test data
+        runner = Fm2ProfRunner(None)
+        expected_css = 1
+        expected_name = 'dummy_css'
+        expected_data_length = 42
+        expected_data_location = (4,2)
+        expected_data_branch_id = 420
+        expected_data_data_chainage = 4.2
+        css_data = {
+            'id'      :   [expected_name, 'dummy_css_1'],
+            'length'  :   [expected_data_length],
+            'xy'      :   [expected_data_location],
+            'branchid':   [expected_data_branch_id],
+            'chainage':   [expected_data_data_chainage] }
+
+        fmd_arg_list = (None, None, None, None, css_data)
+        fm_model_data = FMD(fmd_arg_list)
+        input_param_dict = {'dummyKey' : 'dummyValue'}
+        # 2. Verify initial expectations
+        assert runner is not None
+
+        # 3. Run test
+        try:
+            return_css_list = runner._generate_cross_section_list(input_param_dict, fm_model_data)
+        except Exception as e_info:
+            pytest.fail('Exception {} was given while generating cross sections'.format(str(e_info)))
+
+        # 4. Verify final expectations
+        assert return_css_list is not None
+        assert len(return_css_list) == expected_css
+        return_css = return_css_list[0]
+        assert return_css is not None
+        assert return_css.name == expected_name, 'Expected name {} but was {}'.format( expected_name, return_css.name)
+        assert return_css.length == expected_data_length, 'Expected length {} but was {}'.format( expected_data_length, return_css.length)
+        assert return_css.location == expected_data_location, 'Expected location {} but was {}'.format( expected_data_location, return_css.location)
+        assert return_css.branch == expected_data_branch_id, 'Expected branch {} but was {}'.format( expected_data_branch_id, return_css.branch)
+        assert return_css.chainage == expected_data_data_chainage, 'Expected chainage {} but was {}'.format( expected_data_data_chainage, return_css.chainage)
+
+
 
 class Test_generate_cross_section:
     
@@ -337,6 +413,37 @@ class Test_get_new_cross_section:
 
         # 4. Verify final expectations
         assert return_value is None
+
+    @pytest.mark.integrationtest
+    def test_when_given_css_data_but_missing_parameters_then_returns_none(self):
+        # 1. Set up test data
+        runner = Fm2ProfRunner(None)
+        test_css_name = 'dummy_css'
+        test_css_name_wrong_idx = 'wrong_idx'
+        input_param_dict = None
+        css_data = {
+            'id' : [test_css_name],
+            'length': [0],
+            'xy' : [(0,0)],
+            'branchid':[0],
+            'chainage':[0]
+        }
+
+        # 2. Expectations
+        return_css = None
+
+        # 3. Run test
+        try:
+            return_css = runner._get_new_cross_section(
+                            name = test_css_name_wrong_idx, 
+                            input_param_dict = input_param_dict, 
+                            css_data = css_data)
+        except Exception as e_info:
+            pytest.fail('No expected exception but was risen: {}'.format(str(e_info)))
+
+        # 4. Verify final expectations
+        assert return_css is None
+
 
     @pytest.mark.integrationtest
     def test_when_given_css_data_but_no_input_parameters_then_returns_expected_css(self):
