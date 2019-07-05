@@ -81,6 +81,51 @@ class Test_Fm2ProfRunner:
         except:
             pytest.fail('No exception expected.') 
 
+class Test_export_cross_sections:
+
+    @pytest.mark.unittest
+    @pytest.mark.parametrize("cross_sections", [(None), ([]), ('') ])
+    def test_when_no_cross_sections_then_does_not_raise(self, cross_sections):
+        # 1. Set up test data
+        runner = Fm2ProfRunner(None)
+        output_dir = 'dummy_dir'
+
+        # 2. run test
+        try:
+            runner._export_cross_sections(cross_sections, output_dir)
+        except Exception as e:
+            e_message = str(e)
+            pytest.fail('No exception was expected, but given: {}'.format(e_message))
+
+    @pytest.mark.integration
+    @pytest.mark.parametrize("output_dir", [(None), ([]), ('') ])
+    def test_when_no_output_dir_then_exports_to_default_output_dir(self, output_dir):
+        # 1. Set up test data
+        runner = Fm2ProfRunner(None)
+        default_output_dir = 'exported_cross_sections'
+        input_params = {}
+        css_name = 'dummy_name'
+        css_length = 0
+        css_location = (0,0)
+        test_css = CS(input_params, css_name,css_length, css_location)
+        cross_sections = [test_css]
+
+        # 2. verify initial expectations
+        if os.path.exists(default_output_dir):
+            shutil.rmtree(default_output_dir)
+    
+        # 3. run test
+        try:
+            runner._export_cross_sections(cross_sections, output_dir)
+        except Exception as e:
+            e_message = str(e)
+            pytest.fail('No exception was expected, but given: {}'.format(e_message))
+        
+        # 4. Verify final expectations
+        assert os.path.exists(default_output_dir)
+        assert os.listdir(default_output_dir)
+        shutil.rmtree(default_output_dir)
+
 class Test_calculate_css_correction:
     
     @pytest.mark.unittest

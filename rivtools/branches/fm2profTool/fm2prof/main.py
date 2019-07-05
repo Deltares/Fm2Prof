@@ -263,21 +263,27 @@ class Fm2ProfRunner :
         cross_sections = list()
 
         # Read FM model data
-        (time_dependent_data, time_independent_data, edge_data, node_coordinates, cssdata) = FE.read_fm2prof_input(map_file, css_file)
+        fm2prof_fm_model_data = FE.read_fm2prof_input(map_file, css_file)
+        fm_model_data = CE.FmModelData(fm2prof_fm_model_data)
+        css_data = fm_model_data.css_data
+        time_independent_data = fm_model_data.time_independent_data
+        edge_data = fm_model_data.edge_data
+        time_dependent_data = fm_model_data.time_dependent_data
         self.__logger.write('finished reading FM and cross-sectional data data')
 
         # generate all cross-sections
-        for index, name in enumerate(cssdata['id']):
+        css_data_id = css_data.get('id')
+        for index, name in enumerate(css_data_id):
             starttime = datetime.datetime.now()
             self.__logger.write('{} :: cross-section {}'.format(datetime.datetime.strftime(starttime, '%I:%M%p'), name))
 
-            cssindex = cssdata['id'].index(name)
+            cssindex = css_data['id'].index(name)
             css = CE.CrossSection(input_param_dict, 
                                  name=name, 
-                                 length=cssdata['length'][cssindex], 
-                                 location=cssdata['xy'][cssindex],
-                                 branchid=cssdata['branchid'][cssindex],
-                                 chainage=cssdata['chainage'][cssindex])
+                                 length=css_data['length'][cssindex], 
+                                 location=css_data['xy'][cssindex],
+                                 branchid=css_data['branchid'][cssindex],
+                                 chainage=css_data['chainage'][cssindex])
             self.__logger.write('T+ %.2f :: initiated new cross-section %s' % ((datetime.datetime.now()-starttime).total_seconds(), name))
 
             # Retrieve FM data for cross-section
@@ -309,29 +315,44 @@ class Fm2ProfRunner :
         # The roughness tables in 1D model require the same discharges on the rows. 
         # This function interpolates to get the roughnesses at the correct discharges
         FE.interpolate_roughness(cross_sections)
+        self._export_cross_sections(cross_sections, output_dir)
 
+    def _export_cross_sections(self, cross_sections : list, output_dir: str):
+        """Exports all cross sections to the necessary file formats
         
-        chainages = None
+        Arguments:
+            cross_sections {list} -- List of created cross sections
+            output_dir {str} -- target directory where to export all the cross sections
+        """
+        if not cross_sections:
+            return
+        
+        if not output_dir:
+            output_dir = 'exported_cross_sections'
+        # File paths
+        css_location_ini_file = os.path.join(output_dir, 'CrossSectionLocations.ini')
+        css_definitions_ini_file = os.path.join(output_dir, 'CrossSectionDefinitions.ini')
+        
+        csv_geometry_file = output_dir + '\\geometry.csv'
+        csv_roughness_file = output_dir + '\\roughness.csv'
+        
+        csv_geometry_test_file = output_dir + '\\geometry_test.csv'
+        csv_roughness_test_file = output_dir + '\\roughness_test.csv'
 
-        # export all cross-sections
-        sobek_export.export_crossSectionLocations(cross_sections, 
-            file_path=os.path.join(output_dir, 'CrossSectionLocations.ini'))
-        sobek_export.export_geometry(cross_sections, 
-                                     file_path=os.path.join(output_dir, 'CrossSectionDefinitions.ini'),
-                                     fmt='dflow1d')
-        sobek_export.export_geometry(cross_sections, 
-                                     file_path=output_dir + '\\geometry.csv',
-                                     fmt='sobek3')
-        sobek_export.export_geometry(cross_sections, 
-                                     file_path=output_dir + '\\geometry_test.csv',
-                                     fmt='testformat')
-        sobek_export.export_roughness(cross_sections, 
-                                      output_dir + '\\roughness.csv',
-                                      fmt='sobek3')
-        sobek_export.export_roughness(cross_sections, 
-                                      output_dir + '\\roughness_test.csv',
-                                      fmt='testformat')
-        sobek_export.export_volumes(cross_sections, output_dir + '\\volumes.csv')
+        csv_volumes_file = output_dir + '\\volumes.csv'
+
+        # export all cross-sections         
+        sobek_export.export_crossSectionLocations(cross_sections, file_path= css_location_ini_file )
+        
+        sobek_export.export_geometry(cross_sections, file_path = css_definitions_ini_file, fmt='dflow1d')
+        sobek_export.export_geometry(cross_sections, file_path = csv_geometry_file, fmt = 'sobek3')
+        sobek_export.export_geometry(cross_sections, file_path = csv_geometry_test_file, fmt='testformat')
+        
+        sobek_export.export_roughness(cross_sections, file_path = csv_roughness_file , fmt='sobek3')
+        sobek_export.export_roughness(cross_sections, file_path = csv_roughness_test_file, fmt='testformat')
+        
+        sobek_export.export_volumes(cross_sections, file_path = csv_volumes_file)
+        
         self.__logger.write('Exported output files, FM2PROF finished')
 
     def _calculate_css_correction(self, input_param_dict : Mapping[str,str], css : CE.CrossSection, start_time : float):
@@ -374,11 +395,10 @@ class Fm2ProfRunner :
             css_pt_value = int(num_css_pt_value)
         try:
             css.reduce_points( n = css_pt_value, verbose = False)
+            self.__logger.write('T+ {:.2f} :: simplified cross-section to {:d} points'.format((datetime.datetime.now()-start_time).total_seconds(), css_pt_value))
         except Exception as e_error:
             e_message = str(e_error)
             self.__logger.write('Exception thrown while trying to reduce the css points. {}'.format(e_message))
-
-        self.__logger.write('T+ {:.2f} :: simplified cross-section to {:d} points'.format((datetime.datetime.now()-start_time).total_seconds(),val))
 
     def __is_output_directory_set(self, iniFile : IniFile):
         """
