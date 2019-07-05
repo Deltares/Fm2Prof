@@ -235,7 +235,7 @@ class Fm2ProfRunner :
         Runs the Fm2Prof functionality.
         """
         if self.__iniFile is None:
-            self.__logger.write('No ini file was specified and the run cannot go further.')
+            self.__set_logger_message('No ini file was specified and the run cannot go further.')
             return
         self.run_inifile(self.__iniFile)
       
@@ -256,8 +256,8 @@ class Fm2ProfRunner :
 
         # Add a log file
         self.__logger = CE.Logger(output_dir)
-        self.__logger.write('FM2PROF version {}\n=============================='.format(__version__))
-        self.__logger.write('reading FM and cross-sectional data data')
+        self.__set_logger_message('FM2PROF version {}\n=============================='.format(__version__))
+        self.__set_logger_message('reading FM and cross-sectional data data')
 
         # Create an empty list. New cross-sections will be appended to this list. 
         cross_sections = list()
@@ -265,57 +265,152 @@ class Fm2ProfRunner :
         # Read FM model data
         fm2prof_fm_model_data = FE.read_fm2prof_input(map_file, css_file)
         fm_model_data = CE.FmModelData(fm2prof_fm_model_data)
-        css_data = fm_model_data.css_data
-        time_independent_data = fm_model_data.time_independent_data
-        edge_data = fm_model_data.edge_data
-        time_dependent_data = fm_model_data.time_dependent_data
-        self.__logger.write('finished reading FM and cross-sectional data data')
+        self.__set_logger_message('finished reading FM and cross-sectional data data')
 
         # generate all cross-sections
-        css_data_id = css_data.get('id')
-        for index, name in enumerate(css_data_id):
-            starttime = datetime.datetime.now()
-            self.__logger.write('{} :: cross-section {}'.format(datetime.datetime.strftime(starttime, '%I:%M%p'), name))
-
-            cssindex = css_data['id'].index(name)
-            css = CE.CrossSection(input_param_dict, 
-                                 name=name, 
-                                 length=css_data['length'][cssindex], 
-                                 location=css_data['xy'][cssindex],
-                                 branchid=css_data['branchid'][cssindex],
-                                 chainage=css_data['chainage'][cssindex])
-            self.__logger.write('T+ %.2f :: initiated new cross-section %s' % ((datetime.datetime.now()-starttime).total_seconds(), name))
-
-            # Retrieve FM data for cross-section
-            fm_data = FE.get_fm2d_data_for_css(css.name,
-                                               time_independent_data,
-                                               edge_data,
-                                               time_dependent_data)
-
-            self.__logger.write('T+ %.2f :: retrieved data for css %s' % ((datetime.datetime.now()-starttime).total_seconds(), name))
-
-            # Build cross-section
-            css.build_from_fm(fm_data=fm_data)
-            self.__logger.write('T+ %.2f :: cross-section derived, starting correction.....' % (datetime.datetime.now()-starttime).total_seconds())
-
-            # Delta-h correction
-            self._calculate_css_correction(input_param_dict, css, starttime)
-
-            # Reduce number of points in cross-section
-            self._reduce_css_points(input_param_dict, css, starttime)
-
-            # assign roughness
-            css.assign_roughness(fm_data)
-            self.__logger.write('T+ %.2f :: computed roughness' % (datetime.datetime.now()-starttime).total_seconds())
-
-            # Append new cross-section to list of cross-sections
-            cross_sections.append(css)
-            self.__logger.write('cross-section {} generated in {:.2f} seconds'.format(css.name, (datetime.datetime.now()-starttime).total_seconds()))
+        self._generate_cross_section_list(input_param_dict, fm_model_data)
 
         # The roughness tables in 1D model require the same discharges on the rows. 
         # This function interpolates to get the roughnesses at the correct discharges
         FE.interpolate_roughness(cross_sections)
         self._export_cross_sections(cross_sections, output_dir)
+
+    def _generate_cross_section_list(self, input_param_dict : Mapping[str,str], fm_model_data : CE.FmModelData):
+        """Generates cross sections based on the given fm_model_data
+        
+        Arguments:
+            fm_model_data {CE.FmModelData} -- Class with all necessary data for generating Cross Sections
+        """
+        cross_sections = list()
+        if not fm_model_data or not input_param_dict:
+            return cross_sections
+
+        css_data = fm_model_data.css_data
+        css_data_name_list = css_data.get('id')
+      
+        for name in css_data_name_list:
+            generated_cross_section = self._generate_cross_section(name, input_param_dict, fm_model_data)
+            cross_sections.append(generated_cross_section)
+
+        return cross_sections
+    
+    def _generate_cross_section(self, css_name : str, input_param_dict : Mapping[str,str], fm_model_data : CE.FmModelData):
+        """Generates a cross section and configures its values based on the input parameter dictionary
+        
+        Arguments:
+            css_name {str} -- Name for the new Cross Section
+            input_param_dict {Mapping[str,str]} -- Dictionary with input parameters
+            fm_model_data {CE.FmModelData} -- Data to assign to t he new cross section
+        
+        Raises:
+            Exception: If no input_param_dict is given.
+            Exception: If no fm_model_data is given
+        
+        Returns:
+            {CE.CrossSection} -- New Cross Section
+        """
+        if not css_name:
+            css_name = 'new_cross_section'
+
+        if input_param_dict is None:
+            raise Exception('No input parameters (from ini file) given for new cross section {}'.format(css_name))
+
+        if fm_model_data is None:
+            raise Exception('No FM data given for new cross section {}'.format(css_name))
+
+        # define fm_model_data variables
+        css_data = fm_model_data.css_data
+        time_independent_data = fm_model_data.time_independent_data
+        edge_data = fm_model_data.edge_data
+        time_dependent_data = fm_model_data.time_dependent_data
+        
+        # time stamp start
+        start_time = datetime.datetime.now()
+        time_stamp = datetime.datetime.strftime(start_time, '%I:%M%p')        
+        self.__set_logger_message('{} :: cross-section {}'.format(time_stamp, css_name))
+
+        # Create cross section
+        created_css = self._get_new_cross_section(css_name, input_param_dict = input_param_dict, css_data = css_data) 
+        self.__set_logger_message('T+ %.2f :: initiated new cross-section %s' % (self.__get_time_stamp_seconds(start_time), css_name))
+
+        try:            
+            # Retrieve FM data for cross-section
+            fm_data = FE.get_fm2d_data_for_css(created_css.name,
+                                                time_independent_data,
+                                                edge_data,
+                                                time_dependent_data)
+            
+            self.__set_logger_message('T+ %.2f :: retrieved data for css %s' % (self.__get_time_stamp_seconds(start_time), created_css.name))
+
+            # Build cross-section
+            created_css.build_from_fm(fm_data=fm_data)
+            self.__set_logger_message('T+ %.2f :: cross-section derived, starting correction.....' % (self.__get_time_stamp_seconds(start_time)))
+
+            # Delta-h correction
+            self._calculate_css_correction(input_param_dict, created_css, start_time)
+
+            # Reduce number of points in cross-section
+            self._reduce_css_points(input_param_dict, created_css, start_time)
+
+            # assign roughness
+            created_css.assign_roughness(fm_data)
+            self.__set_logger_message('T+ %.2f :: computed roughness' % (self.__get_time_stamp_seconds(start_time)))
+        
+        except Exception as e_info:
+            self.__set_logger_message('Exception while setting cross-section {} details, {}'.format(css_name, str(e_info)))
+
+        self.__set_logger_message('cross-section {} generated in {:.2f} seconds'.format(created_css.name, self.__get_time_stamp_seconds(start_time)))
+        return created_css
+
+    def _get_new_cross_section(self, name:str, input_param_dict : Mapping[str, str], css_data : Mapping[str, str]):
+        """Creates a cross section with the given input param dictionary.
+        
+        Arguments:
+            name {str} -- Name for the new cross section.
+            input_param_dict {Mapping[str, str]} -- Dictionary with parameters for Cross Section.
+            css_data {Mapping[str, str]} -- FM Model data for cross section.
+        
+        Returns:
+            {CE.CrossSection} -- New cross section object.
+        """ 
+        if not name:
+            name = 'new_cross_section'        
+
+        # Get id data and id index
+        if not css_data:
+            return None
+        
+        css_data_id = css_data.get('id')
+        if not css_data_id:
+            return None
+
+        css_index = -1
+        try:
+            css_index = css_data_id.index(name)
+        except ValueError as ve:
+            self.__set_logger_message('Exception thrown while creating cross-section {}, message: {}'.format(name, str(ve)))
+            return None
+        
+        # Get remainig data
+        css_data_length = css_data.get('length')
+        css_data_location = css_data.get('xy')
+        css_data_branch_id = css_data.get('branchid')    
+        css_data_chainage = css_data.get('chainage')
+
+        if (css_data_length is None 
+            or css_data_location is None 
+            or css_data_branch_id is None 
+            or css_data_chainage is None):
+            return None
+
+        css = CE.CrossSection(input_param_dict, 
+            name=name, 
+            length=css_data_length[css_index], 
+            location=css_data_location[css_index],
+            branchid=css_data_branch_id[css_index],
+            chainage=css_data_chainage[css_index])
+
+        return css
 
     def _export_cross_sections(self, cross_sections : list, output_dir: str):
         """Exports all cross sections to the necessary file formats
@@ -353,7 +448,7 @@ class Fm2ProfRunner :
         
         sobek_export.export_volumes(cross_sections, file_path = csv_volumes_file)
         
-        self.__logger.write('Exported output files, FM2PROF finished')
+        self.__set_logger_message('Exported output files, FM2PROF finished')
 
     def _calculate_css_correction(self, input_param_dict : Mapping[str,str], css : CE.CrossSection, start_time : float):
         """Calculates the Cross Section correction if needed.
@@ -367,17 +462,17 @@ class Fm2ProfRunner :
         sd_storage_value = input_param_dict.get(sd_storage_key, 0)
         # Verify the obtained value is an integer.
         if not sd_storage_value.isdigit():
-            self.__logger.write('SDStorage value given is not an integer.')
+            self.__set_logger_message('SDStorage value given is not an integer.')
             return
         # Check if it should be corrected.
         sd_storage_value = int(sd_storage_value)
         if sd_storage_value == 1:
             try:
                 css.calculate_correction()
-                self.__logger.write('T+ %.2f :: correction finished' % (datetime.datetime.now()-start_time).total_seconds())
+                self.__set_logger_message('T+ %.2f :: correction finished' % (datetime.datetime.now()-start_time).total_seconds())
             except Exception as e_error:
                 e_message = str(e_error)
-                self.__logger.write('Exception thrown while trying to calculate the correction. {}'.format(e_message))
+                self.__set_logger_message('Exception thrown while trying to calculate the correction. {}'.format(e_message))
 
     def _reduce_css_points(self, input_param_dict : Mapping[str, str], css : CE.CrossSection, start_time : float ):
         """Returns a valid value for the number of css points read from ini file.
@@ -395,11 +490,34 @@ class Fm2ProfRunner :
             css_pt_value = int(num_css_pt_value)
         try:
             css.reduce_points( n = css_pt_value, verbose = False)
-            self.__logger.write('T+ {:.2f} :: simplified cross-section to {:d} points'.format((datetime.datetime.now()-start_time).total_seconds(), css_pt_value))
+            self.__set_logger_message('T+ {:.2f} :: simplified cross-section to {:d} points'.format((datetime.datetime.now()-start_time).total_seconds(), css_pt_value))
         except Exception as e_error:
             e_message = str(e_error)
-            self.__logger.write('Exception thrown while trying to reduce the css points. {}'.format(e_message))
+            self.__set_logger_message('Exception thrown while trying to reduce the css points. {}'.format(e_message))
 
+    def __set_logger_message(self, err_mssg : str):
+        """Sets message to logger if this is set.
+        
+        Arguments:
+            err_mssg {str} -- Error message to send to logger.
+        """
+        if not self.__logger:
+            return
+        self.__logger.write(err_mssg)
+    
+    def __get_time_stamp_seconds(self, start_time : datetime):
+        """Returns a time stamp with the time difference
+        
+        Arguments:
+            start_time {datetime} -- Initial date time
+        
+        Returns:
+            {float} -- difference of time between start and now in seconds
+        """
+        time_now = datetime.datetime.now()
+        time_difference = time_now - start_time
+        return time_difference.total_seconds()
+    
     def __is_output_directory_set(self, iniFile : IniFile):
         """
         Verifies if the output directory has been set and exists or not.
@@ -429,7 +547,7 @@ class Fm2ProfRunner :
         
         plotLocation = output_directory + '\\{0}_{1}.png'.format(name, figType)
         fig.savefig(plotLocation)
-        self.__logger.write('Saved {0} for {1} plot in {2}.'.format(name, figType, plotLocation))
+        self.__set_logger_message('Saved {0} for {1} plot in {2}.'.format(name, figType, plotLocation))
         
         return
     

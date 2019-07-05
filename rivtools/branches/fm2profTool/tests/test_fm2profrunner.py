@@ -7,6 +7,7 @@ import shutil
 import TestUtils
 from fm2prof.main import Fm2ProfRunner, IniFile
 from fm2prof.Classes import CrossSection as CS
+from fm2prof.Classes import FmModelData as FMD
 
 _root_output_dir = None
 
@@ -51,19 +52,25 @@ def __check_and_create_test_case_output_dir(base_output_dir, caseName):
         os.mkdir(output_directory)
 
     return output_directory
+
+
 # endregion   
 
 class Test_Fm2ProfRunner:
     @pytest.mark.integrationtest
     def test_when_no_file_path_then_no_exception_is_risen(self):
-        """ 1. Set up initial test data """
+        # 1. Set up initial test data
         iniFilePath = ''
+        runner = None
 
-        """ 2. Run test """
+        # 2. Run test
         try:
-            fm2ProfRunner = Fm2ProfRunner(iniFilePath)
-        except:
-            pytest.fail('No exception expected.') 
+            runner = Fm2ProfRunner(iniFilePath)
+        except Exception as e:
+            pytest.fail('No exception expected, but thrown: {}'.format(str(e))) 
+        
+        # 3. Verify final expectations
+        assert runner is not None
             
     @pytest.mark.integrationtest
     def test_given_inifile_then_no_exception_is_risen(self):
@@ -71,15 +78,341 @@ class Test_Fm2ProfRunner:
         ini_file_name = 'fm2prof.ini'
         test_data_dir = TestUtils.get_test_data_dir('IniFile')
         ini_file_path = os.path.join(test_data_dir, ini_file_name)
-        
+        runner = None
+
         #2. Verify the initial expectations
         assert os.path.exists(ini_file_path), "Test File {} was not found".format(ini_file_path)
         
         #3. Run test
         try:
-            fm2ProfRunner = Fm2ProfRunner(ini_file_path)
-        except:
-            pytest.fail('No exception expected.') 
+            runner = Fm2ProfRunner(ini_file_path)
+        except Exception as e:
+            pytest.fail('No exception expected, but thrown: {}'.format(str(e))) 
+        
+        # 4. Verify final expectations
+        assert runner is not None
+
+class Test_generate_cross_section_list:
+    
+    @pytest.mark.unittest
+    def test_when_not_given_FmModelData_then_returns_empty_list(self):
+        # 1. Set up test data
+        runner = Fm2ProfRunner(None)
+        input_param_dict = {
+            'DummyKey' : 'dummyValue'
+        }
+        return_value = None
+        
+        # 2. Verify initial expectations
+        assert runner is not None
+
+        # 3. Run test
+        try:
+            return_value = runner._generate_cross_section_list(input_param_dict, None)
+        except Exception as e_info:
+            pytest.fail('Exception {} was given while generating cross sections'.format(str(e_info)))
+
+        # 4. Verify final expectations
+        assert return_value is not None
+        assert len(return_value) == 0
+    
+    @pytest.mark.unittest
+    def test_when_not_given_input_param_dict_then_returns_empty_list(self):
+        # 1. Set up test data
+        runner = Fm2ProfRunner(None)
+        fm_model_data_args = (0,1,2,3,4)
+        fm_model_data = FMD(fm_model_data_args)
+        return_value = None
+        
+        # 2. Verify initial expectations
+        assert runner is not None
+
+        # 3. Run test
+        try:
+            return_value = runner._generate_cross_section_list(None, fm_model_data)
+        except Exception as e_info:
+            pytest.fail('Exception {} was given while generating cross sections'.format(str(e_info)))
+
+        # 4. Verify final expectations
+        assert return_value is not None
+        assert len(return_value) == 0
+    
+    @pytest.mark.integrationtest
+    def test_when_given_correct_parameters_then_returns_list_with_expected_css(self):
+        # 1. Set up test data
+        runner = Fm2ProfRunner(None)
+        fm_model_data_args = (0,1,2,3,4)
+        fm_model_data = FMD(fm_model_data_args)
+        input_param_dict = {
+            'DummyKey' : 'dummyValue'
+        }
+        return_value = None
+        
+        # 2. Verify initial expectations
+        assert runner is not None
+
+        # 3. Run test
+        try:
+            return_value = runner._generate_cross_section_list(input_param_dict, fm_model_data)
+        except Exception as e_info:
+            pytest.fail('Exception {} was given while generating cross sections'.format(str(e_info)))
+
+        # 4. Verify final expectations
+        assert return_value is not None
+        assert len(return_value) == 0
+        pytest.fail('To Do')
+
+class Test_generate_cross_section:
+    
+    @pytest.mark.unittest
+    def test_when_no_input_param_dict_is_given_then_expected_exception_risen(self):
+        # 1. Set up test data
+        runner = Fm2ProfRunner(None)
+        test_css_name = 'dummy_css'
+        # 2. Set expectations
+        expected_error = 'No input parameters (from ini file) given for new cross section {}'.format(test_css_name)
+
+        # 3. Run test
+        with pytest.raises(Exception) as e_info:
+            runner._generate_cross_section(
+                css_name = test_css_name, 
+                input_param_dict = None, 
+                fm_model_data = None)
+
+        # 4. Verify final expectations
+        error_message = str(e_info.value)
+        assert error_message == expected_error, 'Expected exception message {}, retrieved {}'.format(expected_error, error_message)
+
+    @pytest.mark.unittest
+    def test_when_no_fm_model_data_is_given_then_expected_exception_risen(self):
+        # 1. Set up test data
+        runner = Fm2ProfRunner(None)
+        test_css_name = 'dummy_css'
+        input_param_dict = {'dummyKey' : 'dummyValue'}
+
+        # 2. Set expectations
+        expected_error = 'No FM data given for new cross section {}'.format(test_css_name)
+
+        # 3. Run test
+        with pytest.raises(Exception) as e_info:
+            runner._generate_cross_section(
+                css_name = test_css_name, 
+                input_param_dict = input_param_dict, 
+                fm_model_data = None)
+
+        # 4. Verify final expectations
+        error_message = str(e_info.value)
+        assert error_message == expected_error, 'Expected exception message {}, retrieved {}'.format(expected_error, error_message)
+
+    @pytest.mark.integrationtest
+    def test_when_all_parameters_are_correct_then_returns_expected_css(self):
+        # 1. Set up test data
+        runner = Fm2ProfRunner(None)
+        test_css_name = 'dummy_css'
+        input_param_dict = {'dummyKey' : 'dummyValue'}
+                
+        css_data_length = 42
+        css_data_location = (4,2)
+        css_data_branch_id = 420
+        css_data_chainage = 4.2
+        css_data = {
+            'id' : [test_css_name],
+            'length': [css_data_length],
+            'xy' : [css_data_location],
+            'branchid':[css_data_branch_id],
+            'chainage':[css_data_chainage]
+        }
+        fmd_arg_list = (None, None, None, None, css_data)
+        fm_model_data = FMD(fmd_arg_list)
+
+        # 2. Expectations
+        return_css = None
+
+        # 3. Run test
+        try:
+            return_css = runner._generate_cross_section(
+                            css_name = test_css_name, 
+                            input_param_dict = input_param_dict, 
+                            fm_model_data = fm_model_data)
+        except Exception as e_info:
+            pytest.fail('No expected exception but was risen: {}'.format(str(e_info)))
+
+        # 4. Verify final expectations
+        assert return_css is not None
+        assert return_css.name == test_css_name, 'Expected name {} but was {}'.format( test_css_name, return_css.name)
+        assert return_css.length == css_data_length, 'Expected length {} but was {}'.format( css_data_length, return_css.length)
+        assert return_css.location == css_data_location, 'Expected location {} but was {}'.format( css_data_location, return_css.location)
+        assert return_css.branch == css_data_branch_id, 'Expected branch {} but was {}'.format( css_data_branch_id, return_css.branch)
+        assert return_css.chainage == css_data_chainage, 'Expected chainage {} but was {}'.format( css_data_chainage, return_css.chainage)
+
+class Test_get_new_cross_section:
+    
+    @pytest.mark.unittest
+    @pytest.mark.parametrize('css_data', [(None), ({})])
+    def test_when_not_given_css_data_then_returns_none(self, css_data):
+        # 1. Set up test data
+        runner = Fm2ProfRunner(None)
+        test_css_name = 'dummy_css'
+
+        # 2. Expectations
+        return_value = None
+
+        # 3. Run test
+        try:
+            return_value = runner._get_new_cross_section(
+                            name = test_css_name, 
+                            input_param_dict = None, 
+                            css_data = css_data)
+        except Exception as e_info:
+            pytest.fail('No expected exception but was risen: {}'.format(str(e_info)))
+
+        # 4. Verify final expectations
+        assert return_value is None
+
+    @pytest.mark.unittest
+    def test_when_css_data_id_not_found_then_returns_none(self):
+        # 1. Set up test data
+        runner = Fm2ProfRunner(None)
+        test_css_name = 'dummy_css'
+        input_param_dict = {'dummyKey' : 'dummyValue'}
+        css_data = {'dummyKey' : 'dummyValue'}
+
+        # 2. Expectations
+        return_value = None
+
+        # 3. Run test
+        try:
+            return_value = runner._get_new_cross_section(
+                            name = test_css_name, 
+                            input_param_dict = input_param_dict, 
+                            css_data = css_data)
+        except Exception as e_info:
+            pytest.fail('No expected exception but was risen: {}'.format(str(e_info)))
+
+        # 4. Verify final expectations
+        assert return_value is None
+    
+    @pytest.mark.unittest
+    def test_when_css_index_not_found_then_returns_none(self):
+        # 1. Set up test data
+        runner = Fm2ProfRunner(None)
+        test_css_name = 'dummy_css'
+        input_param_dict = {'dummyKey' : 'dummyValue'}
+        css_data = {'id' : []}
+
+        # 2. Expectations
+        return_value = None
+
+        # 3. Run test
+        try:
+            return_value = runner._get_new_cross_section(
+                            name = test_css_name, 
+                            input_param_dict = input_param_dict, 
+                            css_data = css_data)
+        except Exception as e_info:
+            pytest.fail('No expected exception but was risen: {}'.format(str(e_info)))
+
+        # 4. Verify final expectations
+        assert return_value is None
+
+    @pytest.mark.unittest
+    def test_when_css_data_given_but_empty_input_param_dict_then_returns_expected_css(self):
+        # 1. Set up test data
+        runner = Fm2ProfRunner(None)
+        test_css_name = 'dummy_css'
+        input_param_dict = {'dummyKey' : 'dummyValue'}
+        css_data = {'id' : [test_css_name]}
+
+        # 2. Expectations
+        return_value = None
+
+        # 3. Run test
+        try:
+            return_value = runner._get_new_cross_section(
+                            name = test_css_name, 
+                            input_param_dict = input_param_dict, 
+                            css_data = css_data)
+        except Exception as e_info:
+            pytest.fail('No expected exception but was risen: {}'.format(str(e_info)))
+
+        # 4. Verify final expectations
+        assert return_value is None
+
+    @pytest.mark.integrationtest
+    def test_when_given_css_data_but_no_input_parameters_then_returns_expected_css(self):
+        # 1. Set up test data
+        runner = Fm2ProfRunner(None)
+        test_css_name = 'dummy_css'
+        input_param_dict = None
+        css_data_length = 42
+        css_data_location = (4,2)
+        css_data_branch_id = 420
+        css_data_chainage = 4.2
+        css_data = {
+            'id' : [test_css_name],
+            'length': [css_data_length],
+            'xy' : [css_data_location],
+            'branchid':[css_data_branch_id],
+            'chainage':[css_data_chainage]
+        }
+
+        # 2. Expectations
+        return_css = None
+
+        # 3. Run test
+        try:
+            return_css = runner._get_new_cross_section(
+                            name = test_css_name, 
+                            input_param_dict = input_param_dict, 
+                            css_data = css_data)
+        except Exception as e_info:
+            pytest.fail('No expected exception but was risen: {}'.format(str(e_info)))
+
+        # 4. Verify final expectations
+        assert return_css is not None
+        assert return_css.name == test_css_name, 'Expected name {} but was {}'.format( test_css_name, return_css.name)
+        assert return_css.length == css_data_length, 'Expected length {} but was {}'.format( css_data_length, return_css.length)
+        assert return_css.location == css_data_location, 'Expected location {} but was {}'.format( css_data_location, return_css.location)
+        assert return_css.branch == css_data_branch_id, 'Expected branch {} but was {}'.format( css_data_branch_id, return_css.branch)
+        assert return_css.chainage == css_data_chainage, 'Expected chainage {} but was {}'.format( css_data_chainage, return_css.chainage)
+
+    @pytest.mark.integrationtest
+    def test_when_given_valid_arguments_then_returns_expected_css(self):
+        # 1. Set up test data
+        runner = Fm2ProfRunner(None)
+        test_css_name = 'dummy_css'
+        input_param_dict = {'dummyKey' : 'dummyValue'}
+        css_data_length = 42
+        css_data_location = (4,2)
+        css_data_branch_id = 420
+        css_data_chainage = 4.2
+        css_data = {
+            'id' : [test_css_name],
+            'length': [css_data_length],
+            'xy' : [css_data_location],
+            'branchid':[css_data_branch_id],
+            'chainage':[css_data_chainage]
+        }
+
+        # 2. Expectations
+        return_css = None
+
+        # 3. Run test
+        try:
+            return_css = runner._get_new_cross_section(
+                            name = test_css_name, 
+                            input_param_dict = input_param_dict, 
+                            css_data = css_data)
+        except Exception as e_info:
+            pytest.fail('No expected exception but was risen: {}'.format(str(e_info)))
+
+        # 4. Verify final expectations
+        assert return_css is not None
+        assert return_css.name == test_css_name, 'Expected name {} but was {}'.format( test_css_name, return_css.name)
+        assert return_css.length == css_data_length, 'Expected length {} but was {}'.format( css_data_length, return_css.length)
+        assert return_css.location == css_data_location, 'Expected location {} but was {}'.format( css_data_location, return_css.location)
+        assert return_css.branch == css_data_branch_id, 'Expected branch {} but was {}'.format( css_data_branch_id, return_css.branch)
+        assert return_css.chainage == css_data_chainage, 'Expected chainage {} but was {}'.format( css_data_chainage, return_css.chainage)
 
 class Test_export_cross_sections:
 
