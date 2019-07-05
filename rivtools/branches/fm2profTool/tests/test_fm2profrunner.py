@@ -120,7 +120,7 @@ class Test_generate_cross_section_list:
     def test_when_not_given_input_param_dict_then_returns_empty_list(self):
         # 1. Set up test data
         runner = Fm2ProfRunner(None)
-        fm_model_data_args = (0,1,2,3,4)
+        fm_model_data_args = (0,1,2,3,{})
         fm_model_data = FMD(fm_model_data_args)
         return_value = None
         
@@ -315,7 +315,14 @@ class Test_generate_cross_section:
             'branchid':css_data_branch_id,
             'chainage':css_data_chainage
         }
-        fmd_arg_list = (None, None, None, None, css_data)
+        css_data_dict = {
+            'id' : [test_css_name],
+            'length': [css_data_length],
+            'xy' : [css_data_location],
+            'branchid':[css_data_branch_id],
+            'chainage':[css_data_chainage]
+        }
+        fmd_arg_list = (None, None, None, None, css_data_dict)
         fm_model_data = FMD(fmd_arg_list)
 
         # 2. Expectations
@@ -363,7 +370,6 @@ class Test_get_new_cross_section:
     def test_when_css_data_id_not_found_then_returns_none(self):
         # 1. Set up test data
         runner = Fm2ProfRunner(None)
-        test_css_name = 'dummy_css'
         input_param_dict = {'dummyKey' : 'dummyValue'}
         css_data = {'dummyKey' : 'dummyValue'}
 

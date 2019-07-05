@@ -32,6 +32,7 @@ import seaborn as sns
 
 from fm2prof import common
 from fm2prof import Functions as FE
+from typing import Mapping, Sequence
 from .lib import polysimplify as PS
 
 import os
@@ -55,13 +56,32 @@ class FmModelData:
     time_independent_data = None
     edge_data = None
     node_coordinates = None
-    css_data_dict = {}
+    css_data_list = None
     def __init__(self, arg_list : list):
         if not arg_list:
             raise Exception('FM model data was not read correctly.')
         if len(arg_list) != 5:
             raise Exception ('Fm model data expects 5 arguments but only {} were given'.format(len(arg_list)))
-        (self.time_dependent_data, self.time_independent_data, self.edge_data, self.node_coordinates, self.css_data_dict) = arg_list
+        
+        (self.time_dependent_data, self.time_independent_data, self.edge_data, self.node_coordinates, css_data_dictionary) = arg_list
+        self.css_data_list = self._get_ordered_css_list(css_data_dictionary)
+
+    def _get_ordered_css_list(self, css_data_dict : Mapping[str,str]):
+        """Returns an ordered list where every element represents a Cross Section structure
+        
+        Arguments:
+            css_data_dict {Mapping[str,str]} -- Dictionary ordered by the keys
+        
+        Returns:
+            {list} -- List where every element contains a dictionary to create a Cross Section.
+        """
+        if not css_data_dict:
+            return []
+        number_of_css = len(next(iter(css_data_dict)))
+        css_dict_keys = css_data_dict.keys()
+        css_dict_values = css_data_dict.values()
+        css_data_list = [dict(zip(css_dict_keys, [value[idx] for value in css_dict_values if idx < len(value)])) for idx in range(number_of_css)]
+        return css_data_list
 
 class CrossSection:
     """
