@@ -66,5 +66,5 @@ class Test_FmModelData:
         assert return_fm_model_data.time_independent_data == time_independent_data
         assert return_fm_model_data.edge_data == edge_data
         assert return_fm_model_data.node_coordinates == node_coordinates
-        assert return_fm_model_data.css_data == css_data
+        assert return_fm_model_data.css_data_dict == css_data
 

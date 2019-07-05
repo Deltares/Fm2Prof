@@ -241,19 +241,34 @@ class Test_generate_cross_section_list:
 class Test_generate_cross_section:
     
     @pytest.mark.unittest
+    def test_when_no_css_data_is_given_then_expected_exception_risen(self):
+        # 1. Set up test data
+        runner = Fm2ProfRunner(None)
+
+        # 2. Set expectations
+        expected_error = 'No data was given to create a Cross Section'
+
+        # 3. Run test
+        with pytest.raises(Exception) as e_info:
+            runner._generate_cross_section( css_data = None, input_param_dict = None, fm_model_data = None)
+
+        # 4. Verify final expectations
+        error_message = str(e_info.value)
+        assert error_message == expected_error, 'Expected exception message {}, retrieved {}'.format(expected_error, error_message)
+
+
+    @pytest.mark.unittest
     def test_when_no_input_param_dict_is_given_then_expected_exception_risen(self):
         # 1. Set up test data
         runner = Fm2ProfRunner(None)
         test_css_name = 'dummy_css'
+        css_data = {'id' : test_css_name }
         # 2. Set expectations
         expected_error = 'No input parameters (from ini file) given for new cross section {}'.format(test_css_name)
 
         # 3. Run test
         with pytest.raises(Exception) as e_info:
-            runner._generate_cross_section(
-                css_name = test_css_name, 
-                input_param_dict = None, 
-                fm_model_data = None)
+            runner._generate_cross_section( css_data = css_data, input_param_dict = None, fm_model_data = None)
 
         # 4. Verify final expectations
         error_message = str(e_info.value)
@@ -263,7 +278,8 @@ class Test_generate_cross_section:
     def test_when_no_fm_model_data_is_given_then_expected_exception_risen(self):
         # 1. Set up test data
         runner = Fm2ProfRunner(None)
-        test_css_name = 'dummy_css'
+        test_css_name = 'dummy_name'
+        css_data = {'id' : test_css_name }
         input_param_dict = {'dummyKey' : 'dummyValue'}
 
         # 2. Set expectations
@@ -272,7 +288,7 @@ class Test_generate_cross_section:
         # 3. Run test
         with pytest.raises(Exception) as e_info:
             runner._generate_cross_section(
-                css_name = test_css_name, 
+                css_data = css_data, 
                 input_param_dict = input_param_dict, 
                 fm_model_data = None)
 
@@ -285,6 +301,7 @@ class Test_generate_cross_section:
         # 1. Set up test data
         runner = Fm2ProfRunner(None)
         test_css_name = 'dummy_css'
+        css_data = {'id' : test_css_name }
         input_param_dict = {'dummyKey' : 'dummyValue'}
                 
         css_data_length = 42
@@ -292,11 +309,11 @@ class Test_generate_cross_section:
         css_data_branch_id = 420
         css_data_chainage = 4.2
         css_data = {
-            'id' : [test_css_name],
-            'length': [css_data_length],
-            'xy' : [css_data_location],
-            'branchid':[css_data_branch_id],
-            'chainage':[css_data_chainage]
+            'id' : test_css_name,
+            'length': css_data_length,
+            'xy' : css_data_location,
+            'branchid':css_data_branch_id,
+            'chainage':css_data_chainage
         }
         fmd_arg_list = (None, None, None, None, css_data)
         fm_model_data = FMD(fmd_arg_list)
@@ -307,7 +324,7 @@ class Test_generate_cross_section:
         # 3. Run test
         try:
             return_css = runner._generate_cross_section(
-                            css_name = test_css_name, 
+                            css_data = css_data, 
                             input_param_dict = input_param_dict, 
                             fm_model_data = fm_model_data)
         except Exception as e_info:
@@ -335,10 +352,7 @@ class Test_get_new_cross_section:
 
         # 3. Run test
         try:
-            return_value = runner._get_new_cross_section(
-                            name = test_css_name, 
-                            input_param_dict = None, 
-                            css_data = css_data)
+            return_value = runner._get_new_cross_section(css_data = css_data, input_param_dict = None)
         except Exception as e_info:
             pytest.fail('No expected exception but was risen: {}'.format(str(e_info)))
 
@@ -358,10 +372,7 @@ class Test_get_new_cross_section:
 
         # 3. Run test
         try:
-            return_value = runner._get_new_cross_section(
-                            name = test_css_name, 
-                            input_param_dict = input_param_dict, 
-                            css_data = css_data)
+            return_value = runner._get_new_cross_section(css_data = css_data, input_param_dict = input_param_dict)
         except Exception as e_info:
             pytest.fail('No expected exception but was risen: {}'.format(str(e_info)))
 
@@ -369,10 +380,9 @@ class Test_get_new_cross_section:
         assert return_value is None
     
     @pytest.mark.unittest
-    def test_when_css_index_not_found_then_returns_none(self):
+    def test_when_css_data_misses_rest_of_key_values_then_returns_none(self):
         # 1. Set up test data
         runner = Fm2ProfRunner(None)
-        test_css_name = 'dummy_css'
         input_param_dict = {'dummyKey' : 'dummyValue'}
         css_data = {'id' : []}
 
@@ -381,69 +391,12 @@ class Test_get_new_cross_section:
 
         # 3. Run test
         try:
-            return_value = runner._get_new_cross_section(
-                            name = test_css_name, 
-                            input_param_dict = input_param_dict, 
-                            css_data = css_data)
+            return_value = runner._get_new_cross_section(css_data = css_data, input_param_dict = input_param_dict)
         except Exception as e_info:
             pytest.fail('No expected exception but was risen: {}'.format(str(e_info)))
 
         # 4. Verify final expectations
         assert return_value is None
-
-    @pytest.mark.unittest
-    def test_when_css_data_given_but_empty_input_param_dict_then_returns_expected_css(self):
-        # 1. Set up test data
-        runner = Fm2ProfRunner(None)
-        test_css_name = 'dummy_css'
-        input_param_dict = {'dummyKey' : 'dummyValue'}
-        css_data = {'id' : [test_css_name]}
-
-        # 2. Expectations
-        return_value = None
-
-        # 3. Run test
-        try:
-            return_value = runner._get_new_cross_section(
-                            name = test_css_name, 
-                            input_param_dict = input_param_dict, 
-                            css_data = css_data)
-        except Exception as e_info:
-            pytest.fail('No expected exception but was risen: {}'.format(str(e_info)))
-
-        # 4. Verify final expectations
-        assert return_value is None
-
-    @pytest.mark.integrationtest
-    def test_when_given_css_data_but_missing_parameters_then_returns_none(self):
-        # 1. Set up test data
-        runner = Fm2ProfRunner(None)
-        test_css_name = 'dummy_css'
-        test_css_name_wrong_idx = 'wrong_idx'
-        input_param_dict = None
-        css_data = {
-            'id' : [test_css_name],
-            'length': [0],
-            'xy' : [(0,0)],
-            'branchid':[0],
-            'chainage':[0]
-        }
-
-        # 2. Expectations
-        return_css = None
-
-        # 3. Run test
-        try:
-            return_css = runner._get_new_cross_section(
-                            name = test_css_name_wrong_idx, 
-                            input_param_dict = input_param_dict, 
-                            css_data = css_data)
-        except Exception as e_info:
-            pytest.fail('No expected exception but was risen: {}'.format(str(e_info)))
-
-        # 4. Verify final expectations
-        assert return_css is None
-
 
     @pytest.mark.integrationtest
     def test_when_given_css_data_but_no_input_parameters_then_returns_expected_css(self):
@@ -456,11 +409,11 @@ class Test_get_new_cross_section:
         css_data_branch_id = 420
         css_data_chainage = 4.2
         css_data = {
-            'id' : [test_css_name],
-            'length': [css_data_length],
-            'xy' : [css_data_location],
-            'branchid':[css_data_branch_id],
-            'chainage':[css_data_chainage]
+            'id' : test_css_name,
+            'length': css_data_length,
+            'xy' : css_data_location,
+            'branchid': css_data_branch_id,
+            'chainage': css_data_chainage
         }
 
         # 2. Expectations
@@ -468,10 +421,7 @@ class Test_get_new_cross_section:
 
         # 3. Run test
         try:
-            return_css = runner._get_new_cross_section(
-                            name = test_css_name, 
-                            input_param_dict = input_param_dict, 
-                            css_data = css_data)
+            return_css = runner._get_new_cross_section( css_data = css_data, input_param_dict = input_param_dict)
         except Exception as e_info:
             pytest.fail('No expected exception but was risen: {}'.format(str(e_info)))
 
@@ -494,22 +444,18 @@ class Test_get_new_cross_section:
         css_data_branch_id = 420
         css_data_chainage = 4.2
         css_data = {
-            'id' : [test_css_name],
-            'length': [css_data_length],
-            'xy' : [css_data_location],
-            'branchid':[css_data_branch_id],
-            'chainage':[css_data_chainage]
-        }
+            'id' : test_css_name,
+            'length': css_data_length,
+            'xy' : css_data_location,
+            'branchid':css_data_branch_id,
+            'chainage':css_data_chainage }
 
         # 2. Expectations
         return_css = None
 
         # 3. Run test
         try:
-            return_css = runner._get_new_cross_section(
-                            name = test_css_name, 
-                            input_param_dict = input_param_dict, 
-                            css_data = css_data)
+            return_css = runner._get_new_cross_section( css_data = css_data, input_param_dict = input_param_dict)
         except Exception as e_info:
             pytest.fail('No expected exception but was risen: {}'.format(str(e_info)))
 

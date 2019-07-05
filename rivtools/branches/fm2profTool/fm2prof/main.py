@@ -285,17 +285,33 @@ class Fm2ProfRunner :
         if not fm_model_data or not input_param_dict:
             return cross_sections
 
-        css_data = fm_model_data.css_data
-        css_data_name_list = css_data.get('id')
-      
-        for name in css_data_name_list:
-            generated_cross_section = self._generate_cross_section(name, input_param_dict, fm_model_data)
+        # Preprocess css from fm_model_data so it's easier to handle it.
+        css_data = fm_model_data.css_data_dict     
+        css_data_list = self.__get_ordered_css_list(css_data)
+
+        for css_data in css_data_list:
+            generated_cross_section = self._generate_cross_section(css_data, input_param_dict, fm_model_data)
             if generated_cross_section is not None:
                 cross_sections.append(generated_cross_section)
 
         return cross_sections
     
-    def _generate_cross_section(self, css_name : str, input_param_dict : Mapping[str,str], fm_model_data : CE.FmModelData):
+    def __get_ordered_css_list(self, css_data_dict : Mapping[str,str]):
+        """Returns an ordered list where every element represents a Cross Section structure
+        
+        Arguments:
+            css_data_dict {Mapping[str,str]} -- Dictionary ordered by the keys
+        
+        Returns:
+            {list} -- List where every element contains a dictionary to create a Cross Section.
+        """
+        number_of_css = len(css_data_dict.get('id'))
+        css_dict_keys = css_data_dict.keys()
+        css_dict_values = css_data_dict.values()
+        css_data_list = [dict(zip(css_dict_keys, [value[idx] for value in css_dict_values if idx < len(value)])) for idx in range(number_of_css)]
+        return css_data_list
+
+    def _generate_cross_section(self, css_data : Mapping[str, str], input_param_dict : Mapping[str,str], fm_model_data : CE.FmModelData):
         """Generates a cross section and configures its values based on the input parameter dictionary
         
         Arguments:
@@ -310,6 +326,10 @@ class Fm2ProfRunner :
         Returns:
             {CE.CrossSection} -- New Cross Section
         """
+        if css_data is None:
+            raise Exception('No data was given to create a Cross Section')
+        
+        css_name = css_data.get('id')
         if not css_name:
             css_name = 'new_cross_section'
 
@@ -320,7 +340,6 @@ class Fm2ProfRunner :
             raise Exception('No FM data given for new cross section {}'.format(css_name))
 
         # define fm_model_data variables
-        css_data = fm_model_data.css_data
         time_independent_data = fm_model_data.time_independent_data
         edge_data = fm_model_data.edge_data
         time_dependent_data = fm_model_data.time_dependent_data
@@ -331,7 +350,7 @@ class Fm2ProfRunner :
         self.__set_logger_message('{} :: cross-section {}'.format(time_stamp, css_name))
 
         # Create cross section
-        created_css = self._get_new_cross_section(css_name, input_param_dict = input_param_dict, css_data = css_data) 
+        created_css = self._get_new_cross_section(css_data = css_data, input_param_dict = input_param_dict) 
         self.__set_logger_message('T+ %.2f :: initiated new cross-section %s' % (self.__get_time_stamp_seconds(start_time), css_name))
 
         try:            
@@ -363,20 +382,17 @@ class Fm2ProfRunner :
         self.__set_logger_message('cross-section {} generated in {:.2f} seconds'.format(css_name, self.__get_time_stamp_seconds(start_time)))
         return created_css
 
-    def _get_new_cross_section(self, name:str, input_param_dict : Mapping[str, str], css_data : Mapping[str, str]):
+    def _get_new_cross_section(self, css_data : Mapping[str, str], input_param_dict : Mapping[str, str]):
         """Creates a cross section with the given input param dictionary.
         
         Arguments:
-            name {str} -- Name for the new cross section.
+            css_name {str} -- Name for the new cross section.
             input_param_dict {Mapping[str, str]} -- Dictionary with parameters for Cross Section.
             css_data {Mapping[str, str]} -- FM Model data for cross section.
         
         Returns:
             {CE.CrossSection} -- New cross section object.
         """ 
-        if not name:
-            name = 'new_cross_section'        
-
         # Get id data and id index
         if not css_data:
             return None
@@ -384,14 +400,7 @@ class Fm2ProfRunner :
         css_data_id = css_data.get('id')
         if not css_data_id:
             return None
-
-        css_index = -1
-        try:
-            css_index = css_data_id.index(name)
-        except ValueError as ve:
-            self.__set_logger_message('Exception thrown while creating cross-section {}, message: {}'.format(name, str(ve)))
-            return None
-        
+       
         # Get remainig data
         css_data_length = css_data.get('length')
         css_data_location = css_data.get('xy')
@@ -406,11 +415,11 @@ class Fm2ProfRunner :
 
         try:
             css = CE.CrossSection(input_param_dict, 
-                name=name, 
-                length=css_data_length[css_index], 
-                location=css_data_location[css_index],
-                branchid=css_data_branch_id[css_index],
-                chainage=css_data_chainage[css_index])
+                name = css_data_id, 
+                length = css_data_length, 
+                location = css_data_location,
+                branchid = css_data_branch_id,
+                chainage = css_data_chainage)
         except Exception as e_info:
             self.__set_logger_message('Exception thrown while creating cross-section {}, message: {}'.format(name, str(e_info)))
             return None
