@@ -252,7 +252,7 @@ class Fm2ProfRunner :
         map_file = iniFile._input_file_paths.get(self.__map_file_key)
         css_file = iniFile._input_file_paths.get(self.__css_file_key)
         output_dir = iniFile._output_dir
-        inputParam_dict = iniFile._input_parameters
+        input_param_dict = iniFile._input_parameters
 
         # Add a log file
         self.__logger = CE.Logger(output_dir)
@@ -272,7 +272,7 @@ class Fm2ProfRunner :
             self.__logger.write('{} :: cross-section {}'.format(datetime.datetime.strftime(starttime, '%I:%M%p'), name))
 
             cssindex = cssdata['id'].index(name)
-            css = CE.CrossSection(inputParam_dict, 
+            css = CE.CrossSection(input_param_dict, 
                                  name=name, 
                                  length=cssdata['length'][cssindex], 
                                  location=cssdata['xy'][cssindex],
@@ -293,12 +293,10 @@ class Fm2ProfRunner :
             self.__logger.write('T+ %.2f :: cross-section derived, starting correction.....' % (datetime.datetime.now()-starttime).total_seconds())
 
             # Delta-h correction
-            css.calculate_correction()
-            self.__logger.write('T+ %.2f :: correction finished' % (datetime.datetime.now()-starttime).total_seconds())
+            self._calculate_css_correction(input_param_dict, css, starttime)
 
             # Reduce number of points in cross-section
-            css.reduce_points(n=20, verbose=False)
-            self.__logger.write('T+ %.2f :: simplified cross-section to .. points' % (datetime.datetime.now()-starttime).total_seconds())
+            self._reduce_css_points(input_param_dict, css, starttime)
 
             # assign roughness
             css.assign_roughness(fm_data)
@@ -335,6 +333,52 @@ class Fm2ProfRunner :
                                       fmt='testformat')
         sobek_export.export_volumes(cross_sections, output_dir + '\\volumes.csv')
         self.__logger.write('Exported output files, FM2PROF finished')
+
+    def _calculate_css_correction(self, input_param_dict : Mapping[str,str], css : CE.CrossSection, start_time : float):
+        """Calculates the Cross Section correction if needed.
+        
+        Arguments:
+            input_param_dict {Mapping[str,str]} -- [description]
+            css {CE.CrossSection} -- [description]
+            start_time {float} -- [description]
+        """
+        sd_storage_key = 'sdstorage'
+        sd_storage_value = input_param_dict.get(sd_storage_key, 0)
+        # Verify the obtained value is an integer.
+        if not sd_storage_value.isdigit():
+            self.__logger.write('SDStorage value given is not an integer.')
+            return
+        # Check if it should be corrected.
+        sd_storage_value = int(sd_storage_value)
+        if sd_storage_value == 1:
+            try:
+                css.calculate_correction()
+                self.__logger.write('T+ %.2f :: correction finished' % (datetime.datetime.now()-start_time).total_seconds())
+            except Exception as e_error:
+                e_message = str(e_error)
+                self.__logger.write('Exception thrown while trying to calculate the correction. {}'.format(e_message))
+
+    def _reduce_css_points(self, input_param_dict : Mapping[str, str], css : CE.CrossSection, start_time : float ):
+        """Returns a valid value for the number of css points read from ini file.
+        
+        Arguments:
+            input_param_dict {Mapping[str, str]} -- Dictionary of elements read in the Ini File
+        
+        Returns:
+            {Integer} -- Valid number of css points (default: 20)
+        """
+        num_css_pt_key = 'number_of_css_points'
+        num_css_pt_value = input_param_dict.get(num_css_pt_key, '') # Will return None if not found / defined.
+        css_pt_value = 20 # 20 is our default value for css_pt_value
+        if num_css_pt_value.isdigit():
+            css_pt_value = int(num_css_pt_value)
+        try:
+            css.reduce_points( n = css_pt_value, verbose = False)
+        except Exception as e_error:
+            e_message = str(e_error)
+            self.__logger.write('Exception thrown while trying to reduce the css points. {}'.format(e_message))
+
+        self.__logger.write('T+ {:.2f} :: simplified cross-section to {:d} points'.format((datetime.datetime.now()-start_time).total_seconds(),val))
 
     def __is_output_directory_set(self, iniFile : IniFile):
         """
