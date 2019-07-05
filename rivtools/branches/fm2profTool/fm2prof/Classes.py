@@ -64,9 +64,10 @@ class FmModelData:
             raise Exception ('Fm model data expects 5 arguments but only {} were given'.format(len(arg_list)))
         
         (self.time_dependent_data, self.time_independent_data, self.edge_data, self.node_coordinates, css_data_dictionary) = arg_list
-        self.css_data_list = self._get_ordered_css_list(css_data_dictionary)
+        self.css_data_list = self.get_ordered_css_list(css_data_dictionary)
 
-    def _get_ordered_css_list(self, css_data_dict : Mapping[str,str]):
+    @staticmethod
+    def get_ordered_css_list(css_data_dict : Mapping[str,str]):
         """Returns an ordered list where every element represents a Cross Section structure
         
         Arguments:
@@ -75,9 +76,10 @@ class FmModelData:
         Returns:
             {list} -- List where every element contains a dictionary to create a Cross Section.
         """
-        if not css_data_dict:
+        if not css_data_dict or not isinstance(css_data_dict, dict):
             return []
-        number_of_css = len(next(iter(css_data_dict)))
+        
+        number_of_css = len(css_data_dict[next(iter(css_data_dict))])
         css_dict_keys = css_data_dict.keys()
         css_dict_values = css_data_dict.values()
         css_data_list = [dict(zip(css_dict_keys, [value[idx] for value in css_dict_values if idx < len(value)])) for idx in range(number_of_css)]
