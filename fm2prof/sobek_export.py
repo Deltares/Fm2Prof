@@ -40,10 +40,17 @@ def export_volumes(cross_sections, file_path):
         # Construct array and append to file
         for css in cross_sections:
             for i in range(len(css._css_z)):
-                f.write('{}, {}, {}, {}\n'.format(css.name, 
-                                                  css._css_z[i], 
-                                                  css._css_total_volume_corrected[i], 
-                                                  css._fm_total_volume[i]))
+                try:
+                    f.write('{}, {}, {}, {}\n'.format(css.name, 
+                                                      css._css_z[i], 
+                                                      css._css_total_volume_corrected[i], 
+                                                      css._fm_total_volume[i]))
+                except TypeError:
+                    f.write('{}, {}, {}, {}\n'.format(css.name, 
+                                                      css._css_z[i], 
+                                                      css._css_total_volume[i], 
+                                                      css._fm_total_volume[i]))
+                        
 
 def export_crossSectionLocations(cross_sections, file_path):
     """ DIMR format """
@@ -110,7 +117,7 @@ def _write_geometry_fm1d(fid, cross_sections):
         if np.isnan(css.floodplain_base) == False:
             floodplain_base = str(css.floodplain_base)
         else:
-            floodplain_base = 0
+            floodplain_base = str(css.crest_level)
 
         fid.write("[Definition]\n")
         fid.write("\tid\t\t\t\t\t= {}\n".format(css.name) +\
@@ -159,6 +166,8 @@ def _write_geometry_sobek3(fid, cross_sections):
             # check for nan, because a channel with only one roughness value (ideal case) will not have this value
             if np.isnan(cross_section.floodplain_base) == False:
                 floodplain_base = str(cross_section.floodplain_base)
+            else:
+                floodplain_base = str(cross_section.crest_level) #virtual summer dike
 
         fid.write(cross_section.name + ',,' + 'meta' + ',,,,' + 'ZW' + ',' + str(cross_section.branch) + ',' + str(cross_section.chainage) + ',' + str(cross_section.alluvial_width) + ',' + str(cross_section.nonalluvial_width) + ',,,' + b_summerdike + ',' + crest_level + ',' + floodplain_base + ',' + total_area + ',' + total_area + ',,,,,,' + '\n')
 
