@@ -104,7 +104,22 @@ def get_fm2d_data_for_css(classname, dti, edge_data, dtd):
     velocity = (vx**2+vy**2)**0.5
     waterlevel[waterdepth == 0] = np.nan
 
-    return {'x': x, 'y': y, 'bedlevel': bedlevel, 'bedlevel_full': bedlevel_full, 'waterdepth': waterdepth, 'waterlevel': waterlevel, 'velocity': velocity, 'area': area, 'chezy': chezy, 'edge_nodes': edge_nodes, 'face_nodes': face_nodes, 'face_nodes_full': face_nodes_full, 'area_full': area_full}
+    return_dict = {
+        'x': x, 
+        'y': y, 
+        'bedlevel': bedlevel, 
+        'bedlevel_full': bedlevel_full, 
+        'waterdepth': waterdepth, 
+        'waterlevel': waterlevel, 
+        'velocity': velocity, 
+        'area': area, 
+        'chezy': chezy, 
+        'edge_nodes': edge_nodes, 
+        'face_nodes': face_nodes, 
+        'face_nodes_full': face_nodes_full, 
+        'area_full': area_full}
+
+    return return_dict
 
 def mirror(array, reverse_sign=False):
     """

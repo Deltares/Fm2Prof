@@ -345,6 +345,90 @@ class Test_generate_cross_section:
         assert return_css.branch == css_data_branch_id, 'Expected branch {} but was {}'.format( css_data_branch_id, return_css.branch)
         assert return_css.chainage == css_data_chainage, 'Expected chainage {} but was {}'.format( css_data_chainage, return_css.chainage)
 
+class Test_set_fm_data_to_cross_section:
+    
+    @pytest.mark.unittest
+    def test_when_no_cross_section_given_then_no_exception_risen(self):
+        # 1. Set up test data
+        runner = Fm2ProfRunner(None)
+        cross_section = None
+        input_param_dict = {'dummy_key': 'dummy_value'}
+        fm_args = (None, None, None, None, None)
+        fm_model_data = FMD(fm_args)
+        start_time = datetime.datetime.now
+
+        # 2. Set expectations
+        assert runner is not None
+        assert input_param_dict is not None
+        assert fm_model_data is not None
+        assert start_time is not None
+        
+        # 3. Run test
+        try:
+            runner._set_fm_data_to_cross_section(
+                cross_section = cross_section,
+                input_param_dict = input_param_dict,
+                fm_model_data = fm_model_data,
+                start_time = start_time)
+        except Exception as e_info:
+            pytest.fail('No expected exception but was thrown: {}'.format(str(e_info)))
+
+    @pytest.mark.unittest
+    def test_when_no_fm_model_data_given_then_no_exception_risen(self):
+        # 1. Set up test data
+        runner = Fm2ProfRunner(None)       
+        input_param_dict = {'dummy_key': 'dummy_value'}
+        cross_section = CS(input_param_dict, 'dummy_name', 4.2, (4,2))
+        fm_model_data = None
+        start_time = datetime.datetime.now
+
+        # 2. Set expectations
+        assert runner is not None
+        assert input_param_dict is not None
+        assert cross_section is not None
+        assert start_time is not None
+        
+        # 3. Run test
+        try:
+            runner._set_fm_data_to_cross_section(
+                cross_section = cross_section,
+                input_param_dict = input_param_dict,
+                fm_model_data = fm_model_data,
+                start_time = start_time)
+        except Exception as e_info:
+            pytest.fail('No expected exception but was thrown: {}'.format(str(e_info)))
+
+    @pytest.mark.integrationtest
+    def test_when_given_invalid_parameters_then_no_exception_risen(self):
+        # 1. Set up test data
+        runner = Fm2ProfRunner(None)       
+        input_param_dict = {'dummy_key': 'dummy_value'}
+        cross_section = CS(input_param_dict, 'dummy_name', 4.2, (4,2))
+        fm_args = (None, None, None, None, None)
+        fm_model_data = FMD(fm_args)
+        start_time = datetime.datetime.now
+
+        # 2. Set expectations
+        assert runner is not None
+        assert input_param_dict is not None
+        assert cross_section is not None
+        assert fm_model_data is not None
+        assert start_time is not None
+        
+        # 3. Run test
+        try:
+            runner._set_fm_data_to_cross_section(
+                cross_section = cross_section,
+                input_param_dict = input_param_dict,
+                fm_model_data = fm_model_data,
+                start_time = start_time)
+        except Exception as e_info:
+            pytest.fail('No expected exception but was thrown: {}'.format(str(e_info)))
+
+    @pytest.mark.integrationtest
+    def test_when_given_correct_values_then_fm_data_set_to_css(self):
+        pytest.fail('To do. This test should verify fm_data is set, the CS is built, Delta-h corrected, reduced number of points, assigned roughness.')
+
 class Test_get_new_cross_section:
     
     @pytest.mark.unittest
