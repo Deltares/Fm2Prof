@@ -299,32 +299,25 @@ class Fm2ProfRunner :
         
         self.__set_logger_message('Exported output files, FM2PROF finished')
 
-    def _calculate_css_correction(self, input_param_dict : Mapping[str,str], css : CE.CrossSection, start_time : float):
+    def _calculate_css_correction(self, input_param_dict : Mapping[str,float], css : CE.CrossSection, start_time : float):
         """Calculates the Cross Section correction if needed.
         
         Arguments:
-            input_param_dict {Mapping[str,str]} -- [description]
+            input_param_dict {Mapping[str,float]} -- [description]
             css {CE.CrossSection} -- [description]
             start_time {float} -- [description]
         """
-        
-        # Verify the obtained value is an integer.
-        sd_storage_key = 'sdstorage'
-        sd_storage_value = input_param_dict.get(sd_storage_key)
-        try:
-            sd_storage_value = int(sd_storage_value)
-        except:            
-            self.__set_logger_message('SDStorage value given is not an integer.')
+        if not css:
+            self.__set_logger_message('No Cross Section was provided.')
             return
 
-        # Verify the obtained value is an integer.
+        # Get value, it should already come as an integer.
+        sd_storage_key = 'sdstorage'
+        sd_storage_value = input_param_dict.get(sd_storage_key)
+
+        # Get value, it should already come as a float.
         sd_transition_key = 'transitionheight_sd'
         sd_transition_value = input_param_dict.get(sd_transition_key)
-        try:
-            sd_transition_value = float(sd_transition_value)            
-        except:
-            self.__set_logger_message('transitionheight_sd given is not a float; Will use default (0.5m) instead')
-            sd_transition_value = None
 
         # Check if it should be corrected.
         if sd_storage_value == 1:
