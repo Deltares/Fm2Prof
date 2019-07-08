@@ -1,3 +1,22 @@
+"""
+This module contains functions used for the emulation/reduction of 2D models to 
+1D models for Delft3D FM (D-Hydro).
+
+
+Dependencies
+------------------
+Packages, between parenthesis known working version.
+
+netCDF4 (1.2.1)
+numpy (1.10.4)
+pandas (0.17.1)
+sklearn (0.15.2)
+matplotlib (1.5.1)
+
+
+Contact: K.D. Berends (koen.berends@deltares.nl, k.d.berends@utwente.nl)
+"""
+
 from fm2prof import Functions as FE
 from fm2prof import Classes as CE
 from fm2prof import sobek_export
@@ -12,20 +31,23 @@ class Fm2ProfRunner :
     __iniFile = None
     __showFigures = False
     __saveFigures = False
+    __version = None
 
     __map_file_key = 'fm_netcdfile'
     __css_file_key = 'crosssectionlocationfile'    
     __gebiedsvakken_key = 'gebiedsvakken'
     __sectie_key = 'sectionfractionfile'
 
-    def __init__(self, iniFilePath : str):
+    def __init__(self, iniFilePath : str, version : float = None):
         """
         Initializes the private variables for the Fm2ProfRunner        
 
         Arguments:
-            iniFilePath {str} -- File path where the IniFile is located
+            iniFilePath {str} -- File path where the IniFile is located.
+            version {float} -- Current version of the software, needs to be rethought.
         """
         self.__iniFile = IniFile.IniFile(iniFilePath)
+        self.__version = version
 
     def run(self):
         """
@@ -52,7 +74,6 @@ class Fm2ProfRunner :
         input_param_dict = iniFile._input_parameters
 
         # Add a log file
-        __version = 1.1
         self.__logger = CE.Logger(output_dir)
         self.__set_logger_message('FM2PROF version {}\n=============================='.format(__version))
         self.__set_logger_message('reading FM and cross-sectional data data')

@@ -78,7 +78,7 @@ def main(argv):
     
     # Run Fm2Prof with given arguments
     ini_file_path = opts[0][1]
-    runner = Fm2ProfRunner.Fm2ProfRunner(ini_file_path)
+    runner = Fm2ProfRunner.Fm2ProfRunner(ini_file_path, __version__)
     runner.run()
 
 
