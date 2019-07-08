@@ -83,10 +83,8 @@ def __check_and_create_test_case_output_dir(base_output_dir, caseName):
 # endregion   
 
 @pytest.mark.acceptance
-@pytest.mark.parametrize(
-    ("case_name", "map_file", "css_file"), 
-    _test_scenarios, 
-    ids=_test_scenarios_ids)
+@pytest.mark.timeout(7200)
+@pytest.mark.parametrize(("case_name", "map_file", "css_file"), _test_scenarios, ids=_test_scenarios_ids)
 def test_run_ini_file(case_name, map_file, css_file):       
     
     # 1. Set up test data.
