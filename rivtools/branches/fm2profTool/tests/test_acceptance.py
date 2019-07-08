@@ -4,7 +4,8 @@ import sys, os
 import shutil
 
 import TestUtils
-from fm2prof.main import Fm2ProfRunner, IniFile
+from fm2prof.Fm2ProfRunner import Fm2ProfRunner
+from fm2prof.IniFile import IniFile
 
 _root_output_dir = None
 
@@ -28,14 +29,14 @@ _test_scenarios_ids = [
  """
 
 _test_scenarios = [
-    pytest.param('case_01_rectangle', 'Data\\FM\\50x25_mesh\\FlowFM_fm2prof_map.nc', 'Data\\cross_section_locations.xyz', 'Data\\cross_section_chainages.txt'),
-    pytest.param('case_02_compound', 'Data\\FM\\50x25_mesh\\FlowFM_fm2prof_map.nc', 'Data\\cross_section_locations.xyz', 'Data\\cross_section_chainages.txt'),
-    pytest.param('case_03_threestage', 'Data\\FM\\FlowFM_fm2prof_map.nc', 'Data\\cross_section_locations.xyz', 'Data\\cross_section_chainages.txt'),
-    pytest.param('case_04_storage', 'Data\\FM\\FlowFM_fm2prof_map.nc', 'Data\\cross_section_locations.xyz', 'Data\\cross_section_chainages.txt'),
-    pytest.param('case_05_dyke', 'Data\\FM\\FlowFM_fm2prof_map.nc', 'Data\\cross_section_locations.xyz', 'Data\\cross_section_chainages.txt'),
-    pytest.param('case_06_plassen', 'Data\\FM\\FlowFM_fm2prof_map.nc', 'Data\\cross_section_locations.xyz', 'Data\\cross_section_chainages.txt'),
-    pytest.param('case_07_triangular', 'Data\\FM\\FlowFM_fm2prof_map.nc', 'Data\\cross_section_locations.xyz', 'Data\\cross_section_chainages.txt'),
-    pytest.param('case_08_waal', 'Data\\FM\\FlowFM_fm2prof_map.nc', 'Data\\cross_section_locations.xyz', 'Data\\cross_section_chainages.txt', marks = pytest.mark.slow)
+    pytest.param('case_01_rectangle', 'Data\\FM\\FlowFM_fm2prof_map.nc', 'Data\\cross_section_locations.xyz'),
+    pytest.param('case_02_compound', 'Data\\FM\\FlowFM_fm2prof_map.nc', 'Data\\cross_section_locations.xyz'),
+    pytest.param('case_03_threestage', 'Data\\FM\\FlowFM_fm2prof_map.nc', 'Data\\cross_section_locations.xyz'),
+    pytest.param('case_04_storage', 'Data\\FM\\FlowFM_fm2prof_map.nc', 'Data\\cross_section_locations.xyz'),
+    pytest.param('case_05_dyke', 'Data\\FM\\FlowFM_fm2prof_map.nc', 'Data\\cross_section_locations.xyz'),
+    pytest.param('case_06_plassen', 'Data\\FM\\FlowFM_fm2prof_map.nc', 'Data\\cross_section_locations.xyz'),
+    pytest.param('case_07_triangular', 'Data\\FM\\FlowFM_fm2prof_map.nc', 'Data\\cross_section_locations.xyz'),
+    pytest.param('case_08_waal', 'Data\\FM\\FlowFM_fm2prof_map.nc', 'Data\\cross_section_locations.xyz', marks = pytest.mark.slow)
 ]
 
 # region // Helpers
@@ -83,10 +84,10 @@ def __check_and_create_test_case_output_dir(base_output_dir, caseName):
 
 @pytest.mark.acceptance
 @pytest.mark.parametrize(
-    ("case_name", "map_file", "css_file", "chainage_file"), 
+    ("case_name", "map_file", "css_file"), 
     _test_scenarios, 
     ids=_test_scenarios_ids)
-def test_run_ini_file(case_name, map_file, css_file, chainage_file):       
+def test_run_ini_file(case_name, map_file, css_file):       
     
     # 1. Set up test data.
     iniFilePath = None
