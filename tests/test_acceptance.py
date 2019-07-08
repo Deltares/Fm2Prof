@@ -109,7 +109,7 @@ def test_run_ini_file(case_name, map_file, css_file):
         "bedlevelcriterium"	    :	0.1,
         "sdstorage"			    :	1,	
         "frictionweighing"	    :	0,		
-        "sectionsmethod"		:	1		
+        "sectionsmethod"		:	0		
     }
 
     # Create the runner and set the saving figures variable to true

@@ -78,16 +78,13 @@ class Fm2ProfRunner :
         self.__set_logger_message('FM2PROF version {}\n=============================='.format(self.__version))
         self.__set_logger_message('reading FM and cross-sectional data data')
 
-        # Create an empty list. New cross-sections will be appended to this list. 
-        cross_sections = list()
-
         # Read FM model data
         fm2prof_fm_model_data = FE.read_fm2prof_input(map_file, css_file)
         fm_model_data = CE.FmModelData(fm2prof_fm_model_data)
         self.__set_logger_message('finished reading FM and cross-sectional data data')
 
         # generate all cross-sections
-        self._generate_cross_section_list(input_param_dict, fm_model_data)
+        cross_sections = self._generate_cross_section_list(input_param_dict, fm_model_data)
 
         # The roughness tables in 1D model require the same discharges on the rows. 
         # This function interpolates to get the roughnesses at the correct discharges
