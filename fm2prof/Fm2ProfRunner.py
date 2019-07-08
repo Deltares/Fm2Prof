@@ -75,7 +75,7 @@ class Fm2ProfRunner :
 
         # Add a log file
         self.__logger = CE.Logger(output_dir)
-        self.__set_logger_message('FM2PROF version {}\n=============================='.format(__version))
+        self.__set_logger_message('FM2PROF version {}\n=============================='.format(self.__version))
         self.__set_logger_message('reading FM and cross-sectional data data')
 
         # Create an empty list. New cross-sections will be appended to this list. 
