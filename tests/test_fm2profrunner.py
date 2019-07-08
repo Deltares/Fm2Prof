@@ -679,7 +679,8 @@ class Test_calculate_css_correction:
         runner = Fm2ProfRunner(None)
         input_param_dict = {
             'sdstorage': 1,
-            'transitionheight_sd': 0.5}
+            'transitionheight_sd': 0.5
+            }
         css_name = 'dummy_name'
         css_length = 0
         css_location = (0,0)

@@ -82,42 +82,135 @@ def __check_and_create_test_case_output_dir(base_output_dir, caseName):
     return output_directory
 # endregion   
 
-@pytest.mark.acceptance
-@pytest.mark.timeout(7200)
-@pytest.mark.parametrize(("case_name", "map_file", "css_file"), _test_scenarios, ids=_test_scenarios_ids)
-def test_run_ini_file(case_name, map_file, css_file):       
+class Test_Fm2Prof_Run_IniFile:
+
+    @pytest.mark.acceptance
+    @pytest.mark.timeout(7200)
+    @pytest.mark.parametrize(("case_name", "map_file", "css_file"), _test_scenarios, ids=_test_scenarios_ids)
+    def test_when_given_input_data_then_output_is_generated(self, case_name, map_file, css_file):               
+        # 1. Set up test data.
+        iniFilePath = None
+        iniFile = IniFile(iniFilePath)
+        test_data_dir = TestUtils.get_external_test_data_dir(case_name)
+        iniFile._output_dir = __check_and_create_test_case_output_dir(__get_base_output_dir(), case_name)
+        iniFile._input_file_paths = {
+            "fm_netcdfile": os.path.join(test_data_dir, map_file),
+            'crosssectionlocationfile' : os.path.join(test_data_dir, css_file),
+        }
+        iniFile._input_parameters = {
+            "number_of_css_points"  :	20,        
+            "transitionheight_sd"	:	0.25,
+            "velocity_threshold"	:	0.01,	
+            "relative_threshold"	:	0.03,	
+            "min_depth_storage"	    :	0.02,	
+            "plassen_timesteps"	    :	10,	
+            "storagemethod_wli"	    :	1,		
+            "bedlevelcriterium"	    :	0.1,
+            "sdstorage"			    :	1,	
+            "frictionweighing"	    :	0,		
+            "sectionsmethod"		:	0		
+        }
+
+        # Create the runner and set the saving figures variable to true
+        runner = Fm2ProfRunner(iniFilePath)
+
+        # 2. Verify precondition (no output generated)
+        assert os.path.exists(iniFile._output_dir) and not os.listdir(iniFile._output_dir)
+
+        # 3. Run file:
+        runner.run_inifile(iniFile)
+
+        # 4. Verify there is output generated:
+        assert os.listdir(iniFile._output_dir), "There is no output generated for {0}".format(case_name)
+
+class Test_Main_Run_IniFile:
     
-    # 1. Set up test data.
-    iniFilePath = None
-    iniFile = IniFile(iniFilePath)
-    test_data_dir = TestUtils.get_external_test_data_dir(case_name)
-    iniFile._output_dir = __check_and_create_test_case_output_dir(__get_base_output_dir(), case_name)
-    iniFile._input_file_paths = {
-        "fm_netcdfile": os.path.join(test_data_dir, map_file),
-        'crosssectionlocationfile' : os.path.join(test_data_dir, css_file),
-    }
-    iniFile._input_parameters = {
-        "number_of_css_points"  :	20,        
-        "transitionheight_sd"	:	0.25,
-        "velocity_threshold"	:	0.01,	
-        "relative_threshold"	:	0.03,	
-        "min_depth_storage"	    :	0.02,	
-        "plassen_timesteps"	    :	10,	
-        "storagemethod_wli"	    :	1,		
-        "bedlevelcriterium"	    :	0.1,
-        "sdstorage"			    :	1,	
-        "frictionweighing"	    :	0,		
-        "sectionsmethod"		:	0		
-    }
+    def __run_main_with_arguments(self, ini_file):
+        pythonCall = "fm2prof\\main.py -i {0}".format(ini_file)
+        os.system("python {0}".format(pythonCall))
 
-    # Create the runner and set the saving figures variable to true
-    runner = Fm2ProfRunner(iniFilePath)
+    def __create_test_ini_file(self, root_dir, case_name, map_file, css_file):
+        output_dir = os.path.join(root_dir, 'OutputFiles')
+        if not os.path.exists(output_dir):
+            os.makedirs(output_dir)
 
-    # 2. Verify precondition (no output generated)
-    assert os.path.exists(iniFile._output_dir) and not os.listdir(iniFile._output_dir)
+        input_files_key = 'InputFiles'
+        input_parameters_key = 'InputParameters'
+        output_directory_key = 'OutputDirectory'
 
-    # 3. Run file:
-    runner.run_inifile(iniFile)
+        test_data_dir = TestUtils.get_external_test_data_dir(case_name)
+        input_file_paths = {
+            "fm_netcdfile": os.path.join(test_data_dir, map_file),
+            'crosssectionlocationfile' : os.path.join(test_data_dir, css_file),
+        }
+        input_parameters = {
+            "number_of_css_points"  :	20,        
+            "transitionheight_sd"	:	0.25,
+            "velocity_threshold"	:	0.01,	
+            "relative_threshold"	:	0.03,	
+            "min_depth_storage"	    :	0.02,	
+            "plassen_timesteps"	    :	10,	
+            "storagemethod_wli"	    :	1,		
+            "bedlevelcriterium"	    :	0.1,
+            "sdstorage"			    :	1,	
+            "frictionweighing"	    :	0,		
+            "sectionsmethod"		:	0		
+        }
 
-    # 4. Verify there is output generated:
-    assert os.listdir(iniFile._output_dir), "There is no output generated for {0}".format(case_name)
+        # write file
+        file_path = os.path.join(root_dir, '{}_ini_file.ini'.format(case_name))
+        f = open(file_path, 'w+')
+        
+        f.writelines('[{}]\r\n'.format(input_files_key))
+        for key, value in input_file_paths.items():
+            f.writelines('{} = {}\r\n'.format(key, value))
+        f.writelines('\r\n')
+        f.writelines('[{}]\r\n'.format(input_parameters_key))
+        for key, value in input_parameters.items():
+            f.writelines('{} = {}\r\n'.format(key, value))
+        
+        f.writelines('\r\n')
+        f.writelines('[{}]\r\n'.format(output_directory_key))
+        f.writelines('OutputDir = {}\r\n'.format(output_dir))
+        f.writelines('CaseName = {}\r\n'.format(case_name))
+        
+        f.close()
+        return (file_path, output_dir)
+    
+    @pytest.mark.system
+    def test_when_given_inifile_then_output_is_generated(self):               
+        # 1. Set up test data.
+        case_name = 'case_01_rectangle'
+        map_file = 'Data\\FM\\FlowFM_fm2prof_map.nc'
+        css_file = 'Data\\cross_section_locations.xyz'
+        root_output_dir = os.path.join(os.path.dirname(__file__), "RunMainWithCustomIniFile", case_name)
+        (ini_file_path, output_dir) = self.__create_test_ini_file(root_output_dir, case_name, map_file, css_file)
+
+        # 2. Verify precondition (no output generated)
+        assert os.path.exists(ini_file_path)
+        expected_files = [
+            'CrossSectionDefinitions.ini',
+            'CrossSectionLocations.ini',
+            'geometry.csv',
+            'roughness.csv',
+            'geometry_test.csv',
+            'roughness_test.csv',
+            'volumes.csv',
+        ]
+
+        # 3. Run file:
+        try:
+            self.__run_main_with_arguments(ini_file_path)
+        except Exception as e_error:
+            if os.path.exists(root_output_dir):
+                shutil.rmtree(root_output_dir)
+            pytest.fail('No exception expected but was thrown {}.'.format(str(e_error)))
+
+        # 4. Verify there is output generated:
+        output_files = os.path.join(output_dir, '{}01'.format(case_name))
+        generated_files = os.listdir(output_files)
+        if os.path.exists(root_output_dir):
+            shutil.rmtree(root_output_dir)
+        assert generated_files, "There is no output generated for {0}".format(case_name)
+        for expected_file in expected_files:
+            assert expected_file in generated_files
