@@ -1,3 +1,22 @@
+"""
+This module contains functions used for the emulation/reduction of 2D models to 
+1D models for Delft3D FM (D-Hydro).
+
+
+Dependencies
+------------------
+Packages, between parenthesis known working version.
+
+netCDF4 (1.2.1)
+numpy (1.10.4)
+pandas (0.17.1)
+sklearn (0.15.2)
+matplotlib (1.5.1)
+
+
+Contact: K.D. Berends (koen.berends@deltares.nl, k.d.berends@utwente.nl)
+"""
+
 import os, sys, getopt, shutil
 import configparser
 from typing import Mapping, Sequence
