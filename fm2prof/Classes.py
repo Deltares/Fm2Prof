@@ -344,7 +344,7 @@ class CrossSection:
 
         return wet_area
 
-    def calculate_correction(self):
+    def calculate_correction(self, transition_height:float):
         """
         Function to determine delta-h correction (previously known as 'summerdike option'.
         Optimises values for transition height, crest levels and added volume.
@@ -353,7 +353,7 @@ class CrossSection:
         self._css_total_volume_corrected
 
 
-        TODO: to avoid numerical oscillation, transition_height might need minimal value. Fixed or variable? Test!
+        TODO: to avoid numerical oscillation, transition_height need minimal value. Fixed or variable? Test!
         :return:
         """
 
@@ -361,7 +361,6 @@ class CrossSection:
         initial_error = self._css_total_volume - self._fm_total_volume
         initial_crest = self._css_z[np.argmin(initial_error)]
         initial_volume = np.abs(initial_error[-1])
-        #initial_transition_height = 0.75
 
         # Optimise attributes
         opt = so.minimize(self.optimisation_function,
@@ -371,10 +370,11 @@ class CrossSection:
 
         # Unpack optimisation results
         crest_level = opt['x'][0]
-        #transition_height = opt['x'][1]
+        
         extra_volume = opt['x'][1]
 
-        #transition_height = 0.5
+        if transition_height is None:
+            transition_height = 0.5            
         extra_area_percentage = FE.get_extra_total_area(self._css_z, crest_level, transition_height)
 
         # Write to attributes
