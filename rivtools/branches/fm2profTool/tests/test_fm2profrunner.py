@@ -5,7 +5,8 @@ import datetime
 import shutil
 
 import TestUtils
-from fm2prof.main import Fm2ProfRunner, IniFile
+from fm2prof.Fm2ProfRunner import Fm2ProfRunner
+from fm2prof.IniFile import IniFile
 from fm2prof.Classes import CrossSection as CS
 from fm2prof.Classes import FmModelData as FMD
 

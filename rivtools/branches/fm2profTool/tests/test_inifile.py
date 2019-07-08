@@ -7,7 +7,7 @@ import numbers
 import shutil
 import TestUtils
 
-from fm2prof.main import IniFile
+from fm2prof.IniFile import IniFile
 
 _root_output_dir = None
 
