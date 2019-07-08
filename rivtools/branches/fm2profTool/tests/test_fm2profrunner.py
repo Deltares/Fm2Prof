@@ -434,7 +434,6 @@ class Test_get_new_cross_section:
     def test_when_not_given_css_data_then_returns_none(self, css_data):
         # 1. Set up test data
         runner = Fm2ProfRunner(None)
-        test_css_name = 'dummy_css'
 
         # 2. Expectations
         return_value = None

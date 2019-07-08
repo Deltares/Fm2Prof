@@ -92,6 +92,8 @@ class Fm2ProfRunner :
         # The roughness tables in 1D model require the same discharges on the rows. 
         # This function interpolates to get the roughnesses at the correct discharges
         FE.interpolate_roughness(cross_sections)
+
+        # Export cross sections
         self._export_cross_sections(cross_sections, output_dir)
 
     def _generate_cross_section_list(self, input_param_dict : Mapping[str, list], fm_model_data : CE.FmModelData):
@@ -308,26 +310,29 @@ class Fm2ProfRunner :
             css {CE.CrossSection} -- [description]
             start_time {float} -- [description]
         """
-        sd_storage_key = 'sdstorage'
-        sd_storage_value = input_param_dict.get(sd_storage_key, 0)
+        
         # Verify the obtained value is an integer.
-        if not sd_storage_value or not sd_storage_value.isdigit():
+        sd_storage_key = 'sdstorage'
+        sd_storage_value = input_param_dict.get(sd_storage_key)
+        try:
+            sd_storage_value = int(sd_storage_value)
+        except:            
             self.__set_logger_message('SDStorage value given is not an integer.')
             return
+
+        # Verify the obtained value is an integer.
         sd_transition_key = 'transitionheight_sd'
         sd_transition_value = input_param_dict.get(sd_transition_key)
-        # Verify the obtained value is an integer.
         try:
             sd_transition_value = float(sd_transition_value)            
-        except ValueError:
+        except:
             self.__set_logger_message('transitionheight_sd given is not a float; Will use default (0.5m) instead')
             sd_transition_value = None
 
         # Check if it should be corrected.
-        sd_storage_value = int(sd_storage_value)
         if sd_storage_value == 1:
             try:
-                css.calculate_correction(sd_transition_key)
+                css.calculate_correction(sd_transition_value)
                 self.__set_logger_message('T+ %.2f :: correction finished' % (datetime.datetime.now()-start_time).total_seconds())
             except Exception as e_error:
                 e_message = str(e_error)
@@ -343,13 +348,14 @@ class Fm2ProfRunner :
             {Integer} -- Valid number of css points (default: 20)
         """
         num_css_pt_key = 'number_of_css_points'
-        num_css_pt_value = input_param_dict.get(num_css_pt_key, '') # Will return None if not found / defined.
-        css_pt_value = 20 # 20 is our default value for css_pt_value
+        num_css_pt_value = input_param_dict.get(num_css_pt_key) # Will return None if not found / defined.
+        css_pt_value = 20 # 20 is our default value for css_pt_value   
+        try:
+            # try to reduce points.
+            css_pt_value = int(num_css_pt_value)
+        except:
+            self.__set_logger_message('number_of_css_points given is not an int; Will use default (20) instead')
         
-        if not num_css_pt_value or not num_css_pt_value.isdigit():
-            return        
-        # try to reduce points.
-        css_pt_value = int(num_css_pt_value)
         try:
             css.reduce_points( n = css_pt_value, verbose = False)
             self.__set_logger_message('T+ {:.2f} :: simplified cross-section to {:d} points'.format((datetime.datetime.now()-start_time).total_seconds(), css_pt_value))
