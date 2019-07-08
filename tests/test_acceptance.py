@@ -107,8 +107,8 @@ def test_run_ini_file(case_name, map_file, css_file):
         "plassen_timesteps"	    :	10,	
         "storagemethod_wli"	    :	1,		
         "bedlevelcriterium"	    :	0.1,
-        "SDstorage"			    :	1,	
-        "Frictionweighing"	    :	0,		
+        "sdstorage"			    :	1,	
+        "frictionweighing"	    :	0,		
         "sectionsmethod"		:	1		
     }
 
