@@ -526,11 +526,20 @@ class Fm2ProfRunner :
         if not sd_storage_value.isdigit():
             self.__set_logger_message('SDStorage value given is not an integer.')
             return
+        sd_transition_key = 'transitionheight_sd'
+        sd_transition_value = input_param_dict.get(sd_transition_key)
+        # Verify the obtained value is an integer.
+        try:
+            sd_transition_value = float(sd_transition_value)            
+        except ValueError:
+            self.__set_logger_message('transitionheight_sd given is not a float; Will use default (0.5m) instead')
+            sd_transition_value = None
+
         # Check if it should be corrected.
         sd_storage_value = int(sd_storage_value)
         if sd_storage_value == 1:
             try:
-                css.calculate_correction()
+                css.calculate_correction(sd_transition_key)
                 self.__set_logger_message('T+ %.2f :: correction finished' % (datetime.datetime.now()-start_time).total_seconds())
             except Exception as e_error:
                 e_message = str(e_error)
