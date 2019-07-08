@@ -126,13 +126,3 @@ class Test_Main:
             main.main(mainArgs)
         except IOError:
             pytest.fail('Unexpected IOError exception.')    
-
-# region // Helpers
-
-# High level acceptance tests, these are the ones who are only meant to generate output files
-# for the testers to verify (in Teamcity) whether the runs generate the expected files or not.
-def __run_main_with_arguments(ini_file):
-    pythonCall = "fm2prof\\main.py -i {0}".format(ini_file)
-    os.system("python {0}".format(pythonCall))
-
-# endregion
