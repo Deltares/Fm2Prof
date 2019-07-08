@@ -1,11 +1,12 @@
 import unittest, pytest
 import sys, os
 import datetime
+import numpy as np
 
 import shutil
 
 import TestUtils
-from fm2prof.Fm2ProfRunner import Fm2ProfRunner
+from fm2prof.Fm2ProfRunner import Fm2ProfRunner as Fm2ProfRunner
 from fm2prof.IniFile import IniFile
 from fm2prof.Classes import CrossSection as CS
 from fm2prof.Classes import FmModelData as FMD
@@ -616,23 +617,69 @@ class Test_export_cross_sections:
         # 4. Clean up directory
         shutil.rmtree(output_dir)
     
-    @pytest.mark.unittest
+    @pytest.mark.integrationtest
     def test_when_given_valid_parameters_then_css_are_exported(self):
-        pytest.fail('To do.')
+        # 1. Set up test data
+        runner = Fm2ProfRunner(None)
+        output_dir = 'dummy_dir'
+        input_params = {}
+        css_name = 'dummy_name'
+        css_length = 0
+        css_location = (0,0)
+        test_css = CS(input_params, css_name,css_length, css_location)
+        cross_sections = [test_css]
+        # 2. Set initial expectations        
+        if not os.path.exists(output_dir):
+            os.mkdir(output_dir)
+        assert os.path.exists(output_dir)
+        expected_files = [
+            'CrossSectionDefinitions.ini',
+            'CrossSectionLocations.ini',
+            'geometry.csv'
+        ]
+        # 3. run test
+        try:
+            runner._export_cross_sections(cross_sections, output_dir)
+        except Exception as e:
+            e_message = str(e)
+            shutil.rmtree(output_dir)
+            pytest.fail('No exception expected but was thrown {}'.format(e_message))
+        
+        # 4. Verify final expectations
+        data_in_dir = os.listdir(output_dir)
+        assert data_in_dir is not None
+        for expected_file in expected_files:
+            assert expected_file in data_in_dir
+
+        # 5. Clean up directory
+        #shutil.rmtree(output_dir)
 
 class Test_calculate_css_correction:
     
     @pytest.mark.unittest
     def test_when_cross_section_not_given_then_no_exception_risen(self):
-        pytest.fail('To Do')
+        # 1. Set up test data
+        runner = Fm2ProfRunner(None)
+        input_param_dict = {'sdstorage':'1'}
+        test_css = None
+        starttime = datetime.datetime.now()
+
+        # 2. Set up / verify initial expectations
+        assert runner is not None
+        
+        # 3. Run test
+        try:
+            runner._calculate_css_correction(input_param_dict, test_css,starttime)
+        except:
+            pytest.fail('Unexpected exception while calculating css correction.')        
 
     @pytest.mark.integrationtest
     def test_when_all_parameters_are_correct_then_calculates_css_correction(self):
         # 1. Set up test data
         runner = Fm2ProfRunner(None)
         input_param_dict = {
-            'sdstorage':'1'
-        }
+            'sdstorage': 1,
+            'transitionheight_sd': 0.5}
         css_name = 'dummy_name'
         css_length = 0
         css_location = (0,0)
@@ -644,6 +691,12 @@ class Test_calculate_css_correction:
         assert test_css is not None
         assert test_css._css_is_corrected == False
         
+        # 2.1. values required for correction.
+        test_css._css_total_volume = np.array([2,3,1,0])
+        test_css._fm_total_volume = np.array([2,3,1,0])
+        test_css._css_z = [0]
+
+        
         # 3. Run test
         try:
             runner._calculate_css_correction(input_param_dict,test_css,starttime)
@@ -651,8 +704,7 @@ class Test_calculate_css_correction:
             pytest.fail('Unexpected exception while calculating css correction.')
 
         # 4. Verify final expectations.
-        assert test_css._css_is_corrected == True
-        pytest.fail('Test still needs work.')
+        assert test_css._css_is_corrected == True, 'The calculation did not set the flag \'is corrected \' to True'
 
 class Test_reduce_css_points:
 
