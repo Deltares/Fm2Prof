@@ -23,10 +23,13 @@ from fm2prof import sobek_export
 from fm2prof import IniFile
 
 from typing import Mapping, Sequence
-import datetime, itertools
-import os, shutil
+import datetime
+import itertools
+import os
+import shutil
 
-class Fm2ProfRunner :  
+
+class Fm2ProfRunner:  
     __logger = None    
     __iniFile = None
     __showFigures = False
@@ -34,13 +37,13 @@ class Fm2ProfRunner :
     __version = None
 
     __map_file_key = 'fm_netcdfile'
-    __css_file_key = 'crosssectionlocationfile'    
+    __css_file_key = 'crosssectionlocationfile'
     __gebiedsvakken_key = 'gebiedsvakken'
     __sectie_key = 'sectionfractionfile'
 
-    def __init__(self, iniFilePath : str, version : float = None):
+    def __init__(self, iniFilePath: str, version: float = None):
         """
-        Initializes the private variables for the Fm2ProfRunner        
+        Initializes the private variables for the Fm2ProfRunner
 
         Arguments:
             iniFilePath {str} -- File path where the IniFile is located.
@@ -57,10 +60,10 @@ class Fm2ProfRunner :
             self.__set_logger_message('No ini file was specified and the run cannot go further.')
             return
         self.run_inifile(self.__iniFile)
-      
-    def run_inifile(self, iniFile : IniFile):
+
+    def run_inifile(self, iniFile: IniFile):
         """Runs the desired emulation from 2d to 1d given the mapfile and the cross section file.
-        
+
         Arguments:
             iniFile {IniFile} -- Object containing all the information needed to execute the program
         """
@@ -93,13 +96,13 @@ class Fm2ProfRunner :
         # Export cross sections
         self._export_cross_sections(cross_sections, output_dir)
 
-    def _generate_cross_section_list(self, input_param_dict : Mapping[str, list], fm_model_data : CE.FmModelData):
+    def _generate_cross_section_list(self, input_param_dict: Mapping[str, list], fm_model_data: CE.FmModelData):
         """ Generates cross sections based on the given fm_model_data
 
         Arguments:
             input_param_dict {Mapping[str, list]} -- Dictionary of parameters read from IniFile
             fm_model_data {CE.FmModelData} -- Class with all necessary data for generating Cross Sections
-        
+
         Returns:
             {list} -- List of generated cross sections
         """
@@ -116,26 +119,26 @@ class Fm2ProfRunner :
                 cross_sections.append(generated_cross_section)
 
         return cross_sections
-    
-    def _generate_cross_section(self, css_data : dict, input_param_dict :  Mapping[str, list], fm_model_data : CE.FmModelData):
+
+    def _generate_cross_section(self, css_data: dict, input_param_dict: Mapping[str, list], fm_model_data: CE.FmModelData):
         """Generates a cross section and configures its values based on the input parameter dictionary
-        
+
         Arguments:
             css_data {dict} -- Dictionary of data for the current cross section
             input_param_dict {Mapping[str,list]} -- Dictionary with input parameters
             fm_model_data {CE.FmModelData} -- Data to assign to the new cross section
-        
+
         Raises:
             Exception: If no css_data is given.
             Exception: If no input_param_dict is given.
             Exception: If no fm_model_data is given.
-        
+
         Returns:
             {CE.CrossSection} -- New Cross Section
         """
         if css_data is None:
             raise Exception('No data was given to create a Cross Section')
-        
+
         css_name = css_data.get('id')
         if not css_name:
             css_name = 'new_cross_section'
@@ -145,7 +148,7 @@ class Fm2ProfRunner :
 
         if fm_model_data is None:
             raise Exception('No FM data given for new cross section {}'.format(css_name))
-      
+
         # time stamp start
         start_time = datetime.datetime.now()
         time_stamp = datetime.datetime.strftime(start_time, '%I:%M%p')        
@@ -156,13 +159,13 @@ class Fm2ProfRunner :
             css_data = css_data, 
             input_param_dict = input_param_dict) 
         self.__set_logger_message('T+ %.2f :: initiated new cross-section %s' % (self.__get_time_stamp_seconds(start_time), css_name))
-        
+
         self._set_fm_data_to_cross_section(
             cross_section = created_css,
             input_param_dict = input_param_dict,
             fm_model_data = fm_model_data,
             start_time = start_time )
-        
+
         self.__set_logger_message('cross-section {} generated in {:.2f} seconds'.format(css_name, self.__get_time_stamp_seconds(start_time)))
         return created_css
 
@@ -172,14 +175,14 @@ class Fm2ProfRunner :
         fm_model_data : CE.FmModelData, 
         start_time : datetime):
         """Sets extra FM data to the given Cross Section
-        
+
         Arguments:
             cross_section {CE.CrossSection} -- Given Cross Section.
             input_param_dict {Mapping[str, list]} -- Dictionary with input parameters.
             fm_model_data {CE.FmModelData} -- Data to assign to the new cross section.
             start_time {datetime} -- Timestamp to be used in the logger.
         """
-        
+
         if cross_section is None or fm_model_data is None:
             return
 
@@ -194,7 +197,7 @@ class Fm2ProfRunner :
                                                 time_independent_data,
                                                 edge_data,
                                                 time_dependent_data)
-            
+
             self.__set_logger_message('T+ %.2f :: retrieved data for css %s' % (self.__get_time_stamp_seconds(start_time), css_name))
 
             # Build cross-section
@@ -210,56 +213,57 @@ class Fm2ProfRunner :
             # assign roughness
             cross_section.assign_roughness(fm_data)
             self.__set_logger_message('T+ %.2f :: computed roughness' % (self.__get_time_stamp_seconds(start_time)))
-        
+
         except Exception as e_info:
             self.__set_logger_message('Exception while setting cross-section {} details, {}'.format(css_name, str(e_info)))
 
-    def _get_new_cross_section(self, css_data : Mapping[str, str], input_param_dict : Mapping[str, str]):
+    def _get_new_cross_section(self, css_data: Mapping[str, str], input_param_dict: Mapping[str, str]):
         """Creates a cross section with the given input param dictionary.
-        
+
         Arguments:
             css_data {Mapping[str, str]} -- FM Model data for cross section.
             input_param_dict {Mapping[str, str]} -- Dictionary with parameters for Cross Section.            
-        
+
         Returns:
             {CE.CrossSection} -- New cross section object.
-        """ 
+        """
         # Get id data and id index
         if not css_data:
             return None
-        
+
         css_data_id = css_data.get('id')
         if not css_data_id:
             return None
-       
+
         # Get remainig data
         css_data_length = css_data.get('length')
         css_data_location = css_data.get('xy')
-        css_data_branch_id = css_data.get('branchid')    
+        css_data_branch_id = css_data.get('branchid')
         css_data_chainage = css_data.get('chainage')
 
-        if (css_data_length is None 
-            or css_data_location is None 
-            or css_data_branch_id is None 
-            or css_data_chainage is None):
+        if (css_data_length is None or
+            css_data_location is None or
+            css_data_branch_id is None or
+            css_data_chainage is None):
             return None
 
         try:
-            css = CE.CrossSection(input_param_dict, 
-                name = css_data_id, 
-                length = css_data_length, 
-                location = css_data_location,
-                branchid = css_data_branch_id,
-                chainage = css_data_chainage)
+            css = CE.CrossSection(
+                input_param_dict,
+                name=css_data_id,
+                length=css_data_length,
+                location=css_data_location,
+                branchid=css_data_branch_id,
+                chainage=css_data_chainage)
         except Exception as e_info:
             self.__set_logger_message('Exception thrown while creating cross-section {}, message: {}'.format(css_data_id, str(e_info)))
             return None
 
         return css
 
-    def _export_cross_sections(self, cross_sections : list, output_dir: str):
+    def _export_cross_sections(self, cross_sections: list, output_dir: str):
         """Exports all cross sections to the necessary file formats
-        
+
         Arguments:
             cross_sections {list} -- List of created cross sections
             output_dir {str} -- target directory where to export all the cross sections

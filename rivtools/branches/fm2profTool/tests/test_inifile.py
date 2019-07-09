@@ -5,7 +5,7 @@ import os
 import numbers
 
 import shutil
-import TestUtils
+from tests import TestUtils
 
 from fm2prof.IniFile import IniFile
 
