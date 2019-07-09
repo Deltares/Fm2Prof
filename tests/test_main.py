@@ -1,6 +1,6 @@
 import unittest, pytest
 import os, sys, getopt, shutil
-import TestUtils
+from tests import TestUtils
 from fm2prof import main
 
 class Test_Main:
