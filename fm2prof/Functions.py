@@ -135,6 +135,10 @@ def mirror(array, reverse_sign=False):
         return np.append(np.flipud(array), array)
 
 def get_centre_values(location, x, y, waterdepth, waterlevel):
+    """
+    Find output point closest to x,y location, output depth and water level as nd arrays
+    
+    """
     nn = NearestNeighbors(n_neighbors=1, algorithm='ball_tree').fit(np.array([x, y]).T)
 
     # conversion to 2d array, as 1d arrays are deprecated for kneighbors
@@ -145,7 +149,7 @@ def get_centre_values(location, x, y, waterdepth, waterlevel):
     centre_depth = waterdepth.iloc[index[0]]
     centre_level = waterlevel.iloc[index[0]]
 
-    return centre_depth, centre_level
+    return centre_depth.values[0], centre_level.values[0]
 
 def get_extra_total_area(waterlevel, crest_level, transition_height, hysteresis=False):
     """
