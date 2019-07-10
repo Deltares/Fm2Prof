@@ -181,7 +181,7 @@ class CrossSection:
 
     def build_from_fm(self, fm_data):
         """
-        Build 1D cross-section from FM data.
+        Build 1D geometrical cross-section from FM data.
 
 
         :param fm_data: dict
@@ -200,33 +200,11 @@ class CrossSection:
         # apply rolling average over the velocities to smooth out extreme values
         velocity = velocity.rolling(window=10, min_periods=1, center=True, axis=1).mean()
 
-        # plassen need to be identified, use 5 timesteps and check for non-rising waterlevels
-        waterdepth_diff = np.diff(waterdepth, n=1, axis=-1)
+        # Identify river lakes (plassen)
+        plassen_mask, wet_not_plas_mask, plassen_depth_correction = self._identify_lakes(waterdepth)
+  
 
-        # this creates a series
-        # for waal, 2 steps = 32 hours
-        plassen_mask = (waterdepth.T.iloc[self.parameters[self.__cs_parameter_plassen_timesteps]] > 0) & \
-                       (np.abs(waterdepth.T.iloc[self.parameters[self.__cs_parameter_plassen_timesteps]] - waterdepth.T.iloc[0]) <= 0.01)
-
-        self.plassen_mask = plassen_mask
-
-        plassen_mask_time = np.zeros((len(waterdepth.T), len(plassen_mask)), dtype=bool)
-        plassen_mask_time[0,:] = plassen_mask
-
-        plassen_depth_correction = np.zeros(waterdepth.shape, dtype=float)
-
-        for i, depths in enumerate(waterdepth):
-            plassen_depth_correction[plassen_mask, i] = -waterdepth.T.iloc[0][plassen_mask]
-
-        # walk through dataframe in time, for each timestep check when to unmask a plassen cell
-        for i, diff in enumerate(waterdepth_diff.T):
-            final_mask = reduce(np.logical_and, [(diff <= 0.001), (plassen_mask_time[i] == True)])
-
-            plassen_mask_time[i + 1,:] = final_mask
-                
-        plassen_mask_time = pd.DataFrame(plassen_mask_time).T
-
-        # Masks for wet and flow cells
+        # Masks for wet and flow cells (stroomvoeringscriteria)
         flow_mask = (waterdepth > 0) & \
                     (velocity > self.parameters[self.__cs_parameter_velocity_threshold]) & \
                     (velocity > self.parameters[self.__cs_parameter_relative_threshold]*np.mean(velocity))
@@ -237,20 +215,15 @@ class CrossSection:
         # combine flow and depth mask to avoid assigning shallow flows to storage
         flow_mask = reduce(np.logical_or, [(flow_mask == True), (waterdepth_correction == True)])
 
-        # find all wet cells
-        wet_mask = waterdepth > 0
-
-        # correct wet cells for plassen
-        wet_not_plas_mask = reduce(np.logical_and, [(wet_mask == True), (plassen_mask_time == False)])
-
+        
         # Convert area to a matrix for matrix operations (much more efficient than for-loops)
         area_matrix = pd.DataFrame(index=area.index)
         for t in waterdepth:
             area_matrix[t] = area
 
         # Calculate area and volume as function of waterlevel & waterdepth
-        wet_area = list(np.nansum(area_matrix[wet_not_plas_mask], axis=0))
-        flow_area = list(np.nansum(area_matrix[flow_mask], axis=0))
+        wet_area = np.nansum(area_matrix[wet_not_plas_mask], axis=0)
+        flow_area = np.nansum(area_matrix[flow_mask], axis=0)
 
         # correct waterdepth for plassen
         waterdepth = waterdepth + plassen_depth_correction
@@ -260,23 +233,25 @@ class CrossSection:
         total_volume = np.array(np.nansum(area_matrix[wet_not_plas_mask] * waterdepth[wet_not_plas_mask], axis=0))
         flow_volume = np.array(np.nansum(area_matrix[flow_mask] * waterdepth[flow_mask], axis=0))
 
+        cross_section_z_roughness = centre_level
+        
         # Construct cross-section // (Area method)
         # ========================================
-        total_width = np.array(wet_area)/self.length
-        flow_width = np.array(flow_area)/self.length
+        # Check for monotonicity
+        
+        mono_mask = self._check_monotonicity(centre_level, method=1)
+        centre_level = centre_level[mono_mask]
+        total_volume = total_volume[mono_mask]
+        flow_volume = flow_volume[mono_mask]
+        wet_area = wet_area[mono_mask]
+        flow_area = flow_area[mono_mask]
 
-        # fix error when flow_width > total_width (due to floating points)
-        flow_width[flow_width > total_width] = total_width[flow_width > total_width]
 
-        cross_section_z = np.array(centre_level.values[0])
-
-        # Remove nan's from z
-        cross_section_z[np.isnan(cross_section_z)] = np.nanmin(cross_section_z)
-
+        cross_section_z, total_width, flow_width = self._compute_1D_geometry(centre_level, wet_area, flow_area)
         cross_section_z_geometry = cross_section_z
 
         level_t0 = cross_section_z[0]
-        depth_t0 = centre_depth.values[0][0]
+        depth_t0 = centre_depth[0]
         lowest_z = level_t0 - depth_t0
 
         # waterlevel independent calculation
@@ -324,7 +299,7 @@ class CrossSection:
         self._css_total_volume = np.append([0], np.cumsum(total_width[1:]*np.diff(cross_section_z_geometry)*self.length))
         self._css_total_width = total_width
         self._css_flow_width = flow_width
-        self._css_z_roughness = cross_section_z
+        self._css_z_roughness = cross_section_z_roughness
 
         # convert to float64 array for uniformity (apparently entries can be float32)
         self._css_z = np.array(cross_section_z_geometry, dtype=np.dtype('float64'))
@@ -859,6 +834,99 @@ class CrossSection:
     
     def _close_figure(self, figure):
         plt.close(figure)
+
+    def _identify_lakes(self, waterdepth):
+        """
+        Find cells that do not have rising water depths for a period of time (__cs_parameter_plassen_timesteps)
+
+        :param waterdepth: waterdepths from fm_data
+        
+        :return plassen_mask: mask of all cells that contain a lake
+        :return wet_not_plas_mask: mask of all cells that are wet, but not a lake
+        :return plassen_depth_correction: the depth of lake at the start of a computation
+        """
+        # check for non-rising waterlevels
+        waterdepth_diff = np.diff(waterdepth, n=1, axis=-1)
+
+        # this creates a series
+        # for waal, 2 steps = 32 hours
+        plassen_mask = (waterdepth.T.iloc[self.parameters[self.__cs_parameter_plassen_timesteps]] > 0) & \
+                       (np.abs(waterdepth.T.iloc[self.parameters[self.__cs_parameter_plassen_timesteps]] - waterdepth.T.iloc[0]) <= 0.01)
+
+        self.plassen_mask = plassen_mask
+
+        plassen_mask_time = np.zeros((len(waterdepth.T), len(plassen_mask)), dtype=bool)
+        plassen_mask_time[0,:] = plassen_mask
+
+        plassen_depth_correction = np.zeros(waterdepth.shape, dtype=float)
+
+        for i, depths in enumerate(waterdepth):
+            plassen_depth_correction[plassen_mask, i] = -waterdepth.T.iloc[0][plassen_mask]
+
+        # walk through dataframe in time, for each timestep check when to unmask a plassen cell
+        for i, diff in enumerate(waterdepth_diff.T):
+            final_mask = reduce(np.logical_and, [(diff <= 0.001), (plassen_mask_time[i] == True)])
+
+            plassen_mask_time[i + 1,:] = final_mask
+                
+        plassen_mask_time = pd.DataFrame(plassen_mask_time).T
+
+        # find all wet cells
+        wet_mask = waterdepth > 0
+
+        # correct wet cells for plassen
+        wet_not_plas_mask = reduce(np.logical_and, [(wet_mask == True), (plassen_mask_time == False)])
+
+        return plassen_mask, wet_not_plas_mask, plassen_depth_correction
+
+    def _compute_1D_geometry(self, centre_level, wet_area, flow_area):
+        """
+        'Area method': compute width from area
+        
+        """
+
+        cross_section_z = centre_level
+
+        # Remove nan's from z
+        cross_section_z[np.isnan(cross_section_z)] = np.nanmin(cross_section_z)
+        
+        total_width = np.array(wet_area)/self.length
+        flow_width = np.array(flow_area)/self.length
+
+        # fix error when flow_width > total_width (due to floating points)
+        flow_width[flow_width > total_width] = total_width[flow_width > total_width]
+
+        
+        return cross_section_z, total_width, flow_width
+
+    @staticmethod
+    def _check_monotonicity(arr, method=2):
+        """
+        for given input array, create mask such that when applied to the array, all values are monotonically rising
+
+        method 1: remove values were z is falling from array
+        method 2: sort array such that z is always rising (default)
+
+        Arguments:
+            arr: 1d numpy array
+
+        return:
+            mask such that arr[mask] is monotonically rising
+        """
+        if method == 1:
+            mask = np.array([True])
+            for i in range(1,len(arr)):
+                # Last index that had rising value
+                j = np.argwhere(mask==True)[-1][0]
+                if arr[i] > arr[j]:
+                    mask = np.append(mask, True)
+                else:
+                    mask = np.append(mask, False)
+
+            return mask
+        elif method==2:
+            return np.argsort(arr)
+
 
 class Logger:
     def __init__(self, outputdir):
