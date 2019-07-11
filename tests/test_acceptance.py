@@ -514,15 +514,15 @@ class Test_Acceptance_Waal:
     def test_when_results_available_then_compare(self):
         # 1. Set up test data
         waal_test_folder = TestUtils.get_external_test_data_dir(_waal_case)
-        sobek_model_dir = os.path.join(waal_test_folder, 'Model_SOBEK')
-        fm_model_dir = os.path.join(waal_test_folder, 'Model_FM')
+        sobek_dir = os.path.join(waal_test_folder, 'Model_SOBEK')
+        fm_dir = os.path.join(waal_test_folder, 'Model_FM')
         base_output_dir = _get_base_output_dir()
         fm2prof_dir = base_output_dir + "\\{0}".format(_waal_case)
         compare_dir = os.path.join(fm2prof_dir, 'NC_Output')
 
         # 4. Get observations.nc
-        output_1d = self.__get_observations_file(sobek_model_dir)
-        output_2d = os.path.join(fm_model_dir, 'resultaten\\FlowFM_his.nc')
+        output_1d = self.__get_observations_file(sobek_dir)
+        output_2d = os.path.join(fm_dir, 'resultaten\\FlowFM_his.nc')
         assert os.path.exists(output_2d)
 
         os.makedirs(compare_dir)
@@ -546,7 +546,7 @@ class Test_Acceptance_Waal:
     def test_when_output_exists_then_use_it_for_sobek_model_input(self):
         # 1. Set up test data
         waal_test_folder = TestUtils.get_external_test_data_dir(_waal_case)
-        sobek_dir = (waal_test_folder, 'Model_SOBEK')
+        sobek_dir = os.path.join(waal_test_folder, 'Model_SOBEK')
         fm_dir = os.path.join(waal_test_folder, 'Model_FM')
         base_output_dir = _get_base_output_dir()
         fm2prof_dir = base_output_dir + "\\{0}".format(_waal_case)
