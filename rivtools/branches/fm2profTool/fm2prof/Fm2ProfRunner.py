@@ -29,7 +29,7 @@ import os
 import shutil
 
 
-class Fm2ProfRunner:  
+class Fm2ProfRunner:
     __logger = None    
     __iniFile = None
     __showFigures = False
@@ -287,13 +287,13 @@ class Fm2ProfRunner:
         csv_volumes_file = output_dir + '\\volumes.csv'
 
         # export all cross-sections   
-        try:      
+        try:
             sobek_export.export_crossSectionLocations(cross_sections, file_path= css_location_ini_file )
-            
+
             sobek_export.export_geometry(cross_sections, file_path = css_definitions_ini_file, fmt='dflow1d')
             sobek_export.export_geometry(cross_sections, file_path = csv_geometry_file, fmt = 'sobek3')
             sobek_export.export_geometry(cross_sections, file_path = csv_geometry_test_file, fmt='testformat')
-            
+
             sobek_export.export_roughness(cross_sections, file_path = csv_roughness_file , fmt='sobek3')
             sobek_export.export_roughness(cross_sections, file_path = csv_roughness_test_file, fmt='testformat')
             
