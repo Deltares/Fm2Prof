@@ -13,16 +13,17 @@ _root_output_dir = None
 
 # Test data to be used
 _waal_case = 'case_08_waal'
-_waal_map_file = 'Data\\FM\\FlowFM_fm2prof_map.nc'
-_waal_css_file = 'Data\\cross_section_locations.xyz'
+_case01 = 'case_01_rectangle'
+_case02 = 'case_02_compound'
+_case03 = 'case_03_threestage'
+_case04 = 'case_04_storage'
+_case05 = 'case_05_dyke'
+_case06 = 'case_06_plassen'
+_case07 = 'case_07_triangular'
+
 _test_scenarios_ids = [
-    'case_01_rectangle',
-    'case_02_compound',
-    'case_03_threestage',
-    'case_04_storage',
-    'case_05_dyke',
-    'case_06_plassen',
-    'case_07_triangular',
+    _case01,
+    _case02, _case03, _case04, _case05, _case06, _case07,
     _waal_case
 ]
 
@@ -35,7 +36,7 @@ _test_scenarios_ids = [
 
 _test_scenarios = [
     pytest.param(
-        'case_01_rectangle',
+        _case01,
         'Data\\FM\\FlowFM_fm2prof_map.nc',
         'Data\\cross_section_locations.xyz'),
     pytest.param(
@@ -64,8 +65,8 @@ _test_scenarios = [
         'Data\\cross_section_locations.xyz'),
     pytest.param(
         _waal_case,
-        _waal_map_file,
-        _waal_css_file, marks=pytest.mark.slow)
+        'Data\\FM\\FlowFM_fm2prof_map.nc',
+        'Data\\cross_section_locations.xyz', marks=pytest.mark.slow)
 ]
 
 
@@ -128,6 +129,12 @@ def _check_and_create_test_case_output_dir(base_output_dir, caseName):
     if not os.path.exists(output_directory):
         os.mkdir(output_directory)
 
+    return output_directory
+
+
+def _get_test_case_output_dir(case_name: str):
+    base_output_dir = _get_base_output_dir()
+    output_directory = base_output_dir + "\\{0}".format(case_name)
     return output_directory
 
 
@@ -536,8 +543,7 @@ class Test_Acceptance_Waal:
         waal_test_folder = TestUtils.get_external_test_data_dir(_waal_case)
         sobek_dir = os.path.join(waal_test_folder, 'Model_SOBEK')
         fm_dir = os.path.join(waal_test_folder, 'Model_FM')
-        base_output_dir = _get_base_output_dir()
-        fm2prof_dir = base_output_dir + "\\{0}".format(_waal_case)
+        fm2prof_dir = _get_test_case_output_dir(_waal_case)
         compare_dir = os.path.join(fm2prof_dir, 'NC_Output')
 
         # 4. Get observations.nc
@@ -570,8 +576,7 @@ class Test_Acceptance_Waal:
         waal_test_folder = TestUtils.get_external_test_data_dir(_waal_case)
         sobek_dir = os.path.join(waal_test_folder, 'Model_SOBEK')
         fm_dir = os.path.join(waal_test_folder, 'Model_FM')
-        base_output_dir = _get_base_output_dir()
-        fm2prof_dir = base_output_dir + "\\{0}".format(_waal_case)
+        fm2prof_dir = _get_test_case_output_dir(_waal_case)
         compare_dir = os.path.join(fm2prof_dir, 'NC_Output')
 
         # 2. Verify existent output dir
@@ -612,3 +617,391 @@ class Test_Acceptance_Waal:
         assert figure_list
         for fig_path in figure_list:
             assert os.path.exists(fig_path)
+
+
+class Test_Acceptance_Generic:
+
+    # region of helpers
+    __case_01_tzw = [
+        [0,0,0],
+        [0,150,0],
+        [3000,0,-1],
+        [3000,150,-1]]
+
+    __case_02_tzw = [
+        [0,0,0],
+        [0,50,0],
+        [0,50.000001,-2],
+        [0,99.999999,-2],
+        [0,100,0],
+        [0,150,0],
+        [3000,0,-1],
+        [3000,50,-1],
+        [3000,50.000001,-3],
+        [3000,99.999999,-3],
+        [3000,100,-1],
+        [3000,150,-1]]
+
+    __case_03_tzw = [
+        [0,0,0.5],
+        [0,25,0.5],
+        [0,25.000001,0],
+        [0,50,0],
+        [0,50.000001,-2],
+        [0,99.999999,-2],
+        [0,100,0],
+        [0,124.999999,0],
+        [0,125,0.5],
+        [0,150,0.5],
+        [3000,0,-0.5],
+        [3000,25,-0.5],
+        [3000,25.000001,-1],
+        [3000,50,-1],
+        [3000,50.000001,-3],
+        [3000,99.999999,-3],
+        [3000,100,-1],
+        [3000,124.999999,-1],
+        [3000,125,-0.5],
+        [3000,150,-0.5]]
+
+    __case_05_tzw = [
+        [0,0,1],
+        [0,50,1],
+        [0,50.000001,-2],
+        [0,99.999999,-2],
+        [0,100,1],
+        [0,150,1],
+        [3000,0,0],
+        [3000,50,0],
+        [3000,50.000001,-3],
+        [3000,99.999999,-3],
+        [3000,100,0],
+        [3000,150,0]]
+
+    __case_07_tzw = [
+        [0,6000,0],
+        [0,6125,0], 
+        [0,6125.000001,-2],
+        [0,6374.999999,-2],
+        [0,6375,0],
+        [0,6500,0],
+        [250,6000,-0.1],
+        [250,6226,-0.1], 
+        [250,6226.000001,-2.1],
+        [250,6407.999999,-2.1],
+        [250,6408,-0.1],
+        [250,6500,-0.1],
+        [500,6000,-0.2],
+        [500,6200,-0.2], 
+        [500,6200.000001,-2.2],
+        [500,6399.999999,-2.2],
+        [500,6400,-0.2],
+        [500,6500,-0.2],
+        [9500,6000,-1.8],
+        [9500,6200,-1.8], 
+        [9500,6200.000001,-3.8],
+        [9500,6399.999999,-3.8],
+        [9500,6400,-1.8],
+        [9500,6500,-1.8],
+        [9750,6000,-1.9],
+        [9750,6182,-1.9], 
+        [9750,6182.000001,-3.9],
+        [9750,6391.999999,-3.9],
+        [9750,6392,-1.9],
+        [9750,6500,-1.9],
+        [10000,6000,-2],
+        [10000,6125,-2],
+        [10000,6125.000001,-4],
+        [10000,6374.999999,-4],
+        [10000,6375,-2],
+        [10000,6500,-2]]
+
+    __case_tzw_dict = {
+        _case01: __case_01_tzw,
+
+    }
+
+    def __get_geometry_data(self, input_file: str):
+        """[summary]
+        
+        Arguments:
+            input_file {str} -- Geometry csv file
+        
+        Returns:
+            {tuple} --  Y = chainage; CL = crest level;
+                        FPB = floodplain base level; 
+                        FA = flow area behind summer dike; 
+                        TA = total area behind summer dike
+                        Z = cross-section z values;
+                        W = cross-section total width;
+                        F = cross-section flow width
+        """
+                # Reading geometry.csv file
+        # Output lists ===
+        
+        z_tmp = []
+        w_tmp = []
+        f_tmp = []
+        Y=[]
+        CL = []
+        FPB = []
+        FA = []
+        TA = []
+        n = 0
+        assert os.path.exists(input_file), 'Input file {} does not exist'.format(input_file)
+        
+        with open(input_file) as fin:
+            for line in fin:
+                ls = line.strip().split(',')
+                if 'meta' in line:
+                    Y.append(float(ls[8]))      # chainage
+                    CL.append(float(ls[14]))    # crest level
+                    FPB.append(float(ls[15]))   # floodplain base level
+                    FA.append(float(ls[16]))    # flow area behind summer dike
+                    TA.append(float(ls[17]))    # total area behind summer dike
+                    if n == 1:
+                        Z = [z_tmp]
+                        W = [w_tmp]
+                        F = [f_tmp]
+                        n += 1
+                    elif n > 1:
+                        Z.append(z_tmp)
+                        W.append(w_tmp)
+                        F.append(f_tmp)
+                    z_tmp = []
+                    w_tmp = []
+                    f_tmp = []
+                    n += 1
+                elif 'geom' in line:
+                    z_tmp.append(float(ls[3]))  # z values
+                    w_tmp.append(float(ls[4]))  # w values (total width)
+                    f_tmp.append(float(ls[5]))  # fw values (flow width)
+            Z.append(z_tmp)
+            W.append(w_tmp)
+            F.append(f_tmp)
+
+        return (Z, W, F, Y, CL, FPB, FA, TA)
+
+    def __interpolate_z(self, tzw: list, y: float):
+        """
+        interpolate the analytical cross-section at the given chainage y (float)
+        """
+        tz=[]
+        tw=[]
+        y0 = tzw[0][1]
+        for i in range(len(tzw)):
+            if tzw[i][0] == y:
+                tz.append(float(tzw[i][-1])) # z
+                tw.append(float(tzw[i][1])) # y
+                
+            elif tzw[i][0] > y:
+                for j in range(i-1,-1,-1):
+                    if tzw[j][1] == y0:
+                        tzw0 = j
+                        tzw1 = i
+                        ty0 = tzw[j][0]
+                        tz0 = [tzw[z][-1] for z in range(tzw0,tzw1)]
+                        tw0 = [tzw[z][1] for z in range(tzw0,tzw1)]
+                        ty1 = tzw[i][0]
+                        tz1 = [tzw[z][-1] for z in range(tzw1,tzw1+tzw1-tzw0)]
+                        rr = (y-ty0)/(ty1-ty0)
+                        tz = [(rr*(tz1[x]-tz0[x]))+tz0[x] for x in range(len(tz1))]
+                        tw = tw0
+                        break
+                break
+        return tz,tw
+
+    def __Interpolate_tz_for_CS(self, plt_z, plt_x, tz, tx):
+        est_z = [plt_z[0]]
+        est_x = plt_x
+        n = 0
+        outputlist = []
+        for i in range(1,len(plt_z)-1):
+            flag1 = 0
+            for j in range(n,len(tz)):
+                #print(j)
+                #print(est_x[i],float(tx[j]),float(tx[j-1]))
+                if abs(est_x[i]-float(tx[j]))<1e-5:# est_x[i] == float(tx[j]):
+                    est_z.append(tz[j])
+                    n = j+1
+                    outputlist.append([plt_x[i],tz[j],plt_z[i],i,j,n,'I'])
+                    #print([plt_x[i],tz[j],plt_z[i],i,j,n,'I'])
+                    break
+    #            elif abs(est_x[i]-float(tx[j]))<1e-5:
+    #                est_z.append(tz[j])
+    #                #n = j+1
+    #                outputlist.append([plt_x[i],tz[j],plt_z[i],i,j,n,'II'])
+    #                break
+                elif est_x[i] < float(tx[j]) and est_x[i] > float(tx[j-1]):
+                    #print(est_x[i],float(tx[j]),float(tx[j-1]))
+                    est_z.append(tz[j])
+                    outputlist.append([plt_x[i],tz[j],plt_z[i],i,j,n,'III'])
+                    #print([tx[j],plt_x[i],tz[j],plt_z[i],i,j,n,'III'])
+                    break
+                    #print(est_x[i-1],est_x[i],est_x[i+1],i,'Y')
+                elif est_x[i] > tx[-1]:
+                    est_z.append(plt_z[i])
+                    #print([plt_x[i],tz[j],plt_z[i],i,j,n,'IV'])
+                    break
+                elif abs(est_x[i]-est_x[i+1])<1e-5 and abs(est_x[i]-est_x[i-1])<1e-5:
+                    est_z.append(tz[-1])
+                    flag1 = 1
+                    break
+            if abs(est_x[i]-est_x[i+1])<1e-5 and abs(est_x[i]-est_x[i-1])<1e-5 and flag1 == 0:
+                est_z.append(tz[-1])
+                    #print([plt_x[i],tz[j],plt_z[i],i,j,n,'X'])
+                    #break
+            #print(est_z[-1])
+            
+        est_z.append(plt_z[-1])
+        return est_z, est_x, outputlist
+
+    def __Error_check(self,est_z, plt_z):
+        diff = [est_z[i]-plt_z[i] for i in range(len(plt_z))]
+        ErrorList = []
+        for i in range(len(plt_tz)-1):
+            dx = plt_x[i+1]-plt_x[i]
+            if (diff[i] > 0 and diff[i+1] > 0) or (diff[i] < 0 and diff[i+1] < 0):
+                min_z = abs(diff[i])
+                if abs(diff[i]) > abs(diff[i+1]):
+                    min_z = abs(diff[i+1])
+                dx = plt_x[i+1]-plt_x[i]
+                Error_area = (min_z + 0.5*abs(diff[i+1]-diff[i])) *dx
+            elif diff[i] == 0 and diff[i+1] == 0:
+                Error_area = 0
+            elif diff[i] == 0 or diff[i+1] == 0:
+                dz = abs(diff[i])
+                if abs(diff[i]) < abs(diff[i+1]):
+                    dz = abs(diff[i+1])
+                Error_area = 0.5* dz * dx
+            else:
+                D = abs(diff[i]/diff[i+1])
+                dx0 = (D*dx)/(D+1)
+                dx1 = dx-dx0
+                Error_area = 0.5 * (abs(diff[i])*dx0 + abs(diff[i+1])*dx1 )
+            ErrorList.append(Error_area)
+        return sum(ErrorList)
+
+    def __ShiftCrossSection(self,tx,tz):
+        min_value = min(tz)
+        min_list = [i for i, x in enumerate(tz) if x == min_value]
+        midpoint = (tx[min_list[-1]]-tx[min_list[0]])/2 + tx[min_list[0]]
+        cs_midpoint = (tx[-1]-tx[0])/2 + tx[0]
+        shift = midpoint - cs_midpoint
+        tmp_tx = [tx[i]-shift for i in range(1,len(tx)-1)]
+        new_tx = [tx[0]] + tmp_tx + [tx[-1]]
+        return new_tx
+
+    def __symmetric(self,L):
+        if len(L)%2 != 0:
+            return False
+        else:
+            for i in range(1,int(len(L)/2)):
+                if L[i]-L[i-1] != L[-i]-L[-i-1] > 1e-4:
+                    return False
+        return True
+
+    def __plot_cs(self, fig_dir: str, tx,tz,plt_x,plt_z,y,err,ttbs=None,tfpb=None,tcl=None,tbs=None,fpb=None,cl=None):
+        fig, axh = plt.subplots(1, figsize=(10, 4))
+        axh.plot(tx, tz, label='Analytical')
+        axh.plot(plt_x, plt_z, label='FM2PROF')
+        axh.set_ylim()
+        axh.set_xlabel('x [m]')
+        axh.set_ylabel('z [m]')
+        axh.legend()
+        titlestr = 'Cross-section at chainage ' + str(y)
+        axh.set_title(titlestr)
+        axh.text(0.06, 0.85, 'sum(err) = {:.2f}'.format(err),
+        horizontalalignment='left',
+        verticalalignment='center',
+        transform = axh.transAxes)
+        if ttbs is not None:
+            axh.text(0.06, 0.72, 'FM2PROF:\n    CrestLevel = {:.2f}m, Floodplain Base level = {:.2f}m\n    Crest height = {:.2f}m, Total area behind summer dike = {:.2f}m^2'.format(cl,fpb,cl-fpb,tbs),
+            horizontalalignment='left',
+            verticalalignment='center',
+            transform = axh.transAxes)
+            axh.text(0.06, 0.52, 'Analytical:\n    CrestLevel = {:.2f}m, Floodplain Base level = {:.2f}m\n    Crest height = {:.2f}m, Total area behind summer dike = {:.2f}m^2'.format(tcl,tfpb,1,ttbs),
+            horizontalalignment='left',
+            verticalalignment='center',
+            transform = axh.transAxes)
+        plt.grid()
+        plt.tight_layout()
+        fig_name = '{}.png'.format(titlestr)
+        fig_path = os.path.join(fig_dir, fig_name)
+        plt.savefig(fig_path)
+
+    def __convert_zw2xz(self, z:list, w:list, tx:list):
+        """ Convert zw lists to xz list for plotting """
+        w_tmp = [(w[-1]-w[i])/2 for i in range(len(w))]
+        plt_w_reverse = w_tmp[::-1]
+        plt_w_forward = [w[i]/2+w[-1]/2 for i in range(len(w))]
+        plt_w_tmp = plt_w_reverse + plt_w_forward
+        plt_w = [plt_w_tmp[i] + tx[0] for i in range(len(plt_w_tmp))]
+        plt_z = z[::-1] + z
+        return plt_z, plt_w
+
+    # region for tests
+    @pytest.mark.acceptance
+    @pytest.mark.requires_output
+    def test_when_output_exists_then_compare_generic_model_input(self):
+        # 1. Get all necessary output / input directories
+        case_name = _case01
+        fm2prof_dir = _get_test_case_output_dir(case_name)
+        fm2prof_output_dir = os.path.join(fm2prof_dir, 'Output')
+        fm2prof_fig_dir = os.path.join(fm2prof_dir, 'Figures')
+
+        geometry_file_name = 'geometry.csv'
+        input_geometry_file = os.path.join(fm2prof_output_dir, geometry_file_name)
+
+        # 2. Verify / create necessary folders and directories
+        assert os.path.exists(input_geometry_file), 'Input file {} could not be found'.format(input_geometry_file)
+        if os.path.exists(fm2prof_fig_dir):
+            shutil.rmtree(fm2prof_fig_dir)
+        os.makedirs(fm2prof_fig_dir)
+
+        # Read data in geometry.csv
+        (Z, W, F, Y, CL, FPB, FA, TA) = self.__get_geometry_data(input_geometry_file)
+
+        plt_tz = []
+        plt_tx = []
+       
+        tzw_values = self.__case_tzw_dict.get(case_name)
+        if not tzw_values or tzw_values is None:
+            pytest.fail('Test failed, no values retrieved for {}'.format(case_name))
+
+        # loop over each chainage (cross-section)
+        for cs in range(len(Y)):
+            y = Y[cs]
+            z = Z[cs]
+            w = W[cs]
+            # give the interpolated analytical result at chainage y
+            [tz, tx] = self.__interpolate_z(tzw_values, y)
+            # check whether the analytical cross-section is symmetric
+            if not self.__symmetric(tx):
+                tx = self.__ShiftCrossSection(tx,tz)
+            [plt_z,plt_x] = self.__convert_zw2xz(z,w,tx) 
+            [plt_tz,plt_tx,outlist] = self.__Interpolate_tz_for_CS(plt_z,plt_x,tz,tx)
+            if case_name == _case05:
+                # Dike case
+                ttbs = 2*50.0*1.0 # 50m * 1m (crest level-base level) * 2 = analytical total area behind summer dike
+                tfpb = tz[1] - 1.0 # real floodplain is 1m lower than the "floodplain" in the cross-section geometry
+                tcl = tz[1] # real crest level is the "floodplain" height in the cross-section geometry
+                cl = CL[cs] # crest level from fm2prof
+                fpb = FPB[cs] # floodplain base level from fm2prof
+                #fbs = FA[cs] # flow area behind summer dike from fm2prof
+                tbs = TA[cs] # total area behind summer dike from fm2prof
+            elif case_name == _case04:
+                # Storage
+                pass         
+            elif case_name == _case06:
+                # Lake case
+                pass                
+            
+            sumError = self.__Error_check(plt_tz,plt_z)
+            # dyke
+            
+            if case_name == _case05:
+                self.__plot_cs(fm2prof_fig_dir, tx, tz,plt_x,plt_z,y,sumError,ttbs,tfpb,tcl,tbs,fpb,cl)
+            else:
+                self.__plot_cs(fm2prof_fig_dir, tx, tz,plt_x,plt_z,y,sumError)
+
