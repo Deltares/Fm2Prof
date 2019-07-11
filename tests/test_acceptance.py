@@ -369,6 +369,17 @@ class Test_Acceptance_Waal:
             self, case_name: str,
             output_1d: str, output_2d: str,
             fig_dir: str):
+        """Compares two .nc files and outputs its result as plots
+
+        Arguments:
+            case_name {str} -- Name of the current study case.
+            output_1d {str} -- location of the 1d output directory.
+            output_2d {str} -- Location of the 2d output directory.
+            fig_dir {str} -- Directory where to save the figures.
+
+        Returns:
+            {list[str]} -- List of generated figures.
+        """
 
         # Imports
         import numpy as np
@@ -386,6 +397,7 @@ class Test_Acceptance_Waal:
                 'size': 20}
 
         matplotlib.rc('font', **font)
+        list_of_figures = []
         # Read data
         df_1d = Dataset(output_1d)
         df_2d = Dataset(output_2d)
@@ -462,7 +474,11 @@ class Test_Acceptance_Waal:
                 axh.legend()
                 axh.set_title(stat)
                 plt.tight_layout()
-                fig.savefig("case8_{}.png".format(stat))
+                fig_name = os.path.join(
+                    fig_dir,
+                    'case8_{}.png'.format(stat))
+                fig.savefig(fig_name)
+                list_of_figures.append(fig_name)
 
         # Plot bias/std
         fig, ax = plt.subplots(1, figsize=(10, 4))
@@ -477,7 +493,11 @@ class Test_Acceptance_Waal:
         ax.set_xlim([kms[0], kms[-1]])
 
         plt.tight_layout()
-        fig.savefig('{}_statistics.png'.format(case_name))
+        fig_name = os.path.join(
+            fig_dir,
+            '{}_statistics.png'.format(case_name))
+        fig.savefig(fig_name)
+        list_of_figures.append(fig_name)
 
         # Plot Q/H at selected stations
         stations = [['Q-TielWaal', "LMW.TielWaal", "TielWaal"],
@@ -505,10 +525,10 @@ class Test_Acceptance_Waal:
             fig, ax = plt.subplots(1)
             ax.plot(t_1d, q_1d, label='sobek')
             ax.plot(t_2d, q_2d, label='FM2D')
-        # plt.show()
-        fig_path = os.path.join(fig_dir, '{}.png'.format(case_name))
-        plt.savefig(fig_path)
-        return fig_path
+
+        # fig_path = os.path.join(fig_dir, '{}.png'.format(case_name))
+        # plt.savefig(fig_path)
+        return list_of_figures
 
     @pytest.mark.waal_compare_results
     def test_when_results_available_then_compare(self):
@@ -534,11 +554,13 @@ class Test_Acceptance_Waal:
         assert os.path.exists(output_2d)
 
         # 5. Compare values Generate figures.
-        fig_path = self.__compare_1d_2d_output_and_generate_plots(
+        figure_list = self.__compare_1d_2d_output_and_generate_plots(
             _waal_case, output_1d, output_2d, fm2prof_dir)
 
         # 6. Verify final expectations
-        assert os.path.exists(fig_path)
+        assert figure_list
+        for fig_path in figure_list:
+            assert os.path.exists(fig_path)
 
     @pytest.mark.slow
     @pytest.mark.acceptance
@@ -583,8 +605,10 @@ class Test_Acceptance_Waal:
         assert os.path.exists(output_2d)
 
         # 7. Compare values Generate figures.
-        fig_path = self.__compare_1d_2d_output_and_generate_plots(
+        figure_list = self.__compare_1d_2d_output_and_generate_plots(
             _waal_case, output_1d, output_2d, fm2prof_dir)
 
         # 8. Verify final expectations
-        assert os.path.exists(fig_path)
+        assert figure_list
+        for fig_path in figure_list:
+            assert os.path.exists(fig_path)
