@@ -835,7 +835,7 @@ class Test_Acceptance_Generic:
                     sd_key = ls.index('Use Summerdike')
                 elif 'meta' ''in line:
                     Y.append(float(ls[y_index]))      # chainage
-                    if ls[sd_key] == 1:
+                    if ls[sd_key] == '1':
                         CL.append(float(ls[cl_index]))    # crest level
                         FPB.append(float(ls[fpb_index]))  # floodplain base level
                         FA.append(float(ls[fa_index]))    # flow area behind summer dike
@@ -992,7 +992,7 @@ class Test_Acceptance_Generic:
             transform = axh.transAxes)
         plt.grid()
         plt.tight_layout()
-        figtitlestr = 'CrossSection_chainage' + str(y)
+        figtitlestr = 'CrossSection_chainage' + str(int(y))
         fig_name = '{}.png'.format(figtitlestr)
         fig_path = os.path.join(fig_dir, fig_name)
         plt.savefig(fig_path)
@@ -1007,12 +1007,19 @@ class Test_Acceptance_Generic:
         plt_z = z[::-1] + z
         return plt_z, plt_w
 
+    def __FlowWidth_check(self, W:list, F:list, case_name:str):
+        for i in range(len(W)):
+            storage_width = [W[i][j]-F[i][j] for j in range(len(W[i]))]
+            sum_storage_width = sum(storage_width)
+            if sum_storage_width > 0.001 and case_name is not _case04:
+                pytest.fail('Storage width is found!')
+
     # region for tests
     @pytest.mark.acceptance
     @pytest.mark.requires_output
     def test_when_output_exists_then_compare_generic_model_input(self):
         # 1. Get all necessary output / input directories
-        case_name = _case01
+        case_name = _case04
         fm2prof_dir = _get_test_case_output_dir(case_name)
         fm2prof_output_dir = os.path.join(fm2prof_dir, 'Output')
         fm2prof_fig_dir = os.path.join(fm2prof_dir, 'Figures')
@@ -1028,13 +1035,15 @@ class Test_Acceptance_Generic:
 
         # Read data in geometry.csv
         (Z, W, F, Y, CL, FPB, FA, TA) = self.__get_geometry_data(input_geometry_file)
+        
+        self.__FlowWidth_check(W, F, case_name)
 
         tzw_values = self.__case_tzw_dict.get(case_name)
         if not tzw_values or tzw_values is None:
             pytest.fail('Test failed, no values retrieved for {}'.format(case_name))
+        if Y[-1] > tzw_values[-1][0]:
+            pytest.fail('Test failed, redo FM simulation with the maximum chainage less than equal to {}'.format(tzw_values[-1][0]))
 
-        plt_tz = []
-        plt_tx = []
         # loop over each chainage (cross-section)
         for cs in range(len(Y)):
             y = Y[cs]
