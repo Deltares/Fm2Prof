@@ -144,6 +144,56 @@ def _get_test_case_output_dir(case_name: str):
     return output_directory
 
 
+class Test_Generate_Latex_Report:
+
+    import fileinput
+    def _get_case_figures(self, case_name):
+        case_dir = _get_test_case_output_dir(case_name)
+        case_fig_dir = os.path.join(case_dir, 'Figures')
+        if not os.path.exists(case_fig_dir):
+            return []
+        return os.listdir(case_fig_dir)
+
+    def _get_all_cases_and_figures(self):
+        case_figures = []
+        for case in _test_scenarios:
+            case_figures.append((case, self._get_case_figures(case)))
+        return case_figures
+
+    def _generate_python_section(self, case_values):
+        (case_name, case_figures) = case_values
+        latex_lines = []
+        entry = '\\chapter{{{}}}\t\\label{{sec:{}}}'.format(case_name, case_name)
+        latex_lines.append(entry)
+        for case_figure in case_figures:
+            fig_path = case_figure
+            fullpath, fig_label = os.path.split(case_figure)
+            fig_template = """
+            \\begin{{figure}}[!h]
+            \\centering
+                \\includegraphics[width=0.95\\textwidth]{{}}
+                \\caption{{\\small {}}}
+                \\label{{fig:{}}}
+            \\end{{figure}}""".format(fig_path, fig_label)
+            latex_lines.append(fig_template)
+        return latex_lines
+
+    @pytest.mark.generate_test_report
+    def test_when_output_generated_then_generate_report(self):
+        cases_and_figures = self._get_all_cases_and_figures()
+        lines = []
+        for case in cases_and_figures:
+            lines.append(self._generate_python_section(case))
+
+        assert lines
+                
+        # with fileinput.FileInput(filename, inplace=True, backup='.bak') as file:
+        #     for line in file:
+        #         print(line.replace(text_to_search, replacement_text), end='')
+
+
+
+
 class Test_Fm2Prof_Run_IniFile:
 
     @pytest.mark.acceptance
