@@ -183,8 +183,7 @@ class Test_Fm2Prof_Run_IniFile:
         runner.run_inifile(iniFile)
 
         # 4. Verify there is output generated:
-        assert (os.listdir(iniFile._output_dir),
-                "There is no output generated for {0}".format(case_name))
+        assert os.listdir(iniFile._output_dir), "There is no output generated for {0}".format(case_name)
 
 
 class Test_Main_Run_IniFile:
@@ -279,8 +278,7 @@ class Test_Main_Run_IniFile:
         generated_files = os.listdir(output_files)
         if os.path.exists(root_output_dir):
             shutil.rmtree(root_output_dir)
-        assert (generated_files,
-                "There is no output generated for {0}".format(case_name))
+        assert generated_files, "There is no output generated for {0}".format(case_name)
         for expected_file in expected_files:
             assert expected_file in generated_files
 
@@ -364,8 +362,7 @@ class Test_Acceptance_Waal:
             {str} -- File path where the observation file has been generated.
         """
         dflow1_output = os.path.join(sobek_dir, 'dflow1d\\output')
-        assert (os.path.exists(dflow1_output),
-                'Sobek output folder not created.')
+        assert os.path.exists(dflow1_output), 'Sobek output folder not created.'
         assert os.listdir(dflow1_output), 'No output generated.'
 
         observations_file = os.path.join(dflow1_output, 'observations.nc')
@@ -545,12 +542,18 @@ class Test_Acceptance_Waal:
         fm_dir = os.path.join(waal_test_folder, 'Model_FM')
         fm2prof_dir = _get_test_case_output_dir(_waal_case)
         compare_dir = os.path.join(fm2prof_dir, 'NC_Output')
+        figure_dir = os.path.join(fm2prof_dir, 'Figures')
 
+        if os.path.exists(figure_dir):
+            shutil.rmtree(figure_dir)
+        os.makedirs(figure_dir)
         # 4. Get observations.nc
         output_1d = self.__get_observations_file(sobek_dir)
         output_2d = os.path.join(fm_dir, 'resultaten\\FlowFM_his.nc')
         assert os.path.exists(output_2d)
 
+        if os.path.exists(compare_dir):
+            shutil.rmtree(compare_dir)
         os.makedirs(compare_dir)
         shutil.copy(output_1d, compare_dir)
         shutil.copy(output_2d, compare_dir)
@@ -561,9 +564,10 @@ class Test_Acceptance_Waal:
 
         # 5. Compare values Generate figures.
         figure_list = self.__compare_1d_2d_output_and_generate_plots(
-            _waal_case, output_1d, output_2d, fm2prof_dir)
+            _waal_case, output_1d, output_2d, figure_dir)
 
         # 6. Verify final expectations
+        assert os.listdir(figure_dir)
         assert figure_list
         for fig_path in figure_list:
             assert os.path.exists(fig_path)
@@ -578,6 +582,7 @@ class Test_Acceptance_Waal:
         fm_dir = os.path.join(waal_test_folder, 'Model_FM')
         fm2prof_dir = _get_test_case_output_dir(_waal_case)
         compare_dir = os.path.join(fm2prof_dir, 'NC_Output')
+        figure_dir = os.path.join(fm2prof_dir, 'Figures')
 
         # 2. Verify existent output dir
         if not os.path.exists(fm2prof_dir):
@@ -590,6 +595,10 @@ class Test_Acceptance_Waal:
             pytest.fail(
                 'FM directory not found. {}'.format(fm_dir))
 
+        if os.path.exists(figure_dir):
+            shutil.rmtree(figure_dir)
+        os.makedirs(figure_dir)
+
         # 4. Create xml
         sobek_xml_location = self.__create_xml_waal(sobek_dir)
 
@@ -601,6 +610,8 @@ class Test_Acceptance_Waal:
         output_2d = os.path.join(fm_dir, 'resultaten\\FlowFM_his.nc')
         assert os.path.exists(output_2d)
 
+        if os.path.exists(compare_dir):
+            shutil.rmtree(compare_dir)
         os.makedirs(compare_dir)
         shutil.copy(output_1d, compare_dir)
         shutil.copy(output_2d, compare_dir)
