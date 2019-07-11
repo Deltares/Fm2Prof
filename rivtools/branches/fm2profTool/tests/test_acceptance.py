@@ -4,6 +4,7 @@ import sys
 import os
 
 import shutil
+import matplotlib.pyplot as plt
 
 from tests import TestUtils
 from fm2prof.Fm2ProfRunner import Fm2ProfRunner
@@ -23,7 +24,12 @@ _case07 = 'case_07_triangular'
 
 _test_scenarios_ids = [
     _case01,
-    _case02, _case03, _case04, _case05, _case06, _case07,
+    _case02,
+    _case03,
+    _case04,
+    _case05,
+    _case06,
+    _case07,
     _waal_case
 ]
 
@@ -388,7 +394,6 @@ class Test_Acceptance_Waal:
         # Imports
         import numpy as np
         import pandas as pd
-        import matplotlib.pyplot as plt
         from netCDF4 import Dataset
         import matplotlib
         from tqdm import tqdm
@@ -631,7 +636,6 @@ class Test_Acceptance_Waal:
 
 
 class Test_Acceptance_Generic:
-
     # region of helpers
     __case_01_tzw = [
         [0,0,0],
@@ -729,7 +733,12 @@ class Test_Acceptance_Generic:
 
     __case_tzw_dict = {
         _case01: __case_01_tzw,
-
+        _case02: __case_02_tzw,
+        _case03: __case_03_tzw,
+        _case04: __case_02_tzw,
+        _case05: __case_05_tzw,
+        _case06: __case_02_tzw,
+        _case07: __case_07_tzw,
     }
 
     def __get_geometry_data(self, input_file: str):
@@ -764,12 +773,23 @@ class Test_Acceptance_Generic:
         with open(input_file) as fin:
             for line in fin:
                 ls = line.strip().split(',')
-                if 'meta' in line:
-                    Y.append(float(ls[8]))      # chainage
-                    CL.append(float(ls[14]))    # crest level
-                    FPB.append(float(ls[15]))   # floodplain base level
-                    FA.append(float(ls[16]))    # flow area behind summer dike
-                    TA.append(float(ls[17]))    # total area behind summer dike
+                if 'id' in line[:2]:
+                    z_index = ls.index('level')
+                    w_index = ls.index('Total width')
+                    f_index = ls.index('Flow width')
+                    y_index = ls.index('chainage')
+                    cl_index = ls.index('Crest level summerdike')
+                    fpb_index = ls.index('Floodplain baselevel behind summerdike')
+                    fa_index = ls.index('Flow area behind summerdike')
+                    ta_index = ls.index('Total area behind summerdike')
+                    sd_key = ls.index('Use Summerdike')
+                elif 'meta' ''in line:
+                    Y.append(float(ls[y_index]))      # chainage
+                    if ls[sd_key] == 1:
+                        CL.append(float(ls[cl_index]))    # crest level
+                        FPB.append(float(ls[fpb_index]))  # floodplain base level
+                        FA.append(float(ls[fa_index]))    # flow area behind summer dike
+                        TA.append(float(ls[ta_index]))    # total area behind summer dike
                     if n == 1:
                         Z = [z_tmp]
                         W = [w_tmp]
@@ -784,9 +804,9 @@ class Test_Acceptance_Generic:
                     f_tmp = []
                     n += 1
                 elif 'geom' in line:
-                    z_tmp.append(float(ls[3]))  # z values
-                    w_tmp.append(float(ls[4]))  # w values (total width)
-                    f_tmp.append(float(ls[5]))  # fw values (flow width)
+                    z_tmp.append(float(ls[z_index]))  # z values
+                    w_tmp.append(float(ls[w_index]))  # w values (total width)
+                    f_tmp.append(float(ls[f_index]))  # fw values (flow width)
             Z.append(z_tmp)
             W.append(w_tmp)
             F.append(f_tmp)
@@ -830,29 +850,17 @@ class Test_Acceptance_Generic:
         for i in range(1,len(plt_z)-1):
             flag1 = 0
             for j in range(n,len(tz)):
-                #print(j)
-                #print(est_x[i],float(tx[j]),float(tx[j-1]))
                 if abs(est_x[i]-float(tx[j]))<1e-5:# est_x[i] == float(tx[j]):
                     est_z.append(tz[j])
                     n = j+1
                     outputlist.append([plt_x[i],tz[j],plt_z[i],i,j,n,'I'])
-                    #print([plt_x[i],tz[j],plt_z[i],i,j,n,'I'])
                     break
-    #            elif abs(est_x[i]-float(tx[j]))<1e-5:
-    #                est_z.append(tz[j])
-    #                #n = j+1
-    #                outputlist.append([plt_x[i],tz[j],plt_z[i],i,j,n,'II'])
-    #                break
                 elif est_x[i] < float(tx[j]) and est_x[i] > float(tx[j-1]):
-                    #print(est_x[i],float(tx[j]),float(tx[j-1]))
                     est_z.append(tz[j])
                     outputlist.append([plt_x[i],tz[j],plt_z[i],i,j,n,'III'])
-                    #print([tx[j],plt_x[i],tz[j],plt_z[i],i,j,n,'III'])
                     break
-                    #print(est_x[i-1],est_x[i],est_x[i+1],i,'Y')
                 elif est_x[i] > tx[-1]:
                     est_z.append(plt_z[i])
-                    #print([plt_x[i],tz[j],plt_z[i],i,j,n,'IV'])
                     break
                 elif abs(est_x[i]-est_x[i+1])<1e-5 and abs(est_x[i]-est_x[i-1])<1e-5:
                     est_z.append(tz[-1])
@@ -860,15 +868,12 @@ class Test_Acceptance_Generic:
                     break
             if abs(est_x[i]-est_x[i+1])<1e-5 and abs(est_x[i]-est_x[i-1])<1e-5 and flag1 == 0:
                 est_z.append(tz[-1])
-                    #print([plt_x[i],tz[j],plt_z[i],i,j,n,'X'])
-                    #break
-            #print(est_z[-1])
             
         est_z.append(plt_z[-1])
         return est_z, est_x, outputlist
 
-    def __Error_check(self,est_z, plt_z):
-        diff = [est_z[i]-plt_z[i] for i in range(len(plt_z))]
+    def __Error_check(self, plt_tz, plt_z, plt_x):
+        diff = [plt_tz[i]-plt_z[i] for i in range(len(plt_z))]
         ErrorList = []
         for i in range(len(plt_tz)-1):
             dx = plt_x[i+1]-plt_x[i]
@@ -937,7 +942,8 @@ class Test_Acceptance_Generic:
             transform = axh.transAxes)
         plt.grid()
         plt.tight_layout()
-        fig_name = '{}.png'.format(titlestr)
+        figtitlestr = 'CrossSection_chainage' + str(y)
+        fig_name = '{}.png'.format(figtitlestr)
         fig_path = os.path.join(fig_dir, fig_name)
         plt.savefig(fig_path)
 
@@ -973,13 +979,12 @@ class Test_Acceptance_Generic:
         # Read data in geometry.csv
         (Z, W, F, Y, CL, FPB, FA, TA) = self.__get_geometry_data(input_geometry_file)
 
-        plt_tz = []
-        plt_tx = []
-       
         tzw_values = self.__case_tzw_dict.get(case_name)
         if not tzw_values or tzw_values is None:
             pytest.fail('Test failed, no values retrieved for {}'.format(case_name))
 
+        plt_tz = []
+        plt_tx = []
         # loop over each chainage (cross-section)
         for cs in range(len(Y)):
             y = Y[cs]
@@ -1008,11 +1013,12 @@ class Test_Acceptance_Generic:
                 # Lake case
                 pass                
             
-            sumError = self.__Error_check(plt_tz,plt_z)
+            sumError = self.__Error_check(plt_tz,plt_z,plt_x)
             # dyke
             
             if case_name == _case05:
-                self.__plot_cs(fm2prof_fig_dir, tx, tz,plt_x,plt_z,y,sumError,ttbs,tfpb,tcl,tbs,fpb,cl)
+                self.__plot_cs(fm2prof_fig_dir, tx, tz, plt_x, plt_z, y, sumError, ttbs, tfpb, tcl, tbs, fpb, cl)
             else:
-                self.__plot_cs(fm2prof_fig_dir, tx, tz,plt_x,plt_z,y,sumError)
+                self.__plot_cs(fm2prof_fig_dir, tx, tz, plt_x, plt_z, y, sumError)
+            
 
