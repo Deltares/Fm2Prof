@@ -149,6 +149,10 @@ def get_centre_values(location, x, y, waterdepth, waterlevel):
     centre_depth = waterdepth.iloc[index[0]]
     centre_level = waterlevel.iloc[index[0]]
 
+    # remove nan values
+    centre_depth[np.isnan(centre_depth)] = np.nanmin(centre_depth)
+    centre_level[np.isnan(centre_level)] = np.nanmin(centre_level)
+    
     return centre_depth.values[0], centre_level.values[0]
 
 def get_extra_total_area(waterlevel, crest_level, transition_height, hysteresis=False):
