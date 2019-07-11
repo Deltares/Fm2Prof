@@ -156,7 +156,7 @@ class Test_Generate_Latex_Report:
 
     def _get_all_cases_and_figures(self):
         case_figures = []
-        for case in _test_scenarios:
+        for case in _test_scenarios_ids:
             case_figures.append((case, self._get_case_figures(case)))
         return case_figures
 
@@ -166,38 +166,77 @@ class Test_Generate_Latex_Report:
         entry = '\\chapter{{{}}}\t\\label{{sec:{}}}'.format(case_name, case_name)
         latex_lines.append(entry)
         for case_figure in case_figures:
-            fig_path = case_figure
+            fig_path = '..\\{}\\Figures\\{}'.format(case_name, case_figure)
             fullpath, fig_label = os.path.split(case_figure)
             fig_template = """
             \\begin{{figure}}[!h]
             \\centering
-                \\includegraphics[width=0.95\\textwidth]{{}}
+                \\includegraphics[width=0.95\\textwidth]{{{}}}
                 \\caption{{\\small {}}}
                 \\label{{fig:{}}}
-            \\end{{figure}}""".format(fig_path, fig_label)
+            \\end{{figure}}""".format(fig_path, fig_label, fig_label)
             latex_lines.append(fig_template)
         return latex_lines
 
+    def _make_pdf(self, report_dir):
+        tex_path = os.path.join(report_dir, 'acceptance_report.tex')
+        bibtex = os.path.join(report_dir, 'acceptance_report')
+        log = os.path.join(report_dir, 'a_r_Log.txt')
+        os.system('pdflatex {}'.format(tex_path))
+        os.system('bibtex {}'.format(bibtex))
+        os.system('pdflatex {}'.format(tex_path))
+        os.system('pdflatex \'{}\' > {}'.format(tex_path, log))
+        os.system('xcopy *.pdf .. /Y')
+
     @pytest.mark.generate_test_report
     def test_when_output_generated_then_generate_report(self):
+        # 1. Find latex template
+        latex_key = 'PYTHON_CODE_HERE'
+        latex_name = 'acceptance_report.tex'
+        latex_dir_name = 'latex_report'
+        pdf_name = 'acceptance_report.pdf'
+        latex_dir = TestUtils.get_test_data_dir(latex_dir_name)
+        output_dir = _get_base_output_dir()
+        report_dir = os.path.join(output_dir, latex_dir_name)
+
+        # 2. Gather case figures.
         cases_and_figures = self._get_all_cases_and_figures()
         lines = []
         for case in cases_and_figures:
             lines.append(self._generate_python_section(case))
 
         assert lines
-                
-        # with fileinput.FileInput(filename, inplace=True, backup='.bak') as file:
-        #     for line in file:
-        #         print(line.replace(text_to_search, replacement_text), end='')
 
+        # 3. Copy dir to output test (to use it later as external)
+        if os.path.exists(report_dir):
+            shutil.rmtree(report_dir)
+        shutil.copytree(latex_dir, report_dir, False, None)
+        latex_path = os.path.join(report_dir, latex_name)
 
+        assert os.path.exists(latex_path), 'Latex template could not be found on path {}.'.format(latex_path)
+
+        # 4. Add templates to the latex file
+        with open(latex_path) as f:
+            file_str = f.read()
+
+        new_sections = ['\n'.join(line) for line in lines]
+        new_content = '\n\n'.join(new_sections)
+        file_str = file_str.replace(latex_key, new_content)
+
+        with open(latex_path, 'w') as f:
+            f.write(file_str)
+        
+        # 5. Execute Pdf generator
+        self._make_pdf(report_dir)
+
+        # 6. Verify PDF is generated
+        pdf_path = os.path.join(report_dir, pdf_name)
+        assert os.path.exists(pdf_path), 'PDF file was not generated.'
 
 
 class Test_Fm2Prof_Run_IniFile:
 
     @pytest.mark.acceptance
-    @pytest.mark.timeout(7200)
     @pytest.mark.parametrize(
         ("case_name", "map_file", "css_file"),
         _test_scenarios, ids=_test_scenarios_ids)
@@ -296,7 +335,7 @@ class Test_Main_Run_IniFile:
         f.close()
         return (file_path, output_dir)
 
-    @pytest.mark.system
+    @pytest.mark.systemtest
     def test_when_given_inifile_then_output_is_generated(self):
         # 1. Set up test data.
         case_name = 'case_01_rectangle'
@@ -1017,9 +1056,13 @@ class Test_Acceptance_Generic:
     # region for tests
     @pytest.mark.acceptance
     @pytest.mark.requires_output
-    def test_when_output_exists_then_compare_generic_model_input(self):
+    @pytest.mark.parametrize(
+        'case_name', _test_scenarios_ids, ids=_test_scenarios_ids)
+    def test_when_output_exists_then_compare_generic_model_input(self, case_name: str):
+        if case_name == _waal_case:
+            print('This case is tested on another fixture.')
+            return
         # 1. Get all necessary output / input directories
-        case_name = _case04
         fm2prof_dir = _get_test_case_output_dir(case_name)
         # Data from the above tests is saved directly in fm2prof_dir,
         # not in case_name/output
