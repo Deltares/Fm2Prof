@@ -1021,11 +1021,13 @@ class Test_Acceptance_Generic:
         # 1. Get all necessary output / input directories
         case_name = _case04
         fm2prof_dir = _get_test_case_output_dir(case_name)
-        fm2prof_output_dir = os.path.join(fm2prof_dir, 'Output')
+        # Data from the above tests is saved directly in fm2prof_dir,
+        # not in case_name/output
+        # fm2prof_output_dir = os.path.join(fm2prof_dir, 'Output')
         fm2prof_fig_dir = os.path.join(fm2prof_dir, 'Figures')
 
         geometry_file_name = 'geometry.csv'
-        input_geometry_file = os.path.join(fm2prof_output_dir, geometry_file_name)
+        input_geometry_file = os.path.join(fm2prof_dir, geometry_file_name)
 
         # 2. Verify / create necessary folders and directories
         assert os.path.exists(input_geometry_file), 'Input file {} could not be found'.format(input_geometry_file)
