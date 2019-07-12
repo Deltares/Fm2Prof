@@ -234,15 +234,14 @@ def _read_css_xyz(file_path : str, delimiter = ','):
         input_data = dict(xy=list(), id=list(), branchid=list(), length=list(), chainage=list())
         for line in fid:
             try:
-                (x, y, branchid, length, chainage) = line.split(delimiter)
+                (cssid, x, y, length, branchid, chainage) = line.split(delimiter)
             except ValueError:
                 # revert to legacy format
-                (x, y, length) = line.split(delimiter)
-                branchid = 'not defined'
-                chainage = 0
+                (x, y, branchid, length, chainage) = line.split(delimiter)
+                cssid = branchid + '_' + str(round(float(chainage)))
 
             input_data['xy'].append((float(x), float(y)))
-            input_data['id'].append(branchid + '_' + str(round(float(chainage))))
+            input_data['id'].append(cssid)
             input_data['length'].append(float(length))
             input_data['branchid'].append(branchid)
             input_data['chainage'].append(float(chainage))
