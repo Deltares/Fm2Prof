@@ -199,9 +199,13 @@ class Test_Generate_Latex_Report:
         latex_name = 'acceptance_report.tex'
         latex_dir_name = 'latex_report'
         pdf_name = 'acceptance_report.pdf'
+        html_name = 'index.html'
+        html_dir_name = 'html_report'
         latex_dir = TestUtils.get_test_data_dir(latex_dir_name)
+        html_dir = TestUtils.get_test_data_dir(html_dir_name)
         output_dir = _get_base_output_dir()
         report_dir = os.path.join(output_dir, latex_dir_name)
+        html_report_dir = os.path.join(output_dir, html_dir_name)
 
         # 2. Gather case figures.
         cases_and_figures = self._get_all_cases_and_figures()
@@ -233,10 +237,68 @@ class Test_Generate_Latex_Report:
         # 5. Execute Pdf generator
         self._make_pdf(report_dir)
 
-        # 6. Verify PDF is generated
-        pdf_path = os.path.join(report_dir, pdf_name)
-        assert os.path.exists(pdf_path), 'PDF file was not generated.'
+        # 6. Make Index.html
+        if os.path.exists(html_report_dir):
+            shutil.rmtree(html_report_dir)
+        shutil.copytree(html_dir, html_report_dir, False, None)
 
+        index_html, section_html, image_html = self.__get_html_templates(html_report_dir)
+        sections = []
+        for case in cases_and_figures:            
+            case_name, html_figures = self.__get_html_figures(image_html, case)
+            html_sections = self.__get_html_sections(section_html, case_name, html_figures)
+            sections.append(html_sections)
+
+        sections_html = '\n'.join(sections)
+        with open('index_2.html', 'w') as f:
+            f.write(sections_html)
+
+        report_html = index_html.replace('PYTHON_CODE_HERE', sections_html)
+        html_path = os.path.join(html_report_dir, html_name)
+        with open(html_path, 'w') as f:
+            f.write(report_html)
+
+        # 7. Verify PDF and HTML are generated
+        pdf_path = os.path.join(report_dir, pdf_name)
+        assert os.path.exists(pdf_path) and os.path.exists(html_path), 'PDF file was not generated.'
+    
+    def __get_html_templates(self, html_folder):
+        
+        index_template_path = os.path.join(html_folder, 'index.html')
+        section_template_path = os.path.join(html_folder, 'test_case.html')
+        image_template_path = os.path.join(html_folder, 'test_case_figure.html')
+        
+        index_template = self.__get_html_file_content(index_template_path)
+        section_template = self.__get_html_file_content(section_template_path)
+        image_template = self.__get_html_file_content(image_template_path)
+        
+        return index_template, section_template, image_template
+
+    def __get_html_file_content(self, file_path):
+        with open(file_path) as f:
+            file_str = f.read()
+        return file_str
+
+    def __get_html_figures(self, figure_template, case_values):
+        (case_name, case_figures) = case_values
+        html_figures = []
+        section_name = case_name.replace('_', ' ').capitalize()
+        for case_figure in case_figures:
+            fig_path = '../{}/Figures/{}'.format(case_name, case_figure)
+            fullpath, fig_name = os.path.split(case_figure)
+            fig_name = os.path.splitext(fig_name)[0]
+            fig_caption = '{} {}'.format(section_name, fig_name.replace('_', ' ').capitalize())
+            case_fig_html = figure_template.replace('FIGURE_NAME_HERE', fig_name)
+            case_fig_html = case_fig_html.replace('FIGURE_PATH', fig_path)
+            case_fig_html = case_fig_html.replace('FIGURE_ALT_TEXT', fig_caption)
+            html_figures.append(case_fig_html)
+        return case_name, html_figures
+    
+    def __get_html_sections(self, section_template, case_name, case_figures):
+        html_figures = '\n'.join(case_figures)
+        case_html = section_template.replace('TEST_CASE_NAME_HERE', case_name)
+        case_html = case_html.replace('TEST_CASE_FIGURES_HERE', html_figures)
+        return case_html
 
 class Test_Fm2Prof_Run_IniFile:
 
