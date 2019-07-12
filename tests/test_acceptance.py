@@ -1010,18 +1010,15 @@ class Test_Acceptance_Generic:
         est_z = [plt_z[0]]
         est_x = plt_x
         n = 0
-        outputlist = []
         for i in range(1,len(plt_z)-1):
             flag1 = 0
             for j in range(n,len(tz)):
                 if abs(est_x[i]-float(tx[j]))<1e-5:# est_x[i] == float(tx[j]):
                     est_z.append(tz[j])
                     n = j+1
-                    outputlist.append([plt_x[i],tz[j],plt_z[i],i,j,n,'I'])
                     break
                 elif est_x[i] < float(tx[j]) and est_x[i] > float(tx[j-1]):
                     est_z.append(tz[j])
-                    outputlist.append([plt_x[i],tz[j],plt_z[i],i,j,n,'III'])
                     break
                 elif est_x[i] > tx[-1]:
                     est_z.append(plt_z[i])
@@ -1034,7 +1031,7 @@ class Test_Acceptance_Generic:
                 est_z.append(tz[-1])
             
         est_z.append(plt_z[-1])
-        return est_z, est_x, outputlist
+        return est_z, est_x
 
     def __Error_check(self, plt_tz, plt_z, plt_x):
         diff = [plt_tz[i]-plt_z[i] for i in range(len(plt_z))]
@@ -1081,10 +1078,17 @@ class Test_Acceptance_Generic:
                     return False
         return True
 
-    def __plot_cs(self, fig_dir: str, tx,tz,plt_x,plt_z,y,err,ttbs=None,tfpb=None,tcl=None,tbs=None,fpb=None,cl=None):
+    def __plot_cs(self, fig_dir: str, tx,tz,plt_x,plt_z,y,err,plt_s=None,ts=None,ttbs=None,tfpb=None,tcl=None,tbs=None,fpb=None,cl=None):
         fig, axh = plt.subplots(1, figsize=(10, 4))
-        axh.plot(tx, tz, label='Analytical')
-        axh.plot(plt_x, plt_z, label='FM2PROF')
+        tz_plt = [plt_z[0]] + tz + [plt_z[-1]]
+        tx_plt = [tx[0]] + tx + [tx[-1]]
+        if ts is not None and ts:
+            ts_plt = [ts[0]] + ts + [ts[-1]]
+            axh.plot(ts_plt, tz_plt, label='Analytical flow width',linestyle='--',color='#1f77b4')
+        if plt_s is not None and plt_s:
+            axh.plot(plt_s, plt_z, label='FM2PROF flow width',linestyle=':',color='#ff7f0e')
+        axh.plot(tx_plt, tz_plt, label='Analytical total width',color='#ff7f0e')
+        axh.plot(plt_x, plt_z, label='FM2PROF total width',color='#1f77b4')
         axh.set_ylim()
         axh.set_xlabel('x [m]')
         axh.set_ylabel('z [m]')
@@ -1111,11 +1115,16 @@ class Test_Acceptance_Generic:
         fig_path = os.path.join(fig_dir, fig_name)
         plt.savefig(fig_path)
 
-    def __convert_zw2xz(self, z:list, w:list, tx:list):
+    def __convert_zw2xz(self, z:list, w:list, tx:list, max_width:float, flow_width=None):
         """ Convert zw lists to xz list for plotting """
-        w_tmp = [(w[-1]-w[i])/2 for i in range(len(w))]
-        plt_w_reverse = w_tmp[::-1]
-        plt_w_forward = [w[i]/2+w[-1]/2 for i in range(len(w))]
+        if flow_width:
+            w_tmp = [w[i]/2 for i in range(len(w))]
+            plt_w_forward = [w_tmp[i]*-1 for i in range(len(w_tmp))]
+            plt_w_reverse = w_tmp[::-1]
+        else:
+            w_tmp = [(max_width-w[i])/2 for i in range(len(w))]
+            plt_w_forward = [max_width/2+w[i]/2 for i in range(len(w))]
+            plt_w_reverse = w_tmp[::-1]
         plt_w_tmp = plt_w_reverse + plt_w_forward
         plt_w = [plt_w_tmp[i] + tx[0] for i in range(len(plt_w_tmp))]
         plt_z = z[::-1] + z
@@ -1124,9 +1133,16 @@ class Test_Acceptance_Generic:
     def __FlowWidth_check(self, W:list, F:list, case_name:str):
         for i in range(len(W)):
             storage_width = [W[i][j]-F[i][j] for j in range(len(W[i]))]
-            sum_storage_width = sum(storage_width)
-            if sum_storage_width > 0.001 and case_name is not _case04:
-                pytest.fail('Storage width is found!')
+            if i==0:
+                S = [storage_width]
+            else:
+                S.append(storage_width)
+        return S
+    
+    def __interpolate_s(self):
+        """ interpolate the analytical storage width """
+        ts = [25,50,50.000001,99.999999,100,125]
+        return ts
 
     # region for tests
     @pytest.mark.acceptance
@@ -1156,26 +1172,42 @@ class Test_Acceptance_Generic:
         # Read data in geometry.csv
         (Z, W, F, Y, CL, FPB, FA, TA) = self.__get_geometry_data(input_geometry_file)
         
-        self.__FlowWidth_check(W, F, case_name)
+        S = self.__FlowWidth_check(W, F, case_name)
 
         tzw_values = self.__case_tzw_dict.get(case_name)
         if not tzw_values or tzw_values is None:
             pytest.fail('Test failed, no values retrieved for {}'.format(case_name))
         if Y[-1] > tzw_values[-1][0]:
-            pytest.fail('Test failed, redo FM simulation with the maximum chainage less than equal to {}'.format(tzw_values[-1][0]))
+            pytest.fail('Test failed, redo FM simulation with the maximum chainage less than or equal to {}'.format(tzw_values[-1][0]))
 
         # loop over each chainage (cross-section)
         for cs in range(len(Y)):
             y = Y[cs]
             z = Z[cs]
             w = W[cs]
+            s = S[cs]
             # give the interpolated analytical result at chainage y
             [tz, tx] = self.__interpolate_z(tzw_values, y)
+            # give the interpolated analytical storage width at chainage y for storage_04
+            
             # check whether the analytical cross-section is symmetric
             if not self.__symmetric(tx):
                 tx = self.__ShiftCrossSection(tx,tz)
-            [plt_z,plt_x] = self.__convert_zw2xz(z,w,tx) 
-            [plt_tz,plt_tx,outlist] = self.__Interpolate_tz_for_CS(plt_z,plt_x,tz,tx)
+            [plt_z,plt_x] = self.__convert_zw2xz(z,w,tx,max(w)) 
+            [plt_tz,plt_tx] = self.__Interpolate_tz_for_CS(plt_z,plt_x,tz,tx)
+
+            plt_s_flag = False
+            if sum(s) > 0.001 or case_name == _case04:
+                # Storage or false storage width
+                plt_s = None
+                ts = None
+                plt_s_flag = True
+                # case04_storage case only
+                if Y[cs] >= 1250 and Y[cs] <= 1750 and case_name == _case04:
+                    ts = self.__interpolate_s()
+                if sum(s) > 0.001:
+                    [plt_z,plt_s] = self.__convert_zw2xz(z,s,tx,max(w),1)
+                    plt_s = [plt_s[i]+plt_x[i] for i in range(len(plt_s))]
             if case_name == _case05:
                 # Dike case
                 ttbs = 2*50.0*1.0 # 50m * 1m (crest level-base level) * 2 = analytical total area behind summer dike
@@ -1183,21 +1215,19 @@ class Test_Acceptance_Generic:
                 tcl = tz[1] # real crest level is the "floodplain" height in the cross-section geometry
                 cl = CL[cs] # crest level from fm2prof
                 fpb = FPB[cs] # floodplain base level from fm2prof
-                #fbs = FA[cs] # flow area behind summer dike from fm2prof
-                tbs = TA[cs] # total area behind summer dike from fm2prof
-            elif case_name == _case04:
-                # Storage
-                pass         
-            elif case_name == _case06:
-                # Lake case
-                pass                
+                tbs = TA[cs] # total area behind summer dike from fm2prof               
             
             sumError = self.__Error_check(plt_tz,plt_z,plt_x)
-            # dyke
             
-            if case_name == _case05:
-                self.__plot_cs(fm2prof_fig_dir, tx, tz, plt_x, plt_z, y, sumError, ttbs, tfpb, tcl, tbs, fpb, cl)
+            if plt_s_flag:
+                if case_name == _case05:
+                    self.__plot_cs(fm2prof_fig_dir, tx, tz, plt_x, plt_z, y, sumError, plt_s, ts, ttbs, tfpb, tcl, tbs, fpb, cl)
+                else:
+                    self.__plot_cs(fm2prof_fig_dir, tx, tz, plt_x, plt_z, y, sumError, plt_s, ts)
             else:
-                self.__plot_cs(fm2prof_fig_dir, tx, tz, plt_x, plt_z, y, sumError)
+                if case_name == _case05:
+                    self.__plot_cs(fm2prof_fig_dir, tx, tz, plt_x, plt_z, y, sumError, '', '', ttbs, tfpb, tcl, tbs, fpb, cl)
+                else:
+                    self.__plot_cs(fm2prof_fig_dir, tx, tz, plt_x, plt_z, y, sumError)
             
 
