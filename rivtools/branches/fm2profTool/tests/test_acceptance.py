@@ -179,14 +179,20 @@ class Test_Generate_Latex_Report:
         return latex_lines
 
     def _make_pdf(self, report_dir):
-        tex_path = os.path.join(report_dir, 'acceptance_report.tex')
-        bibtex = os.path.join(report_dir, 'acceptance_report')
-        log = os.path.join(report_dir, 'a_r_Log.txt')
-        os.system('pdflatex {}'.format(tex_path))
-        os.system('bibtex {}'.format(bibtex))
-        os.system('pdflatex {}'.format(tex_path))
-        os.system('pdflatex \'{}\' > {}'.format(tex_path, log))
-        os.system('xcopy *.pdf .. /Y')
+        tex_path = 'acceptance_report.tex'
+        bibtex = 'acceptance_report'
+        log = 'a_r_Log.txt'
+        current_wc = os.getcwd()
+        os.system('cd {}'.format(report_dir))
+        try:
+            os.system('pdflatex {}'.format(tex_path))
+            os.system('bibtex {}'.format(bibtex))
+            os.system('pdflatex {}'.format(tex_path))
+            os.system('pdflatex \'{}\' > {}'.format(tex_path, log))
+            os.system('xcopy *.pdf .. /Y')
+        except Exception as e_info:
+            print('Error while generating pdf: {}'.format(e_info))
+        os.system('cd {}'.format(current_wc))
 
     @pytest.mark.generate_test_report
     def test_when_output_generated_then_generate_report(self):
@@ -221,7 +227,8 @@ class Test_Generate_Latex_Report:
 
         new_sections = ['\n'.join(line) for line in lines]
         new_content = '\n\n'.join(new_sections)
-        file_str = file_str.replace(latex_key, new_content)
+        # file_str = file_str.replace(latex_key, new_content)
+        file_str = file_str.replace(latex_key, 'test')
 
         with open(latex_path, 'w') as f:
             f.write(file_str)
