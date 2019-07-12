@@ -163,36 +163,34 @@ class Test_Generate_Latex_Report:
     def _generate_python_section(self, case_values):
         (case_name, case_figures) = case_values
         latex_lines = []
-        entry = '\\chapter{{{}}}\t\\label{{sec:{}}}'.format(case_name, case_name)
+        chapter_name = case_name.replace('_', ' ').capitalize()
+        label_name = case_name.replace('_', '')
+        entry = '\\chapter{{{}}}\n\\label{{sec:{}}}'.format(chapter_name, label_name)
         latex_lines.append(entry)
         for case_figure in case_figures:
-            fig_path = '..\\{}\\Figures\\{}'.format(case_name, case_figure)
-            fullpath, fig_label = os.path.split(case_figure)
+            fig_path = '../{}/Figures/{}'.format(case_name, case_figure)
+            fullpath, fig_name = os.path.split(case_figure)
+            fig_name = os.path.splitext(fig_name)[0]
+            fig_label = '{}{}'.format(label_name, fig_name.replace('_', ''))
+            fig_caption = '{} {}'.format(chapter_name, fig_name.replace('_', ' ').capitalize())
             fig_template = """
-            \\begin{{figure}}[!h]
-            \\centering
-                \\includegraphics[width=0.95\\textwidth]{{{}}}
-                \\caption{{\\small {}}}
-                \\label{{fig:{}}}
-            \\end{{figure}}""".format(fig_path, fig_label, fig_label)
+\\begin{{figure}}[!h]
+\\centering
+    \\includegraphics[width=0.95\\textwidth]{{{}}}
+    \\caption{{\\small {}}}
+    \\label{{fig:{}}}
+\\end{{figure}}""".format(fig_path, fig_caption, fig_label)
             latex_lines.append(fig_template)
         return latex_lines
 
     def _make_pdf(self, report_dir):
-        tex_path = 'acceptance_report.tex'
-        bibtex = 'acceptance_report'
-        log = 'a_r_Log.txt'
         current_wc = os.getcwd()
-        os.system('cd {}'.format(report_dir))
+        os.chdir('{}'.format(report_dir))
         try:
-            os.system('pdflatex {}'.format(tex_path))
-            os.system('bibtex {}'.format(bibtex))
-            os.system('pdflatex {}'.format(tex_path))
-            os.system('pdflatex \'{}\' > {}'.format(tex_path, log))
-            os.system('xcopy *.pdf .. /Y')
+            os.system('buildDoc.bat')
         except Exception as e_info:
             print('Error while generating pdf: {}'.format(e_info))
-        os.system('cd {}'.format(current_wc))
+        os.chdir('{}'.format(current_wc))
 
     @pytest.mark.generate_test_report
     def test_when_output_generated_then_generate_report(self):
@@ -227,18 +225,17 @@ class Test_Generate_Latex_Report:
 
         new_sections = ['\n'.join(line) for line in lines]
         new_content = '\n\n'.join(new_sections)
-        # file_str = file_str.replace(latex_key, new_content)
-        file_str = file_str.replace(latex_key, 'test')
+        file_str = file_str.replace(latex_key, new_content)
 
         with open(latex_path, 'w') as f:
             f.write(file_str)
         
-        # # 5. Execute Pdf generator
-        # self._make_pdf(report_dir)
+        # 5. Execute Pdf generator
+        self._make_pdf(report_dir)
 
-        # # 6. Verify PDF is generated
-        # pdf_path = os.path.join(report_dir, pdf_name)
-        # assert os.path.exists(pdf_path), 'PDF file was not generated.'
+        # 6. Verify PDF is generated
+        pdf_path = os.path.join(report_dir, pdf_name)
+        assert os.path.exists(pdf_path), 'PDF file was not generated.'
 
 
 class Test_Fm2Prof_Run_IniFile:

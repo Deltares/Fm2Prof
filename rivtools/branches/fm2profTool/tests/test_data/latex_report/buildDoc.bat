@@ -1,6 +1,3 @@
-pdflatex "acceptance_report.tex"
-bibtex "acceptance_report"
-pdflatex "acceptance_report.tex"
-pdflatex "acceptance_report.tex" > a_r_Log.txt
-xcopy a_r_Log.txt "..\BuildLogs" /Y
-xcopy *.pdf .. /Y
+pdflatex acceptance_report.tex > ar_first_Log.txt
+pdflatex acceptance_report.tex > ar_first_toc_Log.txt
+pdflatex acceptance_report.tex > ar_last_Log.txt
