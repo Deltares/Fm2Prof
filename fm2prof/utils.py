@@ -21,12 +21,12 @@ def networkdeffile_to_input(networkdefinitionfile, crossectionlocationfile):
 	"""
 
 	# Open network definition file, for each branch extract necessary info
-	x = []
-	y = []
-	cid = []
-	bid = []
-	coff = []
-	cdis = []
+	x = []          # x-coordinate of cross-section centre
+	y = []			# y-coordinate of cross-section centre
+	cid = []		# id of cross-section
+	bid = []		# id of 1D branch
+	coff = []		# offset of cross-section on 1D branch ('chainage')
+	cdis = []		# distance of 1D branch influenced by crosss-section ('vaklengte')
 
 	with open(networkdefinitionfile, 'r') as f:
 		for line in f:
@@ -67,7 +67,7 @@ def networkdeffile_to_input(networkdefinitionfile, crossectionlocationfile):
 
 	with open(crossectionlocationfile, 'w') as f:
 		for i in range(len(x)):
-			f.write('{:.4f}, {:.4f}, {}, {:.2f}, {}, {:.2f}\n'.format(x[i], y[i], cid[i], cdis[i], bid[i], coff[i]))
+			f.write('{}, {:.4f}, {:.4f}, {:.2f}, {}, {:.2f}\n'.format(cid[i], x[i], y[i], cdis[i], bid[i], coff[i]))
 
 
 
