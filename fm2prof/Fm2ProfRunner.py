@@ -30,7 +30,7 @@ import shutil
 
 
 class Fm2ProfRunner:
-    __logger = None    
+    __logger = None
     __iniFile = None
     __showFigures = False
     __saveFigures = False
