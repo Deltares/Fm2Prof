@@ -8,7 +8,7 @@ class TestUtils:
     _name_local = 'test_data'
 
     @staticmethod
-    def get_test_data_dir(dir_name: str):
+    def get_local_test_data_dir(dir_name: str):
         """
         Returns the desired directory relative to the test data.
         Avoiding extra code on the tests.
