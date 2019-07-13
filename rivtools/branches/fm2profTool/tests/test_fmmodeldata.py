@@ -9,8 +9,9 @@ from tests import TestUtils
 
 import fm2prof.Classes as CE
 
+
 class Test_FmModelData:
-    
+
     @pytest.mark.unittest
     @pytest.mark.parametrize("arg_list", [(''), (None)])
     def test_when_no_arguments_exception_is_risen(self, arg_list):
@@ -23,7 +24,7 @@ class Test_FmModelData:
         # 3. Run test
         with pytest.raises(Exception) as pytest_wrapped_e:
             CE.FmModelData(arg_list)
-        
+
         # 4. Verify final expectations
         recieved_error_message = str(pytest_wrapped_e.value)
         assert expected_error_message == recieved_error_message, "Expected error message {}, does not match generated {}".format(expected_error_message, recieved_error_message)
