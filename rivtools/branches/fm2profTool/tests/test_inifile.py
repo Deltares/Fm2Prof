@@ -5,8 +5,8 @@ import os
 import numbers
 
 import shutil
-from tests import TestUtils
 
+from tests.TestUtils import TestUtils
 from fm2prof.IniFile import IniFile
 
 _root_output_dir = None
@@ -398,7 +398,7 @@ class Test_readini_file:
     @pytest.mark.systemtest
     def test_when_inifile_contains_output_dir_then_sets_output_dir(self):
         # 1. Set initial test data
-        test_data_dir = TestUtils.get_test_data_dir('IniFile')
+        test_data_dir = TestUtils.get_local_test_data_dir('IniFile')
         ini_file_path = os.path.join(test_data_dir, 'valid_ini_file.ini')
         output_dir = 'tmp\\dummyTest01'
         expected_output_dir = os.path.join(os.getcwd(), output_dir)
@@ -424,7 +424,7 @@ class Test_readini_file:
     @pytest.mark.systemtest
     def test_when_inifile_contains_input_parameters_then_sets_them(self):
         # 1. Set initial test data
-        test_data_dir = TestUtils.get_test_data_dir('IniFile')
+        test_data_dir = TestUtils.get_local_test_data_dir('IniFile')
         ini_file_path = os.path.join(test_data_dir, 'valid_ini_file.ini')
         expected_input_parameters = {
             'number_of_css_points': 20,
@@ -469,7 +469,7 @@ class Test_readini_file:
     def test_when_inifile_contains_input_files_then_sets_input_file_paths(
             self):
         # 1. Set initial test data
-        test_data_dir = TestUtils.get_test_data_dir('IniFile')
+        test_data_dir = TestUtils.get_local_test_data_dir('IniFile')
         ini_file_path = os.path.join(test_data_dir, 'valid_ini_file.ini')
         expected_input_files = {
             'fm_netcdfile': 'dummy_file.nc',
@@ -490,24 +490,22 @@ class Test_readini_file:
         # 4. Verify final expectations
         assert ini_file is not None
         assert ini_file._input_parameters is not None
-        assert ini_file._input_parameters is not None
-        for expected_input_param in expected_input_parameters:
-            expected_value = expected_input_parameters[expected_input_param]
-            read_param_value = ini_file._input_parameters.get(
-                expected_input_param)
 
+        for expected_input_file in expected_input_files:
+            expected_value = expected_input_files[expected_input_file]
+            read_param_value = ini_file._input_file_paths.get(
+                expected_input_file)
             assert read_param_value is not None, '' + \
-                'Key {} was not read or '.format(expected_input_param) + \
-                'could not be found in {}'.format(ini_file._input_parameters)
-
+                'Key {} was not read or could not be found in {}'.format(
+                    expected_input_file, ini_file._input_file_paths)
             assert read_param_value == expected_value, '' + \
-                'Expected value does not match ' + \
-                'for key {}'.format(expected_input_param)
+                'Expected value does not match for key {}'.format(
+                    expected_input_file)
 
     @pytest.mark.systemtest
     def test_when_inifile_is_not_valid_then_raises_exception(self):
         # 1. Set initial test data
-        test_data_dir = TestUtils.get_test_data_dir('IniFile')
+        test_data_dir = TestUtils.get_local_test_data_dir('IniFile')
         ini_file_path = os.path.join(test_data_dir, 'invalid_ini_file.ini')
         ini_file = IniFile(None)
 
@@ -551,7 +549,7 @@ class Test_get_inifile_params:
     @pytest.mark.unittest
     def test_when_given_invalid_inifile_then_exception_is_risen(self):
         # 1. Set up initial test data """
-        test_data_dir = TestUtils.get_test_data_dir('IniFile')
+        test_data_dir = TestUtils.get_local_test_data_dir('IniFile')
         ini_file_path = os.path.join(test_data_dir, 'invalid_ini_file.ini')
         return_value = None
 
@@ -568,7 +566,7 @@ class Test_get_inifile_params:
     @pytest.mark.systemtest
     def test_when_given_valid_inifile_then_gets_expected_values(self):
         # 1. Set initial test data
-        test_data_dir = TestUtils.get_test_data_dir('IniFile')
+        test_data_dir = TestUtils.get_local_test_data_dir('IniFile')
         ini_file_path = os.path.join(test_data_dir, 'valid_dummy_inifile.ini')
         return_dict = None
 

@@ -357,7 +357,7 @@ class Test_Main_Run_IniFile:
             assert expected_file in generated_files
 
 
-class Test_Acceptance_Waal:
+class Test_Compare_Waal_Model:
     """Requires fm2prof output generated for waal_case
     """
 
@@ -706,7 +706,7 @@ class Test_Acceptance_Waal:
             assert os.path.exists(fig_path)
 
 
-class Test_Acceptance_Generic:
+class Test_Compare_Generic_Model:
     # region of helpers
     __case_01_tzw = [
         [0, 0, 0],
@@ -1139,8 +1139,8 @@ class Test_Acceptance_Generic:
                 'Test failed, no values retrieved for {}'.format(case_name))
         if Y[-1] > tzw_values[-1][0]:
             pytest.fail(
-                'Test failed, redo FM simulation with the maximum\
-                     chainage less than or equal to {}'.format(tzw_values[-1][0]))
+                'Test failed, redo FM simulation with the maximum chainage\
+                     less than or equal to {}'.format(tzw_values[-1][0]))
 
         # loop over each chainage (cross-section)
         for cs in range(len(Y)):
