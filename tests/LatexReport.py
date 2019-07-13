@@ -30,6 +30,10 @@ class LatexReport:
         except Exception as e_info:
             print('Error while generating pdf: {}'.format(e_info))
         os.chdir('{}'.format(current_wc))
+        pdf_name = self.__latex_report_name + '.pdf'
+        pdf_path = os.path.join(report_dir, pdf_name)
+        if not os.path.exists(pdf_path):
+            raise Exception('PDF File was not generated.')
 
     def _generate_python_report(self, target_dir: str, report_dict: dict):
         """Generates a .tex from a template with content that is formated

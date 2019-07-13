@@ -265,7 +265,7 @@ class Test_Main_Run_IniFile:
         input_parameters_key = 'InputParameters'
         output_directory_key = 'OutputDirectory'
 
-        test_data_dir = TestUtils.get_test_data_dir('main_test_data')
+        test_data_dir = TestUtils.get_local_test_data_dir('main_test_data')
         input_file_paths = {
             "fm_netcdfile": os.path.join(test_data_dir, map_file),
             'crosssectionlocationfile': os.path.join(test_data_dir, css_file),
@@ -411,15 +411,17 @@ class Test_Compare_Waal_Model:
             sobek_xml_location {str}
                 -- Location of xml file that points to the working dir.
         """
-        dimr_runner_relative = ('SOBEK\\plugins\\DeltaShell.Dimr'
-                                '\\kernels\\x64\\dimr\\scripts\\run_dimr.bat')
-        dimr_runner_path = os.path.join(
-            '..\\waal_sobek_runner',
-            dimr_runner_relative)
+        runner_script = 'dimr\\scripts\\run_dimr.bat'
+        runner_dir = TestUtils.get_test_dir('waal_sobek_runner')
+        dimr_runner_path = os.path.join(runner_dir, runner_script)
+        if not os.path.exists(dimr_runner_path):
+            pytest.fail(
+                'DIMR Runner not found at {}.'.format(dimr_runner_path))
 
         dimr_call = '{} {} -d 0 > out.txt 2>&1'.format(
                     dimr_runner_path, sobek_xml_location)
         try:
+            print(dimr_call)
             os.system(dimr_call)
         except Exception as e_error:
             pytest.fail(
@@ -554,9 +556,11 @@ class Test_Compare_Waal_Model:
                 axh.legend()
                 axh.set_title(stat)
                 plt.tight_layout()
+                # Avoid inserting points in file names.
+                stat_fig_name = stat.replace('.', '_')
                 fig_name = os.path.join(
                     fig_dir,
-                    'case8_{}.png'.format(stat))
+                    'case8_{}.png'.format(stat_fig_name))
                 fig.savefig(fig_name)
                 list_of_figures.append(fig_name)
 
@@ -698,7 +702,7 @@ class Test_Compare_Waal_Model:
 
         # 7. Compare values Generate figures.
         figure_list = self.__compare_1d_2d_output_and_generate_plots(
-            _waal_case, output_1d, output_2d, fm2prof_dir)
+            _waal_case, output_1d, output_2d, figure_dir)
 
         # 8. Verify final expectations
         assert figure_list
