@@ -5,8 +5,8 @@ import os
 import numbers
 
 import shutil
-from tests import TestUtils
 
+from tests.TestUtils import TestUtils
 import fm2prof.Functions as Func
 
 
@@ -34,7 +34,8 @@ class Test_read_css_xyz:
     @pytest.mark.systemtest
     def test_read_css_xyz_valid_file_path_returns_expected_input_data(self):
         # 1. Prepare test data
-        test_directory = TestUtils.get_test_data_dir('functions_test_data')
+        dir_name = 'functions_test_data'
+        test_directory = TestUtils.get_local_test_data_dir(dir_name)
         file_name = 'cross_section_locations.xyz'
         file_path = os.path.join(test_directory, file_name)
         expected_input_data = {
