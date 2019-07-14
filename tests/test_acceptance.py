@@ -7,13 +7,13 @@ import shutil
 import matplotlib.pyplot as plt
 
 from tests.TestUtils import TestUtils
-import tests.ReportHelper as ReportHelper
-from tests.CompareWaalModel import CompareWaalModel as CompareWaalModel
-from tests.LatexReport import LatexReport as LatexReport
-from tests.HtmlReport import HtmlReport as HtmlReport
-
 from fm2prof.Fm2ProfRunner import Fm2ProfRunner
 from fm2prof.Fm2ProfRunner import IniFile
+
+import tests.ReportHelper as ReportHelper
+from tests.LatexReport import LatexReport as LatexReport
+from tests.HtmlReport import HtmlReport as HtmlReport
+from tests.CompareWaalModel import CompareWaalModel as CompareWaalModel
 
 _root_output_dir = None
 
@@ -361,13 +361,6 @@ class Test_Main_Run_IniFile:
 class Test_Compare_Waal_Model:
     """Requires fm2prof output generated for waal_case
     """
-
-    @classmethod
-    def setup_class(Main):
-        """
-        Sets up the necessary data for Test_Compare_Waal_Model
-        """
-        TestUtils.install_package('tqdm')
 
     @pytest.mark.slow
     @pytest.mark.acceptance
