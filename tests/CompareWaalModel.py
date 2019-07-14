@@ -1,14 +1,13 @@
 import os
 import shutil
-import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import matplotlib
-
-from netCDF4 import Dataset
-from tqdm import tqdm
 
 from tests.TestUtils import TestUtils
+
+import matplotlib
+import matplotlib.pyplot as plt
+from netCDF4 import Dataset
 
 
 class CompareWaalModel:
@@ -252,6 +251,12 @@ class CompareWaalModel:
         Returns:
             {list[str]} -- List of generated figures.
         """
+        try:
+            from tqdm import tqdm
+        except:
+            TestUtils.install_package('tqdm')
+            from tqdm import tqdm
+
         if not os.path.exists(fig_dir):
             os.makedirs(fig_dir)
 
