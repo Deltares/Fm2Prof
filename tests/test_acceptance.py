@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 
 from tests.TestUtils import TestUtils
 import tests.ReportHelper as ReportHelper
+from tests.CompareWaalModel import CompareWaalModel as CompareWaalModel
 from tests.LatexReport import LatexReport as LatexReport
 from tests.HtmlReport import HtmlReport as HtmlReport
 
@@ -361,352 +362,41 @@ class Test_Compare_Waal_Model:
     """Requires fm2prof output generated for waal_case
     """
 
-    def __copy_output_to_sobek_dir(self, output_dir: str, target_dir: str):
-        """Moves the output generated in output_dir to
-        the pre-defined sobek directory.
-
-        Arguments:
-            output_dir {str} -- Path location for the directory.
-            target_dir {str} -- Path location for the directory.
+    @classmethod
+    def setup_class(Main):
         """
-        if not os.path.exists(output_dir):
-            pytest.fail('Output directory {} not found.'.format(output_dir))
-
-        shutil.move(output_dir, target_dir)
-
-    def __create_xml_waal(self, working_dir: str):
-        # write file
-        file_path = os.path.join(working_dir, 'waal.xml')
-        if os.path.exists(file_path):
-            os.remove(file_path)
-        flow1d_working_dir = os.path.join(working_dir, 'dflow1d')
-        f = open(file_path, 'w+')
-        f.write('<?xml version="1.0" encoding="utf-8" standalone="yes"?>\n')
-        f.write(
-            '<dimrConfig xmlns="http://schemas.deltares.nl/dimr"' +
-            ' xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"' +
-            ' xsi:schemaLocation="http://schemas.deltares.nl/dimr' +
-            ' http://content.oss.deltares.nl/schemas/dimr-1.2.xsd">\n')
-        f.write('<documentation>\n')
-        f.write('<fileVersion>1.2</fileVersion>\n')
-        f.write('<createdBy>Deltares, Coupling Team</createdBy>\n')
-        f.write('<creationDate>2019-03-28T08:04:13.0106499Z</creationDate>\n')
-        f.write('</documentation>\n')
-        f.write('<control>\n')
-        f.write('<start name="rijn-flow-model" />\n')
-        f.write('</control>\n')
-        f.write('<component name="rijn-flow-model">\n')
-        f.write('<library>cf_dll</library>\n')
-        f.write('<workingDir>{}</workingDir>\n'.format(flow1d_working_dir))
-        f.write('<inputFile>rijn-flow-model.md1d</inputFile>\n')
-        f.write('</component>\n')
-        f.write('</dimrConfig>\n')
-        f.close()
-        return file_path
-
-    def __run_dimr_from_command(self, sobek_xml_location: str):
-        """ Runs created xml with dimr script.
-
-        Arguments:
-            sobek_xml_location {str}
-                -- Location of xml file that points to the working dir.
+        Sets up the necessary data for Test_Compare_Waal_Model
         """
-        runner_script = 'dimr\\scripts\\run_dimr.bat'
-        runner_dir = TestUtils.get_test_dir('waal_sobek_runner')
-        dimr_runner_path = os.path.join(runner_dir, runner_script)
-        if not os.path.exists(dimr_runner_path):
-            pytest.fail(
-                'DIMR Runner not found at {}.'.format(dimr_runner_path))
-
-        dimr_call = '{} {} -d 0 > out.txt 2>&1'.format(
-                    dimr_runner_path, sobek_xml_location)
-        try:
-            print(dimr_call)
-            os.system(dimr_call)
-        except Exception as e_error:
-            pytest.fail(
-                'Exception thrown while not expected. {}'.format(
-                    str(e_error)))
-
-    def __get_observations_file(self, sobek_dir: str):
-        """Finds the observations.nc file generated from the sobek dimr run.
-
-        Arguments:
-            sobek_dir {str} -- Parent directory used for running dimr
-
-        Returns:
-            {str} -- File path where the observation file has been generated.
-        """
-        dflow1d_output = os.path.join(sobek_dir, 'dflow1d\\output')
-        assert os.path.exists(dflow1d_output), '' + \
-            'Sobek output folder not created at {}.'.format(dflow1d_output)
-        assert os.listdir(dflow1d_output), '' + \
-            'No output generated at {}.'.format(dflow1d_output)
-
-        observations_file = os.path.join(dflow1d_output, 'observations.nc')
-        assert os.path.exists(observations_file), '' + \
-            'Observation file was not found at {}.'.format(observations_file)
-        return observations_file
-
-    def __compare_1d_2d_output_and_generate_plots(
-            self, case_name: str,
-            output_1d: str, output_2d: str,
-            fig_dir: str):
-        """Compares two .nc files and outputs its result as plots
-
-        Arguments:
-            case_name {str} -- Name of the current study case.
-            output_1d {str} -- location of the 1d output directory.
-            output_2d {str} -- Location of the 2d output directory.
-            fig_dir {str} -- Directory where to save the figures.
-
-        Returns:
-            {list[str]} -- List of generated figures.
-        """
-
-        # Imports
-        import numpy as np
-        import pandas as pd
-        from netCDF4 import Dataset
-        import matplotlib
-        from tqdm import tqdm
-        if not os.path.exists(fig_dir):
-            os.makedirs(fig_dir)
-
-        font = {'family': 'sans-serif',
-                'sans-serif': ['Sansa Pro, sans-serif'],
-                'weight': 'normal',
-                'size': 20}
-
-        matplotlib.rc('font', **font)
-        list_of_figures = []
-        # Read data
-        df_1d = Dataset(output_1d)
-        df_2d = Dataset(output_2d)
-        econding = 'utf-8'
-
-        # Parse station names
-        stations_1d = np.array(
-            ["".join(
-                [i.decode(econding).strip() for i in row]
-                ) for row in df_1d.variables['observation_id'][:]])
-        stations_2d = np.array(
-            ["".join(
-                [i.decode(econding) for i in row.compressed()]
-                ) for row in df_2d.variables['station_name'][:]])
-        qstations_2d = np.array(
-            ["".join(
-                [i.decode(econding) for i in row.compressed()]
-                ) for row in df_2d.variables['cross_section_name'][:]])
-
-        # Parse time (to days)
-        time_key = 'time'
-        t_1d = df_1d.variables[time_key][:]/3600/24
-        t_2d = df_2d.variables[time_key][:]/3600/24
-
-        # times at which to compare
-        tbnd = [np.max((t_1d[0], t_2d[0])), np.min((t_1d[-1], t_2d[-2]))]
-        tinterp = np.linspace(tbnd[0], tbnd[1], 200)
-
-        # calculate bias/std at riverkms
-        bias = []
-        std = []
-        kms = np.arange(868, 961, 1)
-        # kms = np.arange(880, 881)
-        plot_at = [880, 914, 930, 940, 950, 960]
-        plot_at = [960]
-
-        # Keys
-        key_1d_water_level = 'water_level'
-        key_1d_water_disch = 'water_discharge'
-        key_2d_water_level = 'waterlevel'
-        key_2d_water_disch = 'cross_section_discharge'
-
-        for km in tqdm(kms):
-            stat = '{}.00_WA'.format(km)
-
-            # Find corresponding station for both models
-            id_1d = np.argwhere(stations_1d == stat)[0]
-            wl_1d = df_1d.variables[key_1d_water_level][:][:, id_1d].flatten()
-            q_1d = df_1d.variables[key_1d_water_disch][:][:, id_1d].flatten()
-
-            id_2d = np.argwhere(stations_2d == stat)[0]
-            wl_2d = df_2d.variables[key_2d_water_level][:, id_2d].flatten()
-            q_2d = df_2d.variables[key_2d_water_disch][id_2d].flatten()
-
-            # compare the two
-            interp1d = np.interp(tinterp, t_1d, wl_1d)
-            interp2d = np.interp(tinterp, t_2d, wl_2d)
-            diffd = interp1d-interp2d
-
-            # append to lists
-            bias.append(np.mean(diffd))
-            std.append(np.std(diffd))
-
-            # If plot, plot
-            if km in plot_at:
-                fig, axh = plt.subplots(1, figsize=(10, 4))
-
-                axh.plot(t_1d, wl_1d, label='SOBEK')
-                axh.plot(t_2d, wl_2d, label='FM-2D')
-
-                axh.set_ylim()
-                axh.set_xlabel('Tijd [dagen]')
-                axh.set_ylabel('Waterstand [m + NAP]')
-                axh.legend()
-                axh.set_title(stat)
-                plt.tight_layout()
-                # Avoid inserting points in file names.
-                stat_fig_name = stat.replace('.', '_')
-                fig_name = os.path.join(
-                    fig_dir,
-                    'case8_{}.png'.format(stat_fig_name))
-                fig.savefig(fig_name)
-                list_of_figures.append(fig_name)
-
-        # Plot bias/std
-        fig, ax = plt.subplots(1, figsize=(10, 4))
-        ax.plot(kms, bias, label='bias')
-        ax.plot(kms, std, label='$\\sigma$')
-        ax.plot([kms[0], kms[-1]], [0, 0], '--k')
-        # ax.plot([913.5]*2, [0, 0.75], '-r')
-        ax.legend()
-        ax.set_xlabel("Rivierkilometer")
-        ax.set_ylabel("Bias/$\\sigma$ [m]")
-        ax.set_ylim([-0.25, 1])
-        ax.set_xlim([kms[0], kms[-1]])
-
-        plt.tight_layout()
-        fig_name = os.path.join(
-            fig_dir,
-            '{}_statistics.png'.format(case_name))
-        fig.savefig(fig_name)
-        list_of_figures.append(fig_name)
-
-        # Plot Q/H at selected stations
-        stations = [['Q-TielWaal', "LMW.TielWaal", "TielWaal"],
-                    ['Q-Nijmegenhaven', 'LMW.Nijmegenhave', "Nijmegenhaven"],
-                    ['Q-Zaltbommel', 'LMW.Zaltbommel', "Zaltbommel_waq"],
-                    ['Q-Vuren', 'LMW.Vuren', "Vuren"]]
-
-        for station in stations:
-            id_1d = np.argwhere(stations_1d == station[1])[0]
-            wl_1d = df_1d.variables[key_1d_water_level][:][:, id_1d].flatten()
-            q_1d = df_1d.variables[key_1d_water_disch][:][:, id_1d].flatten()
-
-            id_2d = np.argwhere(stations_2d == station[2])[0]
-            qid_2d = np.argwhere(qstations_2d == station[0])[0]
-            wl_2d = df_2d.variables[key_2d_water_level][:, id_2d].flatten()
-            q_2d = df_2d.variables[key_2d_water_disch][:, qid_2d].flatten()
-
-            fig, ax = plt.subplots(1)
-            ax.plot(q_1d, wl_1d, '.')
-            ax.plot(q_2d, wl_2d, '+')
-            ax.set_xlabel('Afvoer [m$^3$/s]')
-            ax.set_ylabel('Waterstand [m + NAP]')
-            ax.set_title(station[2])
-
-            fig, ax = plt.subplots(1)
-            ax.plot(t_1d, q_1d, label='sobek')
-            ax.plot(t_2d, q_2d, label='FM2D')
-
-        # fig_path = os.path.join(fig_dir, '{}.png'.format(case_name))
-        # plt.savefig(fig_path)
-        return list_of_figures
-
-    @pytest.mark.waal_compare_results
-    def test_when_results_available_then_compare(self):
-        # 1. Set up test data
-        waal_test_folder = TestUtils.get_external_test_data_dir(_waal_case)
-        sobek_dir = os.path.join(waal_test_folder, 'Model_SOBEK')
-        fm_dir = os.path.join(waal_test_folder, 'Model_FM')
-        fm2prof_dir = _get_test_case_output_dir(_waal_case)
-        compare_dir = os.path.join(fm2prof_dir, 'NC_Output')
-        figure_dir = os.path.join(fm2prof_dir, 'Figures')
-
-        if os.path.exists(figure_dir):
-            shutil.rmtree(figure_dir)
-        os.makedirs(figure_dir)
-        # 4. Get observations.nc
-        output_1d = self.__get_observations_file(sobek_dir)
-        output_2d = os.path.join(fm_dir, 'resultaten\\FlowFM_his.nc')
-        assert os.path.exists(output_2d)
-
-        if os.path.exists(compare_dir):
-            shutil.rmtree(compare_dir)
-        os.makedirs(compare_dir)
-        shutil.copy(output_1d, compare_dir)
-        shutil.copy(output_2d, compare_dir)
-        output_1d = os.path.join(compare_dir, 'observations.nc')
-        output_2d = os.path.join(compare_dir, 'FlowFM_his.nc')
-        assert os.path.exists(output_1d)
-        assert os.path.exists(output_2d)
-
-        # 5. Compare values Generate figures.
-        figure_list = self.__compare_1d_2d_output_and_generate_plots(
-            _waal_case, output_1d, output_2d, figure_dir)
-
-        # 6. Verify final expectations
-        assert os.listdir(figure_dir)
-        assert figure_list
-        for fig_path in figure_list:
-            assert os.path.exists(fig_path)
+        TestUtils.install_package('tqdm')
 
     @pytest.mark.slow
     @pytest.mark.acceptance
     @pytest.mark.requires_output
-    def test_when_output_exists_then_use_it_for_sobek_model_input(self):
+    def test_when_fm2prof_output_then_use_it_for_sobek_model_input(self):
         # 1. Set up test data
         waal_test_folder = TestUtils.get_external_test_data_dir(_waal_case)
         sobek_dir = os.path.join(waal_test_folder, 'Model_SOBEK')
         fm_dir = os.path.join(waal_test_folder, 'Model_FM')
         fm2prof_dir = _get_test_case_output_dir(_waal_case)
-        compare_dir = os.path.join(fm2prof_dir, 'NC_Output')
-        figure_dir = os.path.join(fm2prof_dir, 'Figures')
 
-        # 2. Verify existent output dir
-        if not os.path.exists(fm2prof_dir):
+        result_figures = []
+
+        # 2. Try to compare.
+        try:
+            waal_comparer = CompareWaalModel()
+            result_figures = waal_comparer._compare_waal(
+                case_name=_waal_case,
+                results_dir=fm2prof_dir,
+                sobek_dir=sobek_dir,
+                fm_dir=fm_dir)
+        except Exception as e_info:
             pytest.fail(
-                'Fm2Prof output dir {} not found.'.format(fm2prof_dir))
-        if not os.path.exists(sobek_dir):
-            pytest.fail(
-                'Sobek directory not found. {}'.format(sobek_dir))
-        if not os.path.exists(fm_dir):
-            pytest.fail(
-                'FM directory not found. {}'.format(fm_dir))
+                'No exception expected but was thrown ' +
+                '{}.'.format(str(e_info)))
 
-        if os.path.exists(figure_dir):
-            shutil.rmtree(figure_dir)
-        os.makedirs(figure_dir)
-
-        # 4. Create xml
-        sobek_xml_location = self.__create_xml_waal(sobek_dir)
-
-        # 5. Run DIMR
-        self.__run_dimr_from_command(sobek_xml_location)
-
-        # 6. Get observations.nc
-        output_1d = self.__get_observations_file(sobek_dir)
-        output_2d = os.path.join(fm_dir, 'resultaten\\FlowFM_his.nc')
-        assert os.path.exists(output_2d)
-
-        if os.path.exists(compare_dir):
-            shutil.rmtree(compare_dir)
-        os.makedirs(compare_dir)
-        shutil.copy(output_1d, compare_dir)
-        shutil.copy(output_2d, compare_dir)
-        output_1d = os.path.join(compare_dir, 'observations.nc')
-        output_2d = os.path.join(compare_dir, 'FlowFM_his.nc')
-        assert os.path.exists(output_1d)
-        assert os.path.exists(output_2d)
-
-        # 7. Compare values Generate figures.
-        figure_list = self.__compare_1d_2d_output_and_generate_plots(
-            _waal_case, output_1d, output_2d, figure_dir)
-
-        # 8. Verify final expectations
-        assert figure_list
-        for fig_path in figure_list:
+        # 3. Verify final expectations
+        assert result_figures
+        for fig_path in result_figures:
             assert os.path.exists(fig_path)
 
 

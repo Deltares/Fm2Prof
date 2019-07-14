@@ -58,7 +58,7 @@ def _get_case_figures(case_name: str, case_label: str, data_dir: str):
                 _fig_path_key: os.path.join(case_dir, fig)
             }
             figures_list.append(figure_dict)
-        return figures_list
+        return sorted(figures_list, key=lambda fig: fig[_fig_name_key])
 
 
 def _get_all_cases_and_figures(scenarios: list, data_dir: str):
