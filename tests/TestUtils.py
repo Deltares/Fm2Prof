@@ -1,11 +1,25 @@
 import sys
 import os
+try:
+    from pip import main as pipmain
+except:
+    from pip._internal import main as pipmain
 
 
 class TestUtils:
 
     _name_external = 'external_test_data'
     _name_local = 'test_data'
+
+    @staticmethod
+    def install_package(package: str):
+        """Installs a package that is normally only used
+        by a test configuration.
+
+        Arguments:
+            package {str} -- Name of the PIP package.
+        """
+        pipmain(['install', package])
 
     @staticmethod
     def get_local_test_data_dir(dir_name: str):
