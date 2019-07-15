@@ -532,10 +532,6 @@ class Test_Compare_Idealized_Model:
         if not tzw_values or tzw_values is None:
             pytest.fail(
                 'Test failed, no values retrieved for {}'.format(case_name))
-        # if Y[-1] > tzw_values[-1][0]:
-        #     pytest.fail(
-        #         'Test failed, redo FM simulation with the maximum chainage' + \
-        #         ' less than or equal to {}'.format(tzw_values[-1][0]))
 
         try:
             generic_comparer = CompareIdealizedModel()
