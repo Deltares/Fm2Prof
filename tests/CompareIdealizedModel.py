@@ -435,7 +435,7 @@ class CompareIdealizedModel:
         plt.close('all')
 
     def __get_analytical_roughness(
-            self, H_pos, b:float, y, MainChannel, case_name):
+            self, H_pos, b :float, y, MainChannel, case_name):
         tR_pos = []
         tH_pos = []
         for i in range(len(H_pos)):
@@ -445,6 +445,11 @@ class CompareIdealizedModel:
                     tH_pos.append(H_pos[i])
                     if case_name == 'case_01_rectangle':
                         Cz = (150.0*d/(2.0*d+150))**(1/6)/0.03
+                    elif case_name == 'case_05_dyke':
+                        if d < 3.0:
+                            Cz = (50.0*d/(3.0*d+50))**(1/6)/0.03
+                        else:
+                            Cz = (50.0*d/(3.0*2+50))**(1/6)/0.03
                     elif case_name == 'case_07_triangular':
                         if y > 500 and y < 9500:
                             if d < 2.0:
@@ -462,7 +467,23 @@ class CompareIdealizedModel:
                         else:
                             Cz = (50.0*d/(2.0*2+50))**(1/6)/0.03
                     tR_pos.append(Cz)
-                else: # floodplain1
+                else:  # floodplain1
+                    if case_name == 'case_06_plassen':
+                        if y >= 1420 and y <= 1580:
+                            if d < 2.0:
+                                Cz = ((-0.53+10)*30/((-0.53+10)*2+30))**(1/6)/0.07
+                            elif d >= 2.0 and d < 2.0 + 0.01:  # +0.00048m in reality (filling lake completely)
+                                Cz = ((30*(b+8))/(2*(b+8)+30))**(1/6)/0.07
+                            else:
+                                Cz = (100*(d-2.0)/(2.0*(d+48)))**(1/6)/0.07
+                        else:
+                            if d > 2.0 + 0.01:
+                                Cz = (100*(d-2.0)/(2.0*(d+48)))**(1/6)/0.07
+                        try:
+                            tR_pos.append(Cz)
+                            tH_pos.append(H_pos[i])
+                        except NameError:
+                            pass
                     if d > 2.0:
                         if case_name == 'case_02_compound':
                             Cz = (100*(d-2.0)/(2.0*(d+48)))**(1/6)/0.07
@@ -477,16 +498,13 @@ class CompareIdealizedModel:
                             else:
                                 Cz = (100*(d-2.0)/(2.0*(d+48)))**(1/6)/0.07
                         elif case_name == 'case_05_dyke':
-                            if d > 3.0:
-                                Cz = (100*(d-3.0)/(2.0*(d+47)))**(1/6)/0.07
-                        elif case_name == 'case_06_plassen':
-                            if y >= 1420 or y <= 1580:
-                                Cz = (25.0*(H_pos[i]+3*d+4)/(2.0*(H_pos[i]+60)))**(1/6)/0.07   
-                            else:
-                                Cz = (100*(d-2.0)/(2.0*(d+48)))**(1/6)/0.07
+                            if d > 3.0 and d <= 3.25:
+                                Cz = ((100*(d-3.0) + 100/0.25*(d-3.0))/(4*(1.0/0.25)*(d-3.0) + 2*(d-3.0)+100))**(1/6)/0.07
+                            elif d > 3.25:
+                                Cz = ((100*(d-3.0)+100)/(2*(d-3.0)+100+4.0))**(1/6)/0.07
                         elif case_name == 'case_07_triangular':
                             if y > 500 or y < 9500:
-                                Cz = (300*(d-2.0)/(2.0*(d+148)))**(1/6)/0.07   
+                                Cz = (300*(d-2.0)/(2.0*(d+148)))**(1/6)/0.07
                             else:
                                 Cz = (300*(d-2.0)/(2.0*(d+148)))**(1/6)/0.07
                         try:
