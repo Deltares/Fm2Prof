@@ -543,7 +543,7 @@ class Test_Compare_Generic_Model:
                     fa_index = ls.index('Flow area behind summerdike')
                     ta_index = ls.index('Total area behind summerdike')
                     sd_key = ls.index('Use Summerdike')
-                elif 'meta' ''in line:
+                elif 'meta' in line:
                     Y.append(float(ls[y_index]))      # chainage
                     if ls[sd_key] == '1':
                         # crest level
@@ -753,6 +753,7 @@ class Test_Compare_Generic_Model:
         fig_name = '{}.png'.format(figtitlestr)
         fig_path = os.path.join(fig_dir, fig_name)
         plt.savefig(fig_path)
+        plt.close('all')
 
     def __convert_zw2xz(
             self,
@@ -1120,4 +1121,3 @@ class Test_Compare_Generic_Model:
         R_pos.append(hpos_tmp)
         N.append(n_counter)
         return (Y, N, H_pos, R_pos)        
-
