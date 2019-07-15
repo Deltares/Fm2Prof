@@ -498,9 +498,10 @@ class CompareIdealizedModel:
                             else:
                                 Cz = (100*(d-2.0)/(2.0*(d+48)))**(1/6)/0.07
                         elif case_name == 'case_05_dyke':
-                            if d > 3.0 and d <= 3.25:
-                                Cz = ((100*(d-3.0) + 100/0.25*(d-3.0))/(4*(1.0/0.25)*(d-3.0) + 2*(d-3.0)+100))**(1/6)/0.07
-                            elif d > 3.25:
+                            th = 0.25  # transition height
+                            if d > 3.0 and d <= 3.0+th:
+                                Cz = ((100*(d-3.0) + 100/th*(d-3.0))/(4*(1.0/th)*(d-3.0) + 2*(d-3.0)+100))**(1/6)/0.07
+                            elif d > 3.0+th:
                                 Cz = ((100*(d-3.0)+100)/(2*(d-3.0)+100+4.0))**(1/6)/0.07
                         elif case_name == 'case_07_triangular':
                             if y > 500 or y < 9500:
