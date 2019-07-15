@@ -183,12 +183,11 @@ class CompareWaalModel:
         dimr_call = '{} {} -d 0 > out.txt 2>&1'.format(
                     dimr_runner_path, sobek_xml_location)
         try:
-            print(dimr_call)
             os.system(dimr_call)
         except Exception as e_error:
             raise Exception(
-                'Exception thrown while doing DIMR call. {}'.format(
-                    str(e_error)))
+                'Exception thrown while doing DIMR call.' +
+                ' {}'.format(str(e_error)))
 
     def __get_2d_observations_file(self, fm_dir: str):
         """Finds the observation file for a 2d model
@@ -222,17 +221,19 @@ class CompareWaalModel:
             sobek_dir, self.__1d_dir_name + '\\output')
         if not os.path.exists(dflow1d_output):
             raise IOError(
-                'Sobek output folder not created at ' +
-                '{}.'.format(dflow1d_output))
+                'Sobek output folder not created at' +
+                ' {}.'.format(dflow1d_output))
 
         if not os.listdir(dflow1d_output):
-            raise IOError('No output generated at {}.'.format(dflow1d_output))
+            raise IOError(
+                'No output generated at' +
+                '{}.'.format(dflow1d_output))
 
         observations_file = os.path.join(dflow1d_output, 'observations.nc')
         if not os.path.exists(observations_file):
             raise IOError(
-                'Observation file was not found at ' +
-                '{}.'.format(observations_file))
+                'Observation file was not found at' +
+                ' {}.'.format(observations_file))
 
         return observations_file
 
