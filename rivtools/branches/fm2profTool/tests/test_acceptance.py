@@ -14,7 +14,8 @@ import tests.ReportHelper as ReportHelper
 from tests.LatexReport import LatexReport as LatexReport
 from tests.HtmlReport import HtmlReport as HtmlReport
 from tests.CompareWaalModel import CompareWaalModel as CompareWaalModel
-from tests.CompareIdealizedModel import CompareIdealizedModel as CompareIdealizedModel
+from tests.CompareIdealizedModel \
+    import CompareIdealizedModel as CompareIdealizedModel
 
 _root_output_dir = None
 
@@ -490,7 +491,7 @@ class Test_Compare_Idealized_Model:
         [10000, 6374.999999, -4],
         [10000, 6375, -2],
         [10000, 6500, -2]]
-    
+
     __case_tzw_dict = {
         _case01: __case_01_tzw,
         _case02: __case_02_tzw,
@@ -578,7 +579,8 @@ class Test_Compare_Idealized_Model:
                 'Test failed, no values retrieved for {}'.format(case_name))
         # if Y[-1] > tzw_values[-1][0]:
         #     pytest.fail(
-        #         'Test failed, redo FM simulation with the maximum chainage' + \
+        #         'Test failed,' + \
+        #         ' redo FM simulation with the maximum chainage' + \
         #         ' less than or equal to {}'.format(tzw_values[-1][0]))
 
         try:
