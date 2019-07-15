@@ -89,7 +89,8 @@ class CompareIdealizedModel:
                         sumError)
 
     def _compare_roughness(
-            self, case_name, tzw_values, input_roughness_file, fm2prof_fig_dir):
+            self,
+            case_name, tzw_values, input_roughness_file, fm2prof_fig_dir):
         # Read data in roughness.csv
         (Y, N, H_pos, R_pos) = self.__get_roughness_data(input_roughness_file)
 
