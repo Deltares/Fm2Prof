@@ -51,9 +51,9 @@ class LatexReport:
         template_dir = ReportHelper._get_template_folder(
             self.__latex_template_dir)
         if not os.path.exists(template_dir):
-            raise IOError('\
-                Template directory could not be found at {}\
-                    '.format(template_dir))
+            raise IOError(
+                'Template directory could not be found at' +
+                ' {}'.format(template_dir))
 
         # Clean the report dir (target)
         report_dir = os.path.join(target_dir, self.__latex_template_dir)
@@ -112,7 +112,7 @@ class LatexReport:
             '\\chapter{' + temp_name_key + '}\n' + \
             '\\label{sec:' + temp_key_key + '}'
         chapter_content = ''
-        for case in cases_dict:
+        for case in sorted(cases_dict):
             case_dict = cases_dict[case]
             # Get values from dictionary.
             case_name = case_dict.get(ReportHelper._case_lab_key)

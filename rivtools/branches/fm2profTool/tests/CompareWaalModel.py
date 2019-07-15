@@ -399,4 +399,5 @@ class CompareWaalModel:
 
         # fig_path = os.path.join(fig_dir, '{}.png'.format(case_name))
         # plt.savefig(fig_path)
+        plt.close('all')
         return list_of_figures
