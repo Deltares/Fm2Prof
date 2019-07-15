@@ -775,7 +775,6 @@ class Test_Compare_Generic_Model:
     def __FlowWidth_check(self, W: list, F: list, case_name: str):
         for i in range(len(W)):
             storage_width = [W[i][j]-F[i][j] for j in range(len(W[i]))]
-            sum_storage_width = sum(storage_width)
             if i == 0:
                 S = [storage_width]
             else:
@@ -791,11 +790,11 @@ class Test_Compare_Generic_Model:
     @pytest.mark.acceptance
     @pytest.mark.requires_output
     @pytest.mark.parametrize(
-        'case_name', _test_scenarios_ids, ids=_test_scenarios_ids)
+        ("case_name"), _test_scenarios_ids, ids=_test_scenarios_ids)
     def test_when_output_exists_then_compare_generic_model_input(
             self, case_name: str):
         if case_name == _waal_case:
-            print('This case is tested on another fixture.')
+            # print('This case is tested on another fixture.')
             return
         # 1. Get all necessary output / input directories
         fm2prof_dir = _get_test_case_output_dir(case_name)
@@ -897,3 +896,228 @@ class Test_Compare_Generic_Model:
                     self.__plot_cs(
                         fm2prof_fig_dir, tx, tz, plt_x, plt_z, y,
                         sumError)
+
+        assert os.listdir(fm2prof_fig_dir), '' + \
+            'There is no output generated for {0}'.format(case_name)
+
+    # region for tests
+    @pytest.mark.acceptance
+    @pytest.mark.requires_output
+    @pytest.mark.parametrize(
+        ("case_name"), _test_scenarios_ids, ids=_test_scenarios_ids)
+    def test_when_output_exists_then_compare_generic_model_roughness(
+            self, case_name: str):
+        if case_name == _waal_case:
+            # print('This case is tested on another fixture.')
+            return
+        # 1. Get all necessary output / input directories
+        fm2prof_dir = _get_test_case_output_dir(case_name)
+        #fm2prof_output_dir = os.path.join(fm2prof_dir, 'Output')
+        fm2prof_fig_dir = os.path.join(fm2prof_dir, 'Figures')
+
+        roughness_file_name = 'roughness.csv'
+        input_roughness_file = os.path.join(
+            fm2prof_dir, roughness_file_name)
+
+        # 2. Verify / create necessary folders and directories
+        assert os.path.exists(input_roughness_file), '' + \
+            'Input file {} could not be found'.format(input_roughness_file)
+        if not os.path.exists(fm2prof_fig_dir):
+            os.makedirs(fm2prof_fig_dir)
+
+        # Read data in geometry.csv
+        (Y, N, H_pos, R_pos) = self.__get_roughness_data(input_roughness_file)
+
+        tzw_values = self.__case_tzw_dict.get(case_name)
+        if not tzw_values or tzw_values is None:
+            pytest.fail(
+                'Test failed, no values retrieved for {}'.format(case_name))
+        if Y[-1] > tzw_values[-1][0]:
+            pytest.fail(
+                'Test failed, redo FM simulation with the maximum chainage' + \
+                ' less than or equal to {}'.format(tzw_values[-1][0]))
+
+        # loop over each chainage (cross-section)
+        n0 = 0
+        y0 = 0
+        MainChannel = True      # Main channel
+        for cs in range(len(Y)):
+            if y0 > Y[cs]:            # if previous chainage is greater, it has switched to FP1
+                MainChannel = False
+            y = Y[cs]           # chainage
+            # n = n0 + N[cs]      # maximum index
+            hpos = H_pos[cs]  # H_pos at chainage y
+            rpos = R_pos[cs]  # R_pos at chainage y
+            # n0 = n              # set up n0 at the next chainage
+            # give the interpolated analytical result at chainage y
+            [tz, tx] = self.__interpolate_z(tzw_values, y)
+            # get the bottom level to determine the water depth
+            baselevel = min(tz)
+            # analytical roughness
+            (tH_pos, tR_pos) = self.__get_analytical_roughness(hpos, baselevel, y, MainChannel, case_name)
+            y0 = y
+
+            # plot the fm2prof and analytical roughness (H_pos vs Cz)
+            self.__plot_roughness(fm2prof_fig_dir, tH_pos, tR_pos, hpos, rpos, y, MainChannel)
+
+        assert os.listdir(fm2prof_fig_dir), '' + \
+            'There is no output generated for {0}'.format(case_name)
+
+    def __plot_roughness(self, fig_dir, tH_pos, tR_pos, H_pos, R_pos, y, MainChannel):
+        fig, axh = plt.subplots(1, figsize=(10, 4))
+        axh.plot(tH_pos, tR_pos, label='Analytical roughness',color='#ff7f0e')
+        axh.plot(H_pos, R_pos, label='FM2PROF roughness',color='#1f77b4')
+        axh.set_ylim()
+        axh.set_xlabel('water level [m]')
+        axh.set_ylabel('roughness [m^0.5/s]')
+        axh.legend()
+        if MainChannel:
+            titlestr = 'Water level dependent main channel roughness at chainage ' + str(y)
+        else:
+            titlestr = 'Water level dependent floodplain 1 roughness at chainage ' + str(y)
+        axh.set_title(titlestr)
+        # axh.text(0.06, 0.85, 'sum(err) = {:.2f}'.format(err),
+        # horizontalalignment='left',
+        # verticalalignment='center',
+        # transform = axh.transAxes)
+        plt.grid()
+        plt.tight_layout()
+        if MainChannel:
+            figtitlestr = 'main_roughness_chainage' + str(int(y))
+        else:
+            figtitlestr = 'fp1_roughness_chainage' + str(int(y))
+        fig_name = '{}.png'.format(figtitlestr)
+        fig_path = os.path.join(fig_dir, fig_name)
+        plt.savefig(fig_path)
+        plt.close('all')  
+
+    def __get_analytical_roughness(self, H_pos, b:float, y, MainChannel, case_name):
+        tR_pos = []
+        tH_pos = []
+        for i in range(len(H_pos)):
+            d = H_pos[i]-b
+            if d >= 0:
+                if MainChannel:
+                    tH_pos.append(H_pos[i])
+                    if case_name == _case01:
+                        Cz = (150.0*d/(2.0*d+150))**(1/6)/0.03
+                    elif case_name == _case07:
+                        if y > 500 and y < 9500:
+                            if d < 2.0:
+                                Cz = (200.0*d/(2.0*d+200))**(1/6)/0.03
+                            else:
+                                Cz = (200.0*d/(2.0*2+200))**(1/6)/0.03
+                        else:
+                            if d < 2.0:
+                                Cz = (250.0*d/(2.0*d+250))**(1/6)/0.03
+                            else:
+                                Cz = (250.0*d/(2.0*2+250))**(1/6)/0.03
+                    else:
+                        if d < 2.0:
+                            Cz = (50.0*d/(2.0*d+50))**(1/6)/0.03
+                        else:
+                            Cz = (50.0*d/(2.0*2+50))**(1/6)/0.03
+                    tR_pos.append(Cz)
+                else: # floodplain1
+                    if d > 2.0:
+                        if case_name == _case02:
+                            Cz = (100*(d-2.0)/(2.0*(d+48)))**(1/6)/0.07
+                        elif case_name == _case03:
+                            if d <= 2.5:
+                                Cz = (50*(d-2.0)/(2.0*(d+23)))**(1/6)/0.07
+                            else:
+                                Cz = ((50*0.5+100*(d-2.5))/(51+2.0*d+45))**(1/6)/0.07
+                        elif case_name == _case04:
+                            if y >= 1250 and y <= 1750:
+                                Cz = (50*(d-2.0)/(2.0*(d+23)))**(1/6)/0.07
+                            else:
+                                Cz = (100*(d-2.0)/(2.0*(d+48)))**(1/6)/0.07
+                        elif case_name == _case05:
+                            if d > 3.0:
+                                Cz = (100*(d-3.0)/(2.0*(d+47)))**(1/6)/0.07
+                        elif case_name == _case06:
+                            if y >= 1420 or y <= 1580:
+                                Cz = (25.0*(H_pos[i]+3*d+4)/(2.0*(H_pos[i]+60)))**(1/6)/0.07   
+                            else:
+                                Cz = (100*(d-2.0)/(2.0*(d+48)))**(1/6)/0.07
+                        elif case_name == _case07:
+                            if y > 500 or y < 9500:
+                                Cz = (300*(d-2.0)/(2.0*(d+148)))**(1/6)/0.07   
+                            else:
+                                Cz = (300*(d-2.0)/(2.0*(d+148)))**(1/6)/0.07
+                        try:
+                            tR_pos.append(Cz)
+                            tH_pos.append(H_pos[i])
+                        except NameError:
+                            pass
+        return tH_pos, tR_pos
+
+    def __get_roughness_data(self, input_file):
+        """[summary]
+        
+        Arguments:
+            input_file {str} -- roughness csv file
+        
+        Returns:
+            {tuple} --  Y = chainage; CL = crest level;
+                        FPB = floodplain base level; 
+                        FA = flow area behind summer dike; 
+                        TA = total area behind summer dike
+                        Z = cross-section z values;
+                        W = cross-section total width;
+                        F = cross-section flow width
+        """
+        # Reading roughness.csv file
+        # Output lists ===
+        
+        hpos_tmp = []
+        rpos_tmp = []
+
+        Y = []
+        N = []
+        assert os.path.exists(input_file), 'Input file {} does not exist'.format(input_file)
+        
+        with open(input_file) as fin:
+            y_prev = ''
+            n_counter = 0
+            for line in fin:
+                ls = line.strip().split(',')
+                if 'Name' in ls[0]:
+                    y_index = ls.index('Chainage')
+                    hpos_index = ls.index('H_pos')
+                    rpos_index = ls.index('R_pos__f(h)')
+                else:
+                    if ls[y_index] != y_prev:
+                        Y.append(float(ls[y_index]))      # chainage
+                        # try:
+                        #     N.append(n_counter)
+                        # except NameError:
+                        #     n_counter = 0
+                        if len(N) == 0:
+                            if len(hpos_tmp) != 0:
+                                H_pos = [hpos_tmp]
+                                R_pos = [rpos_tmp]
+                                N.append(n_counter)
+                                n_counter = 0
+                        # else:
+                        #     if hpos_tmp:
+                        #         H_pos.append(hpos_tmp)      # water level
+                        #         R_pos.append(rpos_tmp)      # roughness (Chezy)
+                        #         N.append(n_counter)
+                        else:
+                            H_pos.append(hpos_tmp)      # water level
+                            R_pos.append(rpos_tmp)      # roughness (Chezy)
+                            N.append(n_counter)
+                            n_counter = 0
+                        hpos_tmp = []
+                        rpos_tmp = []
+                    hpos_tmp.append(float(ls[hpos_index]))
+                    rpos_tmp.append(float(ls[rpos_index]))
+                    y_prev = ls[y_index]
+                    n_counter += 1          # number of data at each chainage
+
+        H_pos.append(hpos_tmp) 
+        R_pos.append(hpos_tmp)
+        N.append(n_counter)
+        return (Y, N, H_pos, R_pos)        
+
