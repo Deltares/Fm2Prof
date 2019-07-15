@@ -67,8 +67,9 @@ class HtmlReport:
         template_dir = ReportHelper._get_template_folder(
             self.__html_template_dir)
         if not os.path.exists(template_dir):
-            raise IOError('Template directory could not be found at {}'.format(
-                self.__template_dir))
+            raise IOError(
+                'Template directory could not be found at ' +
+                '{}'.format(template_dir))
 
         template_path = os.path.join(template_dir, template_name)
         template_content = self.__get_html_template_content(template_path)
@@ -139,7 +140,7 @@ class HtmlReport:
 
         sec_temp = self.__get_html_template(self.__html_sec_temp_name)
         car_temp = self.__get_html_template(self.__html_car_temp_name)
-        for case in cases_dict:
+        for case in sorted(cases_dict):
             case_dict = cases_dict[case]
             # Get dictionaries of mapped template-content.
             carousel_dict = self.__get_carousel_map_values(case_dict)
