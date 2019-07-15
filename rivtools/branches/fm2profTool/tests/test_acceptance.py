@@ -390,7 +390,8 @@ class Test_Compare_Waal_Model:
         # 3. Verify final expectations
         assert result_figures
         for fig_path in result_figures:
-            assert os.path.exists(fig_path)
+            assert os.path.exists(fig_path), '' + \
+                'Figure not found at path {}.'.format(fig_path)
 
 
 class Test_Compare_Generic_Model:
