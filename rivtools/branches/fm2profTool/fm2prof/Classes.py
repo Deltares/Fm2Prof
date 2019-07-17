@@ -150,6 +150,8 @@ class CrossSection:
         self._css_flow_width = 0
         self._fm_total_volume = 0
         self._fm_flow_volume = 0
+        self._fm_wet_area = 0
+        self._fm_flow_area = 0
         self._css_volume_legacy = 0
 
         # flags
@@ -161,6 +163,7 @@ class CrossSection:
         self._set_plotstyle(style=3)
 
         # PARAMETERS
+        self.temp_param_skip_maps = 2
         self.parameters = InputParam_dict
 
     def optimisation_function(self, opt_in):
@@ -189,10 +192,20 @@ class CrossSection:
         """
 
         # Unpack FM data
-        waterlevel = fm_data['waterlevel']
-        waterdepth = fm_data['waterdepth']
-        velocity = fm_data['velocity']
+        waterlevel = fm_data['waterlevel'].iloc[:, self.temp_param_skip_maps:]
+        waterdepth = fm_data['waterdepth'].iloc[:, self.temp_param_skip_maps:]
+        velocity = fm_data['velocity'].iloc[:, self.temp_param_skip_maps:]
         area = fm_data['area']
+        bedlevel = fm_data['bedlevel']
+
+        # Convert area to a matrix for matrix operations (much more efficient than for-loops)
+        area_matrix = pd.DataFrame(index=area.index)
+        for t in waterdepth:
+            area_matrix[t] = area
+
+        bedlevel_matrix = pd.DataFrame(index=bedlevel.index)
+        for t in waterdepth:
+            bedlevel_matrix[t] = bedlevel
 
         # Retrieve the water-depth & water level nearest to the cross-section location
         (centre_depth, centre_level) = FE.get_centre_values(self.location, fm_data['x'], fm_data['y'], waterdepth, waterlevel)
@@ -201,123 +214,106 @@ class CrossSection:
         velocity = velocity.rolling(window=10, min_periods=1, center=True, axis=1).mean()
 
         # Identify river lakes (plassen)
-        plassen_mask, wet_not_plas_mask, plassen_depth_correction = self._identify_lakes(waterdepth)
-  
+        plassen_mask, wet_not_plas_mask, plassen_depth_correction = self.__identify_lakes(waterdepth)  
 
         # Masks for wet and flow cells (stroomvoeringscriteria)
+        flow_mask = self.__distinguish_flow_from_storage(waterdepth, velocity)
+               
+        # Calculate area and volume as function of waterlevel & waterdepth
+        self._fm_wet_area = np.nansum(area_matrix[wet_not_plas_mask], axis=0)
+        self._fm_flow_area = np.nansum(area_matrix[flow_mask], axis=0)
+
+        # Correct waterdepth for plassen
+        waterdepth = waterdepth + plassen_depth_correction
+        waterdepth = waterdepth[waterdepth >= 0]
+
+        # Compute 2D volume as sum of area times depth
+        self._fm_total_volume = np.array(np.nansum(area_matrix[wet_not_plas_mask] * waterdepth[wet_not_plas_mask], axis=0))
+        self._fm_flow_volume = np.array(np.nansum(area_matrix[flow_mask] * waterdepth[flow_mask], axis=0))
+
+        # For roughness we will need the original z-levels, since geometry z will change below
+        self._css_z_roughness = centre_level
+        
+        # Check for monotonicity (water levels should rise)
+        mono_mask = self._check_monotonicity(centre_level, method=1)
+        centre_level = centre_level[mono_mask]
+        self._fm_total_volume = self._fm_total_volume[mono_mask]
+        self._fm_flow_volume = self._fm_flow_volume[mono_mask]
+        self._fm_wet_area = self._fm_wet_area[mono_mask]
+        self._fm_flow_area = self._fm_flow_area[mono_mask]
+        
+        # Compute geometry above z0 - Water level dependent calculation
+        self.__compute_css_above_z0(centre_level)
+        
+        # Compute geometry below z0 - Water level independent calculation
+        self.__extend_css_below_z0(centre_level, centre_depth, bedlevel_matrix, area_matrix, wet_not_plas_mask)
+
+        # Compute 1D volume as integral of width with respect to z times length
+        self._css_total_volume = np.append([0], np.cumsum(self._css_total_width[1:]*np.diff(self._css_z)*self.length))
+        self._css_flow_volume = np.append([0], np.cumsum(self._css_flow_width[1:]*np.diff(self._css_z)*self.length))
+        
+        # If sd correction is run, these attributed will be updated. 
+        self._css_total_volume_corrected = self._css_total_volume
+        self._css_flow_volume_corrected = self._css_flow_volume
+
+        # convert to float64 array for uniformity (apparently entries can be float32)
+        self._css_z = np.array(self._css_z, dtype=np.dtype('float64')) 
+        
+    def __distinguish_flow_from_storage(self, waterdepth, velocity):
+        """
+        Defines mask which is False when flow is below a certain threshold. 
+        (Stroomvoeringscriteriumfunctie)
+
+        Arguments:
+            waterdepth: pandas Dataframe with cell id for index and time in columns
+            velocity: pandas Dataframe with cell id for index and time in columns
+
+        Returns:
+            flow_mask: pandas Dataframe with cell id for index and time in columns. 
+                       True for flow, False for storage
+        """
         flow_mask = (waterdepth > 0) & \
                     (velocity > self.parameters[self.__cs_parameter_velocity_threshold]) & \
                     (velocity > self.parameters[self.__cs_parameter_relative_threshold]*np.mean(velocity))
-        
+
         # shallow flows should not be used for identifying storage (cells with small velocities are uncorrectly seen as storage)
         waterdepth_correction = (waterdepth > 0) & (waterdepth < self.parameters[self.__cs_parameter_min_depth_storage])
 
         # combine flow and depth mask to avoid assigning shallow flows to storage
-        flow_mask = reduce(np.logical_or, [(flow_mask == True), (waterdepth_correction == True)])
+        #flow_mask = reduce(np.logical_or, [(flow_mask == True), (waterdepth_correction == True)])
+        flow_mask = flow_mask | waterdepth_correction
 
+        return flow_mask
         
-        # Convert area to a matrix for matrix operations (much more efficient than for-loops)
-        area_matrix = pd.DataFrame(index=area.index)
-        for t in waterdepth:
-            area_matrix[t] = area
-
-        # Calculate area and volume as function of waterlevel & waterdepth
-        wet_area = np.nansum(area_matrix[wet_not_plas_mask], axis=0)
-        flow_area = np.nansum(area_matrix[flow_mask], axis=0)
-
-        # correct waterdepth for plassen
-        waterdepth = waterdepth + plassen_depth_correction
-        waterdepth = waterdepth[waterdepth >= 0]
-
-        #flow_area = list(np.nansum(area_matrix[flow_mask], axis=0))
-        total_volume = np.array(np.nansum(area_matrix[wet_not_plas_mask] * waterdepth[wet_not_plas_mask], axis=0))
-        flow_volume = np.array(np.nansum(area_matrix[flow_mask] * waterdepth[flow_mask], axis=0))
-
-        cross_section_z_roughness = centre_level
+    def __extend_css_below_z0(self, centre_level, centre_depth, bedlevel_matrix, area_matrix, wet_not_plas_mask):
+        """
+        Extends the cross-sectional information below the water level at the first timestep,
+        under assumption that the polygon formed by the water level and the bed level is convex. 
+        It works by walking down to the bed level at the center point in 'virtual water level steps'. 
+        At each step, we sum the area of cells width bedlevels which would be submerged at that 
+        virtual water level. 
+        """
+        level_z0 = centre_level[0]
+        bdata = bedlevel_matrix[wet_not_plas_mask]
+        bmask = bdata < level_z0
         
-        # Construct cross-section // (Area method)
-        # ========================================
-        # Check for monotonicity
-        
-        mono_mask = self._check_monotonicity(centre_level, method=1)
-        centre_level = centre_level[mono_mask]
-        total_volume = total_volume[mono_mask]
-        flow_volume = flow_volume[mono_mask]
-        wet_area = wet_area[mono_mask]
-        flow_area = flow_area[mono_mask]
+        bedlevels_below_z0 = bdata[bmask]
+        lowest_level_below_z0 = np.nanmin(np.unique(bedlevels_below_z0.values.T[-1]))
+        lowest_level_below_z0 = centre_level[0] - centre_depth[0]
 
+        for unique_level_below_z0 in reversed(np.linspace(lowest_level_below_z0, level_z0, 10)):
 
-        cross_section_z, total_width, flow_width = self._compute_1D_geometry(centre_level, wet_area, flow_area)
-        cross_section_z_geometry = cross_section_z
-
-        level_t0 = cross_section_z[0]
-        depth_t0 = centre_depth[0]
-        lowest_z = level_t0 - depth_t0
-
-        # waterlevel independent calculation
-        if depth_t0 > 0.02:
-            # starting from a wet bed
-
-            # divide restant into 100 points and skip first and last point (too simple?)
-            z_range = np.linspace(level_t0, lowest_z, 100)[1:]
-            volume = 0
-            for index, z in enumerate(z_range):
-                level_drop = level_t0 - z
-                wet_area = self.calculate_wet_area(fm_data, level_drop, plassen_mask)
-
-                width = wet_area / self.length
-
-                if width == 0 & np.any(total_width == 0):
-                    # skip this value
-                    print('skipped width value')
-                else:
-                    cross_section_z_geometry = np.insert(cross_section_z_geometry, 0, z)
-
-                    flow_width = np.insert(flow_width, 0, width)
-                    total_width = np.insert(total_width, 0, width)
-
-                    # retrieve FM volume (not possible as depth data doesn't exist, but use workaround to maintain array lengths)
-                    depth = z - lowest_z
-                    volume = wet_area * depth
-
-                    total_volume = np.insert(total_volume, 0, volume)
-        else:
-            total_width = np.insert(total_width, 0, 0)
-            flow_width = np.insert(flow_width, 0, 0)
-
-            depth = level_t0 - lowest_z
-            wet_area = self.calculate_wet_area(fm_data, depth, plassen_mask)
-            volume = wet_area * depth
-
-            total_volume = np.insert(total_volume, 0, volume)
+            # count area
+            areas = area_matrix[bedlevels_below_z0 <= unique_level_below_z0]
+            area_at_unique_level = np.nansum(areas.values.T[-1])
             
-            # correct the first z-value
-            cross_section_z_geometry = np.insert(cross_section_z_geometry, 0, level_t0 - depth_t0)
-
-        # Write to object
-        # ========================================
-        self._css_total_volume = np.append([0], np.cumsum(total_width[1:]*np.diff(cross_section_z_geometry)*self.length))
-        self._css_total_width = total_width
-        self._css_flow_width = flow_width
-        self._css_z_roughness = cross_section_z_roughness
-
-        # convert to float64 array for uniformity (apparently entries can be float32)
-        self._css_z = np.array(cross_section_z_geometry, dtype=np.dtype('float64'))
-        self._fm_total_volume = total_volume
-        self._fm_flow_volume = flow_volume
-
-    def calculate_wet_area(self, fm_data, level_drop, plassen_mask):
-        bedlevel = fm_data['bedlevel']
-        waterlevel = fm_data['waterlevel']
-        area = fm_data['area']
-
-        # use waterlevel[0] to calculate the mask for each cell separately instead of using a single value for the whole area
-        wet_mask = bedlevel < waterlevel.T.iloc[0] - level_drop
-        combined_mask = reduce(np.logical_and, [(wet_mask == True), (plassen_mask == False)])
-
-        wet_area = np.nansum(area[combined_mask], axis=0)
-
-        return wet_area
+            self._css_z = np.insert(self._css_z, 0, unique_level_below_z0)
+            self._css_flow_width = np.insert(self._css_flow_width, 0, area_at_unique_level/self.length)
+            self._css_total_width = np.insert(self._css_total_width, 0, area_at_unique_level/self.length)
+            self._fm_wet_area = np.insert(self._fm_wet_area, 0, area_at_unique_level)
+            self._fm_flow_area = np.insert(self._fm_flow_area, 0, area_at_unique_level) 
+            self._fm_flow_volume = np.insert(self._fm_flow_volume, 0, np.nan) 
+            self._fm_total_volume = np.insert(self._fm_total_volume, 0, np.nan) 
 
     def calculate_correction(self, transition_height:float):
         """
@@ -328,13 +324,14 @@ class CrossSection:
         self._css_total_volume_corrected
 
 
+
         TODO: to avoid numerical oscillation, transition_height need minimal value. Fixed or variable? Test!
         :return:
         """
 
         # Set initial values for optimisation of parameters
         initial_error = self._css_total_volume - self._fm_total_volume
-        initial_crest = self._css_z[np.argmin(initial_error)]
+        initial_crest = self._css_z[np.nanargmin(initial_error)]
         initial_volume = np.abs(initial_error[-1])
 
         # Optimise attributes
@@ -345,7 +342,6 @@ class CrossSection:
 
         # Unpack optimisation results
         crest_level = opt['x'][0]
-        
         extra_volume = opt['x'][1]
 
         if transition_height is None:
@@ -368,9 +364,9 @@ class CrossSection:
         an alluvial (smooth) and nonalluvial (rough) part of the total
         cross-section. This division is made based on the final timestep.
         """
-
+        chezy_fm = fm_data['chezy'].iloc[:, self.temp_param_skip_maps:]
         # Get chezy values at last timestep
-        end_values = fm_data['chezy'].T.iloc[-1]
+        end_values = chezy_fm.T.iloc[-1]
 
         #end_values[end_values == 0] = np.nan
 
@@ -404,10 +400,10 @@ class CrossSection:
 
         self.roughness_sections = C_sections
         # Find roughness tables for each section
-        chezy = fm_data['chezy'].values.T
+        chezy = chezy_fm.values.T
         chezy[chezy==0] = np.nan
-        self.alluvial_friction_table = [self._css_z_roughness, fm_data['chezy'].T[C_sections[0]].mean(axis=1)]
-        self.nonalluvial_friction_table = [self._css_z_roughness, fm_data['chezy'].T[C_sections[1]].mean(axis=1)]
+        self.alluvial_friction_table = [self._css_z_roughness, chezy_fm.T[C_sections[0]].mean(axis=1)]
+        self.nonalluvial_friction_table = [self._css_z_roughness, chezy_fm.T[C_sections[1]].mean(axis=1)]
 
         # Dirty fix
         # Set width of sections
@@ -835,7 +831,7 @@ class CrossSection:
     def _close_figure(self, figure):
         plt.close(figure)
 
-    def _identify_lakes(self, waterdepth):
+    def __identify_lakes(self, waterdepth):
         """
         Find cells that do not have rising water depths for a period of time (__cs_parameter_plassen_timesteps)
 
@@ -876,28 +872,28 @@ class CrossSection:
 
         # correct wet cells for plassen
         wet_not_plas_mask = reduce(np.logical_and, [(wet_mask == True), (plassen_mask_time == False)])
-
+        #print (wet_not_plas_mask)
+        #pmtmask = plassen_mask_time == False
+        #print (wet_mask & pmtmask)
         return plassen_mask, wet_not_plas_mask, plassen_depth_correction
 
-    def _compute_1D_geometry(self, centre_level, wet_area, flow_area):
+    def __compute_css_above_z0(self, centre_level):
         """
         'Area method': compute width from area
         
         """
 
-        cross_section_z = centre_level
+        self._css_z = centre_level
 
         # Remove nan's from z
-        cross_section_z[np.isnan(cross_section_z)] = np.nanmin(cross_section_z)
+        self._css_z[np.isnan(self._css_z)] = np.nanmin(self._css_z)
         
-        total_width = np.array(wet_area)/self.length
-        flow_width = np.array(flow_area)/self.length
+        # Compute widths
+        self._css_total_width = np.array(self._fm_wet_area)/self.length
+        self._css_flow_width = np.array(self._fm_flow_area)/self.length
 
         # fix error when flow_width > total_width (due to floating points)
-        flow_width[flow_width > total_width] = total_width[flow_width > total_width]
-
-        
-        return cross_section_z, total_width, flow_width
+        self._css_flow_width[self._css_flow_width > self._css_total_width] = self._css_total_width[self._css_flow_width > self._css_total_width]
 
     @staticmethod
     def _check_monotonicity(arr, method=2):
@@ -926,7 +922,6 @@ class CrossSection:
             return mask
         elif method==2:
             return np.argsort(arr)
-
 
 class Logger:
     def __init__(self, outputdir):

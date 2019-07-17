@@ -33,23 +33,40 @@ def export_roughness(cross_sections, file_path, fmt='sobek3'):
 
 def export_volumes(cross_sections, file_path):
     """Write to file the volume/waterlevel information"""
+
     with open(file_path, 'w') as f:
         # Write header
-        f.write("id, z, Total volume 1D, Total volume 2D\n")
+        f.write("id,z,2D_total_volume,2D_flow_volume,2D_wet_area,2D_flow_area,1D_total_volume_sd,1D_total_volume,1D_flow_volume_sd,1D_flow_volume,1D_total_width,1D_flow_width\n")
 
-        # Construct array and append to file
         for css in cross_sections:
             for i in range(len(css._css_z)):
-                try:
-                    f.write('{}, {}, {}, {}\n'.format(css.name, 
-                                                      css._css_z[i], 
-                                                      css._css_total_volume_corrected[i], 
-                                                      css._fm_total_volume[i]))
-                except TypeError:
-                    f.write('{}, {}, {}, {}\n'.format(css.name, 
-                                                      css._css_z[i], 
-                                                      css._css_total_volume[i], 
-                                                      css._fm_total_volume[i]))
+                outputdata = dict(id=css.name,
+                                  z=css._css_z[i],
+                                  tv2d=css._fm_total_volume[i],
+                                  fv2d=css._fm_flow_volume[i],
+                                  wa2d=css._fm_wet_area[i],
+                                  fa2d=css._fm_flow_area[i],
+                                  tvsd1d=css._css_total_volume_corrected[i],
+                                  tv1d=css._css_total_volume[i],
+                                  fvsd1d=css._css_flow_volume_corrected[i],
+                                  fv1d=css._css_flow_volume[i],
+                                  tw1d=css._css_total_width[i],
+                                  fw1d=css._css_flow_width[i])
+                
+                f.write('{id},{z},{tv2d},{fv2d},{wa2d},{fa2d},{tvsd1d},{tv1d},{fvsd1d},{fv1d},{tw1d},{fw1d}\n'.format(**outputdata))
+        ## Construct array and append to file
+        #for css in cross_sections:
+        #    for i in range(len(css._css_z)):
+        #        try:
+        #            f.write('{}, {}, {}, {}\n'.format(css.name, 
+        #                                              css._css_z[i], 
+        #                                              css._css_total_volume_corrected[i], 
+        #                                              css._fm_total_volume[i]))
+        #        except TypeError:
+        #            f.write('{}, {}, {}, {}\n'.format(css.name, 
+        #                                              css._css_z[i], 
+        #                                              css._css_total_volume[i], 
+        #                                              css._fm_total_volume[i]))
                         
 
 def export_crossSectionLocations(cross_sections, file_path):

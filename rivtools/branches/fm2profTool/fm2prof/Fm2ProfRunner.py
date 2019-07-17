@@ -454,7 +454,7 @@ class Fm2ProfRunner:
             self.__set_logger_message(
                 'T+ {:.2f}'.format(log_time.total_seconds()) +
                 ' :: simplified cross-section to' +
-                ' {:d} points'.format(log_time.total_seconds(), css_pt_value))
+                ' {:d} points'.format(css_pt_value))
         except Exception as e_error:
             e_message = str(e_error)
             self.__set_logger_message(
