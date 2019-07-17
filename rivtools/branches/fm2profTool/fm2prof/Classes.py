@@ -246,7 +246,7 @@ class CrossSection:
         self.__compute_css_above_z0(centre_level)
         
         # Compute geometry below z0 - Water level independent calculation
-        self.__extend_css_below_z0(centre_level, centre_depth, bedlevel_matrix, area_matrix, wet_not_plas_mask)
+        self.__extend_css_below_z0(centre_level, centre_depth, bedlevel_matrix, area_matrix, plassen_mask)
 
         # Compute 1D volume as integral of width with respect to z times length
         self._css_total_volume = np.append([0], np.cumsum(self._css_total_width[1:]*np.diff(self._css_z)*self.length))
@@ -285,7 +285,7 @@ class CrossSection:
 
         return flow_mask
         
-    def __extend_css_below_z0(self, centre_level, centre_depth, bedlevel_matrix, area_matrix, wet_not_plas_mask):
+    def __extend_css_below_z0(self, centre_level, centre_depth, bedlevel_matrix, area_matrix, plassen_mask):
         """
         Extends the cross-sectional information below the water level at the first timestep,
         under assumption that the polygon formed by the water level and the bed level is convex. 
@@ -294,7 +294,7 @@ class CrossSection:
         virtual water level. 
         """
         level_z0 = centre_level[0]
-        bdata = bedlevel_matrix[wet_not_plas_mask]
+        bdata = bedlevel_matrix[~plassen_mask]
         bmask = bdata < level_z0
         
         bedlevels_below_z0 = bdata[bmask]
