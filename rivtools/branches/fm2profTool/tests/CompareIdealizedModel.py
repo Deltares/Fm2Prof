@@ -10,6 +10,18 @@ import matplotlib.pyplot as plt
 
 
 class CompareIdealizedModel:
+    def _compare_volume(
+            self, case_name, input_volume_file, fm2prof_fig_dir):
+        # Read data
+        df = pd.read_csv(input_volume_file, index_col=1)
+
+        # Loop over each cross-sections
+        crosssections = np.unique(df.id)
+        
+        for crosssection in crosssections:
+            # Plot volume at each cross-section
+            self.__plot_volume(df, crosssection, fm2prof_fig_dir)
+
     def _compare_css(
             self, case_name, tzw_values, input_geometry_file, fm2prof_fig_dir):
 
@@ -89,8 +101,7 @@ class CompareIdealizedModel:
                         sumError)
 
     def _compare_roughness(
-            self,
-            case_name, tzw_values, input_roughness_file, fm2prof_fig_dir):
+            self, case_name, tzw_values, input_roughness_file, fm2prof_fig_dir):
         # Read data in roughness.csv
         (Y, N, H_pos, R_pos) = self.__get_roughness_data(input_roughness_file)
 
@@ -118,6 +129,21 @@ class CompareIdealizedModel:
             self.__plot_roughness(
                     fm2prof_fig_dir, tH_pos, tR_pos,
                     hpos, rpos, y, MainChannel)
+
+    def __plot_volume(self, df, cs, output_folder):
+        fig, ax = plt.subplots(1, figsize=(10, 4))
+        tv_1d = df[df.id == cs]['1D_total_volume']
+        tv_1dsd = df[df.id == cs]['1D_total_volume_sd']
+        tv_2d = df[df.id == cs]['2D_total_volume']
+        ax.plot(tv_2d, '-', linewidth=5, color=[0.4]*3, label='2D')
+        ax.plot(tv_1d, '--r', label='1D without correction')
+        ax.plot(tv_1dsd, '-r', label='1D with correction')
+        ax.set_title(cs)
+        ax.legend()
+        ax.set_xlabel('Water level [m]')
+        ax.set_ylabel('Volume [m$^3$]')
+        plt.grid()
+        plt.savefig(os.path.join(output_folder, "{}_volumegraph.png".format(cs)))
 
     def __get_geometry_data(self, input_file: str):
         """[summary]
@@ -354,7 +380,7 @@ class CompareIdealizedModel:
                 '\tCrestLevel = {:.2f}m,' + \
                 ' Floodplain Base level = {:.2f}m\n' + \
                 '\tCrest height = {:.2f}m,' + \
-                ' Total area behind summer dike = {:.2f}m^2'
+                ' Total area behind summer dike = {:.2f}m$^2$'
             axh.text(
                 0.06, 0.72,
                 'FM2PROF:\n' + ttbs_text.format(cl, fpb, cl - fpb, tbs),
@@ -414,7 +440,7 @@ class CompareIdealizedModel:
         axh.plot(H_pos, R_pos, label='FM2PROF roughness',color='#1f77b4')
         axh.set_ylim()
         axh.set_xlabel('water level [m]')
-        axh.set_ylabel('roughness [m^0.5/s]')
+        axh.set_ylabel('roughness [$\sqrt{m}$/s]')
         axh.legend()
         if MainChannel:
             titlestr = 'Water level dependent main channel roughness ' + \
