@@ -546,7 +546,7 @@ class Test_Compare_Idealized_Model:
 
         #  4. Final expectation
         assert os.listdir(fm2prof_fig_dir), '' + \
-            'There is no output generated for {0}'.format(case_name)
+            'There is no geometry output generated for {0}'.format(case_name)
 
     # region for tests
     @pytest.mark.acceptance
@@ -577,11 +577,6 @@ class Test_Compare_Idealized_Model:
         if not tzw_values or tzw_values is None:
             pytest.fail(
                 'Test failed, no values retrieved for {}'.format(case_name))
-        # if Y[-1] > tzw_values[-1][0]:
-        #     pytest.fail(
-        #         'Test failed,' + \
-        #         ' redo FM simulation with the maximum chainage' + \
-        #         ' less than or equal to {}'.format(tzw_values[-1][0]))
 
         try:
             generic_comparer = CompareIdealizedModel()
@@ -594,4 +589,42 @@ class Test_Compare_Idealized_Model:
                 '{}.'.format(str(e_info)))
 
         assert os.listdir(fm2prof_fig_dir), '' + \
-            'There is no output generated for {0}'.format(case_name)
+            'There is no roughness output generated for {0}'.format(case_name)
+
+    @pytest.mark.acceptance
+    @pytest.mark.requires_output
+    @pytest.mark.parametrize(
+        ("case_name"), _test_scenarios_ids, ids=_test_scenarios_ids)
+    def test_when_output_exists_then_compare_generic_model_volume(
+            self, case_name: str):
+        if case_name == _waal_case:
+            # print('This case is tested on another fixture.')
+            return
+        # 1. Get all necessary output / input directories
+        fm2prof_dir = _get_test_case_output_dir(case_name)
+        # Data from the above tests is saved directly in fm2prof_dir,
+        # not in case_name/output
+        fm2prof_fig_dir = os.path.join(fm2prof_dir, 'Figures')
+
+        volume_file_name = 'volumes.csv'
+        input_volume_file = os.path.join(fm2prof_dir, volume_file_name)
+
+        # 2. Verify / create necessary folders and directories
+        assert os.path.exists(input_volume_file), '' + \
+            'Input file {} could not be found'.format(input_volume_file)
+        if not os.path.exists(fm2prof_fig_dir):
+            os.makedirs(fm2prof_fig_dir)
+
+        #  3. Run
+        try:
+            generic_comparer = CompareIdealizedModel()
+            generic_comparer._compare_volume(
+                    case_name, input_volume_file, fm2prof_fig_dir)
+        except Exception as e_info:
+            pytest.fail(
+                'No exception expected but was thrown ' +
+                '{}.'.format(str(e_info)))
+
+        #  4. Final expectation
+        assert os.listdir(fm2prof_fig_dir), '' + \
+            'There is no volume output generated for {0}'.format(case_name)
