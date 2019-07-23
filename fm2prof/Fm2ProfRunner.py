@@ -27,7 +27,9 @@ import datetime
 import itertools
 import os
 import shutil
-
+import logging
+from tqdm import tqdm, tqdm_gui
+import time
 
 class Fm2ProfRunner:
     __logger = None
@@ -53,6 +55,8 @@ class Fm2ProfRunner:
         """
         self.__iniFile = IniFile.IniFile(iniFilePath)
         self.__version = version
+
+        self.__create_logger()
 
     def run(self):
         """
@@ -83,10 +87,9 @@ class Fm2ProfRunner:
         input_param_dict = iniFile._input_parameters
 
         # Add a log file
-        self.__logger = CE.Logger(output_dir)
+        self.__add_filehandler_to_logger(output_dir=output_dir, filename='fm2prof.log')
         self.__set_logger_message(
-            'FM2PROF version {}\n=============================='.format(
-                self.__version))
+            'FM2PROF version {}'.format(self.__version))
         self.__set_logger_message('reading FM and cross-sectional data data')
 
         # Read FM model data
@@ -129,12 +132,13 @@ class Fm2ProfRunner:
 
         # Preprocess css from fm_model_data so it's easier to handle it.
         css_data_list = fm_model_data.css_data_list
-
+        self.__logformatter.set_number_of_iterations(len(css_data_list))
         for css_data in css_data_list:
             generated_cross_section = self._generate_cross_section(
                 css_data, input_param_dict, fm_model_data)
             if generated_cross_section is not None:
                 cross_sections.append(generated_cross_section)
+                self.__logformatter.start_new_iteration()
 
         return cross_sections
 
@@ -177,38 +181,34 @@ class Fm2ProfRunner:
         if fm_model_data is None:
             raise Exception(
                 'No FM data given for new cross section {}'.format(css_name))
-
-        # time stamp start
-        start_time = datetime.datetime.now()
-        time_stamp = datetime.datetime.strftime(start_time, '%I:%M%p')
+        
+        self.__logformatter.next_step()
         self.__set_logger_message(
-            '{} :: cross-section {}'.format(time_stamp, css_name))
+            '{}'.format(css_name))
 
         # Create cross section
         created_css = self._get_new_cross_section(
             css_data=css_data,
             input_param_dict=input_param_dict)
-        log_t = self.__get_time_stamp_seconds(start_time)
+
+        created_css.set_logger(self.__logger)
         self.__set_logger_message(
-            'T+ %.2f :: initiated new cross-section %s' % (log_t, css_name))
+            'Initiated new cross-section')
 
         self._set_fm_data_to_cross_section(
             cross_section=created_css,
             input_param_dict=input_param_dict,
-            fm_model_data=fm_model_data,
-            start_time=start_time)
+            fm_model_data=fm_model_data)
 
         self.__set_logger_message(
-            'cross-section {} generated in '.format(css_name) +
-            '{:.2f} seconds'.format(self.__get_time_stamp_seconds(start_time)))
+            'done')
         return created_css
 
     def _set_fm_data_to_cross_section(
             self,
             cross_section: CE.CrossSection,
             input_param_dict: Mapping[str, list],
-            fm_model_data: CE.FmModelData,
-            start_time: datetime):
+            fm_model_data: CE.FmModelData):
         """Sets extra FM data to the given Cross Section
 
         Arguments:
@@ -218,8 +218,7 @@ class Fm2ProfRunner:
                 -- Dictionary with input parameters.
             fm_model_data {CE.FmModelData}
                 -- Data to assign to the new cross section.
-            start_time {datetime}
-                -- Timestamp to be used in the logger.
+
         """
 
         if cross_section is None or fm_model_data is None:
@@ -237,30 +236,31 @@ class Fm2ProfRunner:
                 time_independent_data,
                 edge_data,
                 time_dependent_data)
-            log_t = self.__get_time_stamp_seconds(start_time)
+
             self.__set_logger_message(
-                'T+ %.2f :: retrieved data for css %s' % (log_t, css_name))
+                'Retrieved data for cross-section')
 
             # Build cross-section
+            self.__set_logger_message('Start building geometry')
             cross_section.build_from_fm(fm_data=fm_data)
-            log_t = self.__get_time_stamp_seconds(start_time)
+            
             self.__set_logger_message(
-                'T+ %.2f ::' % (log_t) +
-                ' cross-section derived, starting correction.....')
+                'Cross-section derived, starting correction.....')
 
             # Delta-h correction
             self._calculate_css_correction(
-                input_param_dict, cross_section, start_time)
+                input_param_dict, cross_section)
 
             # Reduce number of points in cross-section
             self._reduce_css_points(
-                input_param_dict, cross_section, start_time)
+                input_param_dict, cross_section)
 
             # assign roughness
+            self.__set_logger_message('Starting computing roughness tables')
             cross_section.assign_roughness(fm_data)
-            log_t = self.__get_time_stamp_seconds(start_time)
+            
             self.__set_logger_message(
-                'T+ %.2f :: computed roughness' % (log_t))
+                'computed roughness')
 
         except Exception as e_info:
             self.__set_logger_message(
@@ -386,14 +386,13 @@ class Fm2ProfRunner:
     def _calculate_css_correction(
             self,
             input_param_dict: Mapping[str, float],
-            css: CE.CrossSection,
-            start_time: float):
+            css: CE.CrossSection):
         """Calculates the Cross Section correction if needed.
 
         Arguments:
             input_param_dict {Mapping[str,float]} -- [description]
             css {CE.CrossSection} -- [description]
-            start_time {float} -- [description]
+            
         """
         if not css:
             self.__set_logger_message('No Cross Section was provided.')
@@ -411,9 +410,9 @@ class Fm2ProfRunner:
         if sd_storage_value == 1:
             try:
                 css.calculate_correction(sd_transition_value)
-                log_t = (datetime.datetime.now()-start_time)
+                
                 self.__set_logger_message(
-                    'T+ %.2f :: correction finished' % log_t.total_seconds())
+                    'correction finished')
             except Exception as e_error:
                 e_message = str(e_error)
                 self.__set_logger_message(
@@ -424,8 +423,7 @@ class Fm2ProfRunner:
     def _reduce_css_points(
             self,
             input_param_dict: Mapping[str, str],
-            css: CE.CrossSection,
-            start_time: float):
+            css: CE.CrossSection):
         """Returns a valid value for the number of css points read from ini file.
 
         Arguments:
@@ -450,18 +448,14 @@ class Fm2ProfRunner:
 
         try:
             css.reduce_points(n=css_pt_value, verbose=False)
-            log_time = (datetime.datetime.now()-start_time)
-            self.__set_logger_message(
-                'T+ {:.2f}'.format(log_time.total_seconds()) +
-                ' :: simplified cross-section to' +
-                ' {:d} points'.format(css_pt_value))
+
         except Exception as e_error:
             e_message = str(e_error)
             self.__set_logger_message(
                 'Exception thrown while trying to reduce the css points. ' +
                 '{}'.format(e_message))
 
-    def __set_logger_message(self, err_mssg: str):
+    def __set_logger_message(self, err_mssg: str, level='info'):
         """Sets message to logger if this is set.
 
         Arguments:
@@ -469,7 +463,20 @@ class Fm2ProfRunner:
         """
         if not self.__logger:
             return
-        self.__logger.write(err_mssg)
+        
+        if level.lower() not in ['info', 'debug', 'warning', 'error', 'critical']:
+            self.__logger.error("{} is not valid logging level.".format(level.lower()))
+
+        if level.lower()=='info':
+            self.__logger.info(err_mssg)
+        elif level.lower()=='debug':
+            self.__logger.debug(err_mssg)
+        elif level.lower()=='warning':
+            self.__logger.warning(err_mssg)
+        elif level.lower()=='error':
+            self.__logger.error(err_mssg)
+        elif level.lower()=='critical':
+            self.__logger.critical(err_mssg)
 
     def __get_time_stamp_seconds(self, start_time: datetime):
         """Returns a time stamp with the time difference
@@ -520,3 +527,26 @@ class Fm2ProfRunner:
             'Saved {} for {} plot in {}.'.format(name, figType, plotLocation))
 
         return
+
+    def __add_filehandler_to_logger(self, output_dir, filename='fm2prof.log'):
+        # create file handler
+        fh = logging.FileHandler(os.path.join(output_dir, filename))
+        fh.setLevel(logging.DEBUG)
+        fh.setFormatter(self.__logformatter)
+        self.__logger.addHandler(fh)
+
+    def __create_logger(self):
+        
+        # Create logger
+        self.__logger = logging.getLogger(__name__)
+        self.__logger.setLevel(logging.DEBUG)
+        
+        # create formatter
+        self.__logformatter = CE.ElapsedFormatter()
+        
+        # create console handler
+        ch = logging.StreamHandler()
+        ch.setLevel(logging.DEBUG)
+        ch.setFormatter(self.__logformatter)
+        self.__logger.addHandler(ch)
+
