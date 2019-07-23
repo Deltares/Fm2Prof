@@ -18,9 +18,12 @@ Contact: K.D. Berends (koen.berends@deltares.nl, k.d.berends@utwente.nl)
 # region // imports
 import numpy as np
 import pandas as pd
+import logging
+from datetime import timedelta, datetime
 from functools import reduce
 import scipy.optimize as so
 from time import time
+import seaborn as sns
 
 from fm2prof import common
 from fm2prof import Functions as FE
@@ -93,6 +96,7 @@ class CrossSection:
     __cs_parameter_Frictionweighing = 'Frictionweighing'
     __cs_parameter_sectionsmethod = 'sectionsmethod'
 
+    __logger = None
     def __init__(self, InputParam_dict, name : str, length : float, location : tuple, branchid = "not defined", chainage=0):
         """                
         Arguments:
@@ -153,22 +157,7 @@ class CrossSection:
         self.temp_param_skip_maps = 2
         self.parameters = InputParam_dict
 
-    def optimisation_function(self, opt_in):
-        """
-        Objective function used in optimising a delta-h correction for parameters:
-            crest_level         : level at which the correction begins
-            transition_height   : height over which volume is released
-            extra_volume        : total extra volume
-
-
-        :param opt_in: tuple
-        :return:
-        """
-        (crest_level, extra_volume) = opt_in
-        transition_height = self.parameters[self.__cs_parameter_transitionheight_sd]
-        predicted_volume = self._css_total_volume+FE.get_extra_total_area(self._css_z, crest_level, transition_height)*extra_volume
-        return FE.return_volume_error(predicted_volume, self._fm_total_volume)
-
+    # Public functions
     def build_from_fm(self, fm_data):
         """
         Build 1D geometrical cross-section from FM data.
@@ -195,16 +184,19 @@ class CrossSection:
             bedlevel_matrix[t] = bedlevel
 
         # Retrieve the water-depth & water level nearest to the cross-section location
+        self._set_logger_message('Retrieving centre point values')
         (centre_depth, centre_level) = FE.get_centre_values(self.location, fm_data['x'], fm_data['y'], waterdepth, waterlevel)
 
         # apply rolling average over the velocities to smooth out extreme values
         velocity = velocity.rolling(window=10, min_periods=1, center=True, axis=1).mean()
 
         # Identify river lakes (plassen)
-        plassen_mask, wet_not_plas_mask, plassen_depth_correction = self.__identify_lakes(waterdepth)  
+        self._set_logger_message('Identifying lakes')
+        plassen_mask, wet_not_plas_mask, plassen_depth_correction = self._identify_lakes(waterdepth)  
 
         # Masks for wet and flow cells (stroomvoeringscriteria)
-        flow_mask = self.__distinguish_flow_from_storage(waterdepth, velocity)
+        self._set_logger_message('Seperating flow from storage')
+        flow_mask = self._distinguish_flow_from_storage(waterdepth, velocity)
                
         # Calculate area and volume as function of waterlevel & waterdepth
         self._fm_wet_area = np.nansum(area_matrix[wet_not_plas_mask], axis=0)
@@ -230,10 +222,12 @@ class CrossSection:
         self._fm_flow_area = self._fm_flow_area[mono_mask]
         
         # Compute geometry above z0 - Water level dependent calculation
-        self.__compute_css_above_z0(centre_level)
+        self._set_logger_message('Computing cross-section from water levels')
+        self._compute_css_above_z0(centre_level)
         
         # Compute geometry below z0 - Water level independent calculation
-        self.__extend_css_below_z0(centre_level, centre_depth, bedlevel_matrix, area_matrix, plassen_mask)
+        self._set_logger_message('Computing cross-section from bed levels')
+        self._extend_css_below_z0(centre_level, centre_depth, bedlevel_matrix, area_matrix, plassen_mask)
 
         # Compute 1D volume as integral of width with respect to z times length
         self._css_total_volume = np.append([0], np.cumsum(self._css_total_width[1:]*np.diff(self._css_z)*self.length))
@@ -246,61 +240,21 @@ class CrossSection:
         # convert to float64 array for uniformity (apparently entries can be float32)
         self._css_z = np.array(self._css_z, dtype=np.dtype('float64')) 
         
-    def __distinguish_flow_from_storage(self, waterdepth, velocity):
+    def optimisation_function(self, opt_in):
         """
-        Defines mask which is False when flow is below a certain threshold. 
-        (Stroomvoeringscriteriumfunctie)
+        Objective function used in optimising a delta-h correction for parameters:
+            crest_level         : level at which the correction begins
+            transition_height   : height over which volume is released
+            extra_volume        : total extra volume
 
-        Arguments:
-            waterdepth: pandas Dataframe with cell id for index and time in columns
-            velocity: pandas Dataframe with cell id for index and time in columns
 
-        Returns:
-            flow_mask: pandas Dataframe with cell id for index and time in columns. 
-                       True for flow, False for storage
+        :param opt_in: tuple
+        :return:
         """
-        flow_mask = (waterdepth > 0) & \
-                    (velocity > self.parameters[self.__cs_parameter_velocity_threshold]) & \
-                    (velocity > self.parameters[self.__cs_parameter_relative_threshold]*np.mean(velocity))
-
-        # shallow flows should not be used for identifying storage (cells with small velocities are uncorrectly seen as storage)
-        waterdepth_correction = (waterdepth > 0) & (waterdepth < self.parameters[self.__cs_parameter_min_depth_storage])
-
-        # combine flow and depth mask to avoid assigning shallow flows to storage
-        #flow_mask = reduce(np.logical_or, [(flow_mask == True), (waterdepth_correction == True)])
-        flow_mask = flow_mask | waterdepth_correction
-
-        return flow_mask
-        
-    def __extend_css_below_z0(self, centre_level, centre_depth, bedlevel_matrix, area_matrix, plassen_mask):
-        """
-        Extends the cross-sectional information below the water level at the first timestep,
-        under assumption that the polygon formed by the water level and the bed level is convex. 
-        It works by walking down to the bed level at the center point in 'virtual water level steps'. 
-        At each step, we sum the area of cells width bedlevels which would be submerged at that 
-        virtual water level. 
-        """
-        level_z0 = centre_level[0]
-        bdata = bedlevel_matrix[~plassen_mask]
-        bmask = bdata < level_z0
-        
-        bedlevels_below_z0 = bdata[bmask]
-        lowest_level_below_z0 = np.nanmin(np.unique(bedlevels_below_z0.values.T[-1]))
-        lowest_level_below_z0 = centre_level[0] - centre_depth[0]
-
-        for unique_level_below_z0 in reversed(np.linspace(lowest_level_below_z0, level_z0, 10)):
-
-            # count area
-            areas = area_matrix[bedlevels_below_z0 <= unique_level_below_z0]
-            area_at_unique_level = np.nansum(areas.values.T[-1])
-            
-            self._css_z = np.insert(self._css_z, 0, unique_level_below_z0)
-            self._css_flow_width = np.insert(self._css_flow_width, 0, area_at_unique_level/self.length)
-            self._css_total_width = np.insert(self._css_total_width, 0, area_at_unique_level/self.length)
-            self._fm_wet_area = np.insert(self._fm_wet_area, 0, area_at_unique_level)
-            self._fm_flow_area = np.insert(self._fm_flow_area, 0, area_at_unique_level) 
-            self._fm_flow_volume = np.insert(self._fm_flow_volume, 0, np.nan) 
-            self._fm_total_volume = np.insert(self._fm_total_volume, 0, np.nan) 
+        (crest_level, extra_volume) = opt_in
+        transition_height = self.parameters[self.__cs_parameter_transitionheight_sd]
+        predicted_volume = self._css_total_volume+FE.get_extra_total_area(self._css_z, crest_level, transition_height)*extra_volume
+        return FE.return_volume_error(predicted_volume, self._fm_total_volume)
 
     def calculate_correction(self, transition_height:float):
         """
@@ -321,6 +275,8 @@ class CrossSection:
         initial_crest = self._css_z[np.nanargmin(initial_error)]
         initial_volume = np.abs(initial_error[-1])
 
+        self._set_logger_message("Initial crest: {} m".format(initial_crest), level='debug')
+        self._set_logger_message("Initial volume: {} m".format(initial_volume), level='debug')
         # Optimise attributes
         opt = so.minimize(self.optimisation_function,
                           (initial_crest, initial_volume),
@@ -330,7 +286,11 @@ class CrossSection:
         # Unpack optimisation results
         crest_level = opt['x'][0]
         extra_volume = opt['x'][1]
-
+        self._set_logger_message("final costs: {}".format(opt['fun']), level='debug')
+        self._set_logger_message("Optimizer msg: {}".format(opt['message']), level='debug')
+        self._set_logger_message("Optimized crest: {} m".format(crest_level), level='debug')
+        self._set_logger_message("Optimized volume: {} m".format(extra_volume), level='debug')
+        
         if transition_height is None:
             transition_height = 0.5            
         extra_area_percentage = FE.get_extra_total_area(self._css_z, crest_level, transition_height)
@@ -409,6 +369,50 @@ class CrossSection:
         self.alluvial_edge_indices = C_sections_edge[0]
         self.nonalluvial_edge_indices = C_sections_edge[1]
 
+    def reduce_points(self, n, method='visvalingam_whyatt', verbose=True):
+        """
+        Reduces the number of points from _css attributes to a preset maximum.
+
+        Implemented vertex reduction methods:
+
+        'visvalingam_whyatt'
+        Based on Visvalingam, M and Whyatt J D (1993), "Line Generalisation by Repeated Elimination of Points",
+        Cartographic J., 30 (1), 46 - 51
+
+        :param n: int
+        :param method: str
+        :param verbose: boolean
+        :return:
+        """
+
+        n_before_reduction = len(self._css_total_width)
+
+        points = np.array([[self._css_z[i], self._css_total_width[i]] for i in range(n_before_reduction)])
+        reduced_index = n_before_reduction - 1 # default is the same value as it came
+        if method.lower() == 'visvalingam_whyatt':
+            try:
+                simplifier = PS.VWSimplifier(points)
+                reduced_index = simplifier.from_number_index(n)
+            except Exception as e:
+                print('Exception thrown while using polysimplify: {}'.format(str(e)))
+
+        # Write to attributes       
+        self.z = self._css_z[reduced_index]
+        self.total_width = self._css_total_width[reduced_index]
+        self.flow_width = self._css_flow_width[reduced_index]
+
+        self._set_logger_message("Cross-section reduced from {} to {} points".format(n_before_reduction, len(self.total_width)))
+
+        self._css_is_reduced = True
+
+    def set_logger(self, logger):
+        """ should be given a logger object (python standard library) """
+        assert isinstance(logger, logging.Logger), 'logger should be instance of logging.Logger class'
+        
+        self.__logger = logger
+
+    # Private Functions
+
     def _calc_roughness_width(self, splitpoint, link_indices, fm_data):
         # get the 2 nodes for every alluvial edge
         section_nodes = fm_data['edge_nodes'][link_indices]
@@ -448,55 +452,10 @@ class CrossSection:
 
         return np.average(bedlevels)
 
-
-    
     def _calc_chezy(self, depth, manning):
         return depth**(1/float(6)) / manning
 
-    def reduce_points(self, n, method='visvalingam_whyatt', verbose=True):
-        """
-        Reduces the number of points from _css attributes to a preset maximum.
-
-        Implemented vertex reduction methods:
-
-        'visvalingam_whyatt'
-        Based on Visvalingam, M and Whyatt J D (1993), "Line Generalisation by Repeated Elimination of Points",
-        Cartographic J., 30 (1), 46 - 51
-
-        :param n: int
-        :param method: str
-        :param verbose: boolean
-        :return:
-        """
-
-        n_before_reduction = len(self._css_total_width)
-
-        #points = np.array([[self._css_z[i], self._css_total_width[i], self._css_flow_width[i]] for i in range(n_before_reduction)])
-        points = np.array([[self._css_z[i], self._css_total_width[i]] for i in range(n_before_reduction)])
-        reduced_index = n_before_reduction - 1 # default is the same value as it came
-        if method.lower() == 'visvalingam_whyatt':
-            try:
-                simplifier = PS.VWSimplifier(points)
-                reduced_index = simplifier.from_number_index(n)
-            except Exception as e:
-                print('Exception thrown while using polysimplify: {}'.format(str(e)))
-
-        # Write to attributes
-        #self.z = np.array(self._css_z)
-        #self.total_width = self._css_total_width
-        #self.flow_width = self._css_flow_width
-        
-        self.z = self._css_z[reduced_index]
-        self.total_width = self._css_total_width[reduced_index]
-        self.flow_width = self._css_flow_width[reduced_index]
-
-        if verbose:
-            print("Reduced from %s to %s points in %03f seconds" % (n_before_reduction, n, end_time-start_time))
-
-        self._css_is_reduced = True
-
-
-    def __identify_lakes(self, waterdepth):
+    def _identify_lakes(self, waterdepth):
         """
         Find cells that do not have rising water depths for a period of time (__cs_parameter_plassen_timesteps)
 
@@ -542,7 +501,7 @@ class CrossSection:
         #print (wet_mask & pmtmask)
         return plassen_mask, wet_not_plas_mask, plassen_depth_correction
 
-    def __compute_css_above_z0(self, centre_level):
+    def _compute_css_above_z0(self, centre_level):
         """
         'Area method': compute width from area
         
@@ -557,9 +516,92 @@ class CrossSection:
         self._css_total_width = np.array(self._fm_wet_area)/self.length
         self._css_flow_width = np.array(self._fm_flow_area)/self.length
 
+        # Flow width must increase at each z
+        for i in range(2, len(self._css_flow_width)+1):
+            self._css_flow_width[-i] = np.min([self._css_flow_width[-i], self._css_flow_width[-i+1]])
+
         # fix error when flow_width > total_width (due to floating points)
         self._css_flow_width[self._css_flow_width > self._css_total_width] = self._css_total_width[self._css_flow_width > self._css_total_width]
 
+    def _distinguish_flow_from_storage(self, waterdepth, velocity):
+        """
+        Defines mask which is False when flow is below a certain threshold. 
+        (Stroomvoeringscriteriumfunctie)
+
+        Arguments:
+            waterdepth: pandas Dataframe with cell id for index and time in columns
+            velocity: pandas Dataframe with cell id for index and time in columns
+
+        Returns:
+            flow_mask: pandas Dataframe with cell id for index and time in columns. 
+                       True for flow, False for storage
+        """
+        flow_mask = (waterdepth > 0) & \
+                    (velocity > self.parameters[self.__cs_parameter_velocity_threshold]) & \
+                    (velocity > self.parameters[self.__cs_parameter_relative_threshold]*np.mean(velocity))
+
+        # shallow flows should not be used for identifying storage (cells with small velocities are uncorrectly seen as storage)
+        waterdepth_correction = (waterdepth > 0) & (waterdepth < self.parameters[self.__cs_parameter_min_depth_storage])
+
+        # combine flow and depth mask to avoid assigning shallow flows to storage
+        #flow_mask = reduce(np.logical_or, [(flow_mask == True), (waterdepth_correction == True)])
+        flow_mask = flow_mask | waterdepth_correction
+
+        return flow_mask
+        
+    def _extend_css_below_z0(self, centre_level, centre_depth, bedlevel_matrix, area_matrix, plassen_mask):
+        """
+        Extends the cross-sectional information below the water level at the first timestep,
+        under assumption that the polygon formed by the water level and the bed level is convex. 
+        It works by walking down to the bed level at the center point in 'virtual water level steps'. 
+        At each step, we sum the area of cells width bedlevels which would be submerged at that 
+        virtual water level. 
+        """
+        level_z0 = centre_level[0]
+        bdata = bedlevel_matrix[~plassen_mask]
+        bmask = bdata < level_z0
+        
+        bedlevels_below_z0 = bdata[bmask]
+        lowest_level_below_z0 = np.nanmin(np.unique(bedlevels_below_z0.values.T[-1]))
+        lowest_level_below_z0 = centre_level[0] - centre_depth[0]
+
+        for unique_level_below_z0 in reversed(np.linspace(lowest_level_below_z0, level_z0, 10)):
+
+            # count area
+            areas = area_matrix[bedlevels_below_z0 <= unique_level_below_z0]
+            area_at_unique_level = np.nansum(areas.values.T[-1])
+            
+            self._css_z = np.insert(self._css_z, 0, unique_level_below_z0)
+            self._css_flow_width = np.insert(self._css_flow_width, 0, area_at_unique_level/self.length)
+            self._css_total_width = np.insert(self._css_total_width, 0, area_at_unique_level/self.length)
+            self._fm_wet_area = np.insert(self._fm_wet_area, 0, area_at_unique_level)
+            self._fm_flow_area = np.insert(self._fm_flow_area, 0, area_at_unique_level) 
+            self._fm_flow_volume = np.insert(self._fm_flow_volume, 0, np.nan) 
+            self._fm_total_volume = np.insert(self._fm_total_volume, 0, np.nan) 
+
+    def _set_logger_message(self, err_mssg: str, level='info'):
+        """Sets message to logger if this is set.
+
+        Arguments:
+            err_mssg {str} -- Error message to send to logger.
+        """
+        if not self.__logger:
+            return
+        
+        if level.lower() not in ['info', 'debug', 'warning', 'error', 'critical']:
+            self.__logger.error("{} is not valid logging level.".format(level.lower()))
+
+        if level.lower()=='info':
+            self.__logger.info(err_mssg)
+        elif level.lower()=='debug':
+            self.__logger.debug(err_mssg)
+        elif level.lower()=='warning':
+            self.__logger.warning(err_mssg)
+        elif level.lower()=='error':
+            self.__logger.error(err_mssg)
+        elif level.lower()=='critical':
+            self.__logger.critical(err_mssg)
+        
     @staticmethod
     def _check_monotonicity(arr, method=2):
         """
@@ -588,14 +630,51 @@ class CrossSection:
         elif method==2:
             return np.argsort(arr)
 
-class Logger:
-    def __init__(self, outputdir):
-        self._outputdir = outputdir
-        with open('{}/{}.log'.format(outputdir, 'fm2prof'), 'w') as f:
-            pass
+class ElapsedFormatter():
+    __new_iteration = True
+    def __init__(self):
+        self.start_time = time()
+        self.number_of_iterations = 1
+        self.current_iteration = 0
 
-    
-    def write(self, arg):
-        with open('{}/{}.log'.format(self._outputdir, 'fm2prof'), 'a') as f:
-            f.write("{}\n".format(arg))
-        print(arg)
+    def format(self, record):
+        if self.__new_iteration:
+            return self.__format_header(record)
+        else:
+            return self.__format_message(record)
+
+    def __format_header(self, record):
+        self.__new_iteration = False
+        elapsed_seconds = record.created - self.start_time
+        return "{now} {level:>7} :: {progress:4.0f}% :: {message} ({file})".format(
+                                                        now=datetime.now().strftime("%Y-%m-%d %H:%M"), 
+                                                        level=record.levelname, 
+                                                        elapsed=elapsed_seconds, 
+                                                        message=record.getMessage(), 
+                                                        file=record.filename,
+                                                        progress=100*self.current_iteration/self.number_of_iterations)
+
+    def __format_message(self, record):
+        elapsed_seconds = record.created - self.start_time
+        return "{now} {level:>7} :: {progress:4.0f}% ::   > T+ {elapsed:.2f}s {message} ({file})".format(
+                                                        now=datetime.now().strftime("%Y-%m-%d %H:%M"), 
+                                                        level=record.levelname, 
+                                                        elapsed=elapsed_seconds, 
+                                                        message=record.getMessage(), 
+                                                        file=record.filename,
+                                                        progress=100*self.current_iteration/self.number_of_iterations)
+
+    def __reset(self):
+        self.start_time = time()
+
+    def start_new_iteration(self):
+        self.current_iteration += 1
+        self.next_step()
+
+    def next_step(self):
+        self.__new_iteration = True
+        self.__reset()
+
+    def set_number_of_iterations(self, n):
+        assert n>0, 'Total number of iterations should be higher than zero'
+        self.number_of_iterations=n
