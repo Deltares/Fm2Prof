@@ -162,6 +162,9 @@ def get_extra_total_area(waterlevel, crest_level, transition_height, hysteresis=
     return 1/(1+np.e**(np.log(0.00001)/(transition_height)*(waterlevel-(crest_level+0.5*transition_height))))
 
 def return_volume_error(predicted, measured, gof='rmse'):
+    non_nan_mask = ~np.isnan(predicted) & ~np.isnan(measured)
+    predicted = predicted[non_nan_mask]
+    measured = measured[non_nan_mask]
     error = np.array(predicted - measured)/np.maximum(np.array(measured), np.ones(len(measured)))
     return np.sum(error**2)
 
