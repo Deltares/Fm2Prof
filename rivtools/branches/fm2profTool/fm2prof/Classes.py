@@ -18,17 +18,9 @@ Contact: K.D. Berends (koen.berends@deltares.nl, k.d.berends@utwente.nl)
 # region // imports
 import numpy as np
 import pandas as pd
-import matplotlib as mpl
-import matplotlib.pyplot as plt
-import matplotlib.ticker as mtick
-import matplotlib.colors as mcolors
-import matplotlib.patches as mpatches
-import matplotlib.cm as cmx
 from functools import reduce
-from mpl_toolkits.mplot3d import Axes3D
 import scipy.optimize as so
 from time import time
-import seaborn as sns
 
 from fm2prof import common
 from fm2prof import Functions as FE
@@ -36,7 +28,6 @@ from typing import Mapping, Sequence
 from .lib import polysimplify as PS
 
 import os
-import matplotlib.font_manager as font_manager
 
 pd.options.mode.chained_assignment = None  # default='warn'
 # endregion
@@ -157,10 +148,6 @@ class CrossSection:
         # flags
         self._css_is_corrected = False
         self._css_is_reduced = False
-
-        # DEFAULTS
-        self.color_palette = 'Tableau20'
-        self._set_plotstyle(style=3)
 
         # PARAMETERS
         self.temp_param_skip_maps = 2
@@ -461,53 +448,7 @@ class CrossSection:
 
         return np.average(bedlevels)
 
-    def _plot_roughness(self, fm_data, b_plot_nonalluvial=True):
-        #sns.set(style='ticks')
-        #sns.set(font_scale=1.5)
 
-        fig = plt.figure(figsize=(10,7))
-        ax = fig.add_subplot(111)
-
-        colors = sns.color_palette()
-
-        #for i in fm_data['chezy'].T:
-        #    if i in self.roughness_sections[0]:
-        #        ax.plot(self._css_z, fm_data['chezy'].T[i].values, '.', color=[0.6, 0.6, 0.6])
-        #    elif i in self.roughness_sections[1]:
-        #        ax.plot(self._css_z, fm_data['chezy'].T[i].values, '^', markeredgecolor=[0.6, 0.6, 0.6], color=[0.6, 0.6, 0.6])
-
-        depth_main = np.append(np.arange(0.1, self.alluvial_friction_table[0][0] - np.min(self._css_z), 0.1), self.alluvial_friction_table[0] - np.min(self._css_z))
-        chezy_main = self._calc_chezy(depth_main, 0.03)
-
-        depth_flood = np.append(np.arange(0.1, self.alluvial_friction_table[0][0] - 0, 0.1), self.nonalluvial_friction_table[0] - 0)
-        chezy_flood = self._calc_chezy(depth_flood, 0.07)
-
-        #depth_flood_1 = depth_flood - 0.5
-        #chezy_flood_1 = self._calc_chezy(depth_flood_1, 0.07)
-
-        ax.plot(depth_main - 2.5, chezy_main, '-', color=colors[0], linewidth=2, alpha=0.4, label='Analytic calculation')
-
-        if b_plot_nonalluvial:
-            ax.plot(depth_flood-0.5, chezy_flood, '-', color=colors[0], linewidth=2, alpha=0.4)
-
-        #ax.plot(depth_flood_1 + 0.5, chezy_flood_1, '-', color=colors[0], linewidth=2, alpha=0.4)
-
-        ax.plot(self.alluvial_friction_table[0], self.alluvial_friction_table[1], '--', dashes=(6, 12), color=colors[1], linewidth=3, label='Alluvial roughness')
-
-        if b_plot_nonalluvial:
-            ax.plot(self.nonalluvial_friction_table[0], self.nonalluvial_friction_table[1], '--', dashes=(3, 3), color=colors[2], linewidth=3, label='Nonalluvial roughness')
-
-        ax.set_xlabel('Waterlevel [m]')
-        ax.set_ylabel('Chezy roughness coefficient $[\mathrm{m^{0.5}/s}]$')
-        #ax.set_title('Chezy roughness for cross-section')
-        ax.legend(loc=2)
-
-        ax.set(xlim=(np.min(self._css_z), np.max(self.alluvial_friction_table[0]) + 0.2))
-        ax.set(ylim=(0, np.max(self.alluvial_friction_table[1]) + 5))
-
-        #plt.gca().set_aspect('equal', adjustable='box')
-        sns.despine()
-        return fig
     
     def _calc_chezy(self, depth, manning):
         return depth**(1/float(6)) / manning
@@ -554,282 +495,6 @@ class CrossSection:
 
         self._css_is_reduced = True
 
-    @staticmethod
-    def _set_plotstyle(style=2):
-        """
-        Set plotting style. 
-
-        Keyword argument:
-
-        style : int, 1 = 'ggplot' style
-                     2 = 'seaborn whitegrid style'
-        """
-        if style == 1:
-            # 'GGPLOT' style
-            plt.style.use('ggplot')
-            font = {'family': 'sans-serif',
-                    'size': 18}
-            mpl.rc('font', **font)
-        elif style == 2:
-            # Style more suited for publication
-            sns.set(font_scale=2)
-            sns.set_style("whitegrid", {""
-                "font.family": "serif",
-                "font.serif": ["Times", "Palatino", "serif"]  # ,"font.size": 22
-            })
-
-            sns.set_context("paper", rc={"axes.titlesize":18,"axes.labelsize":15}) # "font.size":18,
-            sns.set(font='serif')
-        elif style == 3:
-            # Style more suited for publication
-
-            # Add custom font
-            path = os.path.join(os.path.dirname(__file__))
-            font_dirs = [path, ]
-            font_files = font_manager.findSystemFonts(fontpaths=font_dirs)
-            font_list = font_manager.createFontList(font_files)
-            font_manager.fontManager.ttflist.extend(font_list)
-
-            #vitamin_c_palette = ["#004358", "#FD7400", "#1F8A70", "#FFE11A", "#BEDB39"]
-
-            #sns.set_context("paper", rc={"text.usetex": True, "lines.linewidth": 4})
-            #sns.set("paper", font="Linux Libertine O", font_scale=2.5, style='whitegrid', palette=vitamin_c_palette)
-
-            # Set color palette
-
-            #sns.set_palette(vitamin_c_palette)
-            
-    def _plot_2d_model_grid(self, ax_grid, fm_data, node_coordinates, color, type='bedlevel'):
-        colors = sns.color_palette()
-
-        # plot nodes as points
-        if type == 'bedlevel':
-            scatter = ax_grid.scatter(fm_data['x'], fm_data['y'], c=list(fm_data['bedlevel']), cmap='viridis', s=30)
-            #ax_grid.set_xlabel('x-coordinate [m]', fontsize=14)
-            #ax_grid.set_ylabel('y-coordinate [m]', fontsize=14)
-            cbar = plt.colorbar(scatter)
-            cbar.ax.tick_params(labelsize=14)
-            cbar.set_label('Bedlevel [m]', fontsize=14)
-
-            # plot line sections between nodes
-            for nodes in fm_data['edge_nodes']:
-                nodes -= 1
-                x_coordinates = np.array(node_coordinates['x'][nodes])
-                y_coordinates = np.array(node_coordinates['y'][nodes])
-
-                ax_grid.plot(x_coordinates, y_coordinates, color=color, alpha=1)
-        elif type == 'links':
-            roughness = np.array(fm_data['chezy'].T.iloc[-1])
-
-            #remove nan values
-            roughness = roughness[~np.isnan(roughness)]
-
-            color_info = ax_grid.contourf([[0,0],[0,0]], np.sort(np.unique(roughness)), cmap='viridis')
-            plt.cla()
-
-            cmap = plt.get_cmap('viridis')
-            cnorm = mcolors.Normalize(vmin=np.min(roughness), vmax=np.max(roughness))
-            scalarMap = cmx.ScalarMappable(norm=cnorm, cmap=cmap)
-
-            ax_grid.set_axis_bgcolor('w')
-            ax_grid.grid(False)
-            ax_grid.set_xticklabels([])
-            ax_grid.set_yticklabels([])
-
-            for index, nodes in enumerate(fm_data['edge_nodes']):
-                nodes -= 1
-
-                x_coordinates = np.array(node_coordinates['x'][nodes])
-                y_coordinates = np.array(node_coordinates['y'][nodes])
-                value = fm_data['chezy'].T.iloc[-1].iloc[index]
-                colorVal = scalarMap.to_rgba(value)
-
-                ax_grid.plot(x_coordinates, y_coordinates, color=colorVal, alpha=1)
-
-            cbar = plt.colorbar(color_info, format='%d')
-            cbar.ax.tick_params(labelsize=14)
-            #cbar.ax.yaxis.set_major_formatter(mtick.FormatStrFormatter('%d'))
-            cbar.set_label(r'$\mathrm{Ch\acute{e}zy}$ roughness coefficient $[\mathrm{m^{0.5}/s}]$', fontsize=14)
-            #colorbar = mpl.colorbar.ColorbarBase(ax_grid, cmap=cmap, norm=cnorm, orientation='vertical')
-            #colorbar.set_label('Ch\'{e}zy roughness coefficient $[\mathrm{m^{0.5}/s}]$')
-        else:
-            # plot line sections between nodes
-            for nodes in fm_data['edge_nodes']:
-                nodes -= 1
-                x_coordinates = np.array(node_coordinates['x'][nodes])
-                y_coordinates = np.array(node_coordinates['y'][nodes])
-
-                ax_grid.plot(x_coordinates, y_coordinates, color=color, alpha=1)
-
-        plt.gca().set_aspect('equal', adjustable='box')
-
-    def _plot_roughness_sections(self, full_grid_ax, fm_data, node_coordinates):
-        alluvial_nodes = fm_data['edge_nodes'][self.alluvial_edge_indices]
-        nonalluvial_nodes = fm_data['edge_nodes'][self.nonalluvial_edge_indices]
-
-        colors = sns.color_palette()
-
-        for index, node_indices in enumerate(alluvial_nodes):
-            x_coordinates = node_coordinates['x'][node_indices]
-            y_coordinates = node_coordinates['y'][node_indices]
-
-            if index == 0:
-                full_grid_ax.plot(x_coordinates, y_coordinates, linewidth=1, color=colors[0])
-            else:
-                full_grid_ax.plot(x_coordinates, y_coordinates, linewidth=1, color=colors[0])
-
-        for index, node_indices in enumerate(nonalluvial_nodes):
-            x_coordinates = node_coordinates['x'][node_indices]
-            y_coordinates = node_coordinates['y'][node_indices]
-
-            if index == 0:
-                full_grid_ax.plot(x_coordinates, y_coordinates, linewidth=1, color=colors[1])
-            else:
-                full_grid_ax.plot(x_coordinates, y_coordinates, linewidth=1, color=colors[1])
-
-        patch_alluvial = mpatches.Patch(color=colors[0], label='Alluvial')
-        patch_nonalluvial = mpatches.Patch(color=colors[1], label='Nonalluvial')
-
-        full_grid_ax.legend(loc=2, handles=[patch_alluvial, patch_nonalluvial])
-
-    def _plot_ponds(self, ax, fm_data, node_coordinates):
-        colors = sns.color_palette()
-
-        # plot line sections between nodes
-        for nodes in fm_data['edge_nodes']:
-            nodes -= 1
-            x_coordinates = np.array(node_coordinates['x'][nodes])
-            y_coordinates = np.array(node_coordinates['y'][nodes])
-
-            ax.plot(x_coordinates, y_coordinates, color='k', alpha=1)
-
-        plassen_x = fm_data['x'][self.plassen_mask]
-        plassen_y = fm_data['y'][self.plassen_mask]
-
-        ax.scatter(plassen_x, plassen_y, color=colors[1], s=30)
-        plt.gca().set_aspect('equal', adjustable='box')
-            
-    def _plot_zw(self, z_prof=None, w_prof=None):
-        """
-        Plot z/width graph.
-
-        :param ax: float, optional handle to pyplot axes object
-        :return:
-        """
-        #sns.set(style='ticks')
-        #sns.set(font_scale=1.5)
-
-        fig = plt.figure(figsize=(10, 7))
-        #gs = mpl.gridspec.GridSpec(1, 2, width_ratios=[6, 1])
-
-        #hLeft = fig.add_subplot(gs[0])
-        ax = fig.add_subplot(111)
-
-        #colors = common.get_color_palette()
-        #if self._css_is_reduced:
-        #    hLeft.plot(self.total_width, self.z,
-        #               linestyle='-',
-        #               marker='x',
-        #               color=colors[0],
-        #               label='Reduced')
-
-        # plot original profile
-        if w_prof != None:
-            ax.plot(w_prof, z_prof, linestyle='-', alpha=0.4, linewidth=2, label='Original')
-        
-        if self._css_is_reduced:
-            ax.plot(np.append([0], self.total_width * 0.5), np.append([self.z[0]], self.z), linewidth=2,
-                   linestyle='--',
-                   label='Generated')
-            ax.set(ylim=(np.min(self.z) - 0.1, np.max(self.z) + 0.1))
-        else:
-            ax.plot(np.append([0], self._css_total_width * 0.5), np.append([self._css_z[0]], self._css_z), linewidth=2,
-                   linestyle='--',
-                   label='Generated')
-
-            ax.set(ylim=(np.min(self._css_z) - 0.1, np.max(self._css_z) + 0.1))
-
-
-        plt.ylabel('Waterlevel [m]')
-        plt.xlabel('Width [m]')
-        plt.legend(loc=2)
-        sns.despine()
-        return fig
-
-        #hRight = fig.add_subplot(gs[1])
-        #hRight.plot(self.extra_area_percentage, self._css_z, linewidth=2, color=colors[6])
-        #hRight.text(0.5, self.crest_level,
-        #            '%.0f m2\n(%.1f pct)' %
-        #            (self.extra_total_volume/self.length, 100*self.extra_total_volume/self._css_total_volume[-1]),
-        #            horizontalalignment='center')
-
-        #hRight.set_yticks(hLeft.get_yticks())
-        #hRight.set_ylim(hLeft.get_ylim())
-        #hRight.set_xticks([0, 1])
-        #hRight.set_title('Delta-h correction')
-        #plt.setp(hRight.get_yticklabels(), visible=False)
-        #plt.subplots_adjust(right=0.85)
-        #hRight.set_axis_bgcolor(colors[1])
-        #plt.tight_layout()
-
-    def _plot_volume(self, ax=None, relative_error=True):
-        """
-        Plots (2x1) plot of waterlevel/volume and waterlevel/volume error
-
-        :param ax:
-        :param relative_error:
-        :return:
-        """
-
-        #colors = common.get_color_palette(self.color_palette)
-
-        #if not ax:
-        fig = plt.figure(figsize=(14, 7))
-        hError = fig.add_subplot(212)
-        hVolume = fig.add_subplot(211)
-
-        if relative_error:
-            hError.plot(self._css_z, 100*np.array(self._css_total_volume - self._fm_total_volume)/np.array(self._fm_total_volume), linewidth=2)
-            if self._css_is_corrected:
-                hError.plot(self._css_z, 100*np.array(self._css_total_volume_corrected - self._fm_total_volume) /
-                            np.array(self._fm_total_volume), '--', linewidth=2)
-
-                hError.set_ylabel('Relative error [%]')
-        else:
-            hError.yaxis.set_major_formatter(mtick.FormatStrFormatter('%.1e'))
-            hError.plot(self._css_z, np.array(self._css_total_volume - self._fm_total_volume), linewidth=2)
-            if self._css_is_corrected:
-                hError.plot(self._css_z, np.array(self._css_total_volume_corrected - self._fm_total_volume), linewidth=2)
-
-            hError.set_ylabel('Error of total volume [$\mathrm{m^3}$]')
-
-        hError.set_xlabel('Water level [m]')
-
-        #hVolume.yaxis.set_major_formatter(mtick.FormatStrFormatter('%.1e'))
-
-        hVolume.plot(self._css_z, np.array(self._fm_total_volume)*1e-6, 'k', linewidth=2, alpha=0.5, label='2D model results')
-        hVolume.plot(self._css_z, np.array(self._css_total_volume)*1e-6, '--', linewidth=2, label='1D result without correction')
-        if self._css_is_corrected:
-            hVolume.plot(self._css_z, np.array(self._css_total_volume_corrected)*1e-6, '--', linewidth=2, label='1D result with correction')
-
-        plt.legend(loc=2)
-        hVolume.set_ylabel('Total volume [million $\mathrm{m^3}$]')
-        plt.setp(hVolume.get_xticklabels(), visible=False)
-        return fig
-
-    def _plot_fm(self, fm_data):
-        fig = plt.figure(figsize=(20, 10))
-        h3dPlot = fig.add_subplot(111, projection='3d')
-
-        h3dPlot.scatter(list(fm_data['x']), list(fm_data['y']), list(fm_data['z']), c=fm_data['z'])
-
-        h3dPlot.scatter(self.location[0], self.location[1], np.max(fm_data['z']), c='k', marker='^', s=40)
-        plt.gca().invert_zaxis()
-        plt.title('Delft FM points attributed to cross-section')
-        return fig
-    
-    def _close_figure(self, figure):
-        plt.close(figure)
 
     def __identify_lakes(self, waterdepth):
         """
