@@ -131,19 +131,23 @@ class CompareIdealizedModel:
                     hpos, rpos, y, MainChannel)
 
     def __plot_volume(self, df, cs, output_folder):
-        fig, ax = plt.subplots(1, figsize=(10, 4))
-        tv_1d = df[df.id == cs]['1D_total_volume']
-        tv_1dsd = df[df.id == cs]['1D_total_volume_sd']
-        tv_2d = df[df.id == cs]['2D_total_volume']
-        ax.plot(tv_2d, '-', linewidth=5, color=[0.4]*3, label='2D')
-        ax.plot(tv_1d, '--r', label='1D without correction')
-        ax.plot(tv_1dsd, '-r', label='1D with correction')
+        _, ax = plt.subplots(1, figsize=(10, 4))
+        tv_1d = df[df.id==cs]['1D_total_volume']
+        tv_1dsd = df[df.id==cs]['1D_total_volume_sd']
+        fv_1d = df[df.id==cs]['1D_flow_volume']
+        tv_2d = df[df.id==cs]['2D_total_volume']
+        fv_2d = df[df.id==cs]['2D_flow_volume']
+        ax.plot(tv_2d, '-', linewidth=5, color=[0.4]*3, label='2D Total volume')
+        ax.plot(fv_2d, '--', linewidth=4, color=[0.8, 0, 0.8], label='2D Flow volume')	
+        ax.plot(tv_1dsd, '--r', label='1D Total volume (+sd)')
+        ax.plot(fv_1d, '-.c', label='1D Flow volume')
         ax.set_title(cs)
         ax.legend()
         ax.set_xlabel('Water level [m]')
         ax.set_ylabel('Volume [m$^3$]')
         plt.grid()
-        plt.savefig(os.path.join(output_folder, "{}_volumegraph.png".format(cs)))
+        cs_no_period = cs.replace('.','x') # latex won't allow periods 
+        plt.savefig(os.path.join(output_folder, "{}_volumegraph.png".format(cs_no_period)))
 
     def __get_geometry_data(self, input_file: str):
         """[summary]
