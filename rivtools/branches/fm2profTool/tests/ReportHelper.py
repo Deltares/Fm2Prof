@@ -38,27 +38,31 @@ def _get_case_figures(case_name: str, case_label: str, data_dir: str):
         Returns:
             {list} -- List of dictionaries (figures).
         """
-        figures_list = []
+        figures_list = {}
         case_dir = os.path.join(data_dir, case_name)
         case_fig_dir = os.path.join(case_dir, 'Figures')
         if not os.path.exists(case_fig_dir):
             return figures_list
 
-        rel_path = '../{}/Figures/'.format(case_name)
+        
         # Create entries for each figure in the directory
-        for fig in os.listdir(case_fig_dir):
-            fig_base_name = os.path.split(fig)[1]
-            fig_name = case_label + ' ' + os.path.splitext(fig_base_name)[0]
-            fig_name = fig_name.capitalize()
-            fig_key = fig_name.replace(' ', '_')
-            figure_dict = {
-                _fig_name_key: fig_name.replace('_', ' '),
-                _fig_key_key: fig_key.replace('_', '') + 'Key',
-                _fig_rel_path_key: rel_path + fig,
-                _fig_path_key: os.path.join(case_dir, fig)
-            }
-            figures_list.append(figure_dict)
-        return sorted(figures_list, key=lambda fig: fig[_fig_name_key])
+        for subdir in os.listdir(case_fig_dir):
+            rel_path = '../{}/Figures/{}/'.format(case_name, subdir)
+            figures_list[subdir] = list()
+            for fig in os.listdir(os.path.join(case_fig_dir, subdir)):
+                fig_base_name = os.path.split(fig)[1]
+                fig_name = case_label + ' ' + os.path.splitext(fig_base_name)[0]
+                fig_name = fig_name.capitalize()
+                fig_key = fig_name.replace(' ', '_')
+                figure_dict = {
+                    _fig_name_key: fig_name.replace('_', ' '),
+                    _fig_key_key: fig_key.replace('_', '') + 'Key',
+                    _fig_rel_path_key: rel_path + fig,
+                    _fig_path_key: os.path.join(case_dir, subdir, fig)
+                }
+                figures_list[subdir].append(figure_dict)
+            figures_list[subdir] = sorted(figures_list[subdir], key=lambda fig: fig[_fig_name_key])
+        return figures_list
 
 
 def _get_all_cases_and_figures(scenarios: list, data_dir: str):

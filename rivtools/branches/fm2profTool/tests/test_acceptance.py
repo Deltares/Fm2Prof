@@ -156,6 +156,7 @@ def _get_test_case_output_dir(case_name: str):
 
 
 class Test_Generate_Reports:
+    _latex_report_path = None
 
     @pytest.fixture(scope='class')
     def report_data(self):
@@ -169,7 +170,7 @@ class Test_Generate_Reports:
         yield test_data_dir_path, case_figures
 
     @pytest.mark.generate_test_report
-    def test_when_output_generated_then_generate_pdf_report(
+    def test_when_output_generated_then_generate_latex_source_file(
             self, report_data):
 
         assert report_data is not None, '' + \
@@ -180,9 +181,20 @@ class Test_Generate_Reports:
             report = LatexReport()
             latex_report_path = report._generate_python_report(
                 test_data_dir, cases_and_figures)
-            report._convert_to_pdf(latex_report_path)
         except Exception as e_info:
-            err_mssg = 'Error while generating python report ' + \
+            err_mssg = 'Error while generating latex source ' + \
+                '{}'.format(str(e_info))
+            pytest.fail(err_mssg)
+
+    @pytest.mark.generate_test_report
+    def test_when_latex_source_generated_then_compile_to_pdf(self):
+        
+        
+        try:
+            report = LatexReport()
+            report._convert_to_pdf("tests/Output/RunWithFiles_Output/latex_report/")
+        except Exception as e_info:
+            err_mssg = 'Error while compiling latex report ' + \
                 '{}'.format(str(e_info))
             pytest.fail(err_mssg)
 
@@ -379,6 +391,33 @@ class Test_Compare_Waal_Model:
         # 2. Try to compare.
         try:
             waal_comparer = CompareWaalModel()
+            output_1d, _ = waal_comparer._run_waal_1d_model(
+                case_name=_waal_case,
+                results_dir=fm2prof_dir,
+                sobek_dir=sobek_dir,
+                fm_dir=fm_dir)
+        except Exception as e_info:
+            pytest.fail(
+                'No exception expected but was thrown ' +
+                '{}.'.format(str(e_info)))
+
+        # 3. Verify final expectations
+        assert output_1d
+        assert os.path.exists(output_1d), '' + \
+                'No output found at {}.'.format(output_1d)
+
+    def test_when_sobek_output_exist_then_create_figures(self):
+        # 1. Set up test data
+        waal_test_folder = TestUtils.get_external_test_data_dir(_waal_case)
+        sobek_dir = os.path.join(waal_test_folder, 'Model_SOBEK')
+        fm_dir = os.path.join(waal_test_folder, 'Model_FM')
+        fm2prof_dir = _get_test_case_output_dir(_waal_case)
+
+        result_figures = []
+
+        # 2. Try to compare.
+        try:
+            waal_comparer = CompareWaalModel()
             result_figures = waal_comparer._compare_waal(
                 case_name=_waal_case,
                 results_dir=fm2prof_dir,
@@ -516,7 +555,8 @@ class Test_Compare_Idealized_Model:
         fm2prof_dir = _get_test_case_output_dir(case_name)
         # Data from the above tests is saved directly in fm2prof_dir,
         # not in case_name/output
-        fm2prof_fig_dir = os.path.join(fm2prof_dir, 'Figures')
+        fm2prof_fig_dir_head = os.path.join(fm2prof_dir, 'Figures')
+        fm2prof_fig_dir = os.path.join(fm2prof_fig_dir_head, 'Geometry')
 
         geometry_file_name = 'geometry.csv'
         input_geometry_file = os.path.join(fm2prof_dir, geometry_file_name)
@@ -524,9 +564,11 @@ class Test_Compare_Idealized_Model:
         # 2. Verify / create necessary folders and directories
         assert os.path.exists(input_geometry_file), '' + \
             'Input file {} could not be found'.format(input_geometry_file)
+        
         if os.path.exists(fm2prof_fig_dir):
             shutil.rmtree(fm2prof_fig_dir)
         os.makedirs(fm2prof_fig_dir)
+        #os.makedirs(fm2prof_fig_dir)
 
         #  3. Run
         tzw_values = self.__case_tzw_dict.get(case_name)
@@ -560,7 +602,7 @@ class Test_Compare_Idealized_Model:
             return
         # 1. Get all necessary output / input directories
         fm2prof_dir = _get_test_case_output_dir(case_name)
-        fm2prof_fig_dir = os.path.join(fm2prof_dir, 'Figures')
+        fm2prof_fig_dir = os.path.join(fm2prof_dir, 'Figures', 'Roughness')
 
         roughness_file_name = 'roughness.csv'
         input_roughness_file = os.path.join(
@@ -604,7 +646,7 @@ class Test_Compare_Idealized_Model:
         fm2prof_dir = _get_test_case_output_dir(case_name)
         # Data from the above tests is saved directly in fm2prof_dir,
         # not in case_name/output
-        fm2prof_fig_dir = os.path.join(fm2prof_dir, 'Figures')
+        fm2prof_fig_dir = os.path.join(fm2prof_dir, 'Figures', 'Volume')
 
         volume_file_name = 'volumes.csv'
         input_volume_file = os.path.join(fm2prof_dir, volume_file_name)

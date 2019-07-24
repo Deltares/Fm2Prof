@@ -16,7 +16,7 @@ class CompareWaalModel:
     __runner_script = 'dimr\\scripts\\run_dimr.bat'
     __1d_dir_name = 'dflow1d'
 
-    def _compare_waal(
+    def _run_waal_1d_model(
             self,
             case_name: str,
             results_dir: str,
@@ -62,14 +62,45 @@ class CompareWaalModel:
         sobek_xml_location = self.__create_xml_waal(case_name, sobek_dir)
 
         # 5. Run DIMR
-        self.__run_dimr_from_command(sobek_xml_location)
+        self.__run_dimr_from_command(sobek_xml_location)     
 
         # 6. Get observations.nc
         output_1d, output_2d = self.__get_observations(
-            sobek_dir, fm_dir, results_dir
-        )
+            sobek_dir, fm_dir, results_dir)   
 
-        # 7. Compare values Generate figures.
+        return output_1d, output_2d
+
+    def _compare_waal(
+            self,
+            case_name: str,
+            results_dir: str,
+            sobek_dir: str, fm_dir: str):
+        """Compares the output of a sobek and fm model run
+        based on the results obtained from a fm2prof run
+        (in results dir).
+
+        Arguments:
+            case_name {str} -- Name of the current case.
+            results_dir {str} -- Output results of Fm2Prof.
+            sobek_dir {str} -- Directory with Sobek model.
+            fm_dir {str} -- Directory with FM model.
+
+        Raises:
+            IOError: When results_dir does not exists.
+            IOError: When sobek_dir does not exists.
+            IOError: When fm_dir does not exists.
+
+        Returns:
+            {list} -- List of generated figures.
+        """
+        # 1. Set up test data
+        figure_dir = os.path.join(results_dir, 'Figures')
+        
+        # 2. Get observations.nc
+        output_1d, output_2d = self.__get_observations(
+            sobek_dir, fm_dir, results_dir)
+
+        # 3. Compare values Generate figures.
         figure_list = self.__compare_1d_2d_output_and_generate_plots(
             case_name, output_1d, output_2d, figure_dir)
 
@@ -258,8 +289,14 @@ class CompareWaalModel:
             TestUtils.install_package('tqdm')
             from tqdm import tqdm
 
-        if not os.path.exists(fig_dir):
-            os.makedirs(fig_dir)
+        fig_dir_diff = os.path.join(fig_dir, 'Difference')
+        if not os.path.exists(fig_dir_diff):
+            os.makedirs(fig_dir_diff)
+
+        fig_dir_stats = os.path.join(fig_dir, 'Statistics')
+        if not os.path.exists(fig_dir_stats):
+            os.makedirs(fig_dir_stats)
+
 
         font = {'family': 'sans-serif',
                 'sans-serif': ['Sansa Pro, sans-serif'],
@@ -300,9 +337,7 @@ class CompareWaalModel:
         bias = []
         std = []
         kms = np.arange(868, 961, 1)
-        # kms = np.arange(880, 881)
-        plot_at = [880, 914, 930, 940, 950, 960]
-        plot_at = [960]
+        plot_at = np.arange(880, 960, 5)
 
         # Keys
         key_1d_water_level = 'water_level'
@@ -334,9 +369,13 @@ class CompareWaalModel:
             # If plot, plot
             if km in plot_at:
                 fig, axh = plt.subplots(1, figsize=(10, 4))
-
                 axh.plot(t_1d, wl_1d, label='SOBEK')
                 axh.plot(t_2d, wl_2d, label='FM-2D')
+                
+                axdiff = axh.twinx()
+                axdiff.plot(tinterp, diffd, '--', color=[0.2, 0.8, 0.2])
+                axdiff.tick_params(axis='y', labelcolor=[0.2, 0.8, 0.2])
+                axdiff.set_ylabel('Verschil [m]', color=[0.2, 0.8, 0.2])  # we already handled the x-label with ax1
 
                 axh.set_ylim()
                 axh.set_xlabel('Tijd [dagen]')
@@ -347,7 +386,7 @@ class CompareWaalModel:
                 # Avoid inserting points in file names.
                 stat_fig_name = stat.replace('.', '_')
                 fig_name = os.path.join(
-                    fig_dir,
+                    fig_dir_diff,
                     '{}_{}.png'.format(case_name, stat_fig_name))
                 fig.savefig(fig_name)
                 list_of_figures.append(fig_name)
@@ -366,12 +405,13 @@ class CompareWaalModel:
 
         plt.tight_layout()
         fig_name = os.path.join(
-            fig_dir,
+            fig_dir_stats,
             '{}_statistics.png'.format(case_name))
         fig.savefig(fig_name)
         list_of_figures.append(fig_name)
 
         # Plot Q/H at selected stations
+        """
         stations = [['Q-TielWaal', "LMW.TielWaal", "TielWaal"],
                     ['Q-Nijmegenhaven', 'LMW.Nijmegenhave', "Nijmegenhaven"],
                     ['Q-Zaltbommel', 'LMW.Zaltbommel', "Zaltbommel_waq"],
@@ -400,5 +440,6 @@ class CompareWaalModel:
 
         # fig_path = os.path.join(fig_dir, '{}.png'.format(case_name))
         # plt.savefig(fig_path)
+        """
         plt.close('all')
         return list_of_figures
