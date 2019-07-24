@@ -28,7 +28,6 @@ import itertools
 import os
 import shutil
 import logging
-from tqdm import tqdm, tqdm_gui
 import time
 
 class Fm2ProfRunner:
