@@ -190,7 +190,10 @@ class Fm2ProfRunner:
         created_css = self._get_new_cross_section(
             css_data=css_data,
             input_param_dict=input_param_dict)
-
+        
+        if created_css is None:
+            raise Exception('No Cross-section could be generated')
+            
         created_css.set_logger(self.__logger)
         self.__set_logger_message(
             'Initiated new cross-section')
@@ -208,7 +211,8 @@ class Fm2ProfRunner:
             self,
             cross_section: CE.CrossSection,
             input_param_dict: Mapping[str, list],
-            fm_model_data: CE.FmModelData):
+            fm_model_data: CE.FmModelData,
+            start_time= None):
         """Sets extra FM data to the given Cross Section
 
         Arguments:
