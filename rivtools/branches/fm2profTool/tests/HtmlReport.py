@@ -264,12 +264,13 @@ class HtmlReport:
     def __get_section_carousel(self, figures_list: list):
         indicators = []
         images = []
-        for idx, figure in enumerate(figures_list):
-            indicator = self.__get_carousel_indicator(idx)
-            image = self.__get_carousel_img(figure, idx)
-            if indicator and image:
-                indicators.append(indicator)
-                images.append(image)
+        for section in figures_list:
+            for idx, figure in enumerate(figures_list[section]):
+                indicator = self.__get_carousel_indicator(idx)
+                image = self.__get_carousel_img(figure, idx)
+                if indicator and image:
+                    indicators.append(indicator)
+                    images.append(image)
         return indicators, images
 
     def __get_carousel_img(self, figure: dict, idx: int):
@@ -328,16 +329,17 @@ class HtmlReport:
         fig_path_key = 'FIGURE_PATH'
         fig_alt_txt_key = 'FIGURE_ALT_TEXT'
         template = self.__get_html_template(self.__html_fig_temp_name)
-        for figure in case_figures:
-            # Get key values from dictionary.
-            fig_path = figure.get(ReportHelper._fig_rel_path_key)
-            fig_capt = figure.get(ReportHelper._fig_name_key)
-            fig_key = figure.get(ReportHelper._fig_key_key)
-            # Set values in template.
-            fig_html = template.replace(fig_capt_key, fig_capt)
-            fig_html = fig_html.replace(fig_path_key, fig_path)
-            fig_html = fig_html.replace(fig_alt_txt_key, fig_capt)
-            # Add to existent content.
-            html_figures = html_figures + '\n' + fig_html
+        for section in case_figures:
+            for figure in case_figures[section]:
+                # Get key values from dictionary.
+                fig_path = figure.get(ReportHelper._fig_rel_path_key)
+                fig_capt = figure.get(ReportHelper._fig_name_key)
+                fig_key = figure.get(ReportHelper._fig_key_key)
+                # Set values in template.
+                fig_html = template.replace(fig_capt_key, fig_capt)
+                fig_html = fig_html.replace(fig_path_key, fig_path)
+                fig_html = fig_html.replace(fig_alt_txt_key, fig_capt)
+                # Add to existent content.
+                html_figures = html_figures + '\n' + fig_html
 
         return html_figures
