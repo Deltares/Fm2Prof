@@ -434,6 +434,44 @@ class Test_Compare_Waal_Model:
             assert os.path.exists(fig_path), '' + \
                 'Figure not found at path {}.'.format(fig_path)
 
+    @pytest.mark.acceptance
+    @pytest.mark.requires_output
+    @pytest.mark.parametrize(
+        ("case_name"), _test_scenarios_ids, ids=_test_scenarios_ids)
+    def test_when_output_exists_then_compare_waal_model_volume(
+            self, case_name: str):
+        if case_name != _waal_case:
+            # print('This case is tested on another fixture.')
+            return
+        # 1. Get all necessary output / input directories
+        fm2prof_dir = _get_test_case_output_dir(case_name)
+        # Data from the above tests is saved directly in fm2prof_dir,
+        # not in case_name/output
+        fm2prof_fig_dir = os.path.join(fm2prof_dir, 'Figures')
+
+        volume_file_name = 'volumes.csv'
+        input_volume_file = os.path.join(fm2prof_dir, volume_file_name)
+
+        # 2. Verify / create necessary folders and directories
+        assert os.path.exists(input_volume_file), '' + \
+            'Input file {} could not be found'.format(input_volume_file)
+        if not os.path.exists(fm2prof_fig_dir):
+            os.makedirs(fm2prof_fig_dir)
+
+        #  3. Run
+        try:
+            waal_comparer = CompareWaalModel()
+            waal_comparer._compare_volume(
+                    case_name, input_volume_file, fm2prof_fig_dir)
+        except Exception as e_info:
+            pytest.fail(
+                'No exception expected but was thrown ' +
+                '{}.'.format(str(e_info)))
+
+        #  4. Final expectation
+        assert os.listdir(fm2prof_fig_dir), '' + \
+            'There is no volume output generated for {0}'.format(case_name)
+
 
 class Test_Compare_Idealized_Model:
     # region of helpers

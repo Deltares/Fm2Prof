@@ -443,3 +443,43 @@ class CompareWaalModel:
         """
         plt.close('all')
         return list_of_figures
+
+    def _compare_volume(
+            self, case_name, input_volume_file, fm2prof_fig_dir):
+        # Read data
+        df = pd.read_csv(input_volume_file, index_col=1)
+
+        # Loop over each cross-sections
+        cs = np.unique(df.id)
+        crosssections = [cs[i].strip() for i in range(len(cs))]
+        for waal in range(1,7):  # waal1 to waal6
+            waallist = []
+            waalind = []
+            branchstr = 'waal' + str(waal)
+            for cs in range(len(crosssections)):
+                if branchstr in crosssections[cs]:
+                    waallist.append(crosssections[cs])
+                    waalind_tmp.append(cs)
+            tmp_ind = sorted(range(len(waallist)), key=lambda k: waallist[k])
+            waalind = waalind_tmp[tmp_ind]  # sorted index at each branch
+
+            # Under the assumption that the cross-sections for the Waal was made every 500m
+            for cs5000 in range(0,len(crosssections),10):
+                crosssection = crosssections[waalind[cs5000]]
+                # Plot volume at each cross-section
+                self.__plot_volume(df, crosssection, fm2prof_fig_dir)
+
+    def __plot_volume(self, df, cs, output_folder):
+        fig, ax = plt.subplots(1, figsize=(10, 4))
+        tv_1d = df[df.id == cs]['1D_total_volume']
+        tv_1dsd = df[df.id == cs]['1D_total_volume_sd']
+        tv_2d = df[df.id == cs]['2D_total_volume']
+        ax.plot(tv_2d, '-', linewidth=5, color=[0.4]*3, label='2D')
+        ax.plot(tv_1d, '--r', label='1D without correction')
+        ax.plot(tv_1dsd, '-r', label='1D with correction')
+        ax.set_title(cs)
+        ax.legend()
+        ax.set_xlabel('Water level [m]')
+        ax.set_ylabel('Volume [m$^3$]')
+        plt.grid()
+        plt.savefig(os.path.join(output_folder, "{}_volumegraph.png".format(cs)))
