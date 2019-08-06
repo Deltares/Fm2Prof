@@ -7,7 +7,7 @@ setup(
     name="fm2prof",
     packages=(find_packages(exclude=('tests'))),
     # package_dir={'fm2prof': 'fm2prof'},
-    version='1.0.0',
+    version='1.4.0',
     description='Package use to reduce Delft3D FM models from 2D models to 1D models',
     license='LICENSE.txt',
     long_description=open('README.txt').read(),
@@ -23,5 +23,6 @@ setup(
         "netCDF4>=1.2.9",
         "scipy>=1.0",
         "scikit_learn>=0.19.0",
+        "geojson>=2.4.1",
     ],
 )
