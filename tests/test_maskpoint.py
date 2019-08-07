@@ -10,9 +10,6 @@ import json
 
 from fm2prof.MaskPoint import *
 from tests.TestUtils import TestUtils
-# from fm2prof.IniFile import IniFile
-
-_root_output_dir = None
 
 
 class Test_MaskPoint:

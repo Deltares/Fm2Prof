@@ -188,8 +188,6 @@ class Test_Generate_Reports:
 
     @pytest.mark.generate_test_report
     def test_when_latex_source_generated_then_compile_to_pdf(self):
-        
-        
         try:
             report = LatexReport()
             report._convert_to_pdf("tests/Output/RunWithFiles_Output/latex_report/")
