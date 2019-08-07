@@ -44,7 +44,6 @@ def _get_case_figures(case_name: str, case_label: str, data_dir: str):
         if not os.path.exists(case_fig_dir):
             return figures_list
 
-        
         # Create entries for each figure in the directory
         for subdir in os.listdir(case_fig_dir):
             rel_path = '../{}/Figures/{}/'.format(case_name, subdir)
@@ -61,7 +60,9 @@ def _get_case_figures(case_name: str, case_label: str, data_dir: str):
                     _fig_path_key: os.path.join(case_dir, subdir, fig)
                 }
                 figures_list[subdir].append(figure_dict)
-            figures_list[subdir] = sorted(figures_list[subdir], key=lambda fig: fig[_fig_name_key])
+            figures_list[subdir] = sorted(
+                figures_list[subdir],
+                key=lambda fig: fig[_fig_name_key])
         return figures_list
 
 
