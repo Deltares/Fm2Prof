@@ -45,39 +45,51 @@ __maintainer__ = "Koen Berends"
 __email__ = "koen.berends@deltares.nl"
 __status__ = "Prototype"
 
+
 class FmModelData:
     time_dependent_data = None
     time_independent_data = None
     edge_data = None
     node_coordinates = None
     css_data_list = None
-    def __init__(self, arg_list : list):
+
+    def __init__(self, arg_list: list):
         if not arg_list:
             raise Exception('FM model data was not read correctly.')
         if len(arg_list) != 5:
-            raise Exception ('Fm model data expects 5 arguments but only {} were given'.format(len(arg_list)))
-        
-        (self.time_dependent_data, self.time_independent_data, self.edge_data, self.node_coordinates, css_data_dictionary) = arg_list
+            raise Exception(
+                'Fm model data expects 5 arguments but only ' +
+                '{} were given'.format(len(arg_list)))
+
+        (self.time_dependent_data,
+            self.time_independent_data,
+            self.edge_data,
+            self.node_coordinates,
+            css_data_dictionary) = arg_list
         self.css_data_list = self.get_ordered_css_list(css_data_dictionary)
 
     @staticmethod
-    def get_ordered_css_list(css_data_dict : Mapping[str,str]):
+    def get_ordered_css_list(css_data_dict: Mapping[str,str]):
         """Returns an ordered list where every element represents a Cross Section structure
-        
+
         Arguments:
             css_data_dict {Mapping[str,str]} -- Dictionary ordered by the keys
-        
+
         Returns:
             {list} -- List where every element contains a dictionary to create a Cross Section.
         """
         if not css_data_dict or not isinstance(css_data_dict, dict):
             return []
-        
+
         number_of_css = len(css_data_dict[next(iter(css_data_dict))])
         css_dict_keys = css_data_dict.keys()
         css_dict_values = css_data_dict.values()
-        css_data_list = [dict(zip(css_dict_keys, [value[idx] for value in css_dict_values if idx < len(value)])) for idx in range(number_of_css)]
+        css_data_list = [
+            dict(zip(css_dict_keys, [value[idx]
+            for value in css_dict_values if idx < len(value)]))
+            for idx in range(number_of_css)]
         return css_data_list
+
 
 class CrossSection:
     """
@@ -96,15 +108,21 @@ class CrossSection:
     __cs_parameter_Frictionweighing = 'Frictionweighing'
     __cs_parameter_sectionsmethod = 'sectionsmethod'
 
+    __mask_point = None
     __logger = None
-    def __init__(self, InputParam_dict, name : str, length : float, location : tuple, branchid = "not defined", chainage=0):
-        """                
+
+    def __init__(
+            self,
+            InputParam_dict: dict,
+            name: str, length: float, location: tuple,
+            branchid="not defined", chainage=0):
+        """
         Arguments:
             InputParam_dict {Dictionary} -- [description]
             name {str} -- [description]
             length {float} -- [description]
             location {tuple} -- [description]
-        
+
         Keyword Arguments:
             branchid {str} -- [description] (default: {"not defined"})
             chainage {int} -- [description] (default: {0})
@@ -112,12 +130,12 @@ class CrossSection:
         # Cross-section meta data
         self.name = name                # cross-section id
         self.length = length            # 'vaklengte'
-        self.location = location        # (x,y) 
+        self.location = location        # (x,y)
         self.branch = branchid          # name of 1D branch for cross-section
         self.chainage = chainage        # offset from beginning of branch
-        
+
         # Cross-section geometry
-        self.z = np.array([])           
+        self.z = np.array([])
         self.total_width = np.array([])
         self.flow_width = np.array([])
         self.alluvial_width = 0.
@@ -128,8 +146,12 @@ class CrossSection:
 
         # delta h corrections ("summerdike option")
         self.crest_level = 0
-        self.floodplain_base = 0.0 # in cross-section def. WAQ2PROF did crest - some fixed value. how to do here?
-        self.transition_height = 0.5 # note" 'to avoid numerical osscilation'. might need minimal value. fixed or variable? Test!
+        # in cross-section def. WAQ2PROF did crest - some fixed value.
+        #  how to do here?
+        self.floodplain_base = 0.0
+        # note" 'to avoid numerical osscilation'. might need minimal value.
+        # fixed or variable? Test!
+        self.transition_height = 0.5
         self.extra_flow_area = 0.0
         self.extra_total_volume = 0.0
         self.extra_area_percentage = list()
@@ -157,11 +179,13 @@ class CrossSection:
         self.temp_param_skip_maps = 2
         self.parameters = InputParam_dict
 
+    def get_mask_point(self):
+        return self.__mask_point
+
     # Public functions
     def build_from_fm(self, fm_data):
         """
         Build 1D geometrical cross-section from FM data.
-
 
         :param fm_data: dict
         :return:
@@ -174,7 +198,8 @@ class CrossSection:
         area = fm_data['area']
         bedlevel = fm_data['bedlevel']
 
-        # Convert area to a matrix for matrix operations (much more efficient than for-loops)
+        # Convert area to a matrix for matrix operations
+        # (much more efficient than for-loops)
         area_matrix = pd.DataFrame(index=area.index)
         for t in waterdepth:
             area_matrix[t] = area
@@ -183,21 +208,34 @@ class CrossSection:
         for t in waterdepth:
             bedlevel_matrix[t] = bedlevel
 
-        # Retrieve the water-depth & water level nearest to the cross-section location
+        # Retrieve the water-depth
+        # & water level nearest to the cross-section location
         self._set_logger_message('Retrieving centre point values')
-        (centre_depth, centre_level) = FE.get_centre_values(self.location, fm_data['x'], fm_data['y'], waterdepth, waterlevel)
+        (centre_depth, centre_level) = FE.get_centre_values(
+            self.location,
+            fm_data['x'],
+            fm_data['y'],
+            waterdepth,
+            waterlevel)
 
-        # apply rolling average over the velocities to smooth out extreme values
-        velocity = velocity.rolling(window=10, min_periods=1, center=True, axis=1).mean()
+        # apply rolling average over the velocities
+        # to smooth out extreme values
+        velocity = velocity.rolling(
+            window=10,
+            min_periods=1,
+            center=True,
+            axis=1).mean()
 
         # Identify river lakes (plassen)
         self._set_logger_message('Identifying lakes')
-        plassen_mask, wet_not_plas_mask, plassen_depth_correction = self._identify_lakes(waterdepth)  
+
+        # plassen_mask needed for arrays in output
+        plassen_mask, wet_not_plas_mask, plassen_depth_correction = self._identify_lakes(waterdepth)
 
         # Masks for wet and flow cells (stroomvoeringscriteria)
         self._set_logger_message('Seperating flow from storage')
         flow_mask = self._distinguish_flow_from_storage(waterdepth, velocity)
-               
+
         # Calculate area and volume as function of waterlevel & waterdepth
         self._fm_wet_area = np.nansum(area_matrix[wet_not_plas_mask], axis=0)
         self._fm_flow_area = np.nansum(area_matrix[flow_mask], axis=0)
@@ -212,7 +250,7 @@ class CrossSection:
 
         # For roughness we will need the original z-levels, since geometry z will change below
         self._css_z_roughness = centre_level
-        
+
         # Check for monotonicity (water levels should rise)
         mono_mask = self._check_monotonicity(centre_level, method=1)
         centre_level = centre_level[mono_mask]
@@ -220,26 +258,38 @@ class CrossSection:
         self._fm_flow_volume = self._fm_flow_volume[mono_mask]
         self._fm_wet_area = self._fm_wet_area[mono_mask]
         self._fm_flow_area = self._fm_flow_area[mono_mask]
-        
+
         # Compute geometry above z0 - Water level dependent calculation
         self._set_logger_message('Computing cross-section from water levels')
         self._compute_css_above_z0(centre_level)
-        
+
         # Compute geometry below z0 - Water level independent calculation
         self._set_logger_message('Computing cross-section from bed levels')
-        self._extend_css_below_z0(centre_level, centre_depth, bedlevel_matrix, area_matrix, plassen_mask)
+        self._extend_css_below_z0(
+            centre_level,
+            centre_depth,
+            bedlevel_matrix,
+            area_matrix,
+            plassen_mask)
 
         # Compute 1D volume as integral of width with respect to z times length
-        self._css_total_volume = np.append([0], np.cumsum(self._css_total_width[1:]*np.diff(self._css_z)*self.length))
-        self._css_flow_volume = np.append([0], np.cumsum(self._css_flow_width[1:]*np.diff(self._css_z)*self.length))
-        
-        # If sd correction is run, these attributed will be updated. 
+        self._css_total_volume = np.append(
+            [0],
+            np.cumsum(
+                self._css_total_width[1:]*np.diff(self._css_z)*self.length))
+        self._css_flow_volume = np.append(
+            [0],
+            np.cumsum(
+                self._css_flow_width[1:]*np.diff(self._css_z)*self.length))
+
+        # If sd correction is run, these attributed will be updated.
         self._css_total_volume_corrected = self._css_total_volume
         self._css_flow_volume_corrected = self._css_flow_volume
 
-        # convert to float64 array for uniformity (apparently entries can be float32)
-        self._css_z = np.array(self._css_z, dtype=np.dtype('float64')) 
-        
+        # convert to float64 array for uniformity
+        # (apparently entries can be float32)
+        self._css_z = np.array(self._css_z, dtype=np.dtype('float64'))
+
     def optimisation_function(self, opt_in):
         """
         Objective function used in optimising a delta-h correction for parameters:
@@ -256,7 +306,7 @@ class CrossSection:
         predicted_volume = self._css_total_volume+FE.get_extra_total_area(self._css_z, crest_level, transition_height)*extra_volume
         return FE.return_volume_error(predicted_volume, self._fm_total_volume)
 
-    def calculate_correction(self, transition_height:float):
+    def calculate_correction(self, transition_height: float):
         """
         Function to determine delta-h correction (previously known as 'summerdike option'.
         Optimises values for transition height, crest levels and added volume.

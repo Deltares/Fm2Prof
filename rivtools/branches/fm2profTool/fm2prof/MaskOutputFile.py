@@ -1,40 +1,51 @@
 import os
-
-from fm2prof.MaskPoint import *
-
 import geojson
 
 
 class MaskOutputFile:
-    __geojson_data = None
-    __mask_points = []
-
-    @property
-    def mask_points(self):
-        return self.__mask_points
 
     @staticmethod
-    def get_geojson_feature_collection(points):
-        pass
+    def validate_extension(file_path: str):
+        if (not file_path):
+            # Should not be evaluated
+            return
+        if (not file_path.endswith('.json') and
+                not file_path.endswith('.geojson')):
+            raise IOError(
+                'Invalid file path extension, ' +
+                'should be .json or .geojson.')
 
-    def read_mask_output_file(self, file_path: str):
+    @staticmethod
+    def read_mask_output_file(file_path: str):
         """Imports a GeoJson from a given json file path.
 
         Arguments:
             file_path {str} -- Location of the json file
         """
+        geojson_data = geojson.FeatureCollection(None)
         if not file_path or not os.path.exists(file_path):
-            return
+            return geojson_data
 
-        with open(file_path) as json_file:
-            self.__geojson_data = geojson.load(json_file)
+        MaskOutputFile.validate_extension(file_path)
+        with open(file_path) as geojson_file:
+            try:
+                geojson_data = geojson.load(geojson_file)
+            except:
+                return geojson_data
 
-        return self.__geojson_data
+        return geojson_data
 
-    def write_mask_output_file(self, file_path: str):
-        pass
+    @staticmethod
+    def write_mask_output_file(file_path: str, mask_points: list):
+        """Writes a .geojson file with a Feature collection containing
+        the mask_points list given as input.
 
-    def create_mask_point(self, mask_properties):
-        new_mask_point = MaskPoint(None, None)
-        new_mask_point.extend_properties(mask_properties)
-        return new_mask_point
+        Arguments:
+            file_path {str} -- file_path where to store the geojson.
+            mask_points {list} -- List of features to output.
+        """
+        if file_path:
+            MaskOutputFile.validate_extension(file_path)
+            feature_collection = geojson.FeatureCollection(mask_points)
+            with open(file_path, 'w') as f:
+                geojson.dump(feature_collection, f)

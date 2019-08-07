@@ -47,7 +47,7 @@ __status__ = "Prototype"
 def read_fm2prof_input(res_file, css_file):
     """
     Reads input files for 'FM2PROF'. See documentation for file format descriptions.
-    
+
     Data is saved in three major structures:
         time_independent_data: holds bathymetry information
         time_dependent_data: waterlevels, roughnesses and velocities
