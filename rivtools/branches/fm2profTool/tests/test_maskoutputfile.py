@@ -8,8 +8,7 @@ import shutil
 import geojson
 import json
 
-from fm2prof.MaskOutputFile import MaskOutputFile
-from fm2prof.MaskPoint import MaskPoint
+from fm2prof.MaskOutputFile import MaskOutputFile, MaskPoint
 from tests.TestUtils import TestUtils
 
 
