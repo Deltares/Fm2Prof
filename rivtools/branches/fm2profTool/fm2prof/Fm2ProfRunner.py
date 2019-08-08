@@ -21,6 +21,7 @@ from fm2prof import Functions as FE
 from fm2prof import Classes as CE
 from fm2prof import sobek_export
 from fm2prof import IniFile
+from fm2prof.MaskOutputFile import MaskOutputFile
 
 from typing import Mapping, Sequence
 import datetime
@@ -29,6 +30,7 @@ import os
 import shutil
 import logging
 import time
+
 
 class Fm2ProfRunner:
     __logger = None
@@ -86,7 +88,9 @@ class Fm2ProfRunner:
         input_param_dict = iniFile._input_parameters
 
         # Add a log file
-        self.__add_filehandler_to_logger(output_dir=output_dir, filename='fm2prof.log')
+        self.__add_filehandler_to_logger(
+            output_dir=output_dir,
+            filename='fm2prof.log')
         self.__set_logger_message(
             'FM2PROF version {}'.format(self.__version))
         self.__set_logger_message('reading FM and cross-sectional data data')
@@ -109,6 +113,12 @@ class Fm2ProfRunner:
 
         # Export cross sections
         self._export_cross_sections(cross_sections, output_dir)
+
+        # Generate output geojson
+        mask_points = [cs.get_mask_point() for cs in cross_sections]
+        MaskOutputFile.write_mask_output_file(
+            os.path.join(output_dir, 'mask_output.geojson'),
+            mask_points)
 
     def _generate_cross_section_list(
             self,
@@ -180,7 +190,7 @@ class Fm2ProfRunner:
         if fm_model_data is None:
             raise Exception(
                 'No FM data given for new cross section {}'.format(css_name))
-        
+
         self.__logformatter.next_step()
         self.__set_logger_message(
             '{}'.format(css_name))
@@ -189,10 +199,10 @@ class Fm2ProfRunner:
         created_css = self._get_new_cross_section(
             css_data=css_data,
             input_param_dict=input_param_dict)
-        
+
         if created_css is None:
             raise Exception('No Cross-section could be generated')
-            
+
         created_css.set_logger(self.__logger)
         self.__set_logger_message(
             'Initiated new cross-section')
@@ -211,7 +221,7 @@ class Fm2ProfRunner:
             cross_section: CE.CrossSection,
             input_param_dict: Mapping[str, list],
             fm_model_data: CE.FmModelData,
-            start_time= None):
+            start_time=None):
         """Sets extra FM data to the given Cross Section
 
         Arguments:
@@ -246,7 +256,7 @@ class Fm2ProfRunner:
             # Build cross-section
             self.__set_logger_message('Start building geometry')
             cross_section.build_from_fm(fm_data=fm_data)
-            
+
             self.__set_logger_message(
                 'Cross-section derived, starting correction.....')
 
@@ -261,7 +271,7 @@ class Fm2ProfRunner:
             # assign roughness
             self.__set_logger_message('Starting computing roughness tables')
             cross_section.assign_roughness(fm_data)
-            
+
             self.__set_logger_message(
                 'computed roughness')
 
@@ -300,9 +310,9 @@ class Fm2ProfRunner:
         css_data_chainage = css_data.get('chainage')
 
         if (css_data_length is None or
-            css_data_location is None or
-            css_data_branch_id is None or
-            css_data_chainage is None):
+                css_data_location is None or
+                css_data_branch_id is None or
+                css_data_chainage is None):
             return None
 
         try:
@@ -395,7 +405,7 @@ class Fm2ProfRunner:
         Arguments:
             input_param_dict {Mapping[str,float]} -- [description]
             css {CE.CrossSection} -- [description]
-            
+
         """
         if not css:
             self.__set_logger_message('No Cross Section was provided.')
@@ -413,7 +423,6 @@ class Fm2ProfRunner:
         if sd_storage_value == 1:
             try:
                 css.calculate_correction(sd_transition_value)
-                
                 self.__set_logger_message(
                     'correction finished')
             except Exception as e_error:
@@ -466,19 +475,21 @@ class Fm2ProfRunner:
         """
         if not self.__logger:
             return
-        
-        if level.lower() not in ['info', 'debug', 'warning', 'error', 'critical']:
-            self.__logger.error("{} is not valid logging level.".format(level.lower()))
 
-        if level.lower()=='info':
+        if level.lower() not in [
+                'info', 'debug', 'warning', 'error', 'critical']:
+            self.__logger.error(
+                "{} is not valid logging level.".format(level.lower()))
+
+        if level.lower() == 'info':
             self.__logger.info(err_mssg)
-        elif level.lower()=='debug':
+        elif level.lower() == 'debug':
             self.__logger.debug(err_mssg)
-        elif level.lower()=='warning':
+        elif level.lower() == 'warning':
             self.__logger.warning(err_mssg)
-        elif level.lower()=='error':
+        elif level.lower() == 'error':
             self.__logger.error(err_mssg)
-        elif level.lower()=='critical':
+        elif level.lower() == 'critical':
             self.__logger.critical(err_mssg)
 
     def __get_time_stamp_seconds(self, start_time: datetime):
@@ -539,17 +550,15 @@ class Fm2ProfRunner:
         self.__logger.addHandler(fh)
 
     def __create_logger(self):
-        
         # Create logger
         self.__logger = logging.getLogger(__name__)
         self.__logger.setLevel(logging.DEBUG)
-        
+
         # create formatter
         self.__logformatter = CE.ElapsedFormatter()
-        
+
         # create console handler
         ch = logging.StreamHandler()
         ch.setLevel(logging.DEBUG)
         ch.setFormatter(self.__logformatter)
         self.__logger.addHandler(ch)
-

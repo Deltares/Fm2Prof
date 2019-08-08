@@ -28,6 +28,8 @@ import seaborn as sns
 
 from fm2prof import common
 from fm2prof import Functions as FE
+from fm2prof.MaskOutputFile import MaskPoint
+
 from typing import Mapping, Sequence
 from .lib import polysimplify as PS
 
@@ -96,6 +98,10 @@ class FmModelData:
         return css_data_list
 
 
+class CrossSectionOutputMask:
+    pass
+
+
 class CrossSection:
     """
     Use this class to derive cross-sections from fm_data (2D model results).
@@ -113,7 +119,7 @@ class CrossSection:
     __cs_parameter_Frictionweighing = 'Frictionweighing'
     __cs_parameter_sectionsmethod = 'sectionsmethod'
 
-    __mask_point = None
+    __output_mask = None
     __logger = None
 
     def __init__(
@@ -183,9 +189,14 @@ class CrossSection:
         # PARAMETERS
         self.temp_param_skip_maps = 2
         self.parameters = InputParam_dict
+        self.__set_mask_point()
 
     def get_mask_point(self):
-        return self.__mask_point
+        return self.__output_mask
+
+    def __set_mask_point(self):
+        loc_x, loc_y = self.location
+        self.__output_mask = MaskPoint(loc_x, loc_y)
 
     # Public functions
     def build_from_fm(self, fm_data):
