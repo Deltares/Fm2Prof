@@ -16,19 +16,42 @@ class Test_MaskPoint:
 
     @pytest.mark.unittest
     def test_when_no_coordinates_given_then_no_exception_is_risen(self):
-        try:
-            mask_point = MaskPoint(None, None)
-        except:
-            pytest.fail('No exception expected')
+        # 1. Set test data
+        mask_point = MaskPoint()
+
+        # 2. Verify initial expectations
         assert mask_point is not None, '' + \
             'No MaskPoint object was created'
+
+        # 3. Run test
+        try:
+            mask_point.set_coordinates(None, None)
+        except:
+            pytest.fail('No exception expected')
+
+    @pytest.mark.unittest
+    def test_when_coordinates_given_then_no_exception_is_risen(self):
+        # 1. Set test data
+        mask_point = MaskPoint()
+        coord_x = 4.2
+        coord_y = 2.4
+
+        # 2. Verify initial expectations
+        assert mask_point is not None, '' + \
+            'No MaskPoint object was created'
+
+        # 3. Run test
+        try:
+            mask_point.set_coordinates(coord_x, coord_y)
+        except:
+            pytest.fail('No exception expected')
 
     @pytest.mark.unittest
     def test_when_no_added_dict_given_then_extend_properties_does_not_rise(
             self):
         # 1. Set up test model
+        mask_point = MaskPoint()
         extended_dict = None
-        mask_point = MaskPoint(None, None)
 
         # 2. Verify initial expectations
         assert mask_point is not None
@@ -46,7 +69,7 @@ class Test_MaskPoint:
         extended_dict = {
             'dummyKey': 'dummyValue'
             }
-        mask_point = MaskPoint(None, None)
+        mask_point = MaskPoint()
 
         # 2. Verify initial expectations
         assert mask_point is not None
@@ -62,9 +85,10 @@ class Test_MaskPoint:
         # 1. Set up test model
         coord_x = 4.2
         coord_y = 2.4
-        mask_point = MaskPoint(coord_x, coord_y)
+        mask_point = MaskPoint()
 
-        # 2. Set up expectations
+        # 2. Set up initial expectations
+        mask_point.set_coordinates(coord_x, coord_y)
         expected_data = {
             'type': 'Point',
             'coordinates': [coord_x, coord_y],
