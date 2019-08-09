@@ -111,14 +111,17 @@ class Fm2ProfRunner:
         # at the correct discharges.
         FE.interpolate_roughness(cross_sections)
 
+        # Generate output geojson
+        mask_points = [
+            mask_point
+            for cs in cross_sections
+            for mask_point in cs.mask_points_list]
+        MaskOutputFile.write_mask_output_file(
+            os.path.join(output_dir, 'masks_output.geojson'),
+            mask_points)
+
         # Export cross sections
         self._export_cross_sections(cross_sections, output_dir)
-
-        # Generate output geojson
-        mask_points = [cs.get_mask_point() for cs in cross_sections]
-        MaskOutputFile.write_mask_output_file(
-            os.path.join(output_dir, 'mask_output.geojson'),
-            mask_points)
 
     def _generate_cross_section_list(
             self,

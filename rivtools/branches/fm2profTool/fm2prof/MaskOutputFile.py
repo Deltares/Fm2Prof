@@ -7,7 +7,7 @@ class MaskPoint:
     __y = None
     __properties = {}
 
-    def __init__(self, x: float, y: float):
+    def set_coordinates(self, x: float, y: float):
         self.__x = x
         self.__y = y
 
@@ -79,4 +79,7 @@ class MaskOutputFile:
             MaskOutputFile.validate_extension(file_path)
             feature_collection = geojson.FeatureCollection(mask_points)
             with open(file_path, 'w') as f:
-                geojson.dump(feature_collection, f)
+                geojson.dump(
+                    feature_collection,
+                    f,
+                    indent=4)

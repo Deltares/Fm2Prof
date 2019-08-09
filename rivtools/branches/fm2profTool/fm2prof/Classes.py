@@ -98,10 +98,6 @@ class FmModelData:
         return css_data_list
 
 
-class CrossSectionOutputMask:
-    pass
-
-
 class CrossSection:
     """
     Use this class to derive cross-sections from fm_data (2D model results).
@@ -119,7 +115,7 @@ class CrossSection:
     __cs_parameter_Frictionweighing = 'Frictionweighing'
     __cs_parameter_sectionsmethod = 'sectionsmethod'
 
-    __output_mask = None
+    __output_mask_list = []
     __logger = None
 
     def __init__(
@@ -144,7 +140,7 @@ class CrossSection:
         self.location = location        # (x,y)
         self.branch = branchid          # name of 1D branch for cross-section
         self.chainage = chainage        # offset from beginning of branch
-
+        self.__output_mask_list = []    # initialize output mask list.
         # Cross-section geometry
         self.z = np.array([])
         self.total_width = np.array([])
@@ -189,14 +185,10 @@ class CrossSection:
         # PARAMETERS
         self.temp_param_skip_maps = 2
         self.parameters = InputParam_dict
-        self.__set_mask_point()
 
-    def get_mask_point(self):
-        return self.__output_mask
-
-    def __set_mask_point(self):
-        loc_x, loc_y = self.location
-        self.__output_mask = MaskPoint(loc_x, loc_y)
+    @property
+    def mask_points_list(self):
+        return self.__output_mask_list
 
     # Public functions
     def build_from_fm(self, fm_data):
@@ -314,6 +306,9 @@ class CrossSection:
         # convert to float64 array for uniformity
         # (apparently entries can be float32)
         self._css_z = np.array(self._css_z, dtype=np.dtype('float64'))
+
+        # generate all mask points for the given cross_section
+        self._get_mask_output_list(fm_data, plassen_mask)
 
     def optimisation_function(self, opt_in):
         """
@@ -527,6 +522,32 @@ class CrossSection:
         self.__logger = logger
 
     # Private Functions
+    def _get_mask_output_list(self, fm_data, mask_array):
+        """Generates a list of output mask points based on
+        their values in the mask.
+
+        Arguments:
+            fm_data {dict} -- Dictionary containig x,y values.
+            mask_array {NP.array} -- Array of values.
+        """
+        # Properties keys
+        cross_section_id_key = 'cross_section_id'
+        is_plas_key = 'is_plas'
+        area_polygon_id_key = 'area_polygon_id'
+        section_polygon_id_key = 'section_polygon_id'
+        time_series_key = 'time_series'
+        # Generate mask points.
+        for i, mask in enumerate(mask_array):
+            output_mask = MaskPoint()
+            output_mask.set_coordinates(
+                fm_data['x'][i],
+                fm_data['y'][i])
+            properties = {
+                cross_section_id_key: self.name,
+                is_plas_key: mask,
+            }
+            output_mask.extend_properties(properties)
+            self.__output_mask_list.append(output_mask)
 
     def _calc_roughness_width(self, splitpoint, link_indices, fm_data):
         # get the 2 nodes for every alluvial edge
