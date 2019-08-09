@@ -12,6 +12,25 @@ from fm2prof.MaskOutputFile import MaskOutputFile, MaskPoint
 from tests.TestUtils import TestUtils
 
 
+class MaskOutputFileHelper:
+
+    @staticmethod
+    def get_mask_point(coord_x: float, coord_y: float):
+        """Auxiliar method to create a mask point with
+        initialized coords.
+
+        Arguments:
+            coord_x {float} -- Coordinate X
+            coord_y {float} -- Coordinate Y
+
+        Returns:
+            MaskPoint -- Initialized mask point.
+        """
+        mask_point = MaskPoint()
+        mask_point.set_coordinates(coord_x, coord_y)
+        return mask_point
+
+
 class Test_validate_extension:
 
     @pytest.mark.unittest
@@ -141,8 +160,10 @@ class Test_read_mask_output_file:
 
         # 2. Set up expected geojson
         mask_points = [
-            geojson.Feature(geometry=MaskPoint(4.2, 4.2)),
-            geojson.Feature(geometry=MaskPoint(42, 42))
+            geojson.Feature(
+                geometry=MaskOutputFileHelper.get_mask_point(4.2, 4.2)),
+            geojson.Feature(
+                geometry=MaskOutputFileHelper.get_mask_point(42, 42))
         ]
         expected_geojson = geojson.FeatureCollection(mask_points)
 
@@ -252,8 +273,10 @@ class Test_write_mask_output_file:
         file_name = 'mask_points.geojson'
         file_path = os.path.join(test_folder, file_name)
         mask_points = [
-            geojson.Feature(geometry=MaskPoint(4.2, 4.2)),
-            geojson.Feature(geometry=MaskPoint(42, 42))
+            geojson.Feature(
+                geometry=MaskOutputFileHelper.get_mask_point(4.2, 4.2)),
+            geojson.Feature(
+                geometry=MaskOutputFileHelper.get_mask_point(42, 42))
         ]
 
         # 2. Set expectations
