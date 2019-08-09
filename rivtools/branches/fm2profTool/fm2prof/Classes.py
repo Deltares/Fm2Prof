@@ -631,7 +631,7 @@ class CrossSection:
                 np.logical_and,
                 [
                     (diff <= 0.001),
-                    (plassen_mask_time[i])])
+                    (plassen_mask_time[i] == True)])
             plassen_mask_time[i + 1, :] = final_mask
 
         plassen_mask_time = pd.DataFrame(plassen_mask_time).T
@@ -643,8 +643,8 @@ class CrossSection:
         wet_not_plas_mask = reduce(
             np.logical_and,
             [
-                (wet_mask),
-                (not plassen_mask_time)])
+                (wet_mask == True),
+                (plassen_mask_time == False)])
         # print (wet_not_plas_mask)
         # pmtmask = plassen_mask_time == False
         # print (wet_mask & pmtmask)
