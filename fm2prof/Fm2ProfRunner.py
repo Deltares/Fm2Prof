@@ -112,16 +112,37 @@ class Fm2ProfRunner:
         FE.interpolate_roughness(cross_sections)
 
         # Generate output geojson
-        mask_points = [
-            mask_point
-            for cs in cross_sections
-            for mask_point in cs.mask_points_list]
-        MaskOutputFile.write_mask_output_file(
-            os.path.join(output_dir, 'masks_output.geojson'),
-            mask_points)
+        self._generate_geojson_output(output_dir, cross_sections)
 
         # Export cross sections
         self._export_cross_sections(cross_sections, output_dir)
+
+    def _generate_geojson_output(
+            self,
+            output_dir: str,
+            cross_sections: list):
+        """Generates geojson file based on cross sections.
+
+        Arguments:
+            output_dir {str} -- Output directory path.
+            cross_sections {list} -- List of Cross Sections.
+        """
+        output_file_path = os.path.join(output_dir, 'masks_output.geojson')
+        try:
+            mask_points = [
+                mask_point
+                for cs in cross_sections
+                for mask_point in cs.mask_points_list]
+            MaskOutputFile.write_mask_output_file(
+                output_file_path,
+                mask_points)
+        except Exception as e_info:
+            self.__set_logger_message(
+                'Error while generation .geojson file,' +
+                'at {}'.format(output_file_path) +
+                'Reason: {}'.format(str(e_info)),
+                level='error'
+            )
 
     def _generate_cross_section_list(
             self,
