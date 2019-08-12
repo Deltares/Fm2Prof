@@ -28,7 +28,7 @@ import seaborn as sns
 
 from fm2prof import common
 from fm2prof import Functions as FE
-from fm2prof.MaskOutputFile import MaskPoint
+from fm2prof.MaskOutputFile import MaskOutputFile
 
 from typing import Mapping, Sequence
 from .lib import polysimplify as PS
@@ -533,21 +533,45 @@ class CrossSection:
         # Properties keys
         cross_section_id_key = 'cross_section_id'
         is_plas_key = 'is_plas'
-        area_polygon_id_key = 'area_polygon_id'
-        section_polygon_id_key = 'section_polygon_id'
-        time_series_key = 'time_series'
-        # Generate mask points.
-        for i, mask in enumerate(mask_array):
-            output_mask = MaskPoint()
-            output_mask.set_coordinates(
-                fm_data['x'][i],
-                fm_data['y'][i])
-            properties = {
-                cross_section_id_key: self.name,
-                is_plas_key: mask,
-            }
-            output_mask.extend_properties(properties)
-            self.__output_mask_list.append(output_mask)
+        # area_polygon_id_key = 'area_polygon_id'
+        # section_polygon_id_key = 'section_polygon_id'
+        # time_series_key = 'time_series'
+
+        try:
+            # Normalize np arrays to list for correct access
+            x_coords = fm_data.get('x').tolist()
+            y_coords = fm_data.get('y').tolist()
+            is_plas_mask_list = mask_array.tolist()
+
+            # Assume same length for x and y coords.
+            for i in range(len(x_coords)):
+                mask_properties = {
+                    cross_section_id_key: self.name,
+                    is_plas_key: is_plas_mask_list[i],
+                }
+                mask_coords = (x_coords[i], y_coords[i])
+                # Create the actual geojson element.
+                output_mask = MaskOutputFile.create_mask_point(
+                    mask_coords,
+                    mask_properties)
+
+                if output_mask.is_valid:
+                    self.__output_mask_list.append(output_mask)
+                    self._set_logger_message(
+                        'Added output mask at {} '.format(mask_coords) +
+                        'for Cross Section {}.'.format(self.name))
+                else:
+                    self._set_logger_message(
+                        'Invalid output mask at {} '.format(mask_coords) +
+                        'for Cross Section {}, not added. '.format(self.name) +
+                        'Reason {}'.format(output_mask.errors()),
+                        level='error')
+        except Exception as e_error:
+            self._set_logger_message(
+                'Error setting output masks ' +
+                'for Cross Section {}. '.format(self.name) +
+                'Reason: {}'.format(str(e_error)),
+                level='error')
 
     def _calc_roughness_width(self, splitpoint, link_indices, fm_data):
         # get the 2 nodes for every alluvial edge

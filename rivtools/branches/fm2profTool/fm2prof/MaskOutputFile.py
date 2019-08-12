@@ -2,38 +2,21 @@ import os
 import geojson
 
 
-class MaskPoint:
-    __x = None
-    __y = None
-    __properties = {}
+class MaskOutputFile:
 
-    def set_coordinates(self, x: float, y: float):
-        self.__x = x
-        self.__y = y
-
-    def extend_properties(self, added_dict: dict):
-        """Merge a new set of properties with the existent ones.
+    @staticmethod
+    def create_mask_point(coords: geojson.coords, properties: dict):
+        """Creates a Point based on the properties and coordinates given.
 
         Arguments:
-            added_dict {dict} -- New properties to add to the point.
+            coords {geojson.coords} --
+                Coordinates tuple (x,y) for the mask point.
+            properties {dict} -- Dictionary of properties
         """
-        if added_dict:
-            self.__properties = {**self.__properties, **added_dict}
-
-    @property
-    def __coordinates(self):
-        return (self.__x, self.__y)
-
-    @property
-    def __geo_interface__(self):
-        return {
-            'type': 'Point',
-            'coordinates': self.__coordinates,
-            'properties': self.__properties,
-            }
-
-
-class MaskOutputFile:
+        output_mask = geojson.Point(coords)
+        if properties:
+            output_mask.properties = properties
+        return output_mask
 
     @staticmethod
     def validate_extension(file_path: str):
