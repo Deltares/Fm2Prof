@@ -13,7 +13,7 @@ class MaskOutputFile:
                 Coordinates tuple (x,y) for the mask point.
             properties {dict} -- Dictionary of properties
         """
-        output_mask = geojson.Point(coords)
+        output_mask = geojson.Feature(geometry=geojson.Point(coords))
         if properties:
             output_mask.properties = properties
         return output_mask
