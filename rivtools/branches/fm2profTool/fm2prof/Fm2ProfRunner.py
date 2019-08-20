@@ -22,6 +22,7 @@ from fm2prof import Classes as CE
 from fm2prof import sobek_export
 from fm2prof import IniFile
 from fm2prof.MaskOutputFile import MaskOutputFile
+from fm2prof.RegionPolygonFile import RegionPolygonFile
 
 from typing import Mapping, Sequence
 import datetime
@@ -41,7 +42,7 @@ class Fm2ProfRunner:
 
     __map_file_key = 'fm_netcdfile'
     __css_file_key = 'crosssectionlocationfile'
-    __gebiedsvakken_key = 'gebiedsvakken'
+    __region_file_key = 'regionpolygonfile'
     __sectie_key = 'sectionfractionfile'
 
     def __init__(self, iniFilePath: str, version: float = None):
@@ -84,6 +85,7 @@ class Fm2ProfRunner:
         # shorter local variables
         map_file = iniFile._input_file_paths.get(self.__map_file_key)
         css_file = iniFile._input_file_paths.get(self.__css_file_key)
+        region_file = iniFile._input_file_paths.get(self.__region_file_key)
         output_dir = iniFile._output_dir
         input_param_dict = iniFile._input_parameters
 
@@ -95,8 +97,14 @@ class Fm2ProfRunner:
             'FM2PROF version {}'.format(self.__version))
         self.__set_logger_message('reading FM and cross-sectional data data')
 
+        # Read region polygon
+        if region_file:
+            regions = RegionPolygonFile(region_file, logger=self.__logger)
+        else:
+            regions = None
+        
         # Read FM model data
-        fm2prof_fm_model_data = FE.read_fm2prof_input(map_file, css_file)
+        fm2prof_fm_model_data = FE.read_fm2prof_input(map_file, css_file, regions)
         fm_model_data = CE.FmModelData(fm2prof_fm_model_data)
         self.__set_logger_message(
             'finished reading FM and cross-sectional data data')
@@ -586,3 +594,5 @@ class Fm2ProfRunner:
         ch.setLevel(logging.DEBUG)
         ch.setFormatter(self.__logformatter)
         self.__logger.addHandler(ch)
+
+    

@@ -28,6 +28,7 @@ _case04 = 'case_04_storage'
 _case05 = 'case_05_dyke'
 _case06 = 'case_06_plassen'
 _case07 = 'case_07_triangular'
+_case09 = 'case_09_region_polygon'
 
 _test_scenarios_ids = [
     _case01,
@@ -37,6 +38,7 @@ _test_scenarios_ids = [
     _case05,
     _case06,
     _case07,
+    _case09,
     _waal_case
 ]
 
@@ -51,35 +53,49 @@ _test_scenarios = [
     pytest.param(
         _case01,
         'Data\\FM\\FlowFM_fm2prof_map.nc',
-        'Data\\cross_section_locations.xyz'),
+        'Data\\cross_section_locations.xyz', 
+        ''),
     pytest.param(
         _case02,
         'Data\\FM\\FlowFM_fm2prof_map.nc',
-        'Data\\cross_section_locations.xyz'),
+        'Data\\cross_section_locations.xyz', 
+        ''),
     pytest.param(
         _case03,
         'Data\\FM\\FlowFM_fm2prof_map.nc',
-        'Data\\cross_section_locations.xyz'),
+        'Data\\cross_section_locations.xyz', 
+        ''),
     pytest.param(
         _case04,
         'Data\\FM\\FlowFM_fm2prof_map.nc',
-        'Data\\cross_section_locations.xyz'),
+        'Data\\cross_section_locations.xyz', 
+        ''),
     pytest.param(
         _case05,
         'Data\\FM\\FlowFM_fm2prof_map.nc',
-        'Data\\cross_section_locations.xyz'),
+        'Data\\cross_section_locations.xyz', 
+        ''),
     pytest.param(
         _case06,
         'Data\\FM\\FlowFM_fm2prof_map.nc',
-        'Data\\cross_section_locations.xyz'),
+        'Data\\cross_section_locations.xyz', 
+        ''),
     pytest.param(
         _case07,
         'Data\\FM\\FlowFM_fm2prof_map.nc',
-        'Data\\cross_section_locations.xyz'),
+        'Data\\cross_section_locations.xyz', 
+        ''),
+    pytest.param(
+        _case09,
+        'Data\\FM\\FlowFM_fm2prof_map.nc',
+        'Data\\cross_section_locations.xyz', 
+        'Data\\regions_complex.geojson'),
     pytest.param(
         _waal_case,
         'Data\\FM\\FlowFM_fm2prof_map.nc',
-        'Data\\cross_section_locations.xyz', marks=pytest.mark.slow)
+        'Data\\cross_section_locations.xyz', 
+        '', 
+        marks=pytest.mark.slow)
 ]
 
 _run_with_files_dir_name = 'RunWithFiles_Output'
@@ -219,10 +235,10 @@ class Test_Fm2Prof_Run_IniFile:
 
     @pytest.mark.acceptance
     @pytest.mark.parametrize(
-        ("case_name", "map_file", "css_file"),
+        ("case_name", "map_file", "css_file", "region_file"),
         _test_scenarios, ids=_test_scenarios_ids)
     def test_when_given_input_data_then_output_is_generated(
-            self, case_name, map_file, css_file):
+            self, case_name, map_file, css_file, region_file):
         # 1. Set up test data.
         iniFilePath = None
         iniFile = IniFile.IniFile(iniFilePath)
@@ -230,9 +246,16 @@ class Test_Fm2Prof_Run_IniFile:
         base_output_dir = _get_base_output_dir()
         iniFile._output_dir = _check_and_create_test_case_output_dir(
             base_output_dir, case_name)
+            
+        if region_file: 
+            region_file_path = os.path.join(test_data_dir, region_file)
+        else:
+            region_file_path = region_file
+        
         iniFile._input_file_paths = {
-            "fm_netcdfile": os.path.join(test_data_dir, map_file),
+            'fm_netcdfile': os.path.join(test_data_dir, map_file),
             'crosssectionlocationfile': os.path.join(test_data_dir, css_file),
+            'regionpolygonfile': region_file_path
         }
         iniFile._input_parameters = {
             "number_of_css_points": 20,
