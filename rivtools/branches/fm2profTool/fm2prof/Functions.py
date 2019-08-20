@@ -22,13 +22,8 @@ import pandas as pd
 from sklearn.neighbors import KNeighborsClassifier, NearestNeighbors
 import csv
 
-import matplotlib as mpl
-import matplotlib.pyplot as plt
-import matplotlib.ticker as mtick
-import seaborn as sns
-
 import os
-import matplotlib.font_manager as font_manager
+
 # endregion
 
 # region // Module information
@@ -44,7 +39,7 @@ __status__ = "Prototype"
 
 
 # region // public functions
-def read_fm2prof_input(res_file, css_file):
+def read_fm2prof_input(res_file, css_file, regions):
     """
     Reads input files for 'FM2PROF'. See documentation for file format descriptions.
 
@@ -55,6 +50,7 @@ def read_fm2prof_input(res_file, css_file):
 
     :param res_file: str, path to FlowFM map netcfd file (*_map.nc)
     :param css_file: str, path to cross-section definition file
+    :param region_file: str, path to region geojson file
     :return:
     """
 
@@ -64,6 +60,62 @@ def read_fm2prof_input(res_file, css_file):
     # Load locations and names of cross-sections
     cssdata = _read_css_xyz(css_file)
 
+    # Regions
+    if regions is not None:
+        time_independent_data, edge_data = classify_with_regions(regions, cssdata, time_independent_data, edge_data)
+    else:
+        time_independent_data, edge_data = classify_without_regions(cssdata, time_independent_data, edge_data)
+
+    return time_dependent_data, time_independent_data, edge_data, node_coordinates, cssdata
+
+def classify_with_regions(regions, cssdata, time_independent_data, edge_data):
+    """
+        Assigns cross-section id's based on region polygons. 
+        Within a region, assignment will be done by k nearest neighbour
+    """
+    css_regions = regions.classify_points(cssdata['xy'])
+
+    xy_tuples_2d = [(time_independent_data.get('x').values[i], 
+                     time_independent_data.get('y').values[i]) for i in range(len(time_independent_data.get('x')))]
+    
+    time_independent_data['region'] = regions.classify_points(xy_tuples_2d)
+
+    xy_tuples_2d = [(edge_data['coordinates'].get('x').values[i], 
+                     edge_data['coordinates'].get('y').values[i]) for i in range(len(edge_data['coordinates'].get('x')))]
+    
+    edge_data['coordinates']['region'] = regions.classify_points(xy_tuples_2d)
+
+    time_independent_data['sclass'] = time_independent_data['region']
+    edge_data['coordinates']['sclass'] = edge_data['coordinates']['region']
+
+    # Nearest Neighbour within regions
+    for region in np.unique(css_regions):
+        # Select cross-sections within this region
+        css_xy = cssdata['xy'][css_regions==region]
+        css_id = cssdata['id'][css_regions==region]
+
+        # Select 2d points within region
+        node_mask = time_independent_data['region'] == region
+        x_2d_node = time_independent_data['x'][node_mask]
+        y_2d_node = time_independent_data['y'][node_mask]
+
+        edge_mask = edge_data['coordinates']['region'] == region
+        x_2d_edge = edge_data['coordinates']['x'][edge_mask]
+        y_2d_edge = edge_data['coordinates']['y'][edge_mask]
+
+        # Do Nearest Neighour
+        neigh = _get_class_tree(css_xy, css_id)
+        css_2d_nodes = neigh.predict(np.array([x_2d_node, y_2d_node]).T)        
+        css_2d_edges = neigh.predict(np.array([x_2d_edge, y_2d_edge]).T)
+
+        # Update data in main structures
+        time_independent_data['sclass'][node_mask] = css_2d_nodes # sclass = cross-section id
+        
+        edge_data['coordinates']['sclass'][edge_mask] = css_2d_edges
+    
+    return time_independent_data, edge_data
+
+def classify_without_regions(cssdata, time_independent_data, edge_data):
     # Create a class identifier to map points to cross-sections
     neigh = _get_class_tree(cssdata['xy'], cssdata['id'])
 
@@ -73,7 +125,7 @@ def read_fm2prof_input(res_file, css_file):
     # Assign cross-section names to edge coordinates as well
     edge_data['coordinates']['sclass'] = neigh.predict(np.array([edge_data['coordinates']['x'], edge_data['coordinates']['y']]).T)
 
-    return time_dependent_data, time_independent_data, edge_data, node_coordinates, cssdata
+    return time_independent_data, edge_data
 
 def get_fm2d_data_for_css(classname, dti, edge_data, dtd):
     """
@@ -82,7 +134,7 @@ def get_fm2d_data_for_css(classname, dti, edge_data, dtd):
     x = dti['x'][dti['sclass'] == classname]
     y = dti['y'][dti['sclass'] == classname]
     area = dti['area'][dti['sclass'] == classname]
-
+    region = dti['region'][dti['sclass'] == classname]
     waterdepth = dtd['waterdepth'][dti['sclass'] == classname]
     waterlevel = dtd['waterlevel'][dti['sclass'] == classname]
     vx = dtd['velocity_x'][dti['sclass'] == classname]
@@ -114,6 +166,7 @@ def get_fm2d_data_for_css(classname, dti, edge_data, dtd):
         'velocity': velocity, 
         'area': area, 
         'chezy': chezy, 
+        'region': region,
         'edge_nodes': edge_nodes, 
         'face_nodes': face_nodes, 
         'face_nodes_full': face_nodes_full, 
@@ -202,6 +255,10 @@ def _read_fm_model(file_path):
     df['y'] = np.array(res_fid.variables['mesh2d_face_y'])
     df['area'] = np.array(res_fid.variables['mesh2d_flowelem_ba'])
     df['bedlevel'] = np.array(res_fid.variables['mesh2d_flowelem_bl'])
+    # These are filled later
+    df['region'] = ['']*len(df['y'])
+    df['sclass'] = ['']*len(df['y'])
+
 
     # Time-variant variables
     time_dependent = {
@@ -248,6 +305,10 @@ def _read_css_xyz(file_path : str, delimiter = ','):
             input_data['length'].append(float(length))
             input_data['branchid'].append(branchid)
             input_data['chainage'].append(float(chainage))
+
+        # Convert everything to nparray
+        for key in input_data:
+            input_data[key] = np.array(input_data[key])
         return input_data
 
 def _get_class_tree(xy, c):
