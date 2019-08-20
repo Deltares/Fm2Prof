@@ -17,14 +17,14 @@ class RegionPolygonFile:
 
         with open(file_path) as geojson_file:
             geojson_data = json.load(geojson_file).get("features")
-
+        
         regions = GeometryCollection([shape(feature["geometry"]).buffer(0) for feature in geojson_data])
         region_names = [feature.get('properties').get('Name') for feature in geojson_data]
 
         for region, region_name in zip(regions, region_names):
             self.regions[region_name] = region
         
-        self._set_logger_message("The following regions were found: {}".format(list(self.regions.keys())))
+        self._validate_regions()
 
     def classify_points(self, points):
         """ 
@@ -35,7 +35,7 @@ class RegionPolygonFile:
         
         # Convert to shapely point
         points = [Point(xy) for xy in points]
-        points_regions = ['NoRegion']*len(points)
+        points_regions = ['undefined']*len(points)
         
         # Assign point to region
         for i, point in enumerate(points):
@@ -45,7 +45,26 @@ class RegionPolygonFile:
                     break
         
         return np.array(points_regions)
-                
+
+    def _validate_regions(self):
+        self._set_logger_message("Validating Region file")
+        
+        number_of_regions = len(self.regions)
+        self._set_logger_message("{} regions found: {}".format(number_of_regions,
+                                  list(self.regions.keys())
+                                  ))
+
+        # Test if polygons overlap
+        for region_name, region in self.regions.items():
+            for test_name, test_region in self.regions.items():
+                if region_name == test_name:
+                    # region will obviously overlap with itself
+                    pass
+                else:
+                    if region.intersects(test_region):
+                        self._set_logger_message("{} overlaps {}.".format(region_name, test_name),
+                                                 level= 'warning')
+
 
     @staticmethod
     def _validate_extension(file_path: str):
@@ -57,7 +76,7 @@ class RegionPolygonFile:
             raise IOError(
                 'Invalid file path extension, ' +
                 'should be .json or .geojson.')
-    
+
     def set_logger(self, logger):
         """ should be given a logger object (python standard library) """
         assert isinstance(logger, logging.Logger), '' + \
