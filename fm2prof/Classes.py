@@ -24,7 +24,6 @@ from datetime import timedelta, datetime
 from functools import reduce
 import scipy.optimize as so
 from time import time
-import seaborn as sns
 
 from fm2prof import common
 from fm2prof import Functions as FE
@@ -156,7 +155,7 @@ class CrossSection:
         # in cross-section def. WAQ2PROF did crest - some fixed value.
         #  how to do here?
         self.floodplain_base = 0.0
-        # note" 'to avoid numerical osscilation'. might need minimal value.
+        # note" 'to avoid numerical oscillation'. might need minimal value.
         # fixed or variable? Test!
         self.transition_height = 0.5
         self.extra_flow_area = 0.0
@@ -526,13 +525,15 @@ class CrossSection:
         """Generates a list of output mask points based on
         their values in the mask.
 
+        writes to self.__output_mask_list
         Arguments:
-            fm_data {dict} -- Dictionary containig x,y values.
+            fm_data {dict} -- Dictionary containing x,y values.
             mask_array {NP.array} -- Array of values.
         """
         # Properties keys
         cross_section_id_key = 'cross_section_id'
         is_plas_key = 'is_plas'
+        cross_section_region_key = 'region'
         # area_polygon_id_key = 'area_polygon_id'
         # section_polygon_id_key = 'section_polygon_id'
         # time_series_key = 'time_series'
@@ -541,6 +542,7 @@ class CrossSection:
             # Normalize np arrays to list for correct access
             x_coords = fm_data.get('x').tolist()
             y_coords = fm_data.get('y').tolist()
+            region_list = fm_data.get('region').tolist()
             is_plas_mask_list = mask_array.tolist()
 
             # Assume same length for x and y coords.
@@ -548,6 +550,7 @@ class CrossSection:
                 mask_properties = {
                     cross_section_id_key: self.name,
                     is_plas_key: is_plas_mask_list[i],
+                    cross_section_region_key: region_list[i]
                 }
                 mask_coords = (x_coords[i], y_coords[i])
                 # Create the actual geojson element.
@@ -557,9 +560,10 @@ class CrossSection:
 
                 if output_mask.is_valid:
                     self.__output_mask_list.append(output_mask)
-                    self._set_logger_message(
-                        'Added output mask at {} '.format(mask_coords) +
-                        'for Cross Section {}.'.format(self.name))
+                    #self._set_logger_message(
+                    #    'Added output mask at {} '.format(mask_coords) +
+                    #    'for Cross Section {}.'.format(self.name),
+                    #     level='debug')
                 else:
                     self._set_logger_message(
                         'Invalid output mask at {} '.format(mask_coords) +

@@ -21,7 +21,6 @@ Contact: K.D. Berends (koen.berends@deltares.nl, k.d.berends@utwente.nl)
 # region // imports
 import matplotlib.pyplot as plt
 import pandas as pd
-import seaborn as sns
 import sys
 import getopt
 
