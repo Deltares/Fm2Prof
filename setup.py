@@ -24,5 +24,6 @@ setup(
         "scipy>=1.0",
         "scikit_learn>=0.19.0",
         "geojson>=2.4.1",
+        "shapely>=1.6.4"
     ],
 )
