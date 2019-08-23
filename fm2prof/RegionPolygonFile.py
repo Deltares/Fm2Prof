@@ -138,7 +138,7 @@ class SectionPolygonFile(PolygonFile):
     def __init__(self, section_file_path, logger):
         super().__init__(logger)
         self.read_section_file(section_file_path)
-        self.undefined = '1'
+        self.undefined = 'main'
     @property
     def sections(self):
         return self.polygons
@@ -154,6 +154,12 @@ class SectionPolygonFile(PolygonFile):
     def _validate_sections(self):
         self._set_logger_message("Validating Section file")
         raise_exception = False
+        
+        valid_section_keys = {'main', 'floodplain1', 'floodplain2'}
+        map_section_keys = {'1':'main',
+                            '2': 'floodplain1',
+                            '3': 'floodplain2',
+                            }
 
         # each polygon must have a 'section' property
         for section in self.sections:
@@ -161,7 +167,17 @@ class SectionPolygonFile(PolygonFile):
                 raise_exception = True
                 self._set_logger_message('Polygon {} has no property "section"'.format(section.properties.get('name')),
                                           level='error')
-        
+            section_key = str(section.properties.get('section'))
+            if section_key not in valid_section_keys:
+                if section_key not in list(map_section_keys.keys()):
+                    raise_exception = True
+                    self._set_logger_message('{} is not a recognized section'.format(section_key), 
+                    level='error')
+                else:
+                    self._set_logger_message('remapped section {} to {}'.format(section_key, 
+                                                                                map_section_keys[section_key]),
+                    level='warning')
+                    section.properties[section_key] = map_section_keys.get(section_key)
         # check for overlap (only raise a warning)
         self._check_overlap()
 
