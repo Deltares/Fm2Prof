@@ -22,7 +22,7 @@ from fm2prof import Classes as CE
 from fm2prof import sobek_export
 from fm2prof import IniFile
 from fm2prof.MaskOutputFile import MaskOutputFile
-from fm2prof.RegionPolygonFile import RegionPolygonFile
+from fm2prof.RegionPolygonFile import RegionPolygonFile, SectionPolygonFile
 
 from typing import Mapping, Sequence
 import datetime
@@ -43,7 +43,7 @@ class Fm2ProfRunner:
     __map_file_key = 'fm_netcdfile'
     __css_file_key = 'crosssectionlocationfile'
     __region_file_key = 'regionpolygonfile'
-    __sectie_key = 'sectionfractionfile'
+    __section_file_key = 'sectionpolygonfile'
 
     def __init__(self, iniFilePath: str, version: float = None):
         """
@@ -86,6 +86,7 @@ class Fm2ProfRunner:
         map_file = iniFile._input_file_paths.get(self.__map_file_key)
         css_file = iniFile._input_file_paths.get(self.__css_file_key)
         region_file = iniFile._input_file_paths.get(self.__region_file_key)
+        section_file = iniFile._input_file_paths.get(self.__section_file_key)
         output_dir = iniFile._output_dir
         input_param_dict = iniFile._input_parameters
 
@@ -103,8 +104,15 @@ class Fm2ProfRunner:
         else:
             regions = None
         
+        if section_file:
+            sections = SectionPolygonFile(section_file, logger=self.__logger)
+            input_param_dict['sectionsmethod'] = 1
+        else:
+            sections = None
+            input_param_dict['sectionsmethod'] = 0
+
         # Read FM model data
-        fm2prof_fm_model_data = FE.read_fm2prof_input(map_file, css_file, regions)
+        fm2prof_fm_model_data = FE.read_fm2prof_input(map_file, css_file, regions, sections)
         fm_model_data = CE.FmModelData(fm2prof_fm_model_data)
         self.__set_logger_message(
             'finished reading FM and cross-sectional data data')
@@ -117,12 +125,21 @@ class Fm2ProfRunner:
         # the same discharges on the rows.
         # This function interpolates to get the roughnesses
         # at the correct discharges.
+        self.__logformatter.next_step()
+        self.__set_logger_message(
+            'Final steps')
+        self.__set_logger_message(
+            'Interpolating roughness')
         FE.interpolate_roughness(cross_sections)
 
         # Generate output geojson
+        self.__set_logger_message(
+            'Export geojson output to {}'.format(output_dir))
         self._generate_geojson_output(output_dir, cross_sections)
 
         # Export cross sections
+        self.__set_logger_message(
+            'Export model input files to {}'.format(output_dir))
         self._export_cross_sections(cross_sections, output_dir)
 
     def _generate_geojson_output(
@@ -135,22 +152,23 @@ class Fm2ProfRunner:
             output_dir {str} -- Output directory path.
             cross_sections {list} -- List of Cross Sections.
         """
-        output_file_path = os.path.join(output_dir, 'masks_output.geojson')
-        try:
-            mask_points = [
-                mask_point
-                for cs in cross_sections
-                for mask_point in cs.mask_points_list]
-            MaskOutputFile.write_mask_output_file(
-                output_file_path,
-                mask_points)
-        except Exception as e_info:
-            self.__set_logger_message(
-                'Error while generation .geojson file,' +
-                'at {}'.format(output_file_path) +
-                'Reason: {}'.format(str(e_info)),
-                level='error'
-            )
+        for pointtype in ['node', 'edge']:
+            output_file_path = os.path.join(output_dir, '{}_output.geojson'.format(pointtype))
+            try:
+                node_points = [
+                    node_point
+                    for cs in cross_sections
+                    for node_point in cs.get_point_list(pointtype)]
+                MaskOutputFile.write_mask_output_file(
+                    output_file_path,
+                    node_points)
+            except Exception as e_info:
+                self.__set_logger_message(
+                    'Error while generation .geojson file,' +
+                    'at {}'.format(output_file_path) +
+                    'Reason: {}'.format(str(e_info)),
+                    level='error'
+                )
 
     def _generate_cross_section_list(
             self,
@@ -277,8 +295,8 @@ class Fm2ProfRunner:
         try:
             # Retrieve FM data for cross-section
             fm_data = FE.get_fm2d_data_for_css(
-                cross_section.name,
-                time_independent_data,
+                cross_section.name,time_independent_data
+                ,
                 edge_data,
                 time_dependent_data)
 
@@ -287,7 +305,7 @@ class Fm2ProfRunner:
 
             # Build cross-section
             self.__set_logger_message('Start building geometry')
-            cross_section.build_from_fm(fm_data=fm_data)
+            cross_section.build_geometry(fm_data=fm_data)
 
             self.__set_logger_message(
                 'Cross-section derived, starting correction.....')
@@ -307,10 +325,14 @@ class Fm2ProfRunner:
             self.__set_logger_message(
                 'computed roughness')
 
+            cross_section.set_node_output_list()
+            cross_section.set_edge_output_list()
+
         except Exception as e_info:
             self.__set_logger_message(
                 'Exception while setting cross-section' +
-                ' {} details, {}'.format(css_name, str(e_info)))
+                ' {} details, {}'.format(css_name, str(e_info)),
+                level='error')
 
     def _get_new_cross_section(
             self,
@@ -412,19 +434,20 @@ class Fm2ProfRunner:
                 cross_sections,
                 file_path=csv_roughness_file,
                 fmt='sobek3')
-            sobek_export.export_roughness(
-                cross_sections,
-                file_path=csv_roughness_test_file,
-                fmt='testformat')
+            #sobek_export.export_roughness(
+            #    cross_sections,
+            #    file_path=csv_roughness_test_file,
+            #    fmt='testformat')
 
             sobek_export.export_volumes(
                 cross_sections,
                 file_path=csv_volumes_file)
         except Exception as e_info:
             self.__set_logger_message(
-                'An error was produced,' +
+                'An error was produced while exporting files,' +
                 ' not all output files might be exported. ' +
-                '{}'.format(str(e_info)))
+                '{}'.format(str(e_info)),
+                level='error')
 
         self.__set_logger_message('Exported output files, FM2PROF finished')
 

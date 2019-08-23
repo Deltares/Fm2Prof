@@ -39,7 +39,7 @@ __status__ = "Prototype"
 
 
 # region // public functions
-def read_fm2prof_input(res_file, css_file, regions):
+def read_fm2prof_input(res_file, css_file, regions, sections):
     """
     Reads input files for 'FM2PROF'. See documentation for file format descriptions.
 
@@ -66,7 +66,17 @@ def read_fm2prof_input(res_file, css_file, regions):
     else:
         time_independent_data, edge_data = classify_without_regions(cssdata, time_independent_data, edge_data)
 
+    if sections is not None:
+        edge_data = classify_roughness_sections(sections, edge_data)
+
     return time_dependent_data, time_independent_data, edge_data, node_coordinates, cssdata
+
+def classify_roughness_sections(sections, edge_data):
+    """ assigns edges to a roughness section based on polygon data """
+    points = [(edge_data['x'][i], edge_data['y'][i])
+              for i in range(len(edge_data['x']))]
+    edge_data['section'] = sections.classify_points(points)
+    return edge_data
 
 def classify_with_regions(regions, cssdata, time_independent_data, edge_data):
     """
@@ -80,13 +90,13 @@ def classify_with_regions(regions, cssdata, time_independent_data, edge_data):
     
     time_independent_data['region'] = regions.classify_points(xy_tuples_2d)
 
-    xy_tuples_2d = [(edge_data['coordinates'].get('x').values[i], 
-                     edge_data['coordinates'].get('y').values[i]) for i in range(len(edge_data['coordinates'].get('x')))]
+    xy_tuples_2d = [(edge_data.get('x')[i], 
+                     edge_data.get('y')[i]) for i in range(len(edge_data.get('x')))]
     
-    edge_data['coordinates']['region'] = regions.classify_points(xy_tuples_2d)
+    edge_data['region'] = regions.classify_points(xy_tuples_2d)
 
     time_independent_data['sclass'] = time_independent_data['region']
-    edge_data['coordinates']['sclass'] = edge_data['coordinates']['region']
+    #edge_data['sclass'] = edge_data['region']
 
     # Nearest Neighbour within regions
     for region in np.unique(css_regions):
@@ -99,9 +109,9 @@ def classify_with_regions(regions, cssdata, time_independent_data, edge_data):
         x_2d_node = time_independent_data['x'][node_mask]
         y_2d_node = time_independent_data['y'][node_mask]
 
-        edge_mask = edge_data['coordinates']['region'] == region
-        x_2d_edge = edge_data['coordinates']['x'][edge_mask]
-        y_2d_edge = edge_data['coordinates']['y'][edge_mask]
+        edge_mask = edge_data['region'] == region
+        x_2d_edge = edge_data['x'][edge_mask]
+        y_2d_edge = edge_data['y'][edge_mask]
 
         # Do Nearest Neighour
         neigh = _get_class_tree(css_xy, css_id)
@@ -111,7 +121,7 @@ def classify_with_regions(regions, cssdata, time_independent_data, edge_data):
         # Update data in main structures
         time_independent_data['sclass'][node_mask] = css_2d_nodes # sclass = cross-section id
         
-        edge_data['coordinates']['sclass'][edge_mask] = css_2d_edges
+        edge_data['sclass'][edge_mask] = css_2d_edges
     
     return time_independent_data, edge_data
 
@@ -123,7 +133,7 @@ def classify_without_regions(cssdata, time_independent_data, edge_data):
     time_independent_data['sclass'] = neigh.predict(np.array([time_independent_data['x'], time_independent_data['y']]).T)
 
     # Assign cross-section names to edge coordinates as well
-    edge_data['coordinates']['sclass'] = neigh.predict(np.array([edge_data['coordinates']['x'], edge_data['coordinates']['y']]).T)
+    edge_data['sclass'] = neigh.predict(np.array([edge_data['x'], edge_data['y']]).T)
 
     return time_independent_data, edge_data
 
@@ -135,17 +145,19 @@ def get_fm2d_data_for_css(classname, dti, edge_data, dtd):
     y = dti['y'][dti['sclass'] == classname]
     area = dti['area'][dti['sclass'] == classname]
     region = dti['region'][dti['sclass'] == classname]
+    islake = dti['islake'][dti['sclass'] == classname]
     waterdepth = dtd['waterdepth'][dti['sclass'] == classname]
     waterlevel = dtd['waterlevel'][dti['sclass'] == classname]
     vx = dtd['velocity_x'][dti['sclass'] == classname]
     vy = dtd['velocity_y'][dti['sclass'] == classname]
 
     # find all chezy values for this cross section, note that edge coordinates are used
-    chezy = dtd['chezy_edge'][edge_data['coordinates']['sclass'] == classname]
-    edge_nodes = edge_data['edge_nodes'][edge_data['coordinates']['sclass'] == classname]
+    chezy = dtd['chezy_edge'][edge_data['sclass'] == classname]
+    edge_nodes = edge_data['edge_nodes'][edge_data['sclass'] == classname]
+    edge_x = edge_data['x'][edge_data['sclass'] == classname]
+    edge_y = edge_data['y'][edge_data['sclass'] == classname]
+    edge_section = edge_data['section'][edge_data['sclass'] == classname]  # roughness section number 
 
-    velocity_edge = dtd['velocity_edge'][edge_data['coordinates']['sclass'] == classname]
-    
     # retrieve the full set for face_nodes and area, needed for the roughness calculation
     face_nodes = edge_data['face_nodes'][dti['sclass'] == classname]
     face_nodes_full = edge_data['face_nodes']
@@ -167,7 +179,11 @@ def get_fm2d_data_for_css(classname, dti, edge_data, dtd):
         'area': area, 
         'chezy': chezy, 
         'region': region,
+        'islake': islake,
         'edge_nodes': edge_nodes, 
+        'edge_x': edge_x,
+        'edge_y': edge_y,
+        'edge_section': edge_section,
         'face_nodes': face_nodes, 
         'face_nodes_full': face_nodes_full, 
         'area_full': area_full}
@@ -222,24 +238,29 @@ def return_volume_error(predicted, measured, gof='rmse'):
     return np.sum(error**2)
 
 def interpolate_roughness(cross_section_list):
-    try:
-        # get alluvial roughness tables from all cross sections
-        alluvial_levels = [css.alluvial_friction_table[0] for css in cross_section_list]
-        alluvial_chezy = [css.alluvial_friction_table[1] for css in cross_section_list]
+    """
+    Creates a uniform matrix of z/chezy values for all cross-sections by linear interpolation
+    """
+    all_sections = [s for css in cross_section_list for s in css.friction_tables.keys()]
 
-        # same for nonalluvial
-        nonalluvial_levels = [css.nonalluvial_friction_table[0] for css in cross_section_list]
-        nonalluvial_chezy = [css.nonalluvial_friction_table[1] for css in cross_section_list]
-    except IndexError:
-        return None
+    sections = np.unique(all_sections)
 
-    # construct ranges
-    alluvial_range = _construct_range(alluvial_levels, 0.01)
-    nonalluvial_range = _construct_range(nonalluvial_levels, 0.01)
+    zstep = 0.1
 
-    # interpolate all values in every cross section using the constructed ranges
-    for css in cross_section_list:
-        _interpolate_roughness_css(css, alluvial_range, nonalluvial_range)
+    for section in sections:
+        minimal_z = 1e20
+        maximal_z = -1e20
+        for css in cross_section_list:
+            if section in list(css.friction_tables.keys()):
+                minimal_z = np.min([minimal_z,
+                                    np.min(css.friction_tables.get(section).level)])
+                maximal_z = np.max([maximal_z,
+                                    np.max(css.friction_tables.get(section).level)])
+
+        for css in cross_section_list:
+            if section in list(css.friction_tables.keys()):
+                minmaxrange = np.arange(minimal_z, maximal_z, zstep)
+                css.friction_tables.get(section).interpolate(minmaxrange)
 
 # endregion
 
@@ -256,33 +277,39 @@ def _read_fm_model(file_path):
     df['area'] = np.array(res_fid.variables['mesh2d_flowelem_ba'])
     df['bedlevel'] = np.array(res_fid.variables['mesh2d_flowelem_bl'])
     # These are filled later
-    df['region'] = ['']*len(df['y'])
-    df['sclass'] = ['']*len(df['y'])
+    df['region'] = ['']*len(df['y'])  # 
+    df['sclass'] = ['']*len(df['y'])  # cross-section id
+    df['islake'] = [False]*len(df['y'])  # roughness section number 
 
+    
 
+    # Edge data
+    # edgetype 1 = 'internal'
+    internal_edges = res_fid.variables['mesh2d_edge_type'][:] == 1
+    edge_data = {'x': np.array(res_fid.variables['mesh2d_edge_x'])[internal_edges],
+                 'y': np.array(res_fid.variables['mesh2d_edge_y'])[internal_edges],
+                'edge_nodes': np.array(res_fid.variables['mesh2d_edge_nodes'])[internal_edges],
+                'face_nodes': np.array(res_fid.variables['mesh2d_face_nodes']),
+                'sclass': np.array(['']*np.sum(internal_edges), dtype='U99'),
+                'section': np.ones(np.sum(internal_edges)),
+                'region': np.array(['']*np.sum(internal_edges), dtype='U99')
+                }
+
+    # node data (not used?)
+    df_node = pd.DataFrame(columns=['x'], data=np.array(res_fid.variables['mesh2d_node_x']))
+    df_node['y'] = np.array(res_fid.variables['mesh2d_node_y'])
+    
     # Time-variant variables
     time_dependent = {
                       'waterdepth': pd.DataFrame(data = np.array(res_fid.variables['mesh2d_waterdepth']).T, columns=res_fid.variables['time']),
                       'waterlevel': pd.DataFrame(data = np.array(res_fid.variables['mesh2d_s1']).T, columns=res_fid.variables['time']),
                       'chezy_mean': pd.DataFrame(data = np.array(res_fid.variables['mesh2d_czs']).T, columns=res_fid.variables['time']),
-                      'chezy_edge': pd.DataFrame(data = np.array(res_fid.variables['mesh2d_cftrt']).T, columns=res_fid.variables['time']),
+                      'chezy_edge': pd.DataFrame(data = np.array(res_fid.variables['mesh2d_cftrt']).T[internal_edges], columns=res_fid.variables['time']),
                       'velocity_x': pd.DataFrame(data = np.array(res_fid.variables['mesh2d_ucx']).T, columns=res_fid.variables['time']),
                       'velocity_y': pd.DataFrame(data = np.array(res_fid.variables['mesh2d_ucy']).T, columns=res_fid.variables['time']),
                       'velocity_edge': pd.DataFrame(data = np.array(res_fid.variables['mesh2d_u1']).T, columns=res_fid.variables['time'])
                       }
 
-    df_edge = pd.DataFrame(columns=['x'], data=np.array(res_fid.variables['mesh2d_edge_x']))
-    df_edge['y'] = np.array(res_fid.variables['mesh2d_edge_y'])
-
-    edge_data = {
-                'coordinates': df_edge,
-                'edge_nodes': np.array(res_fid.variables['mesh2d_edge_nodes']),
-                'face_nodes': np.array(res_fid.variables['mesh2d_face_nodes'])
-                }
-
-    df_node = pd.DataFrame(columns=['x'], data=np.array(res_fid.variables['mesh2d_node_x']))
-    df_node['y'] = np.array(res_fid.variables['mesh2d_node_y'])
-    
     return df, edge_data, df_node, time_dependent
 
 def _read_css_xyz(file_path : str, delimiter = ','):
@@ -318,18 +345,9 @@ def _get_class_tree(xy, c):
     neigh.fit(X, y)
     return neigh
 
-def _construct_range(xp_list, step):
-    xp_flat = [item for item in xp_list]
-
-    min_xp = np.min(xp_flat) - 0.3
-    max_xp = np.max(xp_flat) + 0.3
-
-    return np.arange(min_xp, max_xp, step)
-
 def _interpolate_roughness_css(cross_section, alluvial_range, nonalluvial_range):
     # change nan's to zeros
     chezy_alluvial = np.nan_to_num(cross_section.alluvial_friction_table[1])
-    chezy_nonalluvial = np.nan_to_num(cross_section.nonalluvial_friction_table[1])
     chezy_nonalluvial = np.nan_to_num(cross_section.nonalluvial_friction_table[1])
 
     waterlevel_alluvial = cross_section.alluvial_friction_table[0]

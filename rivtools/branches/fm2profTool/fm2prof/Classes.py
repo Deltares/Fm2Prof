@@ -114,7 +114,8 @@ class CrossSection:
     __cs_parameter_Frictionweighing = 'Frictionweighing'
     __cs_parameter_sectionsmethod = 'sectionsmethod'
 
-    __output_mask_list = []
+    __output_node_list = []
+    __output_edge_list = []
     __logger = None
 
     def __init__(
@@ -146,6 +147,7 @@ class CrossSection:
         self.flow_width = np.array([])
         self.alluvial_width = 0.
         self.nonalluvial_width = 0.
+        self.friction_tables = dict()
         self.alluvial_friction_table = np.array([])
         self.nonalluvial_friction_table = np.array([])
         self.roughness_sections = np.array([])
@@ -181,16 +183,31 @@ class CrossSection:
         self._css_is_corrected = False
         self._css_is_reduced = False
 
+        # data structures
+        self._fm_data = None
+
         # PARAMETERS
         self.temp_param_skip_maps = 2
         self.parameters = InputParam_dict
 
     @property
-    def mask_points_list(self):
-        return self.__output_mask_list
+    def node_points_list(self):
+        return self.__output_node_list
 
+    @property
+    def edge_points_list(self):
+        return self.__output_edge_list
+
+    def get_point_list(self, pointtype):
+        if pointtype == 'node':
+            return self.node_points_list
+        elif pointtype == 'edge':
+            return self.edge_points_list
+        else:
+            raise ValueError('pointtype must be "node" or "edge"')
+    
     # Public functions
-    def build_from_fm(self, fm_data):
+    def build_geometry(self, fm_data):
         """
         Build 1D geometrical cross-section from FM data.
 
@@ -305,9 +322,11 @@ class CrossSection:
         # convert to float64 array for uniformity
         # (apparently entries can be float32)
         self._css_z = np.array(self._css_z, dtype=np.dtype('float64'))
-
+        
+        fm_data['islake'] = plassen_mask
+        self._fm_data = fm_data
         # generate all mask points for the given cross_section
-        self._get_mask_output_list(fm_data, plassen_mask)
+        #self.set_mask_output_list(fm_data, plassen_mask)
 
     def optimisation_function(self, opt_in):
         """
@@ -397,76 +416,24 @@ class CrossSection:
         an alluvial (smooth) and nonalluvial (rough) part of the total
         cross-section. This division is made based on the final timestep.
         """
-        chezy_fm = fm_data['chezy'].iloc[:, self.temp_param_skip_maps:]
-        # Get chezy values at last timestep
-        end_values = chezy_fm.T.iloc[-1]
 
-        # end_values[end_values == 0] = np.nan
-
-        # Remove points that belong to ponds
-        # plassen_indices = np.where(self.plassen_mask)
-
-        # node_indices = fm_data['face_nodes'][plassen_indices]
-        # node_indices = np.unique(node_indices.flatten())
-
-        # for link_index, chezy_value in enumerate(end_values):
-        #    nodes = fm_data['edge_nodes'][link_index]
-
-        #    if nodes[0] in node_indices and nodes[1] in node_indices:
-        #        # exclude this value from end_values
-        #        end_values[link_index] = np.nan
-
-        # end_values = end_values[~np.isnan(end_values)]
-
-        # Find split point (chezy value) by variance minimisation
-        variance_list = list()
-        split_candidates = np.arange(min(end_values), max(end_values), 1)
-        for split in split_candidates:
-            variance_list.append(
-                np.max(
-                    [np.var(end_values[end_values > split]),
-                        np.var(end_values[end_values < split])]))
-
-        splitpoint = split_candidates[np.nanargmin(variance_list)]
-
-        # Assign datapoints to a cross-section
-        C_sections = list()
-        C_sections.append(end_values[end_values > splitpoint].index)
-        C_sections.append(end_values[end_values < splitpoint].index)
-
-        self.roughness_sections = C_sections
-        # Find roughness tables for each section
-        chezy = chezy_fm.values.T
-        chezy[chezy == 0] = np.nan
-        self.alluvial_friction_table = [
-            self._css_z_roughness,
-            chezy_fm.T[C_sections[0]].mean(axis=1)]
-        self.nonalluvial_friction_table = [
-            self._css_z_roughness,
-            chezy_fm.T[C_sections[1]].mean(axis=1)]
-
-        # Dirty fix
-        # Set width of sections
-        C_sections_edge = list()
-        C_sections_edge.append(
-            [i for i, x in enumerate(end_values > splitpoint) if x])
-        C_sections_edge.append(
-            [i for i, x in enumerate(end_values < splitpoint) if x])
-
-        self.alluvial_width = self._calc_roughness_width(
-            splitpoint, C_sections_edge[0], fm_data)
-        self.nonalluvial_width = self._calc_roughness_width(
-            splitpoint, C_sections_edge[1], fm_data)
-
-        # floodplain base level (temporary here)
-
-        self.floodplain_base = self._calc_base_level(
-            splitpoint, C_sections_edge[1], fm_data)
-
-        # for visualisation later
-        self.alluvial_edge_indices = C_sections_edge[0]
-        self.nonalluvial_edge_indices = C_sections_edge[1]
-
+        # Classify data into roughness sections
+        if self.parameters[self.__cs_parameter_sectionsmethod] == 1:
+            self._classify_roughness_by_polygon()
+        else:
+           self._classify_roughness_by_variance()
+        
+        # Compute roughness tabels
+        self._set_logger_message('Building roughness table')
+        self._build_roughness_tables()
+        # Compute roughness widths
+        self._set_logger_message('Computing section widths')
+        self._compute_section_widths()
+        # Compute floodplain base level
+        self._set_logger_message('Computing base level')
+        self._compute_floodplain_base()
+        # done
+    
     def reduce_points(self, n, method='visvalingam_whyatt', verbose=True):
         """
         Reduces the number of points from _css attributes to a preset maximum.
@@ -520,8 +487,7 @@ class CrossSection:
 
         self.__logger = logger
 
-    # Private Functions
-    def _get_mask_output_list(self, fm_data, mask_array):
+    def set_node_output_list(self):
         """Generates a list of output mask points based on
         their values in the mask.
 
@@ -530,27 +496,29 @@ class CrossSection:
             fm_data {dict} -- Dictionary containing x,y values.
             mask_array {NP.array} -- Array of values.
         """
+        fm_data = self._fm_data
+
         # Properties keys
         cross_section_id_key = 'cross_section_id'
-        is_plas_key = 'is_plas'
         cross_section_region_key = 'region'
-        # area_polygon_id_key = 'area_polygon_id'
-        # section_polygon_id_key = 'section_polygon_id'
-        # time_series_key = 'time_series'
+        is_lake_key = 'is_lake'
+        bedlevel_key = 'bedlevel'
 
         try:
             # Normalize np arrays to list for correct access
             x_coords = fm_data.get('x').tolist()
             y_coords = fm_data.get('y').tolist()
             region_list = fm_data.get('region').tolist()
-            is_plas_mask_list = mask_array.tolist()
+            bedlevel_list = fm_data.get('bedlevel').tolist()
+            is_lake_mask_list = fm_data.get('islake').tolist()
 
             # Assume same length for x and y coords.
             for i in range(len(x_coords)):
                 mask_properties = {
                     cross_section_id_key: self.name,
-                    is_plas_key: is_plas_mask_list[i],
-                    cross_section_region_key: region_list[i]
+                    is_lake_key: is_lake_mask_list[i],
+                    cross_section_region_key: region_list[i],
+                    bedlevel_key: bedlevel_list[i]
                 }
                 mask_coords = (x_coords[i], y_coords[i])
                 # Create the actual geojson element.
@@ -559,7 +527,7 @@ class CrossSection:
                     mask_properties)
 
                 if output_mask.is_valid:
-                    self.__output_mask_list.append(output_mask)
+                    self.__output_node_list.append(output_mask)
                     #self._set_logger_message(
                     #    'Added output mask at {} '.format(mask_coords) +
                     #    'for Cross Section {}.'.format(self.name),
@@ -577,8 +545,134 @@ class CrossSection:
                 'Reason: {}'.format(str(e_error)),
                 level='error')
 
-    def _calc_roughness_width(self, splitpoint, link_indices, fm_data):
+    def set_edge_output_list(self):
+        """Generates a list of output mask points based on
+        their values in the mask.
+
+        writes to self.__output_mask_list
+        Arguments:
+            fm_data {dict} -- Dictionary containing x,y values.
+            mask_array {NP.array} -- Array of values.
+        """
+        fm_data = self._fm_data
+
+        # Properties keys
+        cross_section_id_key = 'cross_section_id'
+        cross_section_region_key = 'region'
+        roughness_section_key = 'section'
+
+        try:
+            # Normalize np arrays to list for correct access
+            x_coords = fm_data.get('edge_x').tolist()
+            y_coords = fm_data.get('edge_y').tolist()
+            section_list = fm_data.get('edge_section').tolist()
+            # Assume same length for x and y coords.
+            for i in range(len(x_coords)):
+                mask_properties = {
+                    cross_section_id_key: self.name,
+                    roughness_section_key: section_list[i]
+                }
+                mask_coords = (x_coords[i], y_coords[i])
+                # Create the actual geojson element.
+                output_mask = MaskOutputFile.create_mask_point(
+                    mask_coords,
+                    mask_properties)
+
+                if output_mask.is_valid:
+                    self.__output_edge_list.append(output_mask)
+                else:
+                    self._set_logger_message(
+                        'Invalid output mask at {} '.format(mask_coords) +
+                        'for Cross Section {}, not added. '.format(self.name) +
+                        'Reason {}'.format(output_mask.errors()),
+                        level='error')
+        except Exception as e_error:
+            self._set_logger_message(
+                'Error setting output masks ' +
+                'for Cross Section {}. '.format(self.name) +
+                'Reason: {}'.format(str(e_error)),
+                level='error')
+
+    def interpolate_roughness_table(self, tablename, z_values):
+        """
+        Interpolates the roughness table to z values
+        """
+        table_name_list = ['main', 'floodplain1']
+
+        if tablename not in table_name_list:
+            raise KeyError("tablename not in list {}".format(table_name_list))
+
+        pass
+
+    # Private Functions
+    def _classify_roughness_by_polygon(self):
+        pass
+
+    def _classify_roughness_by_variance(self):
+        fm_data = self._fm_data
+        chezy_fm = fm_data['chezy'].iloc[:, self.temp_param_skip_maps:]
+
+        # Get chezy values at last timestep
+        end_values = chezy_fm.T.iloc[-1].values
+
+        # Find split point (chezy value) by variance minimisation
+        variance_list = list()
+        split_candidates = np.arange(min(end_values), max(end_values), 1)
+        if len(split_candidates) < 2: # this means that all end values are very close together, so do not split
+            self._fm_data['edge_section'][:] = 1
+        else:
+            for split in split_candidates:
+                variance_list.append(
+                    np.max(
+                        [np.var(end_values[end_values >= split]),
+                            np.var(end_values[end_values < split])]))
+
+            splitpoint = split_candidates[np.nanargmin(variance_list)]
+
+            # High chezy values are assigned to section number '1' (Main channel)
+            self._fm_data['edge_section'][end_values > splitpoint] = 1
+
+            # Low chezy values are assigned to section number '2' (Flood plain) 
+            self._fm_data['edge_section'][end_values <= splitpoint] = 2
+
+    def _build_roughness_tables(self):
+
+        # Find roughness tables for each section
+        chezy_fm = self._fm_data['chezy'].iloc[:, self.temp_param_skip_maps:]
+        
+        sections = np.unique(self._fm_data['edge_section'])
+
+        for section in sections:
+            f = chezy_fm[self._fm_data['edge_section']==section].mean(axis=0).values
+            self.friction_tables[section] = FrictionTable(level=self._css_z_roughness,
+                                                          friction=f)
+        """
+        self.alluvial_friction_table = [
+            self._css_z_roughness,
+            chezy_fm[self._fm_data['edge_section']==1].mean(axis=0).values]
+        self.nonalluvial_friction_table = [
+            self._css_z_roughness,
+            chezy_fm[self._fm_data['edge_section']==2].mean(axis=0).values]
+        """
+    
+    def _compute_section_widths(self):
+        self.alluvial_width = self._calc_roughness_width(self._fm_data['edge_section']==1)
+        self.nonalluvial_width = self._calc_roughness_width(self._fm_data['edge_section']==2)
+    
+    def _compute_floodplain_base(self):
+        # floodplain base level (temporary here)
+        self.floodplain_base = 0
+        #self.floodplain_base = self._calc_base_level(
+        #    splitpoint, C_sections_edge[1], fm_data)
+        
+        #for section_nr in range(len(C_sections)):
+        #    if C_sections_edge[section_nr]:
+        #        self._fm_data['edge_section'][np.array(C_sections_edge[section_nr])] = section_nr
+
+    def _calc_roughness_width(self, link_indices):
         # get the 2 nodes for every alluvial edge
+        fm_data = self._fm_data
+
         section_nodes = fm_data['edge_nodes'][link_indices]
         section_nodes = np.unique(section_nodes.flatten())
 
@@ -920,3 +1014,22 @@ class ElapsedFormatter():
     def set_number_of_iterations(self, n):
         assert n > 0, 'Total number of iterations should be higher than zero'
         self.number_of_iterations = n
+
+
+class FrictionTable:
+    def __init__(self, level, friction):
+        if self._validate_input(level, friction):
+            self.level = level
+            self.friction = friction
+    
+    def interpolate(self, new_z):
+        self.friction = np.interp(new_z, self.level, self.friction)
+        self.level = new_z
+    
+    @staticmethod
+    def _validate_input(level, friction):
+        assert isinstance(level, np.ndarray)
+        assert isinstance(friction, np.ndarray)
+        assert level.shape==friction.shape
+
+        return True
