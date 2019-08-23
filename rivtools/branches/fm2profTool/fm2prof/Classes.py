@@ -114,7 +114,7 @@ class CrossSection:
     __cs_parameter_Frictionweighing = 'Frictionweighing'
     __cs_parameter_sectionsmethod = 'sectionsmethod'
 
-    __output_node_list = []
+    __output_face_list = []
     __output_edge_list = []
     __logger = None
 
@@ -145,11 +145,8 @@ class CrossSection:
         self.z = np.array([])
         self.total_width = np.array([])
         self.flow_width = np.array([])
-        self.alluvial_width = 0.
-        self.nonalluvial_width = 0.
+        self.section_widths = {'main':0, 'floodplain1':0, 'floodplain2':0}
         self.friction_tables = dict()
-        self.alluvial_friction_table = np.array([])
-        self.nonalluvial_friction_table = np.array([])
         self.roughness_sections = np.array([])
 
         # delta h corrections ("summerdike option")
@@ -191,20 +188,38 @@ class CrossSection:
         self.parameters = InputParam_dict
 
     @property
-    def node_points_list(self):
-        return self.__output_node_list
+    def alluvial_width(self):
+        for key in [1, '1', 'main', 'Main']:
+            try:
+                return self.section_widths[key]
+            except KeyError:
+                pass
+        return 0
+
+    @property
+    def nonalluvial_width(self):
+        for key in [2, '2', 'floodplain', 'FloodPlain1']:
+            try:
+                return self.section_widths[key]
+            except KeyError:
+                pass
+        return 0
+
+    @property
+    def face_points_list(self):
+        return self.__output_face_list
 
     @property
     def edge_points_list(self):
         return self.__output_edge_list
 
     def get_point_list(self, pointtype):
-        if pointtype == 'node':
-            return self.node_points_list
+        if pointtype == 'face':
+            return self.face_points_list
         elif pointtype == 'edge':
             return self.edge_points_list
         else:
-            raise ValueError('pointtype must be "node" or "edge"')
+            raise ValueError('pointtype must be "face" or "edge"')
     
     # Public functions
     def build_geometry(self, fm_data):
@@ -487,7 +502,7 @@ class CrossSection:
 
         self.__logger = logger
 
-    def set_node_output_list(self):
+    def set_face_output_list(self):
         """Generates a list of output mask points based on
         their values in the mask.
 
@@ -527,7 +542,7 @@ class CrossSection:
                     mask_properties)
 
                 if output_mask.is_valid:
-                    self.__output_node_list.append(output_mask)
+                    self.__output_face_list.append(output_mask)
                     #self._set_logger_message(
                     #    'Added output mask at {} '.format(mask_coords) +
                     #    'for Cross Section {}.'.format(self.name),
@@ -606,6 +621,7 @@ class CrossSection:
 
     # Private Functions
     def _classify_roughness_by_polygon(self):
+        # classification is already done during file reading, no additional work necessary
         pass
 
     def _classify_roughness_by_variance(self):
@@ -619,7 +635,7 @@ class CrossSection:
         variance_list = list()
         split_candidates = np.arange(min(end_values), max(end_values), 1)
         if len(split_candidates) < 2: # this means that all end values are very close together, so do not split
-            self._fm_data['edge_section'][:] = 1
+            self._fm_data['edge_section'][:] = 'main'
         else:
             for split in split_candidates:
                 variance_list.append(
@@ -630,10 +646,10 @@ class CrossSection:
             splitpoint = split_candidates[np.nanargmin(variance_list)]
 
             # High chezy values are assigned to section number '1' (Main channel)
-            self._fm_data['edge_section'][end_values > splitpoint] = 1
+            self._fm_data['edge_section'][end_values > splitpoint] = 'main'
 
             # Low chezy values are assigned to section number '2' (Flood plain) 
-            self._fm_data['edge_section'][end_values <= splitpoint] = 2
+            self._fm_data['edge_section'][end_values <= splitpoint] = 'floodplain1'
 
     def _build_roughness_tables(self):
 
@@ -646,18 +662,10 @@ class CrossSection:
             f = chezy_fm[self._fm_data['edge_section']==section].mean(axis=0).values
             self.friction_tables[section] = FrictionTable(level=self._css_z_roughness,
                                                           friction=f)
-        """
-        self.alluvial_friction_table = [
-            self._css_z_roughness,
-            chezy_fm[self._fm_data['edge_section']==1].mean(axis=0).values]
-        self.nonalluvial_friction_table = [
-            self._css_z_roughness,
-            chezy_fm[self._fm_data['edge_section']==2].mean(axis=0).values]
-        """
     
     def _compute_section_widths(self):
-        self.alluvial_width = self._calc_roughness_width(self._fm_data['edge_section']==1)
-        self.nonalluvial_width = self._calc_roughness_width(self._fm_data['edge_section']==2)
+        for section in np.unique(self._fm_data['edge_section']):
+            self.section_widths[section] = self._calc_roughness_width(self._fm_data['edge_section']==section)
     
     def _compute_floodplain_base(self):
         # floodplain base level (temporary here)

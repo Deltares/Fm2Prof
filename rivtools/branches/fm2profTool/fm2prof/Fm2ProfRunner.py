@@ -152,7 +152,7 @@ class Fm2ProfRunner:
             output_dir {str} -- Output directory path.
             cross_sections {list} -- List of Cross Sections.
         """
-        for pointtype in ['node', 'edge']:
+        for pointtype in ['face', 'edge']:
             output_file_path = os.path.join(output_dir, '{}_output.geojson'.format(pointtype))
             try:
                 node_points = [
@@ -325,7 +325,7 @@ class Fm2ProfRunner:
             self.__set_logger_message(
                 'computed roughness')
 
-            cross_section.set_node_output_list()
+            cross_section.set_face_output_list()
             cross_section.set_edge_output_list()
 
         except Exception as e_info:
