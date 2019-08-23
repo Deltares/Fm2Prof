@@ -3,30 +3,18 @@ import json
 from shapely.geometry import shape, GeometryCollection, Point
 import logging
 import numpy as np 
+from collections import namedtuple
 
-class RegionPolygonFile:
-    
-    def __init__(self, region_file_path, logger):
-        self.regions = dict()
+Polygon = namedtuple('Polygon', ['geometry', 'properties'])
 
+class PolygonFile:
+    __logger = None
+
+    def __init__(self, logger):
         self.set_logger(logger)
-        self.read_region_file(region_file_path)
-
-    def read_region_file(self, file_path):
-        RegionPolygonFile._validate_extension(file_path)
-
-        with open(file_path) as geojson_file:
-            geojson_data = json.load(geojson_file).get("features")
-        
-        regions = GeometryCollection([shape(feature["geometry"]).buffer(0) for feature in geojson_data])
-        region_names = [feature.get('properties').get('Name') for feature in geojson_data]
-
-        for region, region_name in zip(regions, region_names):
-            self.regions[region_name] = region
-        
-        self._validate_regions()
-
-    def classify_points(self, points):
+        self.polygons = list()
+        self.undefined = 'undefined'
+    def classify_points_with_property(self, points, property='name'):
         """ 
         Classifies points as belonging to which region
 
@@ -35,35 +23,40 @@ class RegionPolygonFile:
         
         # Convert to shapely point
         points = [Point(xy) for xy in points]
-        points_regions = ['undefined']*len(points)
+        points_regions = [self.undefined]*len(points)
         
         # Assign point to region
         for i, point in enumerate(points):
-            for region in self.regions:
-                if point.within(self.regions.get(region)):
-                    points_regions[i] = region
+            for polygon in self.polygons:
+                if point.within(polygon.geometry):
+                    points_regions[i] = polygon.properties.get(property)
                     break
-        
+
         return np.array(points_regions)
 
-    def _validate_regions(self):
-        self._set_logger_message("Validating Region file")
-        
-        number_of_regions = len(self.regions)
-        self._set_logger_message("{} regions found: {}".format(number_of_regions,
-                                  list(self.regions.keys())
-                                  ))
+    def set_logger(self, logger):
+        """ should be given a logger object (python standard library) """
+        assert isinstance(logger, logging.Logger), '' + \
+            'logger should be instance of logging.Logger class'
 
-        # Test if polygons overlap
-        for region_name, region in self.regions.items():
-            for test_name, test_region in self.regions.items():
-                if region_name == test_name:
-                    # region will obviously overlap with itself
-                    pass
-                else:
-                    if region.intersects(test_region):
-                        self._set_logger_message("{} overlaps {}.".format(region_name, test_name),
-                                                 level= 'warning')
+        self.__logger = logger
+    
+    def parse_geojson_file(self, file_path):
+        """ Read data from geojson file """
+        PolygonFile._validate_extension(file_path)
+
+        with open(file_path) as geojson_file:
+            geojson_data = json.load(geojson_file).get("features")
+        
+        for feature in geojson_data:
+            feature_props = {k.lower(): v for k, v in feature.get('properties').items()}
+            self.polygons.append(Polygon(geometry=shape(feature["geometry"]).buffer(0),
+                                         properties=feature_props))
+        #polygons = GeometryCollection([shape(feature["geometry"]).buffer(0) for feature in geojson_data])
+        #polygon_names = [feature.get('properties').get('Name') for feature in geojson_data]
+
+        #for polygon, polygon_name in zip(polygons, polygon_names):
+        #    self.polygons[polygon_name] = polygon
 
 
     @staticmethod
@@ -76,13 +69,6 @@ class RegionPolygonFile:
             raise IOError(
                 'Invalid file path extension, ' +
                 'should be .json or .geojson.')
-
-    def set_logger(self, logger):
-        """ should be given a logger object (python standard library) """
-        assert isinstance(logger, logging.Logger), '' + \
-            'logger should be instance of logging.Logger class'
-
-        self.__logger = logger
 
     def _set_logger_message(self, err_mssg: str, level='info'):
         """Sets message to logger if this is set.
@@ -108,3 +94,78 @@ class RegionPolygonFile:
             self.__logger.error(err_mssg)
         elif level.lower() == 'critical':
             self.__logger.critical(err_mssg)
+
+    def _check_overlap(self):
+        for polygon in self.polygons:
+            for testpoly in self.polygons:
+                if polygon.properties.get('name') == testpoly.properties.get('name'):
+                    # polygon will obviously overlap with itself
+                    pass
+                else:
+                    if polygon.geometry.intersects(testpoly.geometry):
+                        self._set_logger_message("{} overlaps {}.".format(polygon.properties.get('name'), 
+                                                                          testpoly.properties.get('name')),
+                                                 level= 'warning')
+
+class RegionPolygonFile(PolygonFile):
+    
+    def __init__(self, region_file_path, logger):
+        super().__init__(logger)
+        self.read_region_file(region_file_path)
+
+    @property
+    def regions(self):
+        return self.polygons
+
+    def read_region_file(self, file_path):
+        self.parse_geojson_file(file_path)
+        self._validate_regions()
+
+    def _validate_regions(self):
+        self._set_logger_message("Validating Region file")
+        
+        number_of_regions = len(self.regions)
+        
+        self._set_logger_message("{} regions found".format(number_of_regions))
+
+        # Test if polygons overlap
+        self._check_overlap()
+
+    def classify_points(self, points):
+        return self.classify_points_with_property(points, property='name')
+
+class SectionPolygonFile(PolygonFile):
+    def __init__(self, section_file_path, logger):
+        super().__init__(logger)
+        self.read_section_file(section_file_path)
+        self.undefined = '1'
+    @property
+    def sections(self):
+        return self.polygons
+
+    def read_section_file(self, file_path):
+        self.parse_geojson_file(file_path)
+        self._validate_sections()
+
+    def classify_points(self, points):
+        return self.classify_points_with_property(points, property='section')
+
+
+    def _validate_sections(self):
+        self._set_logger_message("Validating Section file")
+        raise_exception = False
+
+        # each polygon must have a 'section' property
+        for section in self.sections:
+            if 'section' not in section.properties:
+                raise_exception = True
+                self._set_logger_message('Polygon {} has no property "section"'.format(section.properties.get('name')),
+                                          level='error')
+        
+        # check for overlap (only raise a warning)
+        self._check_overlap()
+
+        if raise_exception:
+            raise AssertionError('Section file could not validated')
+        else:
+            self._set_logger_message('Section file succesfully validated')

@@ -111,7 +111,7 @@ def _write_roughness_testformat(fid, cross_sections):
 
             for index, level in enumerate(waterlevels):
                 try:
-                    chezy = table[1].iloc[index]
+                    chezy = table[1][index]
                 except IndexError:
                     break
                 if np.isnan(chezy) == False:
@@ -209,30 +209,25 @@ def _write_roughness_sobek3(fid, cross_sections):
     # write header
     fid.write('Name,Chainage,RoughnessType,SectionType,Dependance,Interpolation,Pos/neg,R_pos_constant,Q_pos,R_pos_f(Q),H_pos,R_pos__f(h),R_neg_constant,Q_neg,R_neg_f(Q),H_neg,R_neg_f(h)\n')
 
-    for roughnesstype in ('alluvial', 'nonalluvial'):
+    sections = np.unique([s for css in cross_sections for s in css.friction_tables.keys()])
+    
+    for section in sections:
         for index, cross_section in enumerate(cross_sections):
-            waterlevels = cross_section.alluvial_friction_table[0]
+            if section in list(cross_section.friction_tables.keys()):
+                if section in [1, '1', 'main', 'Main']:
+                    table = cross_section.friction_tables[section]
+                    plain = 'Main'
+                elif section in [2, '2', 'floodplain', 'FloodPlain1', 'Floodplain']:
+                    table = cross_section.friction_tables[section]
+                    plain = 'FloodPlain1'
+                elif section in [3, '3', 'floodplain2', 'FloodPlain2', 'Floodplain2']:
+                    table = cross_section.friction_tables[section]
+                    plain = 'FloodPlain2'
+                else:
+                    raise Exception('Unknown section name: {}'.format(section))
 
-            # round off to 2 decimals
-            waterlevels = np.ceil(waterlevels * 100) / 100
-
-            if roughnesstype == 'alluvial':
-                table = cross_section.alluvial_friction_table
-                plain = 'Main'
-            elif roughnesstype == 'nonalluvial':
-                table = cross_section.nonalluvial_friction_table
-                plain = 'FloodPlain1'
-            else:
-                raise Exception('choose either alluvial or nonalluvial')
-
-            for index, level in enumerate(waterlevels):
-                try:
-                    chezy = table[1].iloc[index]
-                except IndexError:
-                    break
-
-                if np.isnan(chezy) == False:
-                    fid.write(str(cross_section.branch) + ',' + str(cross_section.chainage) + ',' + 'Chezy' + ',' + plain + ',' + 'Waterlevel' + ',' + 'Linear' + ',' + 'Same' + ',,,,' + str(level) + ',' + str(chezy) + ',,,,,' + '\n')
+                for level, friction in zip(table.level, table.friction):
+                    fid.write(str(cross_section.branch) + ',' + str(cross_section.chainage) + ',' + 'Chezy' + ',' + plain + ',' + 'Waterlevel' + ',' + 'Linear' + ',' + 'Same' + ',,,,' + str(level) + ',' + str(friction) + ',,,,,' + '\n')
 
 
            
