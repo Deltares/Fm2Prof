@@ -148,9 +148,9 @@ def _write_geometry_fm1d(fid, cross_sections):
                 "\tsd_flowArea\t\t\t= {}\n".format(css.extra_flow_area)+\
                 "\tsd_totalArea\t\t= {:.4f}\n".format(css.extra_total_area)+\
                 "\tsd_baseLevel\t\t= {}\n".format(css.floodplain_base)+\
-                "\tmain\t\t\t\t= {}\n".format(css.alluvial_width)+\
-                "\tfloodPlain1\t\t\t= {}\n".format(css.nonalluvial_width)+\
-                "\tfloodPlain2\t\t\t= 0.0\n"+\
+                "\tmain\t\t\t\t= {}\n".format(css.section_widths['main'])+\
+                "\tfloodPlain1\t\t\t= {}\n".format(css.section_widths['floodplain1'])+\
+                "\tfloodPlain2\t\t\t= {}\n".format(css.section_widths['floodplain2'])+\
                 "\tgroundlayerUsed\t\t= 0\n"+\
                 "\tgroundLayer\t\t\t= 0.000\n\n"
                 )
@@ -186,7 +186,7 @@ def _write_geometry_sobek3(fid, cross_sections):
             else:
                 floodplain_base = str(cross_section.crest_level) #virtual summer dike
 
-        fid.write(cross_section.name + ',,' + 'meta' + ',,,,' + 'ZW' + ',' + str(cross_section.branch) + ',' + str(cross_section.chainage) + ',' + str(cross_section.alluvial_width) + ',' + str(cross_section.nonalluvial_width) + ',,,' + b_summerdike + ',' + crest_level + ',' + floodplain_base + ',' + total_area + ',' + total_area + ',,,,,,' + '\n')
+        fid.write(cross_section.name + ',,' + 'meta' + ',,,,' + 'ZW' + ',' + str(cross_section.branch) + ',' + str(cross_section.chainage) + ',' + str(cross_section.section_widths.get('main')) + ',' + str(cross_section.section_widths.get('floodplain1')) + ','+str(cross_section.section_widths.get('floodplain2'))+',,' + b_summerdike + ',' + crest_level + ',' + floodplain_base + ',' + total_area + ',' + total_area + ',,,,,,' + '\n')
 
         # this is to avoid the unique z-value error in sobek, the added 'error' depends on the total_width, this is to make sure the order or points is correct
         z_format = '{:.8f}'
