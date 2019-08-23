@@ -598,6 +598,7 @@ class Test_Compare_Idealized_Model:
         _case05: __case_05_tzw,
         _case06: __case_02_tzw,
         _case07: __case_07_tzw,
+        _case09: __case_01_tzw,
     }
 
     # region for tests
