@@ -876,9 +876,17 @@ class CrossSection:
         At each step, we sum the area of cells width bedlevels which
         would be submerged at that virtual water level.
         """
+        filter_by_depth_percentage = self.parameters.get(self.__cs_parameter_bedlevelcriterium) * 100
+        filter_value = FE.empirical_ppf([filter_by_depth_percentage], bedlevel_matrix.values.T[0])[0]
+        self._set_logger_message("Lowest {}% of bed levels are filtered (z<{:.4f}m)".format(filter_by_depth_percentage,
+                                                                                         filter_value),
+                                 level='debug')
         level_z0 = centre_level[0]
         bdata = bedlevel_matrix[~plassen_mask]
-        bmask = bdata < level_z0
+        bmask = (bdata < level_z0) & (bdata > filter_value)
+
+        self._set_logger_message("Number of points below z0 after applying filter: {}".format(np.sum(bmask.values.T[0])),
+                                  level='debug')
 
         bedlevels_below_z0 = bdata[bmask]
         lowest_level_below_z0 = np.nanmin(

@@ -294,6 +294,49 @@ def interpolate_roughness(cross_section_list):
                 minmaxrange = np.arange(minimal_z, maximal_z, zstep)
                 css.friction_tables.get(section).interpolate(minmaxrange)
 
+def empirical_ppf(qs, p, val=None, single_value=False):
+    """
+    Constructs empirical cdf, then draws quantile by linear interpolation
+    qs : array of quantiles (e.g. [2.5, 50, 97.5])
+    p : array of random inputs
+
+    return
+    """
+    if val is None: 
+        p, val = get_empirical_cdf(p)
+
+    if not single_value:
+        output = list()
+        for q in qs:
+            output.append(np.interp(q / 100., p, val))
+    else:
+        output = np.interp(qs / 100., p, val)
+    return output
+
+def get_empirical_cdf(sample, n=100, method=1, ignore_nan=True):
+    """
+    Returns an experimental/empirical cdf from data. 
+
+    Arguments:
+
+        p : list
+
+    Returns:
+
+        (x, y) : lists of values (x) and cumulative probability (y)
+
+    """
+
+    sample = np.array(sample)
+    if ignore_nan:
+        sample = sample[~np.isnan(sample)]
+
+    n = len(sample)
+    val = np.sort(sample)
+    p = np.array(range(n)) / float(n)
+
+    return p, val
+
 # endregion
 
 # region // protected functions
