@@ -432,12 +432,6 @@ class CrossSection:
         cross-section. This division is made based on the final timestep.
         """
 
-        # Classify data into roughness sections
-        if self.parameters[self.__cs_parameter_sectionsmethod] == 1:
-            self._classify_roughness_by_polygon()
-        else:
-           self._classify_roughness_by_variance()
-        
         # Compute roughness tabels
         self._set_logger_message('Building roughness table')
         self._build_roughness_tables()
@@ -518,12 +512,15 @@ class CrossSection:
         cross_section_region_key = 'region'
         is_lake_key = 'is_lake'
         bedlevel_key = 'bedlevel'
+        section_key = 'section'
+        region_key = 'region'
 
         try:
             # Normalize np arrays to list for correct access
             x_coords = fm_data.get('x').tolist()
             y_coords = fm_data.get('y').tolist()
             region_list = fm_data.get('region').tolist()
+            section_list = fm_data.get('section').tolist()
             bedlevel_list = fm_data.get('bedlevel').tolist()
             is_lake_mask_list = fm_data.get('islake').tolist()
 
@@ -533,7 +530,9 @@ class CrossSection:
                     cross_section_id_key: self.name,
                     is_lake_key: is_lake_mask_list[i],
                     cross_section_region_key: region_list[i],
-                    bedlevel_key: bedlevel_list[i]
+                    bedlevel_key: bedlevel_list[i],
+                    region_key: region_list[i],
+                    section_key: section_list[i]
                 }
                 mask_coords = (x_coords[i], y_coords[i])
                 # Create the actual geojson element.
@@ -620,36 +619,6 @@ class CrossSection:
         pass
 
     # Private Functions
-    def _classify_roughness_by_polygon(self):
-        # classification is already done during file reading, no additional work necessary
-        pass
-
-    def _classify_roughness_by_variance(self):
-        fm_data = self._fm_data
-        chezy_fm = fm_data['chezy'].iloc[:, self.temp_param_skip_maps:]
-
-        # Get chezy values at last timestep
-        end_values = chezy_fm.T.iloc[-1].values
-
-        # Find split point (chezy value) by variance minimisation
-        variance_list = list()
-        split_candidates = np.arange(min(end_values), max(end_values), 1)
-        if len(split_candidates) < 2: # this means that all end values are very close together, so do not split
-            self._fm_data['edge_section'][:] = 'main'
-        else:
-            for split in split_candidates:
-                variance_list.append(
-                    np.max(
-                        [np.var(end_values[end_values >= split]),
-                            np.var(end_values[end_values < split])]))
-
-            splitpoint = split_candidates[np.nanargmin(variance_list)]
-
-            # High chezy values are assigned to section number '1' (Main channel)
-            self._fm_data['edge_section'][end_values > splitpoint] = 'main'
-
-            # Low chezy values are assigned to section number '2' (Flood plain) 
-            self._fm_data['edge_section'][end_values <= splitpoint] = 'floodplain1'
 
     def _build_roughness_tables(self):
 
@@ -665,7 +634,8 @@ class CrossSection:
     
     def _compute_section_widths(self):
         for section in np.unique(self._fm_data['edge_section']):
-            self.section_widths[section] = self._calc_roughness_width(self._fm_data['edge_section']==section)
+            self.section_widths[section] = np.sum(self._fm_data['area'][self._fm_data['section']==section])/self.length
+            #self.section_widths[section] = self._calc_roughness_width(self._fm_data['edge_section']==section)
     
     def _compute_floodplain_base(self):
         # floodplain base level (temporary here)

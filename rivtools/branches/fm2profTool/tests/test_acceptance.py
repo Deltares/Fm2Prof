@@ -390,8 +390,6 @@ class Test_Main_Run_IniFile:
             'CrossSectionLocations.ini',
             'geometry.csv',
             'roughness.csv',
-            'geometry_test.csv',
-            'roughness_test.csv',
             'volumes.csv',
         ]
 

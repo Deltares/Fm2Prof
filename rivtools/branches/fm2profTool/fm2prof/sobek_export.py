@@ -214,13 +214,13 @@ def _write_roughness_sobek3(fid, cross_sections):
     for section in sections:
         for index, cross_section in enumerate(cross_sections):
             if section in list(cross_section.friction_tables.keys()):
-                if section in [1, '1', 'main', 'Main']:
+                if section == 'main':
                     table = cross_section.friction_tables[section]
                     plain = 'Main'
-                elif section in [2, '2', 'floodplain', 'FloodPlain1', 'Floodplain']:
+                elif section == 'floodplain1':
                     table = cross_section.friction_tables[section]
                     plain = 'FloodPlain1'
-                elif section in [3, '3', 'floodplain2', 'FloodPlain2', 'Floodplain2']:
+                elif section == 'floodplain2':
                     table = cross_section.friction_tables[section]
                     plain = 'FloodPlain2'
                 else:

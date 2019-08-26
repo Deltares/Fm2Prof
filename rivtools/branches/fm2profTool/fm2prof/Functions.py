@@ -67,16 +67,47 @@ def read_fm2prof_input(res_file, css_file, regions, sections):
         time_independent_data, edge_data = classify_without_regions(cssdata, time_independent_data, edge_data)
 
     if sections is not None:
-        edge_data = classify_roughness_sections(sections, edge_data)
+        edge_data = classify_roughness_sections_by_polygon(sections, edge_data)
+        time_independent_data = classify_roughness_sections_by_polygon(sections, time_independent_data)
+    else:
+        edge_data = classify_roughness_sections_by_variance(edge_data, time_dependent_data['chezy_edge'])
+        time_independent_data = classify_roughness_sections_by_variance(time_independent_data, time_dependent_data['chezy_mean'])
+        
 
     return time_dependent_data, time_independent_data, edge_data, node_coordinates, cssdata
 
-def classify_roughness_sections(sections, edge_data):
+def classify_roughness_sections_by_variance(data, variable):
+
+    # Get chezy values at last timestep
+    end_values = variable.T.iloc[-1].values
+    key='section'
+    # Find split point (chezy value) by variance minimisation
+    variance_list = list()
+    split_candidates = np.arange(min(end_values), max(end_values), 1)
+    if len(split_candidates) < 2: # this means that all end values are very close together, so do not split
+        data[key][:] = 'main'
+    else:
+        for split in split_candidates:
+            variance_list.append(
+                np.max(
+                    [np.var(end_values[end_values > split]),
+                     np.var(end_values[end_values <= split])]))
+
+        splitpoint = split_candidates[np.nanargmin(variance_list)]
+
+        # High chezy values are assigned to section number '1' (Main channel)
+        data[key][end_values > splitpoint] = 'main'
+
+        # Low chezy values are assigned to section number '2' (Flood plain) 
+        data[key][end_values <= splitpoint] = 'floodplain1'
+    return data
+
+def classify_roughness_sections_by_polygon(sections, data):
     """ assigns edges to a roughness section based on polygon data """
-    points = [(edge_data['x'][i], edge_data['y'][i])
-              for i in range(len(edge_data['x']))]
-    edge_data['section'] = sections.classify_points(points)
-    return edge_data
+    points = [(data['x'][i], data['y'][i])
+              for i in range(len(data['x']))]
+    data['section'] = sections.classify_points(points)
+    return data
 
 def classify_with_regions(regions, cssdata, time_independent_data, edge_data):
     """
@@ -150,7 +181,7 @@ def get_fm2d_data_for_css(classname, dti, edge_data, dtd):
     waterlevel = dtd['waterlevel'][dti['sclass'] == classname]
     vx = dtd['velocity_x'][dti['sclass'] == classname]
     vy = dtd['velocity_y'][dti['sclass'] == classname]
-
+    face_section = dti['section'][dti['sclass'] == classname]
     # find all chezy values for this cross section, note that edge coordinates are used
     chezy = dtd['chezy_edge'][edge_data['sclass'] == classname]
     edge_nodes = edge_data['edge_nodes'][edge_data['sclass'] == classname]
@@ -177,6 +208,7 @@ def get_fm2d_data_for_css(classname, dti, edge_data, dtd):
         'waterlevel': waterlevel, 
         'velocity': velocity, 
         'area': area, 
+        'section': face_section,
         'chezy': chezy, 
         'region': region,
         'islake': islake,
@@ -278,6 +310,7 @@ def _read_fm_model(file_path):
     df['bedlevel'] = np.array(res_fid.variables['mesh2d_flowelem_bl'])
     # These are filled later
     df['region'] = ['']*len(df['y'])  # 
+    df['section'] = ['main']*len(df['y'])  # 
     df['sclass'] = ['']*len(df['y'])  # cross-section id
     df['islake'] = [False]*len(df['y'])  # roughness section number 
 
@@ -291,7 +324,7 @@ def _read_fm_model(file_path):
                 'edge_nodes': np.array(res_fid.variables['mesh2d_edge_nodes'])[internal_edges],
                 'face_nodes': np.array(res_fid.variables['mesh2d_face_nodes']),
                 'sclass': np.array(['']*np.sum(internal_edges), dtype='U99'),
-                'section': np.ones(np.sum(internal_edges)),
+                'section': np.array(['main']*np.sum(internal_edges), dtype='U99'),
                 'region': np.array(['']*np.sum(internal_edges), dtype='U99')
                 }
 
@@ -333,7 +366,7 @@ def _read_css_xyz(file_path : str, delimiter = ','):
             input_data['branchid'].append(branchid)
             input_data['chainage'].append(float(chainage))
 
-        # Convert everything to nparray
+        # Convert everything to ndarray
         for key in input_data:
             input_data[key] = np.array(input_data[key])
         return input_data
