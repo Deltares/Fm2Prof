@@ -184,14 +184,15 @@ def get_fm2d_data_for_css(classname, dti, edge_data, dtd):
     face_section = dti['section'][dti['sclass'] == classname]
     # find all chezy values for this cross section, note that edge coordinates are used
     chezy = dtd['chezy_edge'][edge_data['sclass'] == classname]
-    edge_nodes = edge_data['edge_nodes'][edge_data['sclass'] == classname]
+    edge_faces = edge_data['edge_faces'][edge_data['sclass'] == classname]
+    #edge_nodes = edge_data['edge_nodes'][edge_data['sclass'] == classname]
     edge_x = edge_data['x'][edge_data['sclass'] == classname]
     edge_y = edge_data['y'][edge_data['sclass'] == classname]
     edge_section = edge_data['section'][edge_data['sclass'] == classname]  # roughness section number 
 
     # retrieve the full set for face_nodes and area, needed for the roughness calculation
-    face_nodes = edge_data['face_nodes'][dti['sclass'] == classname]
-    face_nodes_full = edge_data['face_nodes']
+    #face_nodes = edge_data['face_nodes'][dti['sclass'] == classname]
+    #face_nodes_full = edge_data['face_nodes']
     area_full = dti['area']
     bedlevel_full = dti['bedlevel']
     bedlevel = dti['bedlevel'][dti['sclass'] == classname]
@@ -202,6 +203,7 @@ def get_fm2d_data_for_css(classname, dti, edge_data, dtd):
     return_dict = {
         'x': x, 
         'y': y, 
+        'area': area,
         'bedlevel': bedlevel, 
         'bedlevel_full': bedlevel_full, 
         'waterdepth': waterdepth, 
@@ -212,12 +214,10 @@ def get_fm2d_data_for_css(classname, dti, edge_data, dtd):
         'chezy': chezy, 
         'region': region,
         'islake': islake,
-        'edge_nodes': edge_nodes, 
+        'edge_faces': edge_faces,
         'edge_x': edge_x,
         'edge_y': edge_y,
         'edge_section': edge_section,
-        'face_nodes': face_nodes, 
-        'face_nodes_full': face_nodes_full, 
         'area_full': area_full}
 
     return return_dict
@@ -321,8 +321,7 @@ def _read_fm_model(file_path):
     internal_edges = res_fid.variables['mesh2d_edge_type'][:] == 1
     edge_data = {'x': np.array(res_fid.variables['mesh2d_edge_x'])[internal_edges],
                  'y': np.array(res_fid.variables['mesh2d_edge_y'])[internal_edges],
-                'edge_nodes': np.array(res_fid.variables['mesh2d_edge_nodes'])[internal_edges],
-                'face_nodes': np.array(res_fid.variables['mesh2d_face_nodes']),
+                'edge_faces': np.array(res_fid.variables['mesh2d_edge_faces'])[internal_edges],
                 'sclass': np.array(['']*np.sum(internal_edges), dtype='U99'),
                 'section': np.array(['main']*np.sum(internal_edges), dtype='U99'),
                 'region': np.array(['']*np.sum(internal_edges), dtype='U99')
