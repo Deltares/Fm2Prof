@@ -893,7 +893,7 @@ class CrossSection:
             np.unique(
                 bedlevels_below_z0.values.T[-1]))
         lowest_level_below_z0 = centre_level[0] - centre_depth[0]
-
+        flow_area_at_z0 = self._fm_flow_area[0]
         for unique_level_below_z0 in reversed(
                 np.linspace(lowest_level_below_z0, level_z0, 10)):
 
@@ -901,6 +901,13 @@ class CrossSection:
             areas = area_matrix[bedlevels_below_z0 <= unique_level_below_z0]
             area_at_unique_level = np.nansum(areas.values.T[-1])
 
+            # Extension of flow/storage below z0
+            if self.parameters.get(self.__cs_parameter_storagemethod_wli) == 0:
+                flow_area_at_unique_level = area_at_unique_level
+            elif self.parameters.get(self.__cs_parameter_storagemethod_wli) == 1:
+                flow_area_at_unique_level = np.min([area_at_unique_level, flow_area_at_z0])
+
+            # Insert values in existing arrays
             self._css_z = np.insert(self._css_z, 0, unique_level_below_z0)
             self._css_flow_width = np.insert(
                 self._css_flow_width,
@@ -917,7 +924,7 @@ class CrossSection:
             self._fm_flow_area = np.insert(
                 self._fm_flow_area,
                 0,
-                area_at_unique_level)
+                flow_area_at_unique_level)
             self._fm_flow_volume = np.insert(self._fm_flow_volume, 0, np.nan)
             self._fm_total_volume = np.insert(self._fm_total_volume, 0, np.nan)
 
