@@ -3,7 +3,7 @@ import pytest
 import sys
 import os
 import numbers
-
+import numpy as np
 import shutil
 
 from tests.TestUtils import TestUtils
@@ -39,7 +39,7 @@ class Test_read_css_xyz:
         file_name = 'cross_section_locations.xyz'
         file_path = os.path.join(test_directory, file_name)
         expected_input_data = {
-            'xy': [(25.0, 75.0), (475.0, 75.0)],
+            'xy': np.array([(25.0, 75.0), (475.0, 75.0)]),
             'id': ['case1_0', 'case1_500'],
             'length': [250.0, 500.0],
             'branchid': ['case1', 'case1'],
@@ -65,7 +65,7 @@ class Test_read_css_xyz:
 
             result_input_value = result_input_data.get(expected_input_key)
             expected_input_value = expected_input_data.get(expected_input_key)
-            assert result_input_value == expected_input_value, '' + \
+            assert np.array_equal(result_input_value, expected_input_value), '' + \
                 'Results did not match ' + \
                 'for key {}, '.format(expected_input_key) + \
                 'expected {}, '.format(expected_input_value) + \

@@ -438,6 +438,7 @@ class Test_readini_file:
             'sdstorage': 1,
             'frictionweighing': 0,
             'sectionsmethod': 1,
+            'mapfiles': 0,
         }
 
         # 2. Verify initial expectations
@@ -474,8 +475,8 @@ class Test_readini_file:
         expected_input_files = {
             'fm_netcdfile': 'dummy_file.nc',
             'crosssectionlocationfile': 'dummy_file.xyz',
-            'gebiedsvakken': 'dummy_file.xyz',
-            'sectionfractionfile': 'dummy_file.txt',
+            'regionpolygonfile': 'dummy_file.geojson',
+            'sectionpolygonfile': 'dummy_file.geojson',
         }
 
         # 2. Verify initial expectations

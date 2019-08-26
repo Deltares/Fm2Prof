@@ -177,7 +177,7 @@ class SectionPolygonFile(PolygonFile):
                     self._set_logger_message('remapped section {} to {}'.format(section_key, 
                                                                                 map_section_keys[section_key]),
                     level='warning')
-                    section.properties[section_key] = map_section_keys.get(section_key)
+                    section.properties['section'] = map_section_keys.get(section_key)
         # check for overlap (only raise a warning)
         self._check_overlap()
 
