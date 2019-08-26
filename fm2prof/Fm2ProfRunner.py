@@ -45,6 +45,8 @@ class Fm2ProfRunner:
     __region_file_key = 'regionpolygonfile'
     __section_file_key = 'sectionpolygonfile'
 
+    __export_mapfiles_key = "exportmapfiles"
+
     def __init__(self, iniFilePath: str, version: float = None):
         """
         Initializes the private variables for the Fm2ProfRunner
@@ -132,15 +134,22 @@ class Fm2ProfRunner:
             'Interpolating roughness')
         FE.interpolate_roughness(cross_sections)
 
-        # Generate output geojson
-        self.__set_logger_message(
-            'Export geojson output to {}'.format(output_dir))
-        self._generate_geojson_output(output_dir, cross_sections)
-
         # Export cross sections
         self.__set_logger_message(
             'Export model input files to {}'.format(output_dir))
         self._export_cross_sections(cross_sections, output_dir)
+
+        # Generate output geojson
+        try:
+            export_mapfiles = input_param_dict[self.__export_mapfiles_key]
+        except KeyError:
+            # If key is missing, export files by default. 
+            # We need a better solution for this (inifile.getparam?.. handle defaults there?)
+            export_mapfiles = True
+        if export_mapfiles:
+            self.__set_logger_message(
+                'Export geojson output to {}'.format(output_dir))
+            self._generate_geojson_output(output_dir, cross_sections)
 
     def _generate_geojson_output(
             self,
@@ -159,9 +168,11 @@ class Fm2ProfRunner:
                     node_point
                     for cs in cross_sections
                     for node_point in cs.get_point_list(pointtype)]
+                self.__set_logger_message("Collected points, dumping to file", level='debug')
                 MaskOutputFile.write_mask_output_file(
                     output_file_path,
                     node_points)
+                self.__set_logger_message("Done", level='debug')
             except Exception as e_info:
                 self.__set_logger_message(
                     'Error while generation .geojson file,' +
