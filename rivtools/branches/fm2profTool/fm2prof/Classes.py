@@ -161,6 +161,7 @@ class CrossSection:
         self.extra_total_volume = 0.0
         self.extra_area_percentage = list()
         self.extra_total_area = 0
+        self.extra_flow_area = 0
 
         # These attributes are used for non-reduced sets
         self._css_z = 0
@@ -421,6 +422,7 @@ class CrossSection:
         self.transition_height = transition_height
         self.extra_total_volume = extra_volume
         self.extra_total_area = extra_volume / self.length
+        self.extra_flow_area = extra_volume / self.length
         self.extra_area_percentage = extra_area_percentage
         self._css_is_corrected = True
 
