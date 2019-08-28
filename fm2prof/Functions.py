@@ -184,7 +184,10 @@ def get_fm2d_data_for_css(classname, dti, edge_data, dtd):
     face_section = dti['section'][dti['sclass'] == classname]
     # find all chezy values for this cross section, note that edge coordinates are used
     chezy = dtd['chezy_edge'][edge_data['sclass'] == classname]
-    edge_faces = edge_data['edge_faces'][edge_data['sclass'] == classname]
+    try:
+        edge_faces = edge_data['edge_faces'][edge_data['sclass'] == classname]
+    except KeyError:
+        edge_faces = None
     #edge_nodes = edge_data['edge_nodes'][edge_data['sclass'] == classname]
     edge_x = edge_data['x'][edge_data['sclass'] == classname]
     edge_y = edge_data['y'][edge_data['sclass'] == classname]
@@ -342,7 +345,11 @@ def get_empirical_cdf(sample, n=100, method=1, ignore_nan=True):
 # region // protected functions
 def _read_fm_model(file_path):
     """input: FM2D map file"""
-
+    fm_edge_keys = {'x': 'mesh2d_edge_x', 
+                    'y': 'mesh2d_edge_y',
+                    'edge_faces': 'mesh2d_edge_faces'
+                    }
+    edge_data = dict()
     # Open results file for reading
     res_fid = netCDF4.Dataset(file_path, 'r')
 
@@ -362,13 +369,19 @@ def _read_fm_model(file_path):
     # Edge data
     # edgetype 1 = 'internal'
     internal_edges = res_fid.variables['mesh2d_edge_type'][:] == 1
-    edge_data = {'x': np.array(res_fid.variables['mesh2d_edge_x'])[internal_edges],
-                 'y': np.array(res_fid.variables['mesh2d_edge_y'])[internal_edges],
-                'edge_faces': np.array(res_fid.variables['mesh2d_edge_faces'])[internal_edges],
-                'sclass': np.array(['']*np.sum(internal_edges), dtype='U99'),
-                'section': np.array(['main']*np.sum(internal_edges), dtype='U99'),
-                'region': np.array(['']*np.sum(internal_edges), dtype='U99')
-                }
+    for key, value in fm_edge_keys.items():
+        try:
+            edge_data[key] = np.array(res_fid.variables[value])[internal_edges]
+        except KeyError:
+            # 'edge_faces' does not always seem to exist in the file. 
+            # todo: incorporate this function in its FmModelData with logger to
+            # output a warning. For now, the omission of 'edge_faces' is handled
+            # in FmModelData.
+            pass
+
+    edge_data['sclass'] = np.array(['']*np.sum(internal_edges), dtype='U99')
+    edge_data['section'] = np.array(['main']*np.sum(internal_edges), dtype='U99')
+    edge_data['region'] = np.array(['']*np.sum(internal_edges), dtype='U99')
 
     # node data (not used?)
     df_node = pd.DataFrame(columns=['x'], data=np.array(res_fid.variables['mesh2d_node_x']))
