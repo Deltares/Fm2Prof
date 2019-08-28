@@ -116,8 +116,20 @@ class Fm2ProfRunner:
         # Read FM model data
         fm2prof_fm_model_data = FE.read_fm2prof_input(map_file, css_file, regions, sections)
         fm_model_data = CE.FmModelData(fm2prof_fm_model_data)
+        
         self.__set_logger_message(
             'finished reading FM and cross-sectional data data')
+        
+        # check if edge/face data is available
+        if 'edge_faces' not in fm_model_data.edge_data:
+            if input_param_dict.get('frictionweighing') == 1:
+                self.__set_logger_message(
+                    'Friction weighing set to 1 (area-weighted average' +
+                    'but FM map file does contain the *edge_faces* keyword.' +
+                    'Area weighting is not possible. Defaulting to simple unweighted' +
+                    'averaging',
+                    level='warning')
+
 
         # generate all cross-sections
         cross_sections = self._generate_cross_section_list(
@@ -341,7 +353,7 @@ class Fm2ProfRunner:
 
         except Exception as e_info:
             self.__set_logger_message(
-                'Exception while setting cross-section' +
+                'Exception thrown while setting cross-section' +
                 ' {} details, {}'.format(css_name, str(e_info)),
                 level='error')
 

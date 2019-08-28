@@ -63,11 +63,13 @@ class FmModelData:
                 'Fm model data expects 5 arguments but only ' +
                 '{} were given'.format(len(arg_list)))
 
+        
         (self.time_dependent_data,
             self.time_independent_data,
             self.edge_data,
             self.node_coordinates,
             css_data_dictionary) = arg_list
+        
         self.css_data_list = self.get_ordered_css_list(css_data_dictionary)
 
     @staticmethod
