@@ -212,7 +212,6 @@ def get_fm2d_data_for_css(classname, dti, edge_data, dtd):
         'waterdepth': waterdepth, 
         'waterlevel': waterlevel, 
         'velocity': velocity, 
-        'area': area, 
         'section': face_section,
         'chezy': chezy, 
         'region': region,
@@ -247,7 +246,7 @@ def get_centre_values(location, x, y, waterdepth, waterlevel):
 
     # conversion to 2d array, as 1d arrays are deprecated for kneighbors
     location_array = np.array(location).reshape(1, -1)
-    (distance, index) = nn.kneighbors(location_array)
+    (_, index) = nn.kneighbors(location_array)
 
     # retrieve cell characteristic waterdepth
     centre_depth = waterdepth.iloc[index[0]]
