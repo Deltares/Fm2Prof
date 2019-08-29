@@ -115,6 +115,7 @@ class CrossSection:
     __cs_parameter_SDstorage = 'SDstorage'
     __cs_parameter_Frictionweighing = 'frictionweighing'
     __cs_parameter_sectionsmethod = 'sectionsmethod'
+    __cs_parameter_sdoptimisationmethod = 'sdoptimisationmethod'
 
     __output_face_list = []
     __output_edge_list = []
@@ -346,7 +347,29 @@ class CrossSection:
         # generate all mask points for the given cross_section
         #self.set_mask_output_list(fm_data, plassen_mask)
 
-    def optimisation_function(self, opt_in):
+    def _combined_optimisation_func(self, opt_in):
+        (crest_level, extra_total_volume, extra_flow_volume) = opt_in
+        transition_height = self.parameters[
+            self.__cs_parameter_transitionheight_sd]
+
+        predicted_total_volume = (
+            self._css_total_volume +
+            FE.get_extra_total_area(
+                self._css_z,
+                crest_level,
+                transition_height) * extra_total_volume)
+        
+        predicted_flow_volume = (
+            self._css_flow_volume +
+            FE.get_extra_total_area(
+                self._css_z,
+                crest_level,
+                transition_height) * extra_flow_volume)
+
+        return FE.return_volume_error(predicted_total_volume + predicted_flow_volume, 
+                                      self._fm_total_volume + self._fm_flow_volume)
+    
+    def _optimisation_func(self, opt_in, *args):
         """
         Objective function used in optimising a delta-h correction
         for parameters:
@@ -358,17 +381,94 @@ class CrossSection:
         :param opt_in: tuple
         :return:
         """
-        (crest_level, extra_volume) = opt_in
+        if args[0][0] == 'both':
+            (crest_level, extra_volume) = opt_in
+            
+        else:
+            (extra_volume) = opt_in
+            crest_level = args[0][2]
+
+        volume = args[0][1]
         transition_height = self.parameters[
             self.__cs_parameter_transitionheight_sd]
+
         predicted_volume = (
-            self._css_total_volume +
+            volume +
             FE.get_extra_total_area(
                 self._css_z,
                 crest_level,
                 transition_height) * extra_volume)
         return FE.return_volume_error(predicted_volume, self._fm_total_volume)
 
+    def _optimize_sd_storage(self, initial_crest, initial_total_volume, initial_flow_volume):
+        
+        # Default option
+        sdoptimisationmethod = self.parameters.get(self.__cs_parameter_sdoptimisationmethod)
+        if sdoptimisationmethod not in [0, 1, 2]:
+            # this should be handled in inifile instead
+            self._set_logger_message('sdoptimisationmethod is {} but should be 0, 1, or 2. Defaulting to 0'.format(sdoptimisationmethod), 
+            level='warning')
+            sdoptimisationmethod = 0
+
+        if sdoptimisationmethod == 0:
+            self._set_logger_message('Optimising SD on total volume', level='debug')
+
+            # Optimise crest on total volume
+            opt = so.minimize(self._optimisation_func,
+                            (initial_crest, initial_total_volume),
+                            args=['both', self._css_total_volume],
+                            method='Nelder-Mead',
+                            tol=1e-6)
+            
+            
+            crest_level = opt['x'][0]
+            extra_total_volume = np.max([opt['x'][1], 0])
+            
+            # Optimise flow volume
+            opt2= so.minimize(self._optimisation_func,
+                            (initial_flow_volume),
+                            args=['notboth', self._css_flow_volume, crest_level],
+                            method='Nelder-Mead',
+                            tol=1e-6)
+            extra_flow_volume = np.min([np.max([opt2['x'][0], 0]), extra_total_volume])
+
+        elif self.parameters.get(self.__cs_parameter_sdoptimisationmethod) == 1:
+            self._set_logger_message('Optimising SD on flow volume', level='debug')
+
+            # Optimise crest on flow volume
+            opt = so.minimize(self._optimisation_func,
+                            (initial_crest, initial_total_volume),
+                            args=['both', self._css_flow_volume],
+                            method='Nelder-Mead',
+                            tol=1e-6)
+            crest_level = opt['x'][0]
+            extra_flow_volume = np.max([opt['x'][1], 0])
+            
+            # Optimise total volume
+            opt2= so.minimize(self._optimisation_func,
+                            (initial_flow_volume),
+                            args=['notboth', self._css_total_volume, crest_level],
+                            method='Nelder-Mead',
+                            tol=1e-6)
+            extra_total_volume = np.max([np.max([opt2['x'][0], 0]), extra_flow_volume])
+        
+        elif self.parameters.get(self.__cs_parameter_sdoptimisationmethod) == 2:
+            self._set_logger_message('Optimising SD on both flow and total volumes', level='debug')
+            opt = so.minimize(self._combined_optimisation_func,
+                            (initial_crest, initial_total_volume, initial_flow_volume),
+                            method='Nelder-Mead',
+                            tol=1e-6)
+
+            crest_level = opt['x'][0]
+            extra_total_volume = np.max([opt['x'][1], 0])
+            extra_flow_volume = np.min([np.max([opt['x'][2], 0]), extra_total_volume])
+            
+        return {'crest_level': crest_level,
+                'extra_total_volume': extra_total_volume,
+                'extra_flow_volume': extra_flow_volume,
+                'final_cost': opt['fun'],
+                'message': opt['message']}
+    
     def calculate_correction(self, transition_height: float):
         """
         Function to determine delta-h correction
@@ -384,34 +484,43 @@ class CrossSection:
         """
 
         # Set initial values for optimisation of parameters
-        initial_error = self._css_total_volume - self._fm_total_volume
-        initial_crest = self._css_z[np.nanargmin(initial_error)]
-        initial_volume = np.abs(initial_error[-1])
+        initial_total_error = self._css_total_volume - self._fm_total_volume
+        initial_flow_error = self._css_flow_volume - self._fm_flow_volume
+
+        initial_crest = self._css_z[np.nanargmin(initial_total_error)]
+        initial_total_volume = np.abs(initial_total_error[-1])
+        initial_flow_volume = np.abs(initial_flow_error[-1])
 
         self._set_logger_message(
-            "Initial crest: {} m".format(initial_crest), level='debug')
+            "Initial crest: {:.4f} m".format(initial_crest), level='debug')
         self._set_logger_message(
-            "Initial volume: {} m".format(initial_volume), level='debug')
+            "Initial extra total volume: {:.4f} m".format(initial_total_volume), level='debug')
+        self._set_logger_message(
+            "Initial extra flow volume: {:.4f} m".format(initial_flow_volume), level='debug')
+
         # Optimise attributes
-        opt = so.minimize(self.optimisation_function,
-                          (initial_crest, initial_volume),
-                          method='Nelder-Mead',
-                          tol=1e-6)
+        opt = self._optimize_sd_storage(initial_crest=initial_crest, 
+                                        initial_total_volume=initial_total_volume, 
+                                        initial_flow_volume=initial_flow_volume,
+                                        )
 
         # Unpack optimisation results
-        crest_level = opt['x'][0]
-        extra_volume = opt['x'][1]
-        self._set_logger_message(
-            "final costs: {}".format(opt['fun']), level='debug')
-        self._set_logger_message(
-            "Optimizer msg: {}".format(opt['message']), level='debug')
-        self._set_logger_message(
-            "Optimized crest: {} m".format(crest_level), level='debug')
-        self._set_logger_message(
-            "Optimized volume: {} m".format(extra_volume), level='debug')
+        transition_height = self.parameters.get(self.__cs_parameter_transitionheight_sd)
+        crest_level = opt.get('crest_level')
+        extra_total_volume = opt.get('extra_total_volume')
+        extra_flow_volume = opt.get('extra_flow_volume')
 
-        if transition_height is None:
-            transition_height = 0.5
+        self._set_logger_message(
+            "final costs: {:.2f}".format(opt.get('final_cost')), level='debug')
+        self._set_logger_message(
+            "Optimizer msg: {}".format(opt.get('message')), level='debug')
+        self._set_logger_message(
+            "Final crest: {:.4f} m".format(crest_level), level='debug')
+        self._set_logger_message(
+            "Final total volume: {:.4f} m".format(extra_total_volume), level='debug')
+        self._set_logger_message(
+            "Final flow volume: {:.4f} m".format(extra_flow_volume), level='debug')
+        
         extra_area_percentage = FE.get_extra_total_area(
             self._css_z,
             crest_level,
@@ -419,12 +528,13 @@ class CrossSection:
 
         # Write to attributes
         self._css_total_volume_corrected = (
-            self._css_total_volume + extra_area_percentage * extra_volume)
+            self._css_total_volume + extra_area_percentage * extra_total_volume)
         self.crest_level = crest_level
         self.transition_height = transition_height
-        self.extra_total_volume = extra_volume
-        self.extra_total_area = extra_volume / self.length
-        self.extra_flow_area = extra_volume / self.length
+        self.extra_total_volume = extra_total_volume
+        self.extra_flow_volume = extra_flow_volume
+        self.extra_total_area = extra_total_volume / self.length
+        self.extra_flow_area = extra_flow_volume / self.length
         self.extra_area_percentage = extra_area_percentage
         self._css_is_corrected = True
 
