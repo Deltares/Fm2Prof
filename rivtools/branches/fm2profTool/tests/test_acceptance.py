@@ -287,11 +287,12 @@ class Test_Fm2Prof_Run_IniFile:
             "relative_threshold": 0.03,
             "min_depth_storage": 0.02,
             "plassen_timesteps": 10,
-            "storagemethod_wli": 1,
+            "storagemethod_wli": 0,
             "bedlevelcriterium": 0.1,
             "sdstorage": 1,
             "frictionweighing": 0,
-            "sectionsmethod": 0
+            "sectionsmethod": 0,
+            "sdoptimisationmethod": 0
         }
 
         # Create the runner and set the saving figures variable to true
@@ -336,11 +337,12 @@ class Test_Main_Run_IniFile:
             "relative_threshold": 0.03,
             "min_depth_storage": 0.02,
             "plassen_timesteps": 10,
-            "storagemethod_wli": 1,
+            "storagemethod_wli": 0,
             "bedlevelcriterium": 0.1,
             "sdstorage": 1,
             "frictionweighing": 0,
-            "sectionsmethod": 0
+            "sectionsmethod": 0,
+            "sdoptimisationmethod": 0
         }
 
         # write file
