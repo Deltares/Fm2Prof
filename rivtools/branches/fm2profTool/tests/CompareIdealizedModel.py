@@ -103,14 +103,16 @@ class CompareIdealizedModel:
     def _compare_roughness(
             self, case_name, tzw_values, input_roughness_file, fm2prof_fig_dir):
         # Read data in roughness.csv
-        (Y, N, H_pos, R_pos) = self.__get_roughness_data(input_roughness_file)
+        (S, Y, N, H_pos, R_pos) = self.__get_roughness_data(input_roughness_file)
 
         # loop over each chainage (cross-section)
         y0 = 0
         MainChannel = True      # Main channel
         for cs in range(len(Y)):
-            if y0 > Y[cs]:            # if previous chainage is greater, it has switched to FP1
+            if S[cs].lower() != "main":
                 MainChannel = False
+            else:
+                MainChannel = True
             y = Y[cs]           # chainage
             # n = n0 + N[cs]      # maximum index
             hpos = H_pos[cs]  # H_pos at chainage y
@@ -560,7 +562,8 @@ class CompareIdealizedModel:
         
         hpos_tmp = []
         rpos_tmp = []
-
+        
+        S = []
         Y = []
         N = []
         assert os.path.exists(input_file), '' + \
@@ -572,12 +575,14 @@ class CompareIdealizedModel:
             for line in fin:
                 ls = line.strip().split(',')
                 if 'Name' in ls[0]:
+                    section_index = ls.index('SectionType')
                     y_index = ls.index('Chainage')
                     hpos_index = ls.index('H_pos')
                     rpos_index = ls.index('R_pos__f(h)')
                 else:
                     if ls[y_index] != y_prev:
                         Y.append(float(ls[y_index]))      # chainage
+                        S.append(ls[section_index])  # Section name
                         if len(N) == 0:
                             if len(hpos_tmp) != 0:
                                 H_pos = [hpos_tmp]
@@ -593,9 +598,10 @@ class CompareIdealizedModel:
                         rpos_tmp = []
                     hpos_tmp.append(float(ls[hpos_index]))
                     rpos_tmp.append(float(ls[rpos_index]))
+
                     y_prev = ls[y_index]
                     n_counter += 1          # number of data at each chainage
         H_pos.append(hpos_tmp) 
-        R_pos.append(hpos_tmp)
+        R_pos.append(rpos_tmp)
         N.append(n_counter)
-        return (Y, N, H_pos, R_pos)
+        return (S, Y, N, H_pos, R_pos)
