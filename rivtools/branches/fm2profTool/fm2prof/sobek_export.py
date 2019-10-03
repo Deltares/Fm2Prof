@@ -19,14 +19,14 @@ def export_geometry(cross_sections, file_path, fmt='sobek3'):
             """ test format for system tests, only has geometry (no summerdike) """
             _write_geometry_testformat(f, cross_sections)
 
-def export_roughness(cross_sections, file_path, fmt='sobek3'):
+def export_roughness(cross_sections, file_path, fmt='sobek3', roughness_section='Main'):
     with open(file_path, 'w') as f:
         if fmt == 'sobek3':
             """ SOBEK 3 style csv """
             _write_roughness_sobek3(f, cross_sections)
-        elif fmt == 'fm1d':
+        elif fmt == 'dflow1d':
             """ DFM 1D style """
-            _write_roughness_fm1d(f, cross_sections)
+            _write_roughness_fm1d(f, cross_sections, roughness_section)
         elif fmt == 'testformat':
             """ test format for system tests, only has geometry (no summerdike) """
             _write_roughness_testformat(f, cross_sections)
@@ -155,8 +155,60 @@ def _write_geometry_fm1d(fid, cross_sections):
                 "\tgroundLayer\t\t\t= 0.000\n\n"
                 )
 
-def _write_roughness_fm1d(fid, cross_sections):
-    raise NotImplementedError()
+def _write_roughness_fm1d(fid, cross_sections, section):
+    """"""
+    general_sec = """[General]
+    majorVersion          = 1                   
+    minorVersion          = 0                   
+    fileType              = roughness        
+
+[Content]
+    sectionId             = {}                
+    flowDirection         = False               
+    interpolate           = 1                   
+    globalType            = 1                   
+    globalValue           = 45               
+
+""".format(section)
+
+    branch_sec = _get_fm1d_branch_sec(cross_sections, section.lower())
+    definition_sec = _get_fm1d_definition_sec(cross_sections, section.lower())
+    fid.write(general_sec)
+    fid.write(branch_sec)
+    fid.write(definition_sec)
+
+def _get_fm1d_definition_sec(cross_sections, section):
+    def_sec = ""
+    
+    for css in cross_sections:
+        table = css.friction_tables[section]
+        def_sec += """[Definition]
+    branchId              = {}               
+    chainage              = {}               
+    values                = {}
+
+""".format(css.branch, 
+           css.chainage, 
+           ", ".join(map("{:.4}".format, table.friction)))
+    return def_sec
+
+def _get_fm1d_branch_sec(cross_sections, section):
+    branch_sec = ""
+    branch_list = []
+    for css in cross_sections:
+        if css.branch not in branch_list:
+            branch_sec += """[BranchProperties]
+    branchId              = {}               
+    roughnessType         = 1                   
+    functionType          = 2                   
+    numLevels             = {}                   
+    levels                = {}
+
+""".format(css.branch, 
+           len(css.friction_tables[section].level),
+           ", ".join(map("{:.4f}".format, css.friction_tables[section].level)))
+
+    return branch_sec
 
 """ SOBEK 3 file formats """
 def _write_geometry_sobek3(fid, cross_sections):
