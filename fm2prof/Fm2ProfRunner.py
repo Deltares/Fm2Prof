@@ -31,6 +31,7 @@ import os
 import shutil
 import logging
 import time
+import numpy as np
 
 
 class Fm2ProfRunner:
@@ -117,9 +118,16 @@ class Fm2ProfRunner:
         fm2prof_fm_model_data = FE.read_fm2prof_input(map_file, css_file, regions, sections)
         fm_model_data = CE.FmModelData(fm2prof_fm_model_data)
         
+        ntsteps = fm_model_data.time_dependent_data.get('waterlevel').shape[1]
+        nfaces = fm_model_data.time_dependent_data.get('waterlevel').shape[0]
+        nedges = fm_model_data.edge_data.get('x').shape[0]
         self.__set_logger_message(
             'finished reading FM and cross-sectional data data')
-        
+        self.__set_logger_message(
+          'Number of: timesteps ({}), '.format(ntsteps) +\
+          'faces ({}), '.format(nfaces)+\
+          'edges ({})'.format(nedges), 
+          level='debug')
         # check if edge/face data is available
         if 'edge_faces' not in fm_model_data.edge_data:
             if input_param_dict.get('frictionweighing') == 1:
@@ -429,6 +437,7 @@ class Fm2ProfRunner:
         css_definitions_ini_file = os.path.join(
             output_dir, 'CrossSectionDefinitions.ini')
 
+
         csv_geometry_file = output_dir + '\\geometry.csv'
         csv_roughness_file = output_dir + '\\roughness.csv'
 
@@ -457,10 +466,18 @@ class Fm2ProfRunner:
                 cross_sections,
                 file_path=csv_roughness_file,
                 fmt='sobek3')
-            #sobek_export.export_roughness(
-            #    cross_sections,
-            #    file_path=csv_roughness_test_file,
-            #    fmt='testformat')
+            
+            sections = np.unique([s for css in cross_sections for s in css.friction_tables.keys()])
+            sectionFileKeyDict = {"main": ['\\roughness-Main.ini', "Main"],
+                                  "floodplain1": ['\\roughness-FloodPlain1.ini', "FloodPlain1"],
+                                  "floodplain2": ['\\roughness-FloodPlain2.ini', "FloodPlain2"]}
+            for section in sections:
+                csv_roughness_ini_file = output_dir + sectionFileKeyDict[section][0]
+                sobek_export.export_roughness(
+                    cross_sections,
+                    file_path=csv_roughness_ini_file,
+                    fmt='dflow1d',
+                    roughness_section=sectionFileKeyDict[section][1])
 
             sobek_export.export_volumes(
                 cross_sections,
