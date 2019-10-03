@@ -181,8 +181,9 @@ def _get_fm1d_definition_sec(cross_sections, section):
     def_sec = ""
     
     for css in cross_sections:
-        table = css.friction_tables[section]
-        def_sec += """[Definition]
+        try:
+            table = css.friction_tables[section]
+            def_sec += """[Definition]
     branchId              = {}               
     chainage              = {}               
     values                = {}
@@ -190,24 +191,30 @@ def _get_fm1d_definition_sec(cross_sections, section):
 """.format(css.branch, 
            css.chainage, 
            ", ".join(map("{:.4}".format, table.friction)))
+        except KeyError:
+            # this section does not exist in this cross-section
+            pass
+        
     return def_sec
 
 def _get_fm1d_branch_sec(cross_sections, section):
     branch_sec = ""
     branch_list = []
     for css in cross_sections:
-        if css.branch not in branch_list:
-            branch_sec += """[BranchProperties]
+        try:
+            if css.branch not in branch_list:
+                branch_sec += """[BranchProperties]
     branchId              = {}               
     roughnessType         = 1                   
     functionType          = 2                   
     numLevels             = {}                   
     levels                = {}
-
 """.format(css.branch, 
            len(css.friction_tables[section].level),
            ", ".join(map("{:.4f}".format, css.friction_tables[section].level)))
-
+        except KeyError:
+            # section not in this croess-section
+            pass
     return branch_sec
 
 """ SOBEK 3 file formats """
