@@ -128,10 +128,11 @@ def get_valid_inifile_input_parameters():
         "min_depth_storage": 0.02,
         "plassen_timesteps": 10,
         "storagemethod_wli": 1,
-        "bedlevelcriterium": 0.1,
+        "bedlevelcriterium": 0.0,
         "sdstorage": 1,
         "frictionweighing": 0,
-        "sectionsmethod": 0
+        "sectionsmethod": 0,
+        "exportmapfiles": 0
     }
 
 
@@ -288,11 +289,12 @@ class Test_Fm2Prof_Run_IniFile:
             "min_depth_storage": 0.02,
             "plassen_timesteps": 10,
             "storagemethod_wli": 0,
-            "bedlevelcriterium": 0.1,
+            "bedlevelcriterium": 0.0,
             "sdstorage": 1,
             "frictionweighing": 0,
             "sectionsmethod": 0,
-            "sdoptimisationmethod": 0
+            "sdoptimisationmethod": 0,
+            "exportmapfiles": 0
         }
 
         # Create the runner and set the saving figures variable to true
@@ -338,11 +340,12 @@ class Test_Main_Run_IniFile:
             "min_depth_storage": 0.02,
             "plassen_timesteps": 10,
             "storagemethod_wli": 0,
-            "bedlevelcriterium": 0.1,
+            "bedlevelcriterium": 0.0,
             "sdstorage": 1,
             "frictionweighing": 0,
             "sectionsmethod": 0,
-            "sdoptimisationmethod": 0
+            "sdoptimisationmethod": 0,
+            "exportmapfiles": 0
         }
 
         # write file
