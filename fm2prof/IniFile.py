@@ -121,7 +121,7 @@ class IniFile:
             try:
                 float_value = float(parameter_value)
                 if float_value.is_integer(): # if integer
-                    input_parameters[sub] = int(parameter_value)
+                    input_parameters[sub] = int(float_value)
                 else: # if float
                     input_parameters[sub] = float_value
             except ValueError:
