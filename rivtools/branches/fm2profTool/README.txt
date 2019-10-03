@@ -1,5 +1,7 @@
 * Environment: *
 A file containing the virtual environment (environment.yml) dependencies is provided and strongly recommended to use in order to execute successfully FM2PROF.
+To install it simply run the following:
+conda env create -f environment.yml
 For more information:
 [conda environment] - https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html
 
