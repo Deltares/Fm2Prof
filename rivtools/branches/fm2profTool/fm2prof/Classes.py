@@ -494,9 +494,9 @@ class CrossSection:
         self._set_logger_message(
             "Initial crest: {:.4f} m".format(initial_crest), level='debug')
         self._set_logger_message(
-            "Initial extra total volume: {:.4f} m".format(initial_total_volume), level='debug')
+            "Initial extra total area: {:.4f} m2".format(initial_total_volume/self.length), level='debug')
         self._set_logger_message(
-            "Initial extra flow volume: {:.4f} m".format(initial_flow_volume), level='debug')
+            "Initial extra flow area: {:.4f} m2".format(initial_flow_volume/self.length), level='debug')
 
         # Optimise attributes
         opt = self._optimize_sd_storage(initial_crest=initial_crest, 
@@ -517,9 +517,9 @@ class CrossSection:
         self._set_logger_message(
             "Final crest: {:.4f} m".format(crest_level), level='debug')
         self._set_logger_message(
-            "Final total volume: {:.4f} m".format(extra_total_volume), level='debug')
+            "Final total area: {:.4f} m2".format(extra_total_volume/self.length), level='debug')
         self._set_logger_message(
-            "Final flow volume: {:.4f} m".format(extra_flow_volume), level='debug')
+            "Final flow area: {:.4f} m2".format(extra_flow_volume/self.length), level='debug')
         
         extra_area_percentage = FE.get_extra_total_area(
             self._css_z,
@@ -997,7 +997,7 @@ class CrossSection:
                                  level='debug')
         level_z0 = centre_level[0]
         bdata = bedlevel_matrix[~plassen_mask]
-        bmask = (bdata < level_z0) & (bdata > filter_value)
+        bmask = (bdata < level_z0) & (bdata >= filter_value)
 
         self._set_logger_message("Number of points below z0 after applying filter: {}".format(np.sum(bmask.values.T[0])),
                                   level='debug')
