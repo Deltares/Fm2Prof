@@ -1,6 +1,4 @@
 name: fm2prof
 dependencies:
-  - python=3.7   # Due to some dependencies we cannot go higher than that
-  - pytest
-  - teamcity-messages
+  - python=3.7
   - geos
