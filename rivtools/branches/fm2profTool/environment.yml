@@ -3,5 +3,6 @@ dependencies:
   - python=3.7
   - geos
   - pip:
-    - pytest
+    - pytest=5.0.1
+    - pytest-cov
     - teamcity-messages

@@ -1,5 +1,6 @@
 import os
 import shutil
+import functools
 import tests.ReportHelper as ReportHelper
 
 
@@ -52,7 +53,7 @@ class HtmlReport:
                 raise Exception(
                     'HTML report was not generated at {}.'.format(html_path))
 
-        return html_reports.keys()
+        return html_reports
 
     def __get_html_template(self, template_name: str):
         """Gets the HTML template content from their folder.
@@ -261,16 +262,16 @@ class HtmlReport:
 
         return default_dict
 
-    def __get_section_carousel(self, figures_list: list):
+    def __get_section_carousel(self, figures_list: dict):
         indicators = []
         images = []
-        for section in figures_list:
-            for idx, figure in enumerate(figures_list[section]):
-                indicator = self.__get_carousel_indicator(idx)
-                image = self.__get_carousel_img(figure, idx)
-                if indicator and image:
-                    indicators.append(indicator)
-                    images.append(image)
+        all_figures = sum(figures_list.values(), [])
+        for idx, figure in enumerate(all_figures):
+            indicator = self.__get_carousel_indicator(idx)
+            image = self.__get_carousel_img(figure, idx)
+            if indicator and image:
+                indicators.append(indicator)
+                images.append(image)
         return indicators, images
 
     def __get_carousel_img(self, figure: dict, idx: int):
