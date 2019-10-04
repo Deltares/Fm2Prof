@@ -51,20 +51,26 @@ class CompareWaalModel:
                 'Sobek directory not found. {}'.format(sobek_dir))
         if not os.path.exists(fm_dir):
             raise IOError(
-                'FM directory not found. {}'.format(fm_dir))
+                f'FM directory not found. {fm_dir}')
 
         # 3. Clean up output directory of figures.
         if os.path.exists(figure_dir):
             shutil.rmtree(figure_dir)
         os.makedirs(figure_dir)
 
-        # 4. Create xml
+        # 4. Copy FM2PROF output to DIMR dir
+        for FileName in ['CrossSectionDefinitions.ini', 'CrossSectionLocations.ini', 
+                         'roughness-FloodPlain1.ini', 'roughness-Main.ini']:
+            shutil.copyfile(src=os.path.join(results_dir, FileName),
+                            dst=os.path.join(sobek_dir, 'dflow1d', FileName))
+
+        # 5. Create xml
         sobek_xml_location = self.__create_xml_waal(case_name, sobek_dir)
 
-        # 5. Run DIMR
+        # 6. Run DIMR
         self.__run_dimr_from_command(sobek_xml_location)     
 
-        # 6. Get observations.nc
+        # 7. Get observations.nc
         output_1d, output_2d = self.__get_observations(
             sobek_dir, fm_dir, results_dir)   
 
