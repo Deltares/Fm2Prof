@@ -822,6 +822,8 @@ class Test_calculate_css_correction:
         # 2.1. values required for correction.
         test_css._css_total_volume = np.array([2, 3, 1, 0])
         test_css._fm_total_volume = np.array([2, 3, 1, 0])
+        test_css._css_flow_volume = np.array([2, 3, 1, 0])
+        test_css._fm_flow_volume = np.array([2, 3, 1, 0])
         test_css._css_z = np.array([0, 1, 2, 3])
 
         # 3. Run test
