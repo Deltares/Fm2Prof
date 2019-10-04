@@ -1,8 +1,11 @@
 name: fm2prof
+channels:
+  - defaults
 dependencies:
   - python=3.7
+  - pip
   - geos
   - pip:
-    - pytest=5.0.1
+    - pytest==5.0.1
     - pytest-cov
     - teamcity-messages
