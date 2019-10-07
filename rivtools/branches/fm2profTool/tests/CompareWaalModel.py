@@ -303,6 +303,11 @@ class CompareWaalModel:
         if not os.path.exists(fig_dir_stats):
             os.makedirs(fig_dir_stats)
 
+        fig_dir_volume = os.path.join(fig_dir, 'Volume')
+        if not os.path.exists(fig_dir_volume):
+            os.makedirs(fig_dir_volume)
+
+
 
         font = {'family': 'sans-serif',
                 'sans-serif': ['Sansa Pro, sans-serif'],
@@ -406,7 +411,7 @@ class CompareWaalModel:
         ax.legend()
         ax.set_xlabel("Rivierkilometer")
         ax.set_ylabel("Bias/$\\sigma$ [m]")
-        ax.set_ylim([-0.25, 1])
+        ax.set_ylim([-0.5, 0.5])
         ax.set_xlim([kms[0], kms[-1]])
 
         plt.tight_layout()
@@ -457,35 +462,48 @@ class CompareWaalModel:
 
         # Loop over each cross-sections
         cs = np.unique(df.id)
-        crosssections = [cs[i].strip() for i in range(len(cs))]
-        for waal in range(1,7):  # waal1 to waal6
+        crosssections = cs#[cs[i].strip() for i in range(len(cs))]
+        for branchnr in range(1,7):  # waal1 to waal6
+            branchstr = f'waal{str(branchnr)}'
             waallist = []
-            waalind = []
-            branchstr = 'waal' + str(waal)
-            for cs in range(len(crosssections)):
-                if branchstr in crosssections[cs]:
-                    waallist.append(crosssections[cs])
-                    waalind_tmp.append(cs)
-            tmp_ind = sorted(range(len(waallist)), key=lambda k: waallist[k])
-            waalind = waalind_tmp[tmp_ind]  # sorted index at each branch
-
+            waalind_tmp = []
+            for cs_index in range(len(crosssections)):
+                if branchstr in crosssections[cs_index]:
+                    waallist.append(crosssections[cs_index])
+                    waalind_tmp.append(cs_index)
+            
+            waallist = np.array(waallist)[np.argsort([float(w.split('_')[1]) for w in waallist])]
+            
             # Under the assumption that the cross-sections for the Waal was made every 500m
-            for cs5000 in range(0,len(crosssections),10):
-                crosssection = crosssections[waalind[cs5000]]
+            for cs5000 in range(0, len(waallist), 5):
+                crosssection = waallist[cs5000]
                 # Plot volume at each cross-section
                 self.__plot_volume(df, crosssection, fm2prof_fig_dir)
 
     def __plot_volume(self, df, cs, output_folder):
-        fig, ax = plt.subplots(1, figsize=(10, 4))
+        fig, axs = plt.subplots(1, 2, figsize=(10, 4))
         tv_1d = df[df.id == cs]['1D_total_volume']
         tv_1dsd = df[df.id == cs]['1D_total_volume_sd']
         tv_2d = df[df.id == cs]['2D_total_volume']
-        ax.plot(tv_2d, '-', linewidth=5, color=[0.4]*3, label='2D')
-        ax.plot(tv_1d, '--r', label='1D without correction')
-        ax.plot(tv_1dsd, '-r', label='1D with correction')
-        ax.set_title(cs)
-        ax.legend()
-        ax.set_xlabel('Water level [m]')
-        ax.set_ylabel('Volume [m$^3$]')
+        fv_1d = df[df.id == cs]['1D_flow_volume']
+        fv_1dsd = df[df.id == cs]['1D_flow_volume_sd']
+        fv_2d = df[df.id == cs]['2D_flow_volume']
+        axs[0].plot(tv_2d, '-', linewidth=5, color=[0.4]*3, label='2D')
+        axs[0].plot(tv_1d, '--r', label='1D without correction')
+        axs[0].plot(tv_1dsd, '-r', label='1D with correction')
+        axs[1].plot(fv_2d, '-', linewidth=5, color=[0.2]*3, label='2D')
+        axs[1].plot(fv_1d, '--b', label='1D without correction')
+        axs[1].plot(fv_1dsd, '-b', label='1D with correction')
+        
+        fig.suptitle(cs)
+        axs[0].set_title('Total volume')
+        axs[1].set_title('Flow volume')
+        for ax in axs:
+            ax.legend()
+            ax.set_xlabel('Water level [m]')
+            ax.set_ylabel('Volume [m$^3$]')
         plt.grid()
-        plt.savefig(os.path.join(output_folder, "{}_volumegraph.png".format(cs)))
+        # make valid cs name (no periods in name)
+        cs_name = cs.replace('.', 'x')
+        cs_name = cs_name.replace(' ', '')
+        plt.savefig(os.path.join(output_folder, "Volume/{}_volumegraph.png".format(cs_name)))
