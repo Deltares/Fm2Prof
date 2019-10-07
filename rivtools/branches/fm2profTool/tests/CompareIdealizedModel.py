@@ -136,13 +136,13 @@ class CompareIdealizedModel:
         _, ax = plt.subplots(1, figsize=(10, 4))
         tv_1d = df[df.id==cs]['1D_total_volume']
         tv_1dsd = df[df.id==cs]['1D_total_volume_sd']
-        fv_1d = df[df.id==cs]['1D_flow_volume']
+        fv_1d = df[df.id==cs]['1D_flow_volume_sd']
         tv_2d = df[df.id==cs]['2D_total_volume']
         fv_2d = df[df.id==cs]['2D_flow_volume']
         ax.plot(tv_2d, '-', linewidth=5, color=[0.4]*3, label='2D Total volume')
         ax.plot(fv_2d, '--', linewidth=4, color=[0.8, 0, 0.8], label='2D Flow volume')	
         ax.plot(tv_1dsd, '--r', label='1D Total volume (+sd)')
-        ax.plot(fv_1d, '-.c', label='1D Flow volume')
+        ax.plot(fv_1d, '-.c', label='1D Flow volume (+sd)')
         ax.set_title(cs)
         ax.legend()
         ax.set_xlabel('Water level [m]')
@@ -476,28 +476,31 @@ class CompareIdealizedModel:
                 if MainChannel:
                     tH_pos.append(H_pos[i])
                     if case_name == 'case_01_rectangle':
-                        Cz = (150.0*d/(2.0*d+150))**(1/6)/0.03
+                        #Cz = (150.0*d/(2.0*d+150))**(1/6)/0.03
+                        Cz = (d)**(1/6)/0.03
                     elif case_name == 'case_05_dyke':
                         if d < 3.0:
-                            Cz = (50.0*d/(3.0*d+50))**(1/6)/0.03
+                            Cz = (d)**(1/6)/0.03
                         else:
-                            Cz = (50.0*d/(3.0*2+50))**(1/6)/0.03
+                            Cz = (d)**(1/6)/0.03
                     elif case_name == 'case_07_triangular':
                         if y > 500 and y < 9500:
                             if d < 2.0:
-                                Cz = (200.0*d/(2.0*d+200))**(1/6)/0.03
+                                Cz = (d)**(1/6)/0.03
                             else:
-                                Cz = (200.0*d/(2.0*2+200))**(1/6)/0.03
+                                Cz = (d)**(1/6)/0.03
                         else:
                             if d < 2.0:
-                                Cz = (250.0*d/(2.0*d+250))**(1/6)/0.03
+                                Cz = (d)**(1/6)/0.03
                             else:
-                                Cz = (250.0*d/(2.0*2+250))**(1/6)/0.03
+                                Cz = (d)**(1/6)/0.03
                     else:
                         if d < 2.0:
-                            Cz = (50.0*d/(2.0*d+50))**(1/6)/0.03
+                            #Cz = (50.0*d/(2.0*d+50))**(1/6)/0.03
+                            Cz = (d)**(1/6)/0.03
                         else:
-                            Cz = (50.0*d/(2.0*2+50))**(1/6)/0.03
+                            #Cz = (50.0*d/(2.0*2+50))**(1/6)/0.03
+                            Cz = (d)**(1/6)/0.03
                     tR_pos.append(Cz)
                 else:  # floodplain1
                     if case_name == 'case_06_plassen':
@@ -518,12 +521,14 @@ class CompareIdealizedModel:
                             pass
                     if d > 2.0:
                         if case_name == 'case_02_compound':
-                            Cz = (100*(d-2.0)/(2.0*(d+48)))**(1/6)/0.07
+                            #Cz = (100*(d-2.0)/(2.0*(d+48)))**(1/6)/0.07
+                            Cz = (d-2.0)**(1/6)/0.07
                         elif case_name == 'case_03_threestage':
                             if d <= 2.5:
-                                Cz = (50*(d-2.0)/(2.0*(d+23)))**(1/6)/0.07
+                                Cz = (d-2)**(1/6)/0.07
                             else:
-                                Cz = ((50*0.5+100*(d-2.5))/(51+2.0*d+45))**(1/6)/0.07
+                                #Cz = ((50*0.5+100*(d-2.5))/(51+2.0*d+45))**(1/6)/0.07
+                                Cz = ((d-2.0)**(1/6)/0.07+(d-2.5)**(1/6)/0.07)/2
                         elif case_name == 'case_04_storage':
                             if y >= 1250 and y <= 1750:
                                 Cz = (50*(d-2.0)/(2.0*(d+23)))**(1/6)/0.07
