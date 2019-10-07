@@ -529,6 +529,8 @@ class CrossSection:
         # Write to attributes
         self._css_total_volume_corrected = (
             self._css_total_volume + extra_area_percentage * extra_total_volume)
+        self._css_flow_volume_corrected = (
+            self._css_flow_volume + extra_area_percentage * extra_flow_volume)
         self.crest_level = crest_level
         self.transition_height = transition_height
         self.extra_total_volume = extra_total_volume
@@ -738,6 +740,7 @@ class CrossSection:
 
         # Find roughness tables for each section
         chezy_fm = self._fm_data.get('chezy').iloc[:, self.temp_param_skip_maps:]
+
         sections = np.unique(self._fm_data.get('edge_section'))
 
         for section in sections:
@@ -754,7 +757,11 @@ class CrossSection:
 
     def _friction_weighing_simple(self, link_chezy, section):
         """ Simple mean, no weight """
-        return link_chezy.mean(axis=0).values    
+        # Remove chezy where zero
+        link_chezy = link_chezy.replace(0, np.NaN)
+        output = link_chezy.mean(axis=0).replace(np.NaN, 0)
+            
+        return output.values    
     
     def _friction_weighing_area(self, link_chezy, section):
         """ 
@@ -765,11 +772,15 @@ class CrossSection:
         The area of a flow link is defined as the average of the two faces it connects. 
         
         """
+        # Remove chezy where zero
+        link_chezy = link_chezy.replace(0, np.NaN)
         efs = self._fm_data['edge_faces'][self._fm_data['edge_section']==section]
         link_area = [self._fm_data.get('area_full')[ef].mean() for ef in efs]
         link_weight = link_area / np.sum(link_area)
 
-        return np.sum(link_chezy.values.T * link_weight, axis=1)
+        output = np.sum(link_chezy.values.T * link_weight, axis=1)
+        output[output==np.NaN] = 0
+        return output
 
     def _compute_section_widths(self):
         for section in np.unique(self._fm_data['edge_section']):
