@@ -285,9 +285,18 @@ class CrossSection:
         self._fm_wet_area = np.nansum(area_matrix[wet_not_plas_mask], axis=0)
         self._fm_flow_area = np.nansum(area_matrix[flow_mask], axis=0)
 
-        # Correct waterdepth for plassen
-        waterdepth = waterdepth + plassen_depth_correction
+        # Correct waterdepth for lakes 
+        waterdepth = waterdepth + plassen_depth_correction 
         waterdepth = waterdepth[waterdepth >= 0]
+
+        # Correct waterdepth for deep pools (volume below deepest point in centre
+        # should not be considered to be conveyance)
+        pools_id = [i[0] for i in np.argwhere(waterdepth.iloc[:, 0] > centre_depth[0])]
+        for pool in pools_id:
+            amount_deeper = waterdepth.iloc[pool,0] - centre_depth[0]
+            waterdepth.iloc[pool] -= amount_deeper 
+       
+        #waterdepth[waterdepth > centre_depth[0]] = centre_depth[0]
 
         # Compute 2D volume as sum of area times depth
         self._fm_total_volume = np.array(
@@ -425,7 +434,7 @@ class CrossSection:
             extra_total_volume = np.max([opt['x'][1], 0])
             
             # Optimise flow volume
-            opt2= so.minimize(self._optimisation_func,
+            opt2 = so.minimize(self._optimisation_func,
                             (initial_flow_volume),
                             args=['notboth', self._css_flow_volume, crest_level],
                             method='Nelder-Mead',
@@ -1013,18 +1022,22 @@ class CrossSection:
         self._set_logger_message("Number of points below z0 after applying filter: {}".format(np.sum(bmask.values.T[0])),
                                   level='debug')
 
+        # Compute values at z0
         bedlevels_below_z0 = bdata[bmask]
-        lowest_level_below_z0 = np.nanmin(
-            np.unique(
-                bedlevels_below_z0.values.T[-1]))
         lowest_level_below_z0 = centre_level[0] - centre_depth[0]
         flow_area_at_z0 = self._fm_flow_area[0]
+        total_area_at_z0 = self._fm_wet_area[0]
+        
         for unique_level_below_z0 in reversed(
                 np.linspace(lowest_level_below_z0, level_z0, 10)):
 
             # count area
             areas = area_matrix[bedlevels_below_z0 <= unique_level_below_z0]
-            area_at_unique_level = np.nansum(areas.values.T[-1])
+
+            # Set area, such that the width computed from this area is equal or lower 
+            # than the minimum width from the flow-dependent level
+            area_at_unique_level = np.min([np.nansum(areas.values.T[-1]),
+                                           total_area_at_z0])
 
             # Extension of flow/storage below z0
             if self.parameters.get(self.__cs_parameter_storagemethod_wli) == 0:
@@ -1037,7 +1050,7 @@ class CrossSection:
             self._css_flow_width = np.insert(
                 self._css_flow_width,
                 0,
-                area_at_unique_level/self.length)
+                flow_area_at_unique_level/self.length)
             self._css_total_width = np.insert(
                 self._css_total_width,
                 0,
