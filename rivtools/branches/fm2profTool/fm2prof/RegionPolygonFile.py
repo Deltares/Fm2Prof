@@ -167,7 +167,7 @@ class SectionPolygonFile(PolygonFile):
                 raise_exception = True
                 self._set_logger_message('Polygon {} has no property "section"'.format(section.properties.get('name')),
                                           level='error')
-            section_key = str(section.properties.get('section'))
+            section_key = str(section.properties.get('section')).lower()
             if section_key not in valid_section_keys:
                 if section_key not in list(map_section_keys.keys()):
                     raise_exception = True
