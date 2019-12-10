@@ -170,7 +170,7 @@ class IniFile:
         
         return file_parameters
     
-    def _extract_output_dir(self, inifile_parameters : Mapping[str, list]):
+    def _extract_output_dir(self, inifile_parameters: Mapping[str, list]):
         """Extract output directory infomation from the dictionary
         
         Arguments:
