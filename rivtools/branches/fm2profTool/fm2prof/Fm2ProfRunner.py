@@ -61,7 +61,7 @@ class Fm2ProfRunner:
     __iniFile = None
     __showFigures = False
     __saveFigures = False
-    __version = None
+    __version = 1.3
 
     __map_file_key = 'fm_netcdfile'
     __css_file_key = 'crosssectionlocationfile'
