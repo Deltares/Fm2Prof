@@ -10,9 +10,11 @@ from tests.TestUtils import TestUtils
 from fm2prof.Fm2ProfRunner import Fm2ProfRunner
 from fm2prof.Fm2ProfRunner import IniFile
 
-import tests.ReportHelper as ReportHelper
-from tests.LatexReport import LatexReport as LatexReport
-from tests.HtmlReport import HtmlReport as HtmlReport
+from ReportGenerator.latex_report import LatexReport as LatexReport
+from ReportGenerator.html_report import HtmlReport as HtmlReport
+
+
+from tests.fm2prof_latex_report import Fm2ProfLatexReport
 from tests.CompareWaalModel import CompareWaalModel as CompareWaalModel
 from tests.CompareIdealizedModel \
     import CompareIdealizedModel as CompareIdealizedModel
@@ -199,9 +201,10 @@ class Test_Generate_Reports:
         test_data_dir = os.path.join(
             _base_output_dir_name, _run_with_files_dir_name)
         test_data_dir_path = TestUtils.get_test_dir(test_data_dir)
-        case_figures = ReportHelper._get_all_cases_and_figures(
-            _test_scenarios_ids, test_data_dir_path)
-        yield test_data_dir_path, case_figures
+        report_content = Fm2ProfLatexReport(
+            scenarios_ids=_test_scenarios_ids,
+            data_dir=test_data_dir_path)
+        yield test_data_dir_path, report_content
 
     @pytest.mark.generate_test_report
     def test_when_output_generated_then_generate_latex_source_file(
@@ -210,11 +213,15 @@ class Test_Generate_Reports:
         assert report_data is not None, '' + \
             'No test data available.'
 
-        test_data_dir, cases_and_figures = report_data
+        # We save the generated report in the test directory as well.
+        test_data_dir, report_content = report_data
+        output_dir = test_data_dir
         try:
-            report = LatexReport()
-            latex_report_path = report._generate_python_report(
-                test_data_dir, cases_and_figures)
+            report = LatexReport(report_content)
+            latex_report_path = \
+                report.generate_latex_report(
+                    target_dir=output_dir)
+            assert os.path.exists(latex_report_path)
         except Exception as e_info:
             err_mssg = 'Error while generating latex source ' + \
                 '{}'.format(str(e_info))
@@ -223,8 +230,8 @@ class Test_Generate_Reports:
     @pytest.mark.generate_test_report
     def test_when_latex_source_generated_then_compile_to_pdf(self):
         try:
-            report = LatexReport()
-            report._convert_to_pdf("tests/Output/RunWithFiles_Output/latex_report/")
+            LatexReport.convert_to_pdf(
+                'tests/Output/RunWithFiles_Output/latex_report/')
         except Exception as e_info:
             err_mssg = 'Error while compiling latex report ' + \
                 '{}'.format(str(e_info))
@@ -237,12 +244,12 @@ class Test_Generate_Reports:
         assert report_data is not None, '' + \
             'No test data available.'
 
-        test_data_dir, cases_and_figures = report_data
-
+        # We save the generated report in the test directory as well.
+        test_data_dir, report_content = report_data
+        output_dir = test_data_dir
         try:
-            report = HtmlReport()
-            report._generate_html_report(
-                test_data_dir, cases_and_figures)
+            report = HtmlReport(report_content)
+            report.generate_html_report(target_dir=output_dir)
         except Exception as e_info:
             err_mssg = 'Error while generating python report ' + \
                 '{}'.format(str(e_info))

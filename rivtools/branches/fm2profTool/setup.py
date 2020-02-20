@@ -5,7 +5,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="fm2prof",
-    packages=(find_packages(exclude=('tests'))),
+    packages=(find_packages(exclude=('tests', 'ReportGenerator'))),
     # package_dir={'fm2prof': 'fm2prof'},
     version='1.4.0',
     description='Package use to reduce Delft3D FM models from 2D models to 1D models',
