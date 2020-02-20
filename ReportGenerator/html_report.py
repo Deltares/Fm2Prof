@@ -1,7 +1,8 @@
 import os
 import shutil
 import functools
-import tests.ReportHelper as ReportHelper
+import ReportGenerator.report_helper as ReportHelper
+from ReportGenerator.report_content import ReportContent
 
 
 class HtmlReport:
@@ -23,18 +24,22 @@ class HtmlReport:
     __sec_car_ind_key = 'SECTION_CAROUSEL_INDICATORS'
     __sec_car_img_key = 'SECTION_CAROUSEL_IMGS'
 
-    def _generate_html_report(self, target_dir: str, scenarios: dict):
+    __template_replace_code = 'PYTHON_CODE_HERE'
+
+    def __init__(self, report_content: ReportContent):
+        self.report_content = report_content
+
+    def generate_html_report(self, target_dir: str):
         """Generates an HTML report based on the contents of the dictionary.
 
         Arguments:
             target_dir {str} -- Target directory where to generate report.
-            scenarios {dict} -- Dictionary with values for the report.
 
         Returns:
             {str} -- HTML file path.
         """
         # Generate html code from dictionary based on templates.
-        html_reports = self.__get_html_index_content(scenarios)
+        html_reports = self.__get_html_index_content()
 
         # Clean report directory in case it already exists.
         report_dir = os.path.join(target_dir, self.__html_template_dir)
@@ -98,42 +103,48 @@ class HtmlReport:
 
         return template_content
 
-    def __get_html_index_content(self, cases_dict: dict):
+    def __get_html_index_content(self):
         """Generates HTML code with all content of the dictionary given.
-
-        Arguments:
-            cases_dict {dict} -- Dictionary with the report content
 
         Returns:
             {tuple} -- Tuple containing HTML code with all sections
                         and a list with one element per HTML section.
         """
         # Get cases HTML formatted content.
-        sections_html, sections_pages = self.__get_html_sections(cases_dict)
+        sections_html, sections_pages = self.__get_html_sections()
 
         # Insert generated HTML into highest template.
         reports = {}
         idx_html = self.__get_html_template(self.__html_idx_temp_name)
-        report_html = idx_html.replace('PYTHON_CODE_HERE', sections_html)
+        report_html = \
+            idx_html.replace(self.__template_replace_code, sections_html)
         reports[self.__html_report_name] = report_html
         # Create an entry per each section page.
         for page in sections_pages:
             page_html = sections_pages[page]
-            content_html = idx_html.replace('PYTHON_CODE_HERE', page_html)
+            content_html = \
+                idx_html.replace(self.__template_replace_code, page_html)
             reports[page] = content_html
 
         return reports
 
-    def __get_html_sections(self, cases_dict: dict):
+    def __get_html_sections(self):
         """Generates all HTML sections based on the content of the dictionary.
 
-        Arguments:
-            cases_dict {dict} -- Dictionary of report content.
+        Raises:
+            ValueError -- When no scenarios can be found
 
         Returns:
             {tuple} -- Tuple containing HTML code with all sections
                         and a dictionary with one element per HTML section.
         """
+        cases_dict = self.report_content.cases_and_figures
+        if not cases_dict:
+            error_mssg = '' + \
+                'No HTML content was generated from, ' + \
+                'because no data was found'
+            raise ValueError(error_mssg)
+
         html_sections = ''
         html_page_sections = {}
         if not cases_dict:
@@ -180,7 +191,8 @@ class HtmlReport:
         return template
 
     def __get_carousel_map_values(self, case_dict: dict):
-        """Generates a dictionary of keys with values to replace in the templates.
+        """Generates a dictionary of keys with values to replace
+        in the templates.
 
         Arguments:
             case_dict {dict} -- Dictionary of values for the templates.
@@ -216,7 +228,8 @@ class HtmlReport:
         return combined_dict
 
     def __get_sec_map_values(self, case_dict: dict):
-        """Generates a dictionary of keys with values to replace in the templates.
+        """Generates a dictionary of keys with values to replace
+        in the templates.
 
         Arguments:
             case_dict {dict} -- Dictionary of values for the templates.
@@ -239,7 +252,8 @@ class HtmlReport:
         return combined_dict
 
     def __get_default_sec_values(self, case_dict: dict):
-        """Generates a dictionary of keys with values to replace in the templates.
+        """Generates a dictionary of keys with values to replace
+        in the templates.
 
         Arguments:
             case_dict {dict} -- Dictionary of values for the templates.

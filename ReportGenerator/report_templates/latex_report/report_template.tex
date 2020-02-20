@@ -13,13 +13,14 @@
 \cleardoublepage
 %
 
-\newcommand{\ProgramName}{Fm2prof\xspace}
+\newcommand{\ProgramName}{%ProgramName%\xspace}
+\newcommand{\ProgramVersion}{%ProgramVersion%\xspace}
 
 \title{\ProgramName}
 \subtitle{Acceptance test Report}
-\projectnumber{11202219-002}
+\projectnumber{%ProjectNumber%}
 \client{Deltares}
-\reference{11202219-002-FM2prof}
+\reference{%ProjectNumber%-\ProgramName}
 \classification{-}
 
 \date{July 2019}
@@ -29,13 +30,11 @@
 
 \references{}
 
-\summary{This is an automatically generated acceptance report of FM2PROF, version 1.3}
+\summary{This is an automatically generated acceptance report of \ProgramName, version \ProgramVersion}
 
 \versioni{1.0}
 \datei{\today}
-\authori{Koen Berends}
-\authorii{Asako Fujisaki}
-\authoriii{Carles Salvador Soriano Perez}
+%AUTHORS%
 \revieweri{}
 \approvali{}
 
@@ -49,17 +48,17 @@
 \label{chapterIntroduction}
 
 \section{Purpose and scope of this document} \label{sec:PurposeAndScope}
-The purpose of this report is to document the results of the acceptance test cases for FM2PROF. 
+The purpose of this report is to document the results of the acceptance test cases for \ProgramName. 
 \section{Versions}
 \label{sec:Versions}
 
 
-\subsection{Version 1.3}
+\subsection{Version \ProgramVersion}
 \label{sec:Version}
 This is the first iteration of the acceptance test documentation. 
 %----------------------------------------
 
-PYTHON_CODE_HERE
+%CONTENT%
 
 %----------------------------------------
 \pagestyle{empty}
