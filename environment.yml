@@ -5,6 +5,8 @@ dependencies:
   - python=3.7
   - pip
   - geos
+  - qt
+  - pyqt
   - pip:
     - pytest==5.0.1
     - pytest-cov
