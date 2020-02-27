@@ -5,8 +5,9 @@ import os
 import numbers
 
 import shutil
-import geojson
 import json
+import geojson
+
 
 from fm2prof.MaskOutputFile import MaskOutputFile
 from tests.TestUtils import TestUtils

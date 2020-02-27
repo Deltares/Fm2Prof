@@ -23,12 +23,19 @@ All rights reserved.
 
 import os 
 import json
-from shapely.geometry import shape, GeometryCollection, Point
+
+from shapely.geometry import shape, GeometryCollection, Point, MultiPolygon
+from typing import Iterable, Callable, Any
 import logging
-import numpy as np 
+import numpy as np
+import multiprocessing
+import rtree
+from itertools import groupby
+
 from collections import namedtuple
 
 Polygon = namedtuple('Polygon', ['geometry', 'properties'])
+
 
 class PolygonFile:
     __logger = None
@@ -37,25 +44,137 @@ class PolygonFile:
         self.set_logger(logger)
         self.polygons = list()
         self.undefined = 'undefined'
-    def classify_points_with_property(self, points, property='name'):
-        """ 
+
+    def classify_points_with_property(
+            self,
+            points: Iterable[list],
+            property_name: str = 'name'):
+        """
         Classifies points as belonging to which region
 
         Points = list of tuples [(x,y), (x,y)]
         """
-        
         # Convert to shapely point
         points = [Point(xy) for xy in points]
         points_regions = [self.undefined]*len(points)
-        
+
         # Assign point to region
         for i, point in enumerate(points):
             for polygon in self.polygons:
                 if point.within(polygon.geometry):
-                    points_regions[i] = polygon.properties.get(property)
+                    points_regions[i] = polygon.properties.get(property_name)
                     break
 
         return np.array(points_regions)
+
+    def classify_points_with_property_shapely_prep(
+            self,
+            points: Iterable[list],
+            property_name: str = 'name'):
+        """
+        Classifies points as belonging to which region
+
+        Points = list of tuples [(x,y), (x,y)]
+        """
+        from shapely.prepared import prep
+        # Convert to shapely point
+        points = [Point(xy) for xy in points]
+        points_regions = [self.undefined]*len(points)
+
+        prep_polygons = [prep(p.geometry) for p in self.polygons]
+
+        # Assign point to region
+        for i, point in enumerate(points):
+            for p_id, polygon in enumerate(prep_polygons):
+                if polygon.intersects(point):
+                    points_regions[i] = \
+                        self.polygons[p_id].properties.get(property_name)
+                    break
+
+        return np.array(points_regions)
+
+    def classify_points_with_property_optimized(
+            self,
+            points: Iterable[list],
+            property_name: str = 'name'):
+        """
+        Classifies points as belonging to which region
+
+        Points = list of tuples [(x,y), (x,y)]
+        """
+        __points_regions = [
+            self.__get_container_polygon_property(Point(xy), property_name)
+            for xy in points]
+        return np.array(__points_regions)
+
+    def __get_container_polygon_property(
+            self, xy_point: Point, property_name: str) -> list:
+        """Returns an iterator that finds whether the xy point
+        is within the list of polygons for this file.
+
+        Arguments:
+            xy_point {Point} -- List of valus x,y,z representing a Point.
+            property_name {str} -- Property to search in the found polygon.
+
+        Returns:
+            list -- Iterator list to improve performance.
+        """
+        return next((
+            polygon.properties.get(property_name)
+            for polygon in self.polygons
+            if xy_point.within(polygon.geometry)),
+            self.undefined)
+
+    def classify_points_with_property_rtree_by_polygons(
+            self,
+            iterable_points: Iterable[list],
+            property_name: str = 'name') -> list:
+        """Applies RTree index to quickly classify points in polygons.
+
+        Arguments:
+            iterable_points {Iterable[list]} -- List of unformatted points.
+
+        Keyword Arguments:
+            property_name {str}
+                -- Property to retrieve from the polygons (default: {'name'})
+
+        Returns:
+            list -- List of mapped points to polygon properties.
+        """
+        idx = rtree.index.Index()
+        for p_id, polygon in enumerate(self.polygons):
+            idx.insert(p_id, polygon.geometry.bounds, polygon)
+
+        point_properties_list = []
+        for point in map(Point, iterable_points):
+            point_properties_polygon = \
+                next(
+                    iter(
+                        self.polygons[polygon_id].properties.get(property_name)
+                        for polygon_id in idx.intersection(point.bounds)
+                        if self.polygons[polygon_id].geometry.intersects(point)),
+                    self.undefined)
+            point_properties_list.append(point_properties_polygon)
+
+        del idx
+        return np.array(point_properties_list)
+
+    def __get_polygon_property(
+            self, grouped_values: list, property_name: str) -> str:
+        """Retrieves the polygon property from the internal list of polygons.
+
+        Arguments:
+            grouped_values {int}
+                -- Grouped values containing point and polygon id.
+            property_name {str} -- Property to search.
+
+        Returns:
+            str -- Property value.
+        """
+        polygon_id = list(grouped_values[1])[0][0]
+        if polygon_id >= len(self.polygons) or polygon_id < 0:
+            return self.undefined
+        return self.polygons[polygon_id].properties.get(property_name)
 
     def set_logger(self, logger):
         """ should be given a logger object (python standard library) """
@@ -63,14 +182,14 @@ class PolygonFile:
             'logger should be instance of logging.Logger class'
 
         self.__logger = logger
-    
+
     def parse_geojson_file(self, file_path):
         """ Read data from geojson file """
         PolygonFile._validate_extension(file_path)
 
         with open(file_path) as geojson_file:
             geojson_data = json.load(geojson_file).get("features")
-        
+
         for feature in geojson_data:
             feature_props = {k.lower(): v for k, v in feature.get('properties').items()}
             self.polygons.append(Polygon(geometry=shape(feature["geometry"]).buffer(0),
@@ -80,7 +199,6 @@ class PolygonFile:
 
         #for polygon, polygon_name in zip(polygons, polygon_names):
         #    self.polygons[polygon_name] = polygon
-
 
     @staticmethod
     def _validate_extension(file_path: str):
@@ -130,8 +248,9 @@ class PolygonFile:
                                                                           testpoly.properties.get('name')),
                                                  level= 'warning')
 
+
 class RegionPolygonFile(PolygonFile):
-    
+
     def __init__(self, region_file_path, logger):
         super().__init__(logger)
         self.read_region_file(region_file_path)
@@ -146,22 +265,27 @@ class RegionPolygonFile(PolygonFile):
 
     def _validate_regions(self):
         self._set_logger_message("Validating Region file")
-        
+
         number_of_regions = len(self.regions)
-        
+
         self._set_logger_message("{} regions found".format(number_of_regions))
 
         # Test if polygons overlap
         self._check_overlap()
 
-    def classify_points(self, points):
-        return self.classify_points_with_property(points, property='name')
+    def classify_points(self, points: Iterable[list]):
+        return self.classify_points_with_property(
+            points,
+            property_name='name')
+
 
 class SectionPolygonFile(PolygonFile):
+
     def __init__(self, section_file_path, logger):
         super().__init__(logger)
         self.read_section_file(section_file_path)
         self.undefined = 'main'
+
     @property
     def sections(self):
         return self.polygons
@@ -170,16 +294,17 @@ class SectionPolygonFile(PolygonFile):
         self.parse_geojson_file(file_path)
         self._validate_sections()
 
-    def classify_points(self, points):
-        return self.classify_points_with_property(points, property='section')
-
+    def classify_points(self, points: Iterable[list]):
+        return self.classify_points_with_property(
+            points,
+            property_name='section')
 
     def _validate_sections(self):
         self._set_logger_message("Validating Section file")
         raise_exception = False
-        
+
         valid_section_keys = {'main', 'floodplain1', 'floodplain2'}
-        map_section_keys = {'1':'main',
+        map_section_keys = {'1': 'main',
                             '2': 'floodplain1',
                             '3': 'floodplain2',
                             }
