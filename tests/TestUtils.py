@@ -68,3 +68,21 @@ class TestUtils:
         test_dir = os.path.dirname(__file__)
         dir_path = os.path.join(test_dir, dir_name)
         return dir_path
+
+    @staticmethod
+    def get_test_dir_output(dir_name: str) -> str:
+        """Returns the path to the output test data.
+        If it does not exist already it is created.
+        
+        Arguments:
+            dir_name {str} -- Name of the folder under Output.
+        
+        Returns:
+            str -- Path to the test output dir.
+        """
+        output_dir = os.path.join('Output', dir_name)
+        test_dir = TestUtils.get_test_dir(output_dir)
+        # Create it if it does not exist
+        if not os.path.exists(test_dir):
+            os.mkdir(test_dir)
+        return test_dir
