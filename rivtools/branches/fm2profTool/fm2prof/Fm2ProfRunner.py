@@ -124,22 +124,22 @@ class Fm2ProfRunner:
         self.__set_logger_message('reading FM and cross-sectional data data')
 
         # Read region polygon
+        regions = None
+        sections = None
+        input_param_dict['sectionsmethod'] = 0
+
         if region_file:
             regions = RegionPolygonFile(region_file, logger=self.__logger)
-        else:
-            regions = None
-        
+
         if section_file:
             sections = SectionPolygonFile(section_file, logger=self.__logger)
             input_param_dict['sectionsmethod'] = 1
-        else:
-            sections = None
-            input_param_dict['sectionsmethod'] = 0
 
         # Read FM model data
-        fm2prof_fm_model_data = FE.read_fm2prof_input(map_file, css_file, regions, sections)
+        fm2prof_fm_model_data = \
+            FE.read_fm2prof_input(map_file, css_file, regions, sections)
         fm_model_data = CE.FmModelData(fm2prof_fm_model_data)
-        
+
         ntsteps = fm_model_data.time_dependent_data.get('waterlevel').shape[1]
         nfaces = fm_model_data.time_dependent_data.get('waterlevel').shape[0]
         nedges = fm_model_data.edge_data.get('x').shape[0]
