@@ -3,6 +3,8 @@ import sys
 import os
 import logging
 from shapely.geometry import Polygon, Point
+import numpy as np
+
 import matplotlib.pyplot as plt
 from random import seed, randint
 import timeit
@@ -15,51 +17,6 @@ from tests.TestUtils import TestUtils
 
 class Test_PolygonFile:
 
-    @pytest.mark.acceptance
-    def test_given_list_of_geometries_then_classifies_correctly(self):
-        # 1. Defining test input data
-        left_classifier = 'left_classifier'
-        right_classifier = 'right_classifier'
-        undefined_classifier = 'undefined'
-        # 1.1. Prepare polygons
-        geometry_left = \
-            p_tuple(
-                geometry=Polygon([[1, 1], [5, 1], [5, 4], [1, 4], [1, 1]]),
-                properties={'name': left_classifier})
-        geometry_right = \
-            p_tuple(
-                geometry=Polygon([[3, 3], [9, 3], [9, 7], [3, 7], [3, 3]]),
-                properties={'name': right_classifier})
-        polygon_list = [geometry_left, geometry_right]
-        # 1.2. Prepare points
-        left_point = (3, 2)
-        right_point = (5, 5)
-        overlap_point = (4, 4)
-        outside_point_left = (2, 5)
-        outside_point_right = (6, 2)
-        xy_list = [
-            left_point, right_point,
-            overlap_point,
-            outside_point_left, outside_point_right]
-        expected_classifiers = [
-            left_classifier, right_classifier,
-            left_classifier,
-            undefined_classifier, undefined_classifier]
-        # 2. Verify initial expectations.
-        polygon_file = PolygonFile(
-            logging.getLogger(__name__))
-        assert polygon_file is not None
-        polygon_file.polygons = polygon_list
-
-        # 3. Run test
-        classifiers = \
-            polygon_file.classify_points_with_property_rtree_by_polygons(
-                xy_list)
-
-        # 4. Verify final expectations.
-        assert classifiers is not None
-        assert classifiers == expected_classifiers
-
     class ClassifierApproaches:
 
         def __init__(self, polygon_file, xy_list):
@@ -71,11 +28,6 @@ class Test_PolygonFile:
                 self.polygon_file.classify_points_with_property(
                     self.xy_list)
 
-        def test_action_regular_optimized(self):
-            return \
-                self.polygon_file.classify_points_with_property_optimized(
-                    iter(self.xy_list))
-
         def test_action_regular_prep(self):
             return \
                 self.polygon_file.classify_points_with_property_shapely_prep(
@@ -85,6 +37,24 @@ class Test_PolygonFile:
             return \
                 self.polygon_file.classify_points_with_property_rtree_by_polygons(
                     self.xy_list)
+
+        @staticmethod
+        def test_action_regular_static(polygon_file, xy_list):
+            return \
+                polygon_file.classify_points_with_property(
+                    xy_list)
+
+        @staticmethod
+        def test_action_prep_static(polygon_file, xy_list):
+            return \
+                polygon_file.classify_points_with_property_shapely_prep(
+                    iter(xy_list))
+
+        @staticmethod
+        def test_action_polygons_static(polygon_file, xy_list):
+            return \
+                polygon_file.classify_points_with_property_rtree_by_polygons(
+                    xy_list)        
 
     def __get_basic_polygon_list(self, left_classifier, right_classifier):
         geometry_left = \
@@ -115,9 +85,62 @@ class Test_PolygonFile:
 
     @pytest.mark.acceptance
     @pytest.mark.parametrize(
+        'classifier_function',
+        [
+            (ClassifierApproaches.test_action_regular_static),
+            (ClassifierApproaches.test_action_prep_static),
+            (ClassifierApproaches.test_action_polygons_static),
+        ])
+    def test_given_list_of_geometries_then_classifies_correctly(
+            self, classifier_function):
+        # 1. Defining test input data
+        left_classifier = 'left_classifier'
+        right_classifier = 'right_classifier'
+        undefined_classifier = 'undefined'
+        # 1.1. Prepare polygons
+        geometry_left = \
+            p_tuple(
+                geometry=Polygon([[1, 1], [5, 1], [5, 4], [1, 4], [1, 1]]),
+                properties={'name': left_classifier})
+        geometry_right = \
+            p_tuple(
+                geometry=Polygon([[3, 3], [9, 3], [9, 7], [3, 7], [3, 3]]),
+                properties={'name': right_classifier})
+        polygon_list = [geometry_left, geometry_right]
+        # 1.2. Prepare points
+        left_point = (3, 2)
+        right_point = (5, 5)
+        overlap_point = (4, 4)
+        outside_point_left = (2, 5)
+        outside_point_right = (6, 2)
+        xy_list = [
+            left_point, right_point,
+            overlap_point,
+            outside_point_left, outside_point_right]
+        expected_classifiers = [
+            left_classifier, right_classifier,
+            left_classifier,
+            undefined_classifier, undefined_classifier]
+        np_expected_classifiers = \
+            np.array(expected_classifiers)
+        # 2. Verify initial expectations.
+        polygon_file = PolygonFile(
+            logging.getLogger(__name__))
+        assert polygon_file is not None
+        polygon_file.polygons = polygon_list
+
+        # 3. Run test
+        classifiers = classifier_function(polygon_file, xy_list)
+
+        # 4. Verify final expectations.
+        assert classifiers is not None
+        assert np.array_equal(classifiers, np_expected_classifiers)
+
+    @pytest.mark.acceptance
+    @pytest.mark.parametrize(
         'number_of_points',
         [(10), (100), (1000), (10000)])
-    def test_performance(self, number_of_points: int):
+    def test_overall_performance(self, number_of_points: int):
         # 1. Defining test input data
         left_classifier = 'left'
         right_classifier = 'right'
@@ -149,10 +172,10 @@ class Test_PolygonFile:
         ca = self.ClassifierApproaches(polygon_file, xy_list)
         cases_list = {
             'regular': ca.test_action_regular,
-            'optimized': ca.test_action_regular_optimized,
             'shapely-prep': ca.test_action_regular_prep,
-            'r-tree polygons': ca.test_action_polygons,
+            # 'r-tree': ca.test_action_polygons,
         }
+
         import itertools
         t_results = {}
         c_results = {}
