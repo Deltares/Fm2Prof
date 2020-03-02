@@ -93,38 +93,6 @@ class PolygonFile:
 
         return np.array(points_regions)
 
-    def classify_points_with_property_optimized(
-            self,
-            points: Iterable[list],
-            property_name: str = 'name'):
-        """
-        Classifies points as belonging to which region
-
-        Points = list of tuples [(x,y), (x,y)]
-        """
-        __points_regions = [
-            self.__get_container_polygon_property(Point(xy), property_name)
-            for xy in points]
-        return np.array(__points_regions)
-
-    def __get_container_polygon_property(
-            self, xy_point: Point, property_name: str) -> list:
-        """Returns an iterator that finds whether the xy point
-        is within the list of polygons for this file.
-
-        Arguments:
-            xy_point {Point} -- List of valus x,y,z representing a Point.
-            property_name {str} -- Property to search in the found polygon.
-
-        Returns:
-            list -- Iterator list to improve performance.
-        """
-        return next((
-            polygon.properties.get(property_name)
-            for polygon in self.polygons
-            if xy_point.within(polygon.geometry)),
-            self.undefined)
-
     def classify_points_with_property_rtree_by_polygons(
             self,
             iterable_points: Iterable[list],
