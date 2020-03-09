@@ -68,8 +68,6 @@ class Fm2ProfRunner:
     __region_file_key = 'regionpolygonfile'
     __section_file_key = 'sectionpolygonfile'
     __export_mapfiles_key = "exportmapfiles"
-    __first_css_key = "firstcss"
-    __last_css_key = "lastcss"
     __css_selection_key = "cssselection"
 
     def __init__(self, iniFilePath: str, version: float = None):
