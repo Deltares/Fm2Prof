@@ -147,7 +147,10 @@ class IniFile:
                 else: # if float
                     input_parameters[sub] = float_value
             except ValueError:
-                input_parameters[sub] = None
+                try:
+                     input_parameters[sub] = list(map(int, parameter_value.split(',')))
+                except ValueError:
+                    input_parameters[sub] = None
         return input_parameters
         
     def _extract_input_files( self, inifile_parameters : Mapping[str, list]):

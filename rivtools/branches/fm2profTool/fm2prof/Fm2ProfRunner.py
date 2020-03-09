@@ -67,8 +67,10 @@ class Fm2ProfRunner:
     __css_file_key = 'crosssectionlocationfile'
     __region_file_key = 'regionpolygonfile'
     __section_file_key = 'sectionpolygonfile'
-
     __export_mapfiles_key = "exportmapfiles"
+    __first_css_key = "firstcss"
+    __last_css_key = "lastcss"
+    __css_selection_key = "cssselection"
 
     def __init__(self, iniFilePath: str, version: float = None):
         """
@@ -137,7 +139,7 @@ class Fm2ProfRunner:
 
         # Read FM model data
         fm2prof_fm_model_data = \
-            FE.read_fm2prof_input(map_file, css_file, regions, sections)
+            FE.read_fm2prof_input(map_file, css_file, regions, sections, logger=self.__logger)
         fm_model_data = CE.FmModelData(fm2prof_fm_model_data)
 
         ntsteps = fm_model_data.time_dependent_data.get('waterlevel').shape[1]
@@ -241,11 +243,15 @@ class Fm2ProfRunner:
         cross_sections = list()
         if not fm_model_data or not input_param_dict:
             return cross_sections
-
+        
+        
+        
         # Preprocess css from fm_model_data so it's easier to handle it.
         css_data_list = fm_model_data.css_data_list
-        self.__logformatter.set_number_of_iterations(len(css_data_list))
-        for css_data in css_data_list:
+        css_selection = self._get_css_range(number_of_css=len(css_data_list))
+        self.__logformatter.set_number_of_iterations(len(css_selection))
+        
+        for css_data in np.array(css_data_list)[css_selection]:
             generated_cross_section = self._generate_cross_section(
                 css_data, input_param_dict, fm_model_data)
             if generated_cross_section is not None:
@@ -253,6 +259,15 @@ class Fm2ProfRunner:
                 self.__logformatter.start_new_iteration()
 
         return cross_sections
+
+    def _get_css_range(self, number_of_css: int):
+        """ parses the CssSelection keyword from the inifile """
+        cssSelection = self.__iniFile._input_parameters.get(self.__css_selection_key)
+        if cssSelection is None:
+            cssSelection = np.arange(0, number_of_css)
+        else:
+            cssSelection = np.array(cssSelection)
+        return cssSelection
 
     def _generate_cross_section(
             self,
@@ -348,8 +363,8 @@ class Fm2ProfRunner:
         try:
             # Retrieve FM data for cross-section
             fm_data = FE.get_fm2d_data_for_css(
-                cross_section.name,time_independent_data
-                ,
+                cross_section.name,
+                time_independent_data,
                 edge_data,
                 time_dependent_data)
 
@@ -468,27 +483,19 @@ class Fm2ProfRunner:
 
         csv_volumes_file = output_dir + '\\volumes.csv'
 
-        # export all cross-sections
+        # export fm1D format
         try:
+            # Export locations
             sobek_export.export_crossSectionLocations(
                 cross_sections, file_path=css_location_ini_file)
-
+            
+            # Export definitions
             sobek_export.export_geometry(
                 cross_sections,
                 file_path=css_definitions_ini_file,
                 fmt='dflow1d')
-            sobek_export.export_geometry(
-                cross_sections, file_path=csv_geometry_file, fmt='sobek3')
-            sobek_export.export_geometry(
-                cross_sections,
-                file_path=csv_geometry_test_file,
-                fmt='testformat')
 
-            sobek_export.export_roughness(
-                cross_sections,
-                file_path=csv_roughness_file,
-                fmt='sobek3')
-            
+            # Export roughness
             sections = np.unique([s for css in cross_sections for s in css.friction_tables.keys()])
             sectionFileKeyDict = {"main": ['\\roughness-Main.ini', "Main"],
                                   "floodplain1": ['\\roughness-FloodPlain1.ini', "FloodPlain1"],
@@ -500,6 +507,37 @@ class Fm2ProfRunner:
                     file_path=csv_roughness_ini_file,
                     fmt='dflow1d',
                     roughness_section=sectionFileKeyDict[section][1])
+        except Exception as e_info:
+            self.__set_logger_message(
+                'An error was produced while exporting files to DIMR format,' +
+                ' not all output files might be exported. ' +
+                '{}'.format(str(e_info)),
+                level='error')
+
+        # Eport SOBEK 3 format
+        try:
+            # Cross-sections
+            sobek_export.export_geometry(
+                cross_sections, file_path=csv_geometry_file, fmt='sobek3')
+            
+            # Roughness
+            sobek_export.export_roughness(
+                cross_sections,
+                file_path=csv_roughness_file,
+                fmt='sobek3')
+        except Exception as e_info:
+            self.__set_logger_message(
+                'An error was produced while exporting files to SOBEK format,' +
+                ' not all output files might be exported. ' +
+                '{}'.format(str(e_info)),
+                level='error')
+        
+        # Other files:
+        try:
+            sobek_export.export_geometry(
+                cross_sections,
+                file_path=csv_geometry_test_file,
+                fmt='testformat')
 
             sobek_export.export_volumes(
                 cross_sections,
