@@ -226,6 +226,7 @@ def _get_fm1d_branch_sec(cross_sections, section):
     for css in cross_sections:
         try:
             if css.branch not in branch_list:
+                branch_list.append(css.branch)
                 branch_sec += """[BranchProperties]
     branchId              = {}               
     roughnessType         = 1                   
