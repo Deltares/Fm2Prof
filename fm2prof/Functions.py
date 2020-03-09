@@ -60,7 +60,7 @@ __status__ = "Prototype"
 
 
 # region // public functions
-def read_fm2prof_input(res_file, css_file, regions, sections):
+def read_fm2prof_input(res_file, css_file, regions, sections, logger):
     """
     Reads input files for 'FM2PROF'. See documentation for file format descriptions.
 
@@ -76,21 +76,29 @@ def read_fm2prof_input(res_file, css_file, regions, sections):
     """
 
     # Read FM map file
+    logger.debug('Opening FM Map file')
     (time_independent_data, edge_data, node_coordinates, time_dependent_data) = _read_fm_model(res_file)
-
+    logger.debug('Closed FM Map file')
+    
     # Load locations and names of cross-sections
+    logger.debug('Opening css file')
     cssdata = _read_css_xyz(css_file)
-
+    logger.debug('Closed css file')
     # Regions
     if regions is not None:
+        logger.debug('Assigning point to cross-sections with regions')
         time_independent_data, edge_data = classify_with_regions(regions, cssdata, time_independent_data, edge_data)
     else:
+        logger.debug('Assigning point to cross-sections without regions')
         time_independent_data, edge_data = classify_without_regions(cssdata, time_independent_data, edge_data)
 
     if sections is not None:
-        edge_data = classify_roughness_sections_by_polygon(sections, edge_data)
-        time_independent_data = classify_roughness_sections_by_polygon(sections, time_independent_data)
+        logger.debug('Assigning edge data to sections with polygons')
+        edge_data = classify_roughness_sections_by_polygon(sections, edge_data, logger)
+        logger.debug('Assigning other data to sections with polygons')
+        time_independent_data = classify_roughness_sections_by_polygon(sections, time_independent_data, logger)
     else:
+        logger.debug('Assigning point to sections without polygons')
         edge_data = classify_roughness_sections_by_variance(edge_data, time_dependent_data['chezy_edge'])
         time_independent_data = classify_roughness_sections_by_variance(time_independent_data, time_dependent_data['chezy_mean'])
         
@@ -123,10 +131,12 @@ def classify_roughness_sections_by_variance(data, variable):
         data[key][end_values <= splitpoint] = 'floodplain1'
     return data
 
-def classify_roughness_sections_by_polygon(sections, data):
+def classify_roughness_sections_by_polygon(sections, data, logger):
     """ assigns edges to a roughness section based on polygon data """
+    logger.debug('....gathering points')
     points = [(data['x'][i], data['y'][i])
               for i in range(len(data['x']))]
+    logger.debug('....classifying points')
     data['section'] = sections.classify_points(points)
     return data
 
@@ -434,7 +444,7 @@ def _read_css_xyz(file_path : str, delimiter = ','):
                 # revert to legacy format
                 (x, y, branchid, length, chainage) = line.split(delimiter)
                 cssid = branchid + '_' + str(round(float(chainage)))
-
+            
             input_data['xy'].append((float(x), float(y)))
             input_data['id'].append(cssid)
             input_data['length'].append(float(length))
