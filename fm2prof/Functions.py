@@ -62,7 +62,8 @@ __status__ = "Prototype"
 # region // public functions
 def read_fm2prof_input(res_file, css_file, regions, sections, logger):
     """
-    Reads input files for 'FM2PROF'. See documentation for file format descriptions.
+    Reads input files for 'FM2PROF'.
+    See documentation for file format descriptions.
 
     Data is saved in three major structures:
         time_independent_data: holds bathymetry information
@@ -79,7 +80,7 @@ def read_fm2prof_input(res_file, css_file, regions, sections, logger):
     logger.debug('Opening FM Map file')
     (time_independent_data, edge_data, node_coordinates, time_dependent_data) = _read_fm_model(res_file)
     logger.debug('Closed FM Map file')
-    
+
     # Load locations and names of cross-sections
     logger.debug('Opening css file')
     cssdata = _read_css_xyz(css_file)
@@ -92,6 +93,7 @@ def read_fm2prof_input(res_file, css_file, regions, sections, logger):
         logger.debug('Assigning point to cross-sections without regions')
         time_independent_data, edge_data = classify_without_regions(cssdata, time_independent_data, edge_data)
 
+    # Sections
     if sections is not None:
         logger.debug('Assigning edge data to sections with polygons')
         edge_data = classify_roughness_sections_by_polygon(sections, edge_data, logger)
@@ -101,15 +103,17 @@ def read_fm2prof_input(res_file, css_file, regions, sections, logger):
         logger.debug('Assigning point to sections without polygons')
         edge_data = classify_roughness_sections_by_variance(edge_data, time_dependent_data['chezy_edge'])
         time_independent_data = classify_roughness_sections_by_variance(time_independent_data, time_dependent_data['chezy_mean'])
-        
 
-    return time_dependent_data, time_independent_data, edge_data, node_coordinates, cssdata
+
+    return time_dependent_data, time_independent_data, edge_data, \
+        node_coordinates, cssdata
+
 
 def classify_roughness_sections_by_variance(data, variable):
 
     # Get chezy values at last timestep
     end_values = variable.T.iloc[-1].values
-    key='section'
+    key = 'section'
     # Find split point (chezy value) by variance minimisation
     variance_list = list()
     split_candidates = np.arange(min(end_values), max(end_values), 1)
@@ -131,6 +135,7 @@ def classify_roughness_sections_by_variance(data, variable):
         data[key][end_values <= splitpoint] = 'floodplain1'
     return data
 
+
 def classify_roughness_sections_by_polygon(sections, data, logger):
     """ assigns edges to a roughness section based on polygon data """
     logger.debug('....gathering points')
@@ -140,21 +145,27 @@ def classify_roughness_sections_by_polygon(sections, data, logger):
     data['section'] = sections.classify_points(points)
     return data
 
+
+def extract_point_from_np(data: dict, pos: int) -> list:
+    return (data['x'][pos], data['y'][pos])
+
+
 def classify_with_regions(regions, cssdata, time_independent_data, edge_data):
     """
-        Assigns cross-section id's based on region polygons. 
+        Assigns cross-section id's based on region polygons.
         Within a region, assignment will be done by k nearest neighbour
     """
     css_regions = regions.classify_points(cssdata['xy'])
 
-    xy_tuples_2d = [(time_independent_data.get('x').values[i], 
-                     time_independent_data.get('y').values[i]) for i in range(len(time_independent_data.get('x')))]
-    
+    xy_tuples_2d = [(time_independent_data.get('x').values[i],
+                     time_independent_data.get('y').values[i])
+                    for i in range(len(time_independent_data.get('x')))]
+
     time_independent_data['region'] = regions.classify_points(xy_tuples_2d)
 
-    xy_tuples_2d = [(edge_data.get('x')[i], 
-                     edge_data.get('y')[i]) for i in range(len(edge_data.get('x')))]
-    
+    xy_tuples_2d = [(edge_data.get('x')[i], edge_data.get('y')[i])
+                    for i in range(len(edge_data.get('x')))]
+
     edge_data['region'] = regions.classify_points(xy_tuples_2d)
 
     time_independent_data['sclass'] = time_independent_data['region']
@@ -187,6 +198,7 @@ def classify_with_regions(regions, cssdata, time_independent_data, edge_data):
     
     return time_independent_data, edge_data
 
+
 def classify_without_regions(cssdata, time_independent_data, edge_data):
     # Create a class identifier to map points to cross-sections
     neigh = _get_class_tree(cssdata['xy'], cssdata['id'])
@@ -198,6 +210,7 @@ def classify_without_regions(cssdata, time_independent_data, edge_data):
     edge_data['sclass'] = neigh.predict(np.array([edge_data['x'], edge_data['y']]).T)
 
     return time_independent_data, edge_data
+
 
 def get_fm2d_data_for_css(classname, dti, edge_data, dtd):
     """
@@ -255,6 +268,7 @@ def get_fm2d_data_for_css(classname, dti, edge_data, dtd):
 
     return return_dict
 
+
 def mirror(array, reverse_sign=False):
     """
     Mirrors array
@@ -267,6 +281,7 @@ def mirror(array, reverse_sign=False):
         return np.append(np.flipud(array)*-1, array)
     else:
         return np.append(np.flipud(array), array)
+
 
 def get_centre_values(location, x, y, waterdepth, waterlevel):
     """
@@ -289,11 +304,13 @@ def get_centre_values(location, x, y, waterdepth, waterlevel):
     
     return centre_depth.values[0], centre_level.values[0]
 
+
 def get_extra_total_area(waterlevel, crest_level, transition_height, hysteresis=False):
     """
     releases extra area dependent on waterlevel using a logistic (sigmoid) function
     """
     return 1/(1+np.e**(np.log(0.00001)/(transition_height)*(waterlevel-(crest_level+0.5*transition_height))))
+
 
 def return_volume_error(predicted, measured, gof='rmse'):
     non_nan_mask = ~np.isnan(predicted) & ~np.isnan(measured)
@@ -430,7 +447,7 @@ def _read_fm_model(file_path):
 
     return df, edge_data, df_node, time_dependent
 
-def _read_css_xyz(file_path : str, delimiter = ','):
+def _read_css_xyz(file_path: str, delimiter: str = ','):
     
     if not file_path or not os.path.exists(file_path):
         raise IOError('No file path for Cross Section location file was given, or could not be found at {}'.format(file_path))
