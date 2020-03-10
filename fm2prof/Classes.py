@@ -138,7 +138,7 @@ class CrossSection:
     __cs_parameter_Frictionweighing = 'frictionweighing'
     __cs_parameter_sectionsmethod = 'sectionsmethod'
     __cs_parameter_sdoptimisationmethod = 'sdoptimisationmethod'
-
+    __cs_parameter_skip_maps = 'skipmaps'
     __output_face_list = []
     __output_edge_list = []
     __logger = None
@@ -210,8 +210,13 @@ class CrossSection:
         self._fm_data = None
 
         # PARAMETERS
-        self.temp_param_skip_maps = 2
         self.parameters = InputParam_dict
+
+        if self.parameters.get(self.__cs_parameter_skip_maps) is None:
+            self._param_skip_maps = 0
+        else:
+            self._param_skip_maps = int(self.parameters.get(self.__cs_parameter_skip_maps))
+        
 
     @property
     def alluvial_width(self):
@@ -257,9 +262,9 @@ class CrossSection:
         """
 
         # Unpack FM data
-        waterlevel = fm_data['waterlevel'].iloc[:, self.temp_param_skip_maps:]
-        waterdepth = fm_data['waterdepth'].iloc[:, self.temp_param_skip_maps:]
-        velocity = fm_data['velocity'].iloc[:, self.temp_param_skip_maps:]
+        waterlevel = fm_data['waterlevel'].iloc[:, self._param_skip_maps:]
+        waterdepth = fm_data['waterdepth'].iloc[:, self._param_skip_maps:]
+        velocity = fm_data['velocity'].iloc[:, self._param_skip_maps:]
         area = fm_data['area']
         bedlevel = fm_data['bedlevel']
 
@@ -770,7 +775,7 @@ class CrossSection:
     def _build_roughness_tables(self):
 
         # Find roughness tables for each section
-        chezy_fm = self._fm_data.get('chezy').iloc[:, self.temp_param_skip_maps:]
+        chezy_fm = self._fm_data.get('chezy').iloc[:, self._param_skip_maps:]
 
         sections = np.unique(self._fm_data.get('edge_section'))
 
