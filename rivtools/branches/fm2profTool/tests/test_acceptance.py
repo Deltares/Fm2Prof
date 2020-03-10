@@ -764,3 +764,100 @@ class Test_Compare_Idealized_Model:
         #  4. Final expectation
         assert os.listdir(fm2prof_fig_dir), '' + \
             'There is no volume output generated for {0}'.format(case_name)
+
+
+class Test_WaalPerformance:
+
+    @pytest.mark.acceptance
+    @pytest.mark.workinprogress
+    def test_when_waal_case_then_performance_is_slow(self):
+        # 1. Set up test model.
+        case_name = 'case_08_waal'
+        local_test_dir = TestUtils.get_local_test_data_dir('performance_waal')
+        ini_file = os.path.join(local_test_dir, 'fm2prof_08.ini')
+        json_file = \
+            os.path.join(local_test_dir, 'SectionPolygonDissolved.json')
+        external_test_dir = TestUtils.get_external_test_data_dir(case_name)
+        map_file = os.path.join(
+            external_test_dir,
+            'Data\\FM\\FlowFM_fm2prof_map.nc')
+        css_file = os.path.join(
+            external_test_dir,
+            'Data\\cross_section_locations.xyz')
+
+        # 1.1. Create ini file.
+        ini_file_path = None
+        test_ini_file = IniFile.IniFile(ini_file_path)
+        base_output_dir = _get_base_output_dir()
+        test_ini_file._output_dir = \
+            _check_and_create_test_case_output_dir(base_output_dir, case_name)
+
+        test_ini_file._input_file_paths = {
+            'fm_netcdfile': map_file,
+            'crosssectionlocationfile': css_file,
+            'regionpolygonfile': None,
+            'sectionpolygonfile': json_file
+        }
+        test_ini_file._input_parameters = {
+            "number_of_css_points": 20,
+            "transitionheight_sd": 0.25,
+            "velocity_threshold": 0.01,
+            "relative_threshold": 0.03,
+            "min_depth_storage": 0.02,
+            "plassen_timesteps": 10,
+            "storagemethod_wli": 1,
+            "bedlevelcriterium": 0.1,
+            "sdstorage": 1,
+            "frictionweighing": 0,
+            "sectionsmethod": 1,
+            "sdoptimisationmethod": 0,
+            "exportmapfiles": 1
+        }
+
+        # 2. Verify initial expectations.
+        assert os.path.exists(ini_file), 'Ini (test) file was not found.'
+        assert os.path.exists(json_file), 'Json (test) file was not found.'
+        assert os.path.exists(map_file), 'Map (test) file was not found.'
+        assert os.path.exists(css_file), '' + \
+            'CrossSection (test) file was not found'
+
+        # 3. Run test.
+        try:
+            runner = Fm2ProfRunner(iniFilePath=None)
+            runner.run_inifile(iniFile=test_ini_file)
+        except Exception as e_error:
+            # if os.path.exists(root_output_dir):
+            #     shutil.rmtree(root_output_dir)
+            pytest.fail(
+                'No exception expected but was thrown {}.'.format(
+                    str(e_error)))
+
+        # 4. Verify final expectations.
+        pass
+
+    def test_dummy_timing(self):
+        import timeit
+
+        def f():
+            y = next((i for i in range(100000) if i == 1000), '-10')
+            print(y)
+
+        def fs():
+            y = [i for i in range(100000) if i == 1000]
+            print(y[0])
+
+        fs_res = timeit.timeit(fs, number=100)
+        f_res = timeit.timeit(f, number=100)
+        assert f_res < fs_res
+
+    def merge_names(self, a, b):
+        val = '{} & {}'.format(a, b)
+        return val
+
+    def test_dummy_mp(self):
+        from itertools import product
+        import multiprocessing
+        names = ['Brown', 'Wilson', 'Bartlett', 'Rivera', 'Molloy', 'Opie']
+        with multiprocessing.Pool(processes=3) as pool:
+            results = pool.starmap(self.merge_names, product(names, repeat=2))
+        assert results is not None

@@ -9,9 +9,11 @@ import matplotlib.pyplot as plt
 from random import seed, randint
 import timeit
 import time
+import logging
 
-from fm2prof.RegionPolygonFile import PolygonFile
+from fm2prof.RegionPolygonFile import PolygonFile, SectionPolygonFile
 from fm2prof.RegionPolygonFile import Polygon as p_tuple
+import fm2prof.Functions as FE
 from tests.TestUtils import TestUtils
 
 
@@ -54,7 +56,7 @@ class Test_PolygonFile:
         def test_action_polygons_static(polygon_file, xy_list):
             return \
                 polygon_file.classify_points_with_property_rtree_by_polygons(
-                    xy_list)        
+                    xy_list)
 
     def __get_basic_polygon_list(self, left_classifier, right_classifier):
         geometry_left = \
@@ -160,6 +162,34 @@ class Test_PolygonFile:
         polygon_file.polygons = polygon_list
 
         # 3. Run test
+        self.__run_performance_test(polygon_file, xy_list, classifiers_names)
+
+    @pytest.mark.acceptance
+    def test_classify_points_for_waal(self):
+        # 1. Set up test data.
+        # Get polygons data.
+        section_data_dir = TestUtils.get_local_test_data_dir('performance_waal')
+        section_file = os.path.join(section_data_dir, 'SectionPolygonDissolved.json')
+        assert os.path.exists(section_file)
+
+        self.__logger = logging.getLogger(__name__)
+        polygon = SectionPolygonFile(section_file, logger=self.__logger)
+        assert polygon is not None
+
+        # Read NC File
+        waal_data_dir = TestUtils.get_external_test_data_dir('case_08_waal\\Data\\FM')
+        waal_nc_file = os.path.join(waal_data_dir, 'FlowFM_fm2prof_map.nc')
+        assert os.path.exists(waal_nc_file)
+
+        _, edge_data, _, _ = FE._read_fm_model(waal_nc_file)
+        points = [(edge_data['x'][i], edge_data['y'][i]) for i in range(len(edge_data['x']))]
+        assert points is not None
+
+        # 2. Run test
+        self.__run_performance_test(polygon, points, None)
+
+    def __run_performance_test(self, polygon_file: PolygonFile, xy_list: list, classifiers_names: list):
+        number_of_points = len(xy_list)
         t_repetitions = 10
 
         def time_function(function_name) -> list:
@@ -184,6 +214,8 @@ class Test_PolygonFile:
             values = case_func()
             c_results[case_name] = values
 
+        if not classifiers_names:
+            return
         # Plot reults
         output_dir = TestUtils.get_test_dir_output('PolygonFile_Performance')
         markers = itertools.cycle((',', '+', '.', 'o', '*'))
