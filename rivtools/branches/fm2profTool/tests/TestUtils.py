@@ -51,7 +51,7 @@ class TestUtils:
         try:
             dir_path = '{}\\{}\\'.format(test_data_name, dir_name)
             test_dir = os.path.join(test_dir, dir_path)
-        except:
+        except Exception:
             print("An error occurred trying to find {}".format(dir_name))
         return test_dir
 
@@ -73,10 +73,10 @@ class TestUtils:
     def get_test_dir_output(dir_name: str) -> str:
         """Returns the path to the output test data.
         If it does not exist already it is created.
-        
+
         Arguments:
             dir_name {str} -- Name of the folder under Output.
-        
+
         Returns:
             str -- Path to the test output dir.
         """
