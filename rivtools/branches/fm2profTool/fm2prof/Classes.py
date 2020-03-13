@@ -139,8 +139,6 @@ class CrossSection:
     __cs_parameter_sectionsmethod = 'sectionsmethod'
     __cs_parameter_sdoptimisationmethod = 'sdoptimisationmethod'
     __cs_parameter_skip_maps = 'skipmaps'
-    __output_face_list = []
-    __output_edge_list = []
     __logger = None
 
     def __init__(
@@ -208,7 +206,8 @@ class CrossSection:
 
         # data structures
         self._fm_data = None
-
+        self.__output_face_list = []
+        self.__output_edge_list = []
         # PARAMETERS
         self.parameters = InputParam_dict
 
