@@ -150,23 +150,12 @@ def extract_point_from_np(data: dict, pos: int) -> list:
     return (data['x'][pos], data['y'][pos])
 
 
-def classify_with_regions(regions, cssdata, time_independent_data, edge_data):
+def classify_with_regions(regions, cssdata, time_independent_data, edge_data, css_regions):
     """
         Assigns cross-section id's based on region polygons.
         Within a region, assignment will be done by k nearest neighbour
     """
-    css_regions = regions.classify_points(cssdata['xy'])
-
-    xy_tuples_2d = [(time_independent_data.get('x').values[i],
-                     time_independent_data.get('y').values[i])
-                    for i in range(len(time_independent_data.get('x')))]
-
-    time_independent_data['region'] = regions.classify_points(xy_tuples_2d)
-
-    xy_tuples_2d = [(edge_data.get('x')[i], edge_data.get('y')[i])
-                    for i in range(len(edge_data.get('x')))]
-
-    edge_data['region'] = regions.classify_points(xy_tuples_2d)
+    
 
     time_independent_data['sclass'] = time_independent_data['region']
     #edge_data['sclass'] = edge_data['region']
@@ -394,7 +383,8 @@ def _read_fm_model(file_path):
     """input: FM2D map file"""
     fm_edge_keys = {'x': 'mesh2d_edge_x', 
                     'y': 'mesh2d_edge_y',
-                    'edge_faces': 'mesh2d_edge_faces'
+                    'edge_faces': 'mesh2d_edge_faces',
+                    'edge_nodes': 'mesh2d_edge_nodes'
                     }
     edge_data = dict()
     # Open results file for reading

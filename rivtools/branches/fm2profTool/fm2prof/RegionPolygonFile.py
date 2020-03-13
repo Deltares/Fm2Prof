@@ -43,7 +43,7 @@ class PolygonFile:
     def __init__(self, logger):
         self.set_logger(logger)
         self.polygons = list()
-        self.undefined = 'undefined'
+        self.undefined = -999
 
     def classify_points_with_property(
             self,
@@ -62,7 +62,7 @@ class PolygonFile:
         for i, point in enumerate(points):
             for polygon in self.polygons:
                 if point.within(polygon.geometry):
-                    points_regions[i] = polygon.properties.get(property_name)
+                    points_regions[i] = int(polygon.properties.get(property_name))
                     break
 
         return np.array(points_regions)
@@ -244,7 +244,7 @@ class RegionPolygonFile(PolygonFile):
     def classify_points(self, points: Iterable[list]):
         return self.classify_points_with_property(
             points,
-            property_name='name')
+            property_name='id')
 
 
 class SectionPolygonFile(PolygonFile):
