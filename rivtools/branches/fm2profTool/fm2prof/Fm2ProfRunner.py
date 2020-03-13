@@ -54,7 +54,7 @@ import shutil
 import logging
 import time
 import numpy as np
-
+from netCDF4 import Dataset
 
 class Fm2ProfRunner:
     __logger = None
@@ -69,6 +69,7 @@ class Fm2ProfRunner:
     __section_file_key = 'sectionpolygonfile'
     __export_mapfiles_key = "exportmapfiles"
     __css_selection_key = "cssselection"
+    __classificationmethod_key = "classificationmethod"
 
     def __init__(self, iniFilePath: str, version: float = None):
         """
@@ -90,7 +91,7 @@ class Fm2ProfRunner:
         Runs the Fm2Prof functionality.
         """
         if self.__iniFile is None:
-            self.__set_logger_message(
+            self.set_logger_message(
                 'No ini file was specified and the run cannot go further.')
             return
         self.run_inifile(self.__iniFile)
@@ -119,9 +120,9 @@ class Fm2ProfRunner:
         self.__add_filehandler_to_logger(
             output_dir=output_dir,
             filename='fm2prof.log')
-        self.__set_logger_message(
+        self.set_logger_message(
             'FM2PROF version {}'.format(self.__version))
-        self.__set_logger_message('reading FM and cross-sectional data data')
+        self.set_logger_message('reading FM and cross-sectional data data')
 
         # Read region polygon
         regions = None
@@ -137,15 +138,15 @@ class Fm2ProfRunner:
 
         # Read FM model data
         fm2prof_fm_model_data = \
-            FE.read_fm2prof_input(map_file, css_file, regions, sections, logger=self.__logger)
+            self._set_fm_model_data(map_file, css_file, regions, sections)
         fm_model_data = CE.FmModelData(fm2prof_fm_model_data)
 
         ntsteps = fm_model_data.time_dependent_data.get('waterlevel').shape[1]
         nfaces = fm_model_data.time_dependent_data.get('waterlevel').shape[0]
         nedges = fm_model_data.edge_data.get('x').shape[0]
-        self.__set_logger_message(
+        self.set_logger_message(
             'finished reading FM and cross-sectional data data')
-        self.__set_logger_message(
+        self.set_logger_message(
           'Number of: timesteps ({}), '.format(ntsteps) +\
           'faces ({}), '.format(nfaces)+\
           'edges ({})'.format(nedges), 
@@ -153,7 +154,7 @@ class Fm2ProfRunner:
         # check if edge/face data is available
         if 'edge_faces' not in fm_model_data.edge_data:
             if input_param_dict.get('frictionweighing') == 1:
-                self.__set_logger_message(
+                self.set_logger_message(
                     'Friction weighing set to 1 (area-weighted average' +
                     'but FM map file does contain the *edge_faces* keyword.' +
                     'Area weighting is not possible. Defaulting to simple unweighted' +
@@ -170,14 +171,14 @@ class Fm2ProfRunner:
         # This function interpolates to get the roughnesses
         # at the correct discharges.
         self.__logformatter.next_step()
-        self.__set_logger_message(
+        self.set_logger_message(
             'Final steps')
-        self.__set_logger_message(
+        self.set_logger_message(
             'Interpolating roughness')
         FE.interpolate_roughness(cross_sections)
 
         # Export cross sections
-        self.__set_logger_message(
+        self.set_logger_message(
             'Export model input files to {}'.format(output_dir))
         self._export_cross_sections(cross_sections, output_dir)
 
@@ -185,13 +186,122 @@ class Fm2ProfRunner:
         try:
             export_mapfiles = input_param_dict[self.__export_mapfiles_key]
         except KeyError:
-            # If key is missing, export files by default. 
+            # If key is missing, do not export files by default. 
             # We need a better solution for this (inifile.getparam?.. handle defaults there?)
-            export_mapfiles = True
+            export_mapfiles = False
         if export_mapfiles:
-            self.__set_logger_message(
+            self.set_logger_message(
                 'Export geojson output to {}'.format(output_dir))
             self._generate_geojson_output(output_dir, cross_sections)
+        
+
+    def _set_fm_model_data(self, res_file, css_file, regions, sections):
+        """
+        Reads input files for 'FM2PROF'. See documentation for file format descriptions.
+
+        Data is saved in three major structures:
+            time_independent_data: holds bathymetry information
+            time_dependent_data: waterlevels, roughnesses and velocities
+            edge_data: the nodes that relate to edges
+
+        :param res_file: str, path to FlowFM map netcfd file (*_map.nc)
+        :param css_file: str, path to cross-section definition file
+        :param region_file: str, path to region geojson file
+        :return:
+        """
+
+        # Read FM map file
+        self.set_logger_message('Opening FM Map file')
+        (time_independent_data, edge_data, node_coordinates, time_dependent_data) = FE._read_fm_model(res_file)
+        self.set_logger_message('Closed FM Map file')
+        
+        # Load locations and names of cross-sections
+        self.set_logger_message('Opening css file')
+        cssdata = FE._read_css_xyz(css_file)
+        self.set_logger_message('Closed css file')
+
+        # Classify 2D grid points to 1D cross-sections for bathymetry
+        if (self.__iniFile._input_parameters.get(self.__classificationmethod_key) == 0 ) or (regions is None):
+            self.set_logger_message('All 2D points assigned to the same region')
+            time_independent_data, edge_data = FE.classify_without_regions(cssdata, time_independent_data, edge_data)
+        elif self.__iniFile._input_parameters.get(self.__classificationmethod_key) == 1:
+            self.set_logger_message('Assigning 2D points to regions using DeltaShell')
+            
+            # Determine in which region each cross-section lies
+            css_regions = regions.classify_points(cssdata['xy'])
+
+            # Determine in which region each 2D point lies
+            self.set_logger_message('Assigning faces...')
+            time_independent_data = self._assign_polygon_using_deltashell(time_independent_data, dtype='face')
+            self.set_logger_message('Assigning edges...')
+            edge_data = self._assign_polygon_using_deltashell(edge_data, dtype='edge')
+
+            # Do Nearest neighbour cross-section for each region
+            time_independent_data, edge_data = FE.classify_with_regions(regions, cssdata, time_independent_data, edge_data, css_regions)
+
+        else:
+            self.set_logger_message('Assigning 2D points to regions using Built-In method')
+            # Determine in which region each cross-section lies
+            css_regions = regions.classify_points(cssdata['xy'])
+
+            # Determine in which region each 2d point lies
+            xy_tuples_2d = [(time_independent_data.get('x').values[i], 
+                     time_independent_data.get('y').values[i]) for i in range(len(time_independent_data.get('x')))]
+    
+            time_independent_data['region'] = regions.classify_points(xy_tuples_2d)
+
+            xy_tuples_2d = [(edge_data.get('x')[i], 
+                            edge_data.get('y')[i]) for i in range(len(edge_data.get('x')))]
+            
+            edge_data['region'] = regions.classify_points(xy_tuples_2d)
+
+            # Do Nearest neighbour cross-section for each region
+            time_independent_data, edge_data = FE.classify_with_regions(regions, cssdata, time_independent_data, edge_data, css_regions)
+
+        if sections is not None:
+            self.set_logger_message('Assigning edge data to sections with polygons')
+            edge_data = FE.classify_roughness_sections_by_polygon(sections, edge_data, self.__logger)
+            self.set_logger_message('Assigning other data to sections with polygons')
+            time_independent_data = FE.classify_roughness_sections_by_polygon(sections, time_independent_data, self.__logger)
+        else:
+            self.set_logger_message('Assigning point to sections without polygons')
+            edge_data = FE.classify_roughness_sections_by_variance(edge_data, time_dependent_data['chezy_edge'])
+            time_independent_data = FE.classify_roughness_sections_by_variance(time_independent_data, time_dependent_data['chezy_mean'])
+            
+
+        return time_dependent_data, time_independent_data, edge_data, node_coordinates, cssdata
+
+    def _get_region_map_file(self):
+        """ Returns the path to a NC file with region ifnormation in the bathymetry data"""
+        map_file_path = self.__iniFile._input_file_paths.get(self.__map_file_key)
+        filepath, ext = os.path.splitext(map_file_path)
+        modified_file_path = f"{filepath}_REGIONBATHY{ext}"
+        return modified_file_path
+
+    def _assign_polygon_using_deltashell(self, data, dtype='face'):
+        """ Assign all 2D points using DeltaShell method """
+
+        # NOTE
+        self.set_logger_message('Looking for REGIONBATHY.nc', 'debug')
+        
+        path_to_modified_nc = self._get_region_map_file()
+        
+        # Load Modified NetCDF
+        with Dataset(path_to_modified_nc) as nf:
+            # Data stored in node z, while fm2prof uses data at faces or edges.
+            region_at_node = nf.variables.get('mesh2d_node_z')[:].data
+
+            if dtype == 'face':
+                node_to_face = nf.variables.get('mesh2d_face_nodes')[:].data
+                region_at_face = region_at_node[node_to_face.T[0]-1]
+                data['region'] = region_at_face
+            elif dtype == 'edge':
+                node_to_edge = data['edge_nodes']
+                region_at_edge = region_at_node[node_to_edge.T[0]-1]
+                data['region'] = region_at_edge
+            
+        return data
+
 
     def _generate_geojson_output(
             self,
@@ -210,13 +320,13 @@ class Fm2ProfRunner:
                     node_point
                     for cs in cross_sections
                     for node_point in cs.get_point_list(pointtype)]
-                self.__set_logger_message("Collected points, dumping to file", level='debug')
+                self.set_logger_message("Collected points, dumping to file", level='debug')
                 MaskOutputFile.write_mask_output_file(
                     output_file_path,
                     node_points)
-                self.__set_logger_message("Done", level='debug')
+                self.set_logger_message("Done", level='debug')
             except Exception as e_info:
-                self.__set_logger_message(
+                self.set_logger_message(
                     'Error while generation .geojson file,' +
                     'at {}'.format(output_file_path) +
                     'Reason: {}'.format(str(e_info)),
@@ -308,7 +418,7 @@ class Fm2ProfRunner:
                 'No FM data given for new cross section {}'.format(css_name))
 
         self.__logformatter.next_step()
-        self.__set_logger_message(
+        self.set_logger_message(
             '{}'.format(css_name))
 
         # Create cross section
@@ -320,7 +430,7 @@ class Fm2ProfRunner:
             raise Exception('No Cross-section could be generated')
 
         created_css.set_logger(self.__logger)
-        self.__set_logger_message(
+        self.set_logger_message(
             'Initiated new cross-section')
 
         self._set_fm_data_to_cross_section(
@@ -328,7 +438,7 @@ class Fm2ProfRunner:
             input_param_dict=input_param_dict,
             fm_model_data=fm_model_data)
 
-        self.__set_logger_message(
+        self.set_logger_message(
             'done')
         return created_css
 
@@ -366,14 +476,14 @@ class Fm2ProfRunner:
                 edge_data,
                 time_dependent_data)
 
-            self.__set_logger_message(
+            self.set_logger_message(
                 'Retrieved data for cross-section')
 
             # Build cross-section
-            self.__set_logger_message('Start building geometry')
+            self.set_logger_message('Start building geometry')
             cross_section.build_geometry(fm_data=fm_data)
 
-            self.__set_logger_message(
+            self.set_logger_message(
                 'Cross-section derived, starting correction.....')
 
             # Delta-h correction
@@ -385,17 +495,17 @@ class Fm2ProfRunner:
                 input_param_dict, cross_section)
 
             # assign roughness
-            self.__set_logger_message('Starting computing roughness tables')
+            self.set_logger_message('Starting computing roughness tables')
             cross_section.assign_roughness(fm_data)
 
-            self.__set_logger_message(
+            self.set_logger_message(
                 'computed roughness')
 
             cross_section.set_face_output_list()
             cross_section.set_edge_output_list()
 
         except Exception as e_info:
-            self.__set_logger_message(
+            self.set_logger_message(
                 'Exception thrown while setting cross-section' +
                 ' {} details, {}'.format(css_name, str(e_info)),
                 level='error')
@@ -444,7 +554,7 @@ class Fm2ProfRunner:
                 branchid=css_data_branch_id,
                 chainage=css_data_chainage)
         except Exception as e_info:
-            self.__set_logger_message(
+            self.set_logger_message(
                 'Exception thrown while creating cross-section ' +
                 '{}, message: {}'.format(css_data_id, str(e_info)))
             return None
@@ -506,7 +616,7 @@ class Fm2ProfRunner:
                     fmt='dflow1d',
                     roughness_section=sectionFileKeyDict[section][1])
         except Exception as e_info:
-            self.__set_logger_message(
+            self.set_logger_message(
                 'An error was produced while exporting files to DIMR format,' +
                 ' not all output files might be exported. ' +
                 '{}'.format(str(e_info)),
@@ -524,7 +634,7 @@ class Fm2ProfRunner:
                 file_path=csv_roughness_file,
                 fmt='sobek3')
         except Exception as e_info:
-            self.__set_logger_message(
+            self.set_logger_message(
                 'An error was produced while exporting files to SOBEK format,' +
                 ' not all output files might be exported. ' +
                 '{}'.format(str(e_info)),
@@ -541,13 +651,13 @@ class Fm2ProfRunner:
                 cross_sections,
                 file_path=csv_volumes_file)
         except Exception as e_info:
-            self.__set_logger_message(
+            self.set_logger_message(
                 'An error was produced while exporting files,' +
                 ' not all output files might be exported. ' +
                 '{}'.format(str(e_info)),
                 level='error')
 
-        self.__set_logger_message('Exported output files, FM2PROF finished')
+        self.set_logger_message('Exported output files, FM2PROF finished')
 
     def _calculate_css_correction(
             self,
@@ -561,7 +671,7 @@ class Fm2ProfRunner:
 
         """
         if not css:
-            self.__set_logger_message('No Cross Section was provided.')
+            self.set_logger_message('No Cross Section was provided.')
             return
 
         # Get value, it should already come as an integer.
@@ -576,11 +686,11 @@ class Fm2ProfRunner:
         if sd_storage_value == 1:
             try:
                 css.calculate_correction(sd_transition_value)
-                self.__set_logger_message(
+                self.set_logger_message(
                     'correction finished')
             except Exception as e_error:
                 e_message = str(e_error)
-                self.__set_logger_message(
+                self.set_logger_message(
                     'Exception thrown ' +
                     'while trying to calculate the correction. ' +
                     '{}'.format(e_message))
@@ -607,7 +717,7 @@ class Fm2ProfRunner:
             # try to reduce points.
             css_pt_value = int(num_css_pt_value)
         except:
-            self.__set_logger_message(
+            self.set_logger_message(
                 'number_of_css_points given is not an int;' +
                 ' Will use default (20) instead')
 
@@ -616,11 +726,11 @@ class Fm2ProfRunner:
 
         except Exception as e_error:
             e_message = str(e_error)
-            self.__set_logger_message(
+            self.set_logger_message(
                 'Exception thrown while trying to reduce the css points. ' +
                 '{}'.format(e_message))
 
-    def __set_logger_message(self, err_mssg: str, level='info'):
+    def set_logger_message(self, err_mssg: str, level='info'):
         """Sets message to logger if this is set.
 
         Arguments:
@@ -690,7 +800,7 @@ class Fm2ProfRunner:
 
         plotLocation = output_directory + '\\{0}_{1}.png'.format(name, figType)
         fig.savefig(plotLocation)
-        self.__set_logger_message(
+        self.set_logger_message(
             'Saved {} for {} plot in {}.'.format(name, figType, plotLocation))
 
         return
