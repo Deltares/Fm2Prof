@@ -55,6 +55,9 @@ import logging
 import time
 import numpy as np
 from netCDF4 import Dataset
+from scipy.spatial import ConvexHull
+from geojson import Polygon, Feature, FeatureCollection
+import geojson
 
 class Fm2ProfRunner:
     __logger = None
@@ -194,6 +197,33 @@ class Fm2ProfRunner:
                 'Export geojson output to {}'.format(output_dir))
             self._generate_geojson_output(output_dir, cross_sections)
         
+        # Export bounding boxes of cross-section control volumes
+        try:
+            self._export_envelope(output_dir, cross_sections)
+        except Exception as e_error:
+            e_message = str(e_error)
+            self.set_logger_message('Error while exporting bounding boxes', 'error')
+            self.set_logger_message(e_message, "error")
+
+    def _export_envelope(self, output_dir, cross_sections):
+        """
+        # Export envelopes around cross-sections
+        """
+        output = {"type": "FeatureCollection"}
+        css_hulls = list()
+        for css in cross_sections:
+            pointlist = np.array([point['geometry']['coordinates'] for point in css.get_point_list('face')])
+            # construct envelope
+            try:
+                hull = ConvexHull(pointlist)
+                css_hulls.append(Feature(
+                    properties= {'name': css.name},
+                    geometry=Polygon([list(map(tuple, pointlist[hull.vertices]))])))
+            except IndexError:
+                self.set_logger_message(f'No Hull Exported For {css.name}')
+
+        with open(os.path.join(output_dir, 'cross_section_volumes.geojson'), 'w') as f: geojson.dump(FeatureCollection(css_hulls), f, indent=2)
+
 
     def _set_fm_model_data(self, res_file, css_file, regions, sections):
         """
