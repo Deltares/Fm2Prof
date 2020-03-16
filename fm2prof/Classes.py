@@ -139,6 +139,7 @@ class CrossSection:
     __cs_parameter_sectionsmethod = 'sectionsmethod'
     __cs_parameter_sdoptimisationmethod = 'sdoptimisationmethod'
     __cs_parameter_skip_maps = 'skipmaps'
+    
     __logger = None
 
     def __init__(
@@ -215,7 +216,15 @@ class CrossSection:
             self._param_skip_maps = 0
         else:
             self._param_skip_maps = int(self.parameters.get(self.__cs_parameter_skip_maps))
-        
+            
+        self._section_map = {'0': 'main',
+                             '1': 'main',
+                             '2': 'floodplain1',
+                             '3': 'floodplain2',
+                             '-999': 'main',
+                             'main': 'main',
+                             'floodplain1': 'floodplain1',
+                             'floodplain2': 'floodplain2'}
 
     @property
     def alluvial_width(self):
@@ -787,7 +796,7 @@ class CrossSection:
             else:
                 raise ValueError("unknown option for roughness weighing: {}".format(self.parameters[self.__cs_parameter_Frictionweighing]))
 
-            self.friction_tables[section] = FrictionTable(level=self._css_z_roughness,
+            self.friction_tables[self._section_map[str(section)]] = FrictionTable(level=self._css_z_roughness,
                                                               friction=friction)
 
     def _friction_weighing_simple(self, link_chezy, section):
@@ -819,7 +828,7 @@ class CrossSection:
 
     def _compute_section_widths(self):
         for section in np.unique(self._fm_data['edge_section']):
-            self.section_widths[section] = np.sum(self._fm_data['area'][self._fm_data['section']==section])/self.length
+            self.section_widths[self._section_map[str(section)]] = np.sum(self._fm_data['area'][self._fm_data['section']==section])/self.length
             #self.section_widths[section] = self._calc_roughness_width(self._fm_data['edge_section']==section)
     
     def _compute_floodplain_base(self):
