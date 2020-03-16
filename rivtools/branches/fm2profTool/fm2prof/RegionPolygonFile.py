@@ -252,7 +252,7 @@ class SectionPolygonFile(PolygonFile):
     def __init__(self, section_file_path, logger):
         super().__init__(logger)
         self.read_section_file(section_file_path)
-        self.undefined = 'main'
+        self.undefined = 1 # 1 is main
 
     @property
     def sections(self):

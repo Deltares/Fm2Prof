@@ -60,55 +60,6 @@ __status__ = "Prototype"
 
 
 # region // public functions
-def read_fm2prof_input(res_file, css_file, regions, sections, logger):
-    """
-    Reads input files for 'FM2PROF'.
-    See documentation for file format descriptions.
-
-    Data is saved in three major structures:
-        time_independent_data: holds bathymetry information
-        time_dependent_data: waterlevels, roughnesses and velocities
-        edge_data: the nodes that relate to edges
-
-    :param res_file: str, path to FlowFM map netcfd file (*_map.nc)
-    :param css_file: str, path to cross-section definition file
-    :param region_file: str, path to region geojson file
-    :return:
-    """
-
-    # Read FM map file
-    logger.debug('Opening FM Map file')
-    (time_independent_data, edge_data, node_coordinates, time_dependent_data) = _read_fm_model(res_file)
-    logger.debug('Closed FM Map file')
-
-    # Load locations and names of cross-sections
-    logger.debug('Opening css file')
-    cssdata = _read_css_xyz(css_file)
-    logger.debug('Closed css file')
-    # Regions
-    if regions is not None:
-        logger.debug('Assigning point to cross-sections with regions')
-        time_independent_data, edge_data = classify_with_regions(regions, cssdata, time_independent_data, edge_data)
-    else:
-        logger.debug('Assigning point to cross-sections without regions')
-        time_independent_data, edge_data = classify_without_regions(cssdata, time_independent_data, edge_data)
-
-    # Sections
-    if sections is not None:
-        logger.debug('Assigning edge data to sections with polygons')
-        edge_data = classify_roughness_sections_by_polygon(sections, edge_data, logger)
-        logger.debug('Assigning other data to sections with polygons')
-        time_independent_data = classify_roughness_sections_by_polygon(sections, time_independent_data, logger)
-    else:
-        logger.debug('Assigning point to sections without polygons')
-        edge_data = classify_roughness_sections_by_variance(edge_data, time_dependent_data['chezy_edge'])
-        time_independent_data = classify_roughness_sections_by_variance(time_independent_data, time_dependent_data['chezy_mean'])
-
-
-    return time_dependent_data, time_independent_data, edge_data, \
-        node_coordinates, cssdata
-
-
 def classify_roughness_sections_by_variance(data, variable):
 
     # Get chezy values at last timestep

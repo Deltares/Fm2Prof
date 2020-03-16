@@ -224,7 +224,6 @@ class Fm2ProfRunner:
 
         with open(os.path.join(output_dir, 'cross_section_volumes.geojson'), 'w') as f: geojson.dump(FeatureCollection(css_hulls), f, indent=2)
 
-
     def _set_fm_model_data(self, res_file, css_file, regions, sections):
         """
         Reads input files for 'FM2PROF'. See documentation for file format descriptions.
@@ -250,29 +249,35 @@ class Fm2ProfRunner:
         cssdata = FE._read_css_xyz(css_file)
         self.set_logger_message('Closed css file')
 
-        # Classify 2D grid points to 1D cross-sections for bathymetry
+        # Classify regions & set cross-sections
         if (self.__iniFile._input_parameters.get(self.__classificationmethod_key) == 0 ) or (regions is None):
-            self.set_logger_message('All 2D points assigned to the same region')
+            self.set_logger_message('All 2D points assigned to the same region and classifying points to cross-sections')
             time_independent_data, edge_data = FE.classify_without_regions(cssdata, time_independent_data, edge_data)
         elif self.__iniFile._input_parameters.get(self.__classificationmethod_key) == 1:
-            self.set_logger_message('Assigning 2D points to regions using DeltaShell')
-            
-            # Determine in which region each cross-section lies
-            css_regions = regions.classify_points(cssdata['xy'])
-
-            # Determine in which region each 2D point lies
-            self.set_logger_message('Assigning faces...')
-            time_independent_data = self._assign_polygon_using_deltashell(time_independent_data, dtype='face')
-            self.set_logger_message('Assigning edges...')
-            edge_data = self._assign_polygon_using_deltashell(edge_data, dtype='edge')
-
-            # Do Nearest neighbour cross-section for each region
-            time_independent_data, edge_data = FE.classify_with_regions(regions, cssdata, time_independent_data, edge_data, css_regions)
-
+            self.set_logger_message('Assigning 2D points to regions using DeltaShell and classifying points to cross-sections')
+            time_independent_data, edge_data = self._classify_with_deltashell(time_independent_data, edge_data, cssdata, regions, polytype='region')
         else:
-            self.set_logger_message('Assigning 2D points to regions using Built-In method')
-            # Determine in which region each cross-section lies
-            css_regions = regions.classify_points(cssdata['xy'])
+            self.set_logger_message('Assigning 2D points to regions using Built-In method and classifying points to cross-sections')
+            time_independent_data, edge_data = self._classify_with_builtin_methods(time_independent_data, edge_data, cssdata, regions)
+
+        # Classify sections for roughness tables
+        if (self.__iniFile._input_parameters.get(self.__classificationmethod_key) == 0 ) or (sections is None):
+            self.set_logger_message('Assigning point to sections without polygons')
+            edge_data = FE.classify_roughness_sections_by_variance(edge_data, time_dependent_data['chezy_edge'])
+            time_independent_data = FE.classify_roughness_sections_by_variance(time_independent_data, time_dependent_data['chezy_mean'])
+        elif self.__iniFile._input_parameters.get(self.__classificationmethod_key) == 1:
+            self.set_logger_message('Assigning 2D points to sections using DeltaShell')
+            time_independent_data, edge_data = self._classify_section_with_deltashell(time_independent_data, edge_data)
+        else:
+            self.set_logger_message('Assigning 2D points to sections using Built-In method')
+            edge_data = FE.classify_roughness_sections_by_polygon(sections, edge_data, self.__logger)
+            time_independent_data = FE.classify_roughness_sections_by_polygon(sections, time_independent_data, self.__logger)
+
+        return time_dependent_data, time_independent_data, edge_data, node_coordinates, cssdata
+
+    def _classify_with_builtin_methods(self, time_independent_data, edge_data, cssdata, polygons):
+        # Determine in which region each cross-section lies
+            css_regions = polygons.classify_points(cssdata['xy'])
 
             # Determine in which region each 2d point lies
             xy_tuples_2d = [(time_independent_data.get('x').values[i], 
@@ -283,55 +288,70 @@ class Fm2ProfRunner:
             xy_tuples_2d = [(edge_data.get('x')[i], 
                             edge_data.get('y')[i]) for i in range(len(edge_data.get('x')))]
             
-            edge_data['region'] = regions.classify_points(xy_tuples_2d)
+            edge_data['region'] = polygons.classify_points(xy_tuples_2d)
 
             # Do Nearest neighbour cross-section for each region
             time_independent_data, edge_data = FE.classify_with_regions(regions, cssdata, time_independent_data, edge_data, css_regions)
 
-        if sections is not None:
-            self.set_logger_message('Assigning edge data to sections with polygons')
-            edge_data = FE.classify_roughness_sections_by_polygon(sections, edge_data, self.__logger)
-            self.set_logger_message('Assigning other data to sections with polygons')
-            time_independent_data = FE.classify_roughness_sections_by_polygon(sections, time_independent_data, self.__logger)
-        else:
-            self.set_logger_message('Assigning point to sections without polygons')
-            edge_data = FE.classify_roughness_sections_by_variance(edge_data, time_dependent_data['chezy_edge'])
-            time_independent_data = FE.classify_roughness_sections_by_variance(time_independent_data, time_dependent_data['chezy_mean'])
-            
+            return time_independent_data, edge_data
+        
+    def _classify_section_with_deltashell(self, time_independent_data, edge_data):
 
-        return time_dependent_data, time_independent_data, edge_data, node_coordinates, cssdata
+        # Determine in which section each 2D point lies
+        self.set_logger_message('Assigning faces...')
+        time_independent_data = self._assign_polygon_using_deltashell(time_independent_data, dtype='face', polytype='section')
+        self.set_logger_message('Assigning edges...')
+        edge_data = self._assign_polygon_using_deltashell(edge_data, dtype='edge', polytype='section')
 
-    def _get_region_map_file(self):
+        
+        return time_independent_data, edge_data
+
+    def _classify_with_deltashell(self, time_independent_data, edge_data, cssdata, polygons, polytype='region'):
+        
+        # Determine in which region each 2D point lies
+        self.set_logger_message('Assigning faces...')
+        time_independent_data = self._assign_polygon_using_deltashell(time_independent_data, dtype='face', polytype=polytype)
+        self.set_logger_message('Assigning edges...')
+        edge_data = self._assign_polygon_using_deltashell(edge_data, dtype='edge', polytype=polytype)
+
+        # Determine in which region each cross-section lies
+        css_regions = polygons.classify_points(cssdata['xy'])
+
+        # Do Nearest neighbour cross-section for each region
+        time_independent_data, edge_data = FE.classify_with_regions(polygons, cssdata, time_independent_data, edge_data, css_regions)
+
+        return time_independent_data, edge_data
+
+    def _get_region_map_file(self, polytype):
         """ Returns the path to a NC file with region ifnormation in the bathymetry data"""
         map_file_path = self.__iniFile._input_file_paths.get(self.__map_file_key)
         filepath, ext = os.path.splitext(map_file_path)
-        modified_file_path = f"{filepath}_REGIONBATHY{ext}"
+        modified_file_path = f"{filepath}_{polytype.upper()}BATHY{ext}"
         return modified_file_path
 
-    def _assign_polygon_using_deltashell(self, data, dtype='face'):
+    def _assign_polygon_using_deltashell(self, data, dtype: str='face', polytype: str='region'):
         """ Assign all 2D points using DeltaShell method """
 
         # NOTE
-        self.set_logger_message('Looking for REGIONBATHY.nc', 'debug')
+        self.set_logger_message(f'Looking for _{polytype.upper()}BATHY.nc', 'debug')
         
-        path_to_modified_nc = self._get_region_map_file()
+        path_to_modified_nc = self._get_region_map_file(polytype)
         
         # Load Modified NetCDF
         with Dataset(path_to_modified_nc) as nf:
             # Data stored in node z, while fm2prof uses data at faces or edges.
-            region_at_node = nf.variables.get('mesh2d_node_z')[:].data
+            region_at_node = nf.variables.get('mesh2d_node_z')[:].data.astype(int)
 
             if dtype == 'face':
                 node_to_face = nf.variables.get('mesh2d_face_nodes')[:].data
                 region_at_face = region_at_node[node_to_face.T[0]-1]
-                data['region'] = region_at_face
+                data[polytype] = region_at_face
             elif dtype == 'edge':
                 node_to_edge = data['edge_nodes']
                 region_at_edge = region_at_node[node_to_edge.T[0]-1]
-                data['region'] = region_at_edge
+                data[polytype] = region_at_edge
             
         return data
-
 
     def _generate_geojson_output(
             self,
