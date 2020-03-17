@@ -626,16 +626,20 @@ class CrossSection:
             [
                 [self._css_z[i], self._css_total_width[i]]
                 for i in range(n_before_reduction)])
-        # default is the same value as it came
-        reduced_index = n_before_reduction - 1
-        if method.lower() == 'visvalingam_whyatt':
-            try:
-                simplifier = PS.VWSimplifier(points)
-                reduced_index = simplifier.from_number_index(n)
-            except Exception as e:
-                print(
-                    'Exception thrown while using polysimplify: ' +
-                    '{}'.format(str(e)))
+        
+        # The number of points is equal to n, it cannot be further reduced
+        reduced_index = np.array([True] * n_before_reduction)
+
+        if n_before_reduction != n:
+            # default is the same value as it came
+            if method.lower() == 'visvalingam_whyatt':
+                try:
+                    simplifier = PS.VWSimplifier(points)
+                    reduced_index = simplifier.from_number_index(n)
+                except Exception as e:
+                    print(
+                        'Exception thrown while using polysimplify: ' +
+                        '{}'.format(str(e)))
 
         # Write to attributes
         self.z = self._css_z[reduced_index]

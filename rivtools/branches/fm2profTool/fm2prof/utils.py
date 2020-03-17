@@ -268,9 +268,12 @@ class VisualiseOutput():
                 levels, values = self.getRoughnessInfoForCss(css["id"], rtype='roughnessMain')
                 axs[2].plot(levels, values,  label='Main channel')
 
+                
                 levels, values = self.getRoughnessInfoForCss(css["id"], rtype='roughnessFP1')
-                axs[2].plot(levels, values, label='Floodplain1')
-
+                if levels is not None:
+                    axs[2].plot(levels, values, label='Floodplain1')
+            
+                    
                 axs[2].set_xlabel('Water level [m]')
                 axs[2].set_ylabel('Manning coefficient [sm$^{-1/3}$]')
 
