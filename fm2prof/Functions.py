@@ -208,7 +208,6 @@ def get_fm2d_data_for_css(classname, dti, edge_data, dtd):
 
     return return_dict
 
-
 def mirror(array, reverse_sign=False):
     """
     Mirrors array
@@ -221,7 +220,6 @@ def mirror(array, reverse_sign=False):
         return np.append(np.flipud(array)*-1, array)
     else:
         return np.append(np.flipud(array), array)
-
 
 def get_centre_values(location, x, y, waterdepth, waterlevel):
     """
@@ -244,13 +242,11 @@ def get_centre_values(location, x, y, waterdepth, waterlevel):
     
     return centre_depth.values[0], centre_level.values[0]
 
-
 def get_extra_total_area(waterlevel, crest_level, transition_height, hysteresis=False):
     """
     releases extra area dependent on waterlevel using a logistic (sigmoid) function
     """
     return 1/(1+np.e**(np.log(0.00001)/(transition_height)*(waterlevel-(crest_level+0.5*transition_height))))
-
 
 def return_volume_error(predicted, measured, gof='rmse'):
     non_nan_mask = ~np.isnan(predicted) & ~np.isnan(measured)
