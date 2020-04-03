@@ -622,13 +622,11 @@ class CrossSection:
 
         # Remove multiple 0s in the total width
         nn = 0
-        while self._css_total_width[nn] == 0:
-            if self._css_total_width[nn+1] == 0:
+        while self._css_total_width[0] == 0 and self._css_total_width[1] == 0:
                 # remove double 0 in the total width and update z and flow width arrays
-                self._css_z = self._css_z[nn+1:]
-                self._css_total_width = self._css_total_width[nn+1:]
-                self._css_flow_width = self._css_flow_width[nn+1:]
-            nn += 1
+                self._css_z = self._css_z[1:]
+                self._css_total_width = self._css_total_width[1:]
+                self._css_flow_width = self._css_flow_width[1:]
         
         # Replace 0 total width from the first row
         if self._css_total_width[0] == 0:
