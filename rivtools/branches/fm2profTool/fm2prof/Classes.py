@@ -620,6 +620,30 @@ class CrossSection:
         :return:
         """
 
+        # Remove multiple 0s in the total width
+        nn = 0
+        while self._css_total_width[nn] == 0:
+            if self._css_total_width[nn+1] == 0:
+                # remove double 0 in the total width and update z and flow width arrays
+                self._css_z = self._css_z[nn+1:]
+                self._css_total_width = self._css_total_width[nn+1:]
+                self._css_flow_width = self._css_flow_width[nn+1:]
+            nn += 1
+        
+        # Replace 0 total width from the first row
+        if self._css_total_width[0] == 0:
+            if self._css_total_width[1] >= 1.0:
+                # minimum of 1.0
+                self._css_total_width[0] = 1.0
+            else:
+                # 0.1m less than the second row (arbitrary)
+                self._css_total_width[0] = self._css_total_width[1]-0.1
+
+        # "increasing order" check
+        self._css_z = self._check_increasing_order(self._css_z)
+        self._css_total_width = self._check_increasing_order(self._css_total_width)
+        self._css_flow_width = self._check_increasing_order(self._css_flow_width)
+
         n_before_reduction = len(self._css_total_width)
 
         points = np.array(
@@ -652,6 +676,13 @@ class CrossSection:
             'to {} points'.format(len(self.total_width)))
 
         self._css_is_reduced = True
+
+    def _check_increasing_order(self, list_points):
+        """ there must not be the same values; if so, assign +1mm """
+        for indx in range(1,len(list_points)):
+            if list_points[indx] == list_points[indx-1]:
+                list_points[indx] = list_points[indx] + 0.001
+        return list_points
 
     def set_logger(self, logger):
         """ should be given a logger object (python standard library) """
