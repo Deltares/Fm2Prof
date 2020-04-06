@@ -1,43 +1,4 @@
-﻿#! /usr/bin/env python
-"""
-This module contains classes used for the emulation/reduction
-of 2D models to 1D models for Delft3D FM (D-Hydro).
-
-CrossSection - for 'FM2PROF'
-
-Dependencies
-------------------
-Packages, between parenthesis known working version.
-
-numpy (1.10.4)
-pandas (0.17.1)
-matplotlib (1.5.1)
-
-Contact: K.D. Berends (koen.berends@deltares.nl, k.d.berends@utwente.nl)
-"""
-"""
-Copyright (C) Stichting Deltares 2019. All rights reserved.
-
-This file is part of the Fm2Prof.
-
-The Fm2Prof is free software: you can redistribute it and/or modify
-it under the terms of the GNU Lesser General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-GNU Affero General Public License for more details.
-
-You should have received a copy of the GNU Affero General Public License
-along with this program. If not, see <http://www.gnu.org/licenses/>.
-
-All names, logos, and references to "Deltares" are registered trademarks of
-Stichting Deltares and remain full property of Stichting Deltares at all times.
-All rights reserved.
-"""
-
+﻿
 # region // imports
 import numpy as np
 import pandas as pd
@@ -50,6 +11,7 @@ from time import time
 from fm2prof import common
 from fm2prof import Functions as FE
 from fm2prof.MaskOutputFile import MaskOutputFile
+from fm2prof.common import FM2ProfBase
 
 from typing import Mapping, Sequence
 from .lib import polysimplify as PS
@@ -70,58 +32,8 @@ __email__ = "koen.berends@deltares.nl"
 __status__ = "Prototype"
 
 
-class FmModelData:
-    time_dependent_data = None
-    time_independent_data = None
-    edge_data = None
-    node_coordinates = None
-    css_data_list = None
 
-    def __init__(self, arg_list: list):
-        if not arg_list:
-            raise Exception('FM model data was not read correctly.')
-        if len(arg_list) != 5:
-            raise Exception(
-                'Fm model data expects 5 arguments but only ' +
-                '{} were given'.format(len(arg_list)))
-
-        
-        (self.time_dependent_data,
-            self.time_independent_data,
-            self.edge_data,
-            self.node_coordinates,
-            css_data_dictionary) = arg_list
-        
-        self.css_data_list = self.get_ordered_css_list(css_data_dictionary)
-
-    @staticmethod
-    def get_ordered_css_list(css_data_dict: Mapping[str, str]):
-        """Returns an ordered list where every element
-        represents a Cross Section structure
-
-        Arguments:
-            css_data_dict {Mapping[str,str]} -- Dictionary ordered by the keys
-
-        Returns:
-            {list} -- List where every element contains a dictionary
-            to create a Cross Section.
-        """
-        if not css_data_dict or not isinstance(css_data_dict, dict):
-            return []
-
-        number_of_css = len(css_data_dict[next(iter(css_data_dict))])
-        css_dict_keys = css_data_dict.keys()
-        css_dict_values = css_data_dict.values()
-        css_data_list = [
-            dict(zip(
-                css_dict_keys,
-                [value[idx]
-                    for value in css_dict_values if idx < len(value)]))
-            for idx in range(number_of_css)]
-        return css_data_list
-
-
-class CrossSection:
+class CrossSection(FM2ProfBase):
     """
     Use this class to derive cross-sections from fm_data (2D model results).
     See docs how to acquire fm_data and how to prepare a proper 2D model.
@@ -288,7 +200,7 @@ class CrossSection:
 
         # Retrieve the water-depth
         # & water level nearest to the cross-section location
-        self._set_logger_message('Retrieving centre point values')
+        self.set_logger_message('Retrieving centre point values')
         (centre_depth, centre_level) = FE.get_centre_values(
             self.location,
             fm_data['x'],
@@ -305,7 +217,7 @@ class CrossSection:
             axis=1).mean()
 
         # Identify river lakes (plassen)
-        self._set_logger_message('Identifying lakes')
+        self.set_logger_message('Identifying lakes')
 
         # plassen_mask needed for arrays in output
         (plassen_mask,
@@ -313,7 +225,7 @@ class CrossSection:
             plassen_depth_correction) = self._identify_lakes(waterdepth)
 
         # Masks for wet and flow cells (stroomvoeringscriteria)
-        self._set_logger_message('Seperating flow from storage')
+        self.set_logger_message('Seperating flow from storage')
         flow_mask = self._distinguish_flow_from_storage(waterdepth, velocity)
 
         # Calculate area and volume as function of waterlevel & waterdepth
@@ -356,11 +268,11 @@ class CrossSection:
         self._fm_flow_area = self._fm_flow_area[mono_mask]
 
         # Compute geometry above z0 - Water level dependent calculation
-        self._set_logger_message('Computing cross-section from water levels')
+        self.set_logger_message('Computing cross-section from water levels')
         self._compute_css_above_z0(centre_level)
 
         # Compute geometry below z0 - Water level independent calculation
-        self._set_logger_message('Computing cross-section from bed levels')
+        self.set_logger_message('Computing cross-section from bed levels')
         self._extend_css_below_z0(
             centre_level,
             centre_depth,
@@ -450,12 +362,12 @@ class CrossSection:
         sdoptimisationmethod = self.parameters.get(self.__cs_parameter_sdoptimisationmethod)
         if sdoptimisationmethod not in [0, 1, 2]:
             # this should be handled in inifile instead
-            self._set_logger_message('sdoptimisationmethod is {} but should be 0, 1, or 2. Defaulting to 0'.format(sdoptimisationmethod), 
+            self.set_logger_message('sdoptimisationmethod is {} but should be 0, 1, or 2. Defaulting to 0'.format(sdoptimisationmethod), 
             level='warning')
             sdoptimisationmethod = 0
 
         if sdoptimisationmethod == 0:
-            self._set_logger_message('Optimising SD on total volume', level='debug')
+            self.set_logger_message('Optimising SD on total volume', level='debug')
 
             # Optimise crest on total volume
             opt = so.minimize(self._optimisation_func,
@@ -477,7 +389,7 @@ class CrossSection:
             extra_flow_volume = np.min([np.max([opt2['x'][0], 0]), extra_total_volume])
 
         elif self.parameters.get(self.__cs_parameter_sdoptimisationmethod) == 1:
-            self._set_logger_message('Optimising SD on flow volume', level='debug')
+            self.set_logger_message('Optimising SD on flow volume', level='debug')
 
             # Optimise crest on flow volume
             opt = so.minimize(self._optimisation_func,
@@ -497,7 +409,7 @@ class CrossSection:
             extra_total_volume = np.max([np.max([opt2['x'][0], 0]), extra_flow_volume])
         
         elif self.parameters.get(self.__cs_parameter_sdoptimisationmethod) == 2:
-            self._set_logger_message('Optimising SD on both flow and total volumes', level='debug')
+            self.set_logger_message('Optimising SD on both flow and total volumes', level='debug')
             opt = so.minimize(self._combined_optimisation_func,
                             (initial_crest, initial_total_volume, initial_flow_volume),
                             method='Nelder-Mead',
@@ -535,11 +447,11 @@ class CrossSection:
         initial_total_volume = np.abs(initial_total_error[-1])
         initial_flow_volume = np.abs(initial_flow_error[-1])
 
-        self._set_logger_message(
+        self.set_logger_message(
             "Initial crest: {:.4f} m".format(initial_crest), level='debug')
-        self._set_logger_message(
+        self.set_logger_message(
             "Initial extra total area: {:.4f} m2".format(initial_total_volume/self.length), level='debug')
-        self._set_logger_message(
+        self.set_logger_message(
             "Initial extra flow area: {:.4f} m2".format(initial_flow_volume/self.length), level='debug')
 
         # Optimise attributes
@@ -554,15 +466,15 @@ class CrossSection:
         extra_total_volume = opt.get('extra_total_volume')
         extra_flow_volume = opt.get('extra_flow_volume')
 
-        self._set_logger_message(
+        self.set_logger_message(
             "final costs: {:.2f}".format(opt.get('final_cost')), level='debug')
-        self._set_logger_message(
+        self.set_logger_message(
             "Optimizer msg: {}".format(opt.get('message')), level='debug')
-        self._set_logger_message(
+        self.set_logger_message(
             "Final crest: {:.4f} m".format(crest_level), level='debug')
-        self._set_logger_message(
+        self.set_logger_message(
             "Final total area: {:.4f} m2".format(extra_total_volume/self.length), level='debug')
-        self._set_logger_message(
+        self.set_logger_message(
             "Final flow area: {:.4f} m2".format(extra_flow_volume/self.length), level='debug')
         
         extra_area_percentage = FE.get_extra_total_area(
@@ -593,13 +505,13 @@ class CrossSection:
         """
 
         # Compute roughness tabels
-        self._set_logger_message('Building roughness table')
+        self.set_logger_message('Building roughness table')
         self._build_roughness_tables()
         # Compute roughness widths
-        self._set_logger_message('Computing section widths')
+        self.set_logger_message('Computing section widths')
         self._compute_section_widths()
         # Compute floodplain base level
-        self._set_logger_message('Computing base level')
+        self.set_logger_message('Computing base level')
         self._compute_floodplain_base()
         # done
     
@@ -668,7 +580,7 @@ class CrossSection:
         self.total_width = self._css_total_width[reduced_index]
         self.flow_width = self._css_flow_width[reduced_index]
 
-        self._set_logger_message(
+        self.set_logger_message(
             'Cross-section reduced ' +
             'from {} '.format(n_before_reduction) +
             'to {} points'.format(len(self.total_width)))
@@ -682,12 +594,6 @@ class CrossSection:
                 list_points[indx] = list_points[indx] + 0.001
         return list_points
 
-    def set_logger(self, logger):
-        """ should be given a logger object (python standard library) """
-        assert isinstance(logger, logging.Logger), '' + \
-            'logger should be instance of logging.Logger class'
-
-        self.__logger = logger
 
     def set_face_output_list(self):
         """Generates a list of output mask points based on
@@ -735,18 +641,18 @@ class CrossSection:
 
                 if output_mask.is_valid:
                     self.__output_face_list.append(output_mask)
-                    #self._set_logger_message(
+                    #self.set_logger_message(
                     #    'Added output mask at {} '.format(mask_coords) +
                     #    'for Cross Section {}.'.format(self.name),
                     #     level='debug')
                 else:
-                    self._set_logger_message(
+                    self.set_logger_message(
                         'Invalid output mask at {} '.format(mask_coords) +
                         'for Cross Section {}, not added. '.format(self.name) +
                         'Reason {}'.format(output_mask.errors()),
                         level='error')
         except Exception as e_error:
-            self._set_logger_message(
+            self.set_logger_message(
                 'Error setting output masks ' +
                 'for Cross Section {}. '.format(self.name) +
                 'Reason: {}'.format(str(e_error)),
@@ -788,13 +694,13 @@ class CrossSection:
                 if output_mask.is_valid:
                     self.__output_edge_list.append(output_mask)
                 else:
-                    self._set_logger_message(
+                    self.set_logger_message(
                         'Invalid output mask at {} '.format(mask_coords) +
                         'for Cross Section {}, not added. '.format(self.name) +
                         'Reason {}'.format(output_mask.errors()),
                         level='error')
         except Exception as e_error:
-            self._set_logger_message(
+            self.set_logger_message(
                 'Error setting output masks ' +
                 'for Cross Section {}. '.format(self.name) +
                 'Reason: {}'.format(str(e_error)),
@@ -1080,14 +986,14 @@ class CrossSection:
         """
         filter_by_depth_percentage = self.parameters.get(self.__cs_parameter_bedlevelcriterium) * 100
         filter_value = FE.empirical_ppf([filter_by_depth_percentage], bedlevel_matrix.values.T[0])[0]
-        self._set_logger_message("Lowest {}% of bed levels are filtered (z<{:.4f}m)".format(filter_by_depth_percentage,
+        self.set_logger_message("Lowest {}% of bed levels are filtered (z<{:.4f}m)".format(filter_by_depth_percentage,
                                                                                          filter_value),
                                  level='debug')
         level_z0 = centre_level[0]
         bdata = bedlevel_matrix[~plassen_mask]
         bmask = (bdata < level_z0) & (bdata >= filter_value)
 
-        self._set_logger_message("Number of points below z0 after applying filter: {}".format(np.sum(bmask.values.T[0])),
+        self.set_logger_message("Number of points below z0 after applying filter: {}".format(np.sum(bmask.values.T[0])),
                                   level='debug')
 
         # Compute values at z0
@@ -1134,31 +1040,6 @@ class CrossSection:
             self._fm_flow_volume = np.insert(self._fm_flow_volume, 0, np.nan)
             self._fm_total_volume = np.insert(self._fm_total_volume, 0, np.nan)
 
-    def _set_logger_message(self, err_mssg: str, level='info'):
-        """Sets message to logger if this is set.
-
-        Arguments:
-            err_mssg {str} -- Error message to send to logger.
-        """
-        if not self.__logger:
-            return
-
-        if level.lower() not in [
-                'info', 'debug', 'warning', 'error', 'critical']:
-                self.__logger.error(
-                    "{} is not valid logging level.".format(level.lower()))
-
-        if level.lower() == 'info':
-            self.__logger.info(err_mssg)
-        elif level.lower() == 'debug':
-            self.__logger.debug(err_mssg)
-        elif level.lower() == 'warning':
-            self.__logger.warning(err_mssg)
-        elif level.lower() == 'error':
-            self.__logger.error(err_mssg)
-        elif level.lower() == 'critical':
-            self.__logger.critical(err_mssg)
-
     @staticmethod
     def _check_monotonicity(arr, method=2):
         """
@@ -1189,71 +1070,3 @@ class CrossSection:
             return np.argsort(arr)
 
 
-class ElapsedFormatter():
-    __new_iteration = True
-
-    def __init__(self):
-        self.start_time = time()
-        self.number_of_iterations = 1
-        self.current_iteration = 0
-
-    def format(self, record):
-        if self.__new_iteration:
-            return self.__format_header(record)
-        else:
-            return self.__format_message(record)
-
-    def __format_header(self, record):
-        self.__new_iteration = False
-        elapsed_seconds = record.created - self.start_time
-        return "{now} {level:>7} :: {progress:4.0f}% :: {message} ({file})".format(
-                now=datetime.now().strftime("%Y-%m-%d %H:%M"),
-                level=record.levelname,
-                elapsed=elapsed_seconds,
-                message=record.getMessage(),
-                file=record.filename,
-                progress=100*self.current_iteration/self.number_of_iterations)
-
-    def __format_message(self, record):
-        elapsed_seconds = record.created - self.start_time
-        return "{now} {level:>7} :: {progress:4.0f}% ::   > T+ {elapsed:.2f}s {message} ({file})".format(
-                now=datetime.now().strftime("%Y-%m-%d %H:%M"),
-                level=record.levelname,
-                elapsed=elapsed_seconds,
-                message=record.getMessage(),
-                file=record.filename,
-                progress=100*self.current_iteration/self.number_of_iterations)
-
-    def __reset(self):
-        self.start_time = time()
-
-    def start_new_iteration(self):
-        self.current_iteration += 1
-        self.next_step()
-
-    def next_step(self):
-        self.__new_iteration = True
-        self.__reset()
-
-    def set_number_of_iterations(self, n):
-        assert n > 0, 'Total number of iterations should be higher than zero'
-        self.number_of_iterations = n
-
-
-class FrictionTable:
-    def __init__(self, level, friction):
-        if self._validate_input(level, friction):
-            self.level = level
-            self.friction = friction
-    
-    def interpolate(self, new_z):
-        self.friction = np.interp(new_z, self.level, self.friction)
-        self.level = new_z
-    
-    @staticmethod
-    def _validate_input(level, friction):
-        assert isinstance(level, np.ndarray)
-        assert isinstance(friction, np.ndarray)
-        assert level.shape==friction.shape
-
-        return True
