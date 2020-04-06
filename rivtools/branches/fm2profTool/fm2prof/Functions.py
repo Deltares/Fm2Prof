@@ -440,8 +440,8 @@ def _interpolate_roughness_css(cross_section, alluvial_range, nonalluvial_range)
     chezy_alluvial_trimmed = np.trim_zeros(chezy_alluvial)
     chezy_nonalluvial_trimmed = np.trim_zeros(chezy_nonalluvial)
 
-    alluvial_nonzero_mask = np.nonzero(chezy_alluvial)[0]
-    nonalluvial_nonzero_mask = np.nonzero(chezy_nonalluvial)[0]
+    alluvial_nonzero_mask = chezy_alluvial.to_numpy().nonzero()[0]
+    nonalluvial_nonzero_mask = chezy_nonalluvial.to_numpy().nonzero()[0]
 
     # only interpolate and assign if nonzero elements exist in the chezy table
     if np.sum(alluvial_nonzero_mask) > 0:
