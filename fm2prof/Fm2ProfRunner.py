@@ -1,32 +1,4 @@
-"""
-This module contains functions used for the emulation/reduction of 2D models to
-1D models for Delft3D FM (D-Hydro).
-
-Contact: K.D. Berends (koen.berends@deltares.nl, k.d.berends@utwente.nl)
-"""
-"""
-Copyright (C) Stichting Deltares 2019. All rights reserved.
-
-This file is part of the Fm2Prof.
-
-The Fm2Prof is free software: you can redistribute it and/or modify
-it under the terms of the GNU Lesser General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-GNU Affero General Public License for more details.
-
-You should have received a copy of the GNU Affero General Public License
-along with this program. If not, see <http://www.gnu.org/licenses/>.
-
-All names, logos, and references to "Deltares" are registered trademarks of
-Stichting Deltares and remain full property of Stichting Deltares at all times.
-All rights reserved.
-"""
-
+from fm2prof.common import FM2ProfBase, FmModelData
 from fm2prof import Functions as FE
 from fm2prof import Classes as CE
 from fm2prof import sobek_export
@@ -47,12 +19,13 @@ from scipy.spatial import ConvexHull
 from geojson import Polygon, Feature, FeatureCollection
 import geojson
 
-class Fm2ProfRunner:
+
+class Fm2ProfRunner(FM2ProfBase):
     __logger = None
     __iniFile = None
     __showFigures = False
     __saveFigures = False
-    __version = 1.3
+    __version = 1.4
 
     __map_file_key = 'fm_netcdfile'
     __css_file_key = 'crosssectionlocationfile'
@@ -75,7 +48,7 @@ class Fm2ProfRunner:
         self.__iniFile = IniFile.IniFile(iniFilePath)
         self.__version = version
 
-        self.__create_logger()
+        self._create_logger()
 
     def run(self):
         """
@@ -108,7 +81,7 @@ class Fm2ProfRunner:
         input_param_dict = iniFile._input_parameters
 
         # Add a log file
-        self.__add_filehandler_to_logger(
+        self.set_logfile(
             output_dir=output_dir,
             filename='fm2prof.log')
         self.set_logger_message(
@@ -121,16 +94,16 @@ class Fm2ProfRunner:
         input_param_dict['sectionsmethod'] = 0
 
         if region_file:
-            regions = RegionPolygonFile(region_file, logger=self.__logger)
+            regions = RegionPolygonFile(region_file, logger=self.get_logger())
 
         if section_file:
-            sections = SectionPolygonFile(section_file, logger=self.__logger)
+            sections = SectionPolygonFile(section_file, logger=self.get_logger())
             input_param_dict['sectionsmethod'] = 1
 
         # Read FM model data
         fm2prof_fm_model_data = \
             self._set_fm_model_data(map_file, css_file, regions, sections)
-        fm_model_data = CE.FmModelData(fm2prof_fm_model_data)
+        fm_model_data = FmModelData(fm2prof_fm_model_data)
 
         ntsteps = fm_model_data.time_dependent_data.get('waterlevel').shape[1]
         nfaces = fm_model_data.time_dependent_data.get('waterlevel').shape[0]
@@ -161,9 +134,7 @@ class Fm2ProfRunner:
         # the same discharges on the rows.
         # This function interpolates to get the roughnesses
         # at the correct discharges.
-        self.__logformatter.next_step()
-        self.set_logger_message(
-            'Final steps')
+        self.start_new_log_task('Finalizing')
         self.set_logger_message(
             'Interpolating roughness')
         FE.interpolate_roughness(cross_sections)
@@ -258,8 +229,8 @@ class Fm2ProfRunner:
             time_independent_data, edge_data = self._classify_section_with_deltashell(time_independent_data, edge_data)
         else:
             self.set_logger_message('Assigning 2D points to sections using Built-In method')
-            edge_data = FE.classify_roughness_sections_by_polygon(sections, edge_data, self.__logger)
-            time_independent_data = FE.classify_roughness_sections_by_polygon(sections, time_independent_data, self.__logger)
+            edge_data = FE.classify_roughness_sections_by_polygon(sections, edge_data, self.get_logger())
+            time_independent_data = FE.classify_roughness_sections_by_polygon(sections, time_independent_data, self.get_logger())
 
         return time_dependent_data, time_independent_data, edge_data, node_coordinates, cssdata
 
@@ -374,13 +345,13 @@ class Fm2ProfRunner:
     def _generate_cross_section_list(
             self,
             input_param_dict: Mapping[str, list],
-            fm_model_data: CE.FmModelData):
+            fm_model_data: FmModelData):
         """ Generates cross sections based on the given fm_model_data
 
         Arguments:
             input_param_dict {Mapping[str, list]}
                 -- Dictionary of parameters read from IniFile
-            fm_model_data {CE.FmModelData}
+            fm_model_data {FmModelData}
                 -- Class with all necessary data for generating Cross Sections
 
         Returns:
@@ -395,7 +366,7 @@ class Fm2ProfRunner:
         # Preprocess css from fm_model_data so it's easier to handle it.
         css_data_list = fm_model_data.css_data_list
         css_selection = self._get_css_range(number_of_css=len(css_data_list))
-        self.__logformatter.set_number_of_iterations(len(css_selection))
+        self.get_logformatter().set_number_of_iterations(len(css_selection))
         
         for css_data in np.array(css_data_list)[css_selection]:
             generated_cross_section = self._generate_cross_section(
@@ -419,7 +390,7 @@ class Fm2ProfRunner:
             self,
             css_data: dict,
             input_param_dict: Mapping[str, list],
-            fm_model_data: CE.FmModelData):
+            fm_model_data: FmModelData):
         """Generates a cross section and configures its values based
         on the input parameter dictionary
 
@@ -428,7 +399,7 @@ class Fm2ProfRunner:
                 -- Dictionary of data for the current cross section
             input_param_dict {Mapping[str,list]}
                 -- Dictionary with input parameters
-            fm_model_data {CE.FmModelData}
+            fm_model_data {FmModelData}
                 -- Data to assign to the new cross section
 
         Raises:
@@ -467,7 +438,7 @@ class Fm2ProfRunner:
         if created_css is None:
             raise Exception('No Cross-section could be generated')
 
-        created_css.set_logger(self.__logger)
+        created_css.set_logger(self.get_logger())
         self.set_logger_message(
             'Initiated new cross-section')
 
@@ -484,7 +455,7 @@ class Fm2ProfRunner:
             self,
             cross_section: CE.CrossSection,
             input_param_dict: Mapping[str, list],
-            fm_model_data: CE.FmModelData,
+            fm_model_data: FmModelData,
             start_time=None):
         """Sets extra FM data to the given Cross Section
 
@@ -493,7 +464,7 @@ class Fm2ProfRunner:
                 -- Given Cross Section.
             input_param_dict {Mapping[str, list]}
                 -- Dictionary with input parameters.
-            fm_model_data {CE.FmModelData}
+            fm_model_data {FmModelData}
                 -- Data to assign to the new cross section.
 
         """
@@ -768,30 +739,7 @@ class Fm2ProfRunner:
                 'Exception thrown while trying to reduce the css points. ' +
                 '{}'.format(e_message))
 
-    def set_logger_message(self, err_mssg: str, level='info'):
-        """Sets message to logger if this is set.
-
-        Arguments:
-            err_mssg {str} -- Error message to send to logger.
-        """
-        if not self.__logger:
-            return
-
-        if level.lower() not in [
-                'info', 'debug', 'warning', 'error', 'critical']:
-            self.__logger.error(
-                "{} is not valid logging level.".format(level.lower()))
-
-        if level.lower() == 'info':
-            self.__logger.info(err_mssg)
-        elif level.lower() == 'debug':
-            self.__logger.debug(err_mssg)
-        elif level.lower() == 'warning':
-            self.__logger.warning(err_mssg)
-        elif level.lower() == 'error':
-            self.__logger.error(err_mssg)
-        elif level.lower() == 'critical':
-            self.__logger.critical(err_mssg)
+    
 
     def __get_time_stamp_seconds(self, start_time: datetime):
         """Returns a time stamp with the time difference
@@ -842,26 +790,3 @@ class Fm2ProfRunner:
             'Saved {} for {} plot in {}.'.format(name, figType, plotLocation))
 
         return
-
-    def __add_filehandler_to_logger(self, output_dir, filename='fm2prof.log'):
-        # create file handler
-        fh = logging.FileHandler(os.path.join(output_dir, filename))
-        fh.setLevel(logging.DEBUG)
-        fh.setFormatter(self.__logformatter)
-        self.__logger.addHandler(fh)
-
-    def __create_logger(self):
-        # Create logger
-        self.__logger = logging.getLogger(__name__)
-        self.__logger.setLevel(logging.DEBUG)
-
-        # create formatter
-        self.__logformatter = CE.ElapsedFormatter()
-
-        # create console handler
-        ch = logging.StreamHandler()
-        ch.setLevel(logging.DEBUG)
-        ch.setFormatter(self.__logformatter)
-        self.__logger.addHandler(ch)
-
-    
