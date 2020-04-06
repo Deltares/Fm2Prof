@@ -19,28 +19,32 @@ from colorama import Fore, Back, Style
 # Import from package
 from fm2prof import IniFile
 
+
 class ElapsedFormatter:
     """
     Logger formatting class
     """
-    __new_iteration = True
-    __intro = True
-    __colors = {'INFO': [Back.BLUE, Fore.BLUE],
-                'DEBUG': [Back.CYAN, Fore.CYAN],
-                'WARNING': [Back.YELLOW + Fore.BLACK, Fore.YELLOW],
-                'ERROR': [Back.RED, Fore.RED],
-                'RESET': Style.RESET_ALL}
+    
 
     def __init__(self):
         self.start_time = time.time()
         self.number_of_iterations = 1
         self.current_iteration = 0
+        
+
+        self._new_iteration = True
+        self._intro = True
+        self._colors = {'INFO': [Back.BLUE, Fore.BLUE],
+                    'DEBUG': [Back.CYAN+Fore.BLACK, Fore.CYAN+Back.BLACK],
+                    'WARNING': [Back.YELLOW + Fore.BLACK, Fore.YELLOW],
+                    'ERROR': [Back.RED, Fore.RED],
+                    'RESET': Style.RESET_ALL}
         colorama.init()
 
     def format(self, record):
-        if self.__new_iteration:
+        if self._new_iteration:
             return self.__format_header(record)
-        elif self.__intro:
+        elif self._intro:
             return self.__format_intro(record)
         else:
             return self.__format_message(record)
@@ -50,53 +54,62 @@ class ElapsedFormatter:
 
     def __format_intro(self, record:LogRecord) -> AnyStr:
         level = record.levelname
-        color = self.__colors[level]
-        reset = self.__colors['RESET']
+        color = self._colors[level]
+        reset = self._colors['RESET']
         return f"{color[0]}{self.__current_time()} {level:>7} {reset}{color[1]}{reset} {record.getMessage()}" 
 
     def __format_header(self, record:LogRecord) -> AnyStr:
-        self.__new_iteration = False
-        elapsed_seconds = record.created - self.start_time
-        return "{now} {level:>7} :: {progress:4.0f}% :: {message} ({file})".format(
-                now=self.__current_time(),
-                level=record.levelname,
-                elapsed=elapsed_seconds,
-                message=record.getMessage(),
-                file=record.filename,
-                progress=100*self.current_iteration/self.number_of_iterations)
+        # Only one header
+        self._new_iteration = False
+        color = self._colors['DEBUG'][0]
+        reset = self._colors['RESET']
+        return f"{color}{self.__current_time()} {record.getMessage()} {reset}"
 
     def __format_message(self, record) -> AnyStr:
         level = record.levelname
-        color = self.__colors[level]
+        color = self._colors[level]
         elapsed_seconds = record.created - self.start_time
-        return "{color}{now} {level:>7} {reset}{color2}{reset} {progress:4.0f}% T+ {elapsed:.2f}s {message} ({file})".format(
+        return "{color}{now} {level:>7} {reset}{color2}{reset} {progress:4.0f}% T+ {elapsed:.2f}s {message}".format(
                 color=color[0],
                 color2=color[1],
                 now=self.__current_time(),
                 level=level,
-                reset=self.__colors['RESET'],
+                reset=self._colors['RESET'],
                 elapsed=elapsed_seconds,
                 message=record.getMessage(),
-                file=record.filename,
                 progress=100*self.current_iteration/self.number_of_iterations)
 
-    def __reset(self):
+    def __reset_time(self):
         self.start_time = time.time()
 
     def start_new_iteration(self):
+        """
+        Use this method to print a header
+        """
         self.current_iteration += 1
-        self.next_step()
+        self._next_step()
 
-    def next_step(self):
-        self.__new_iteration = True
-        self.__reset()
+    def _next_step(self):
+        self._new_iteration = True
+        self.__reset_time()
 
     def set_number_of_iterations(self, n):
         assert n > 0, 'Total number of iterations should be higher than zero'
         self.number_of_iterations = n
 
     def set_intro(self, flag: bool=True):
-        self.__intro=flag
+        self._intro=flag
+
+
+class ElapsedFileFormatter(ElapsedFormatter):
+    def __init__(self):
+        super().__init__()
+        
+        self._colors = {'INFO': ['', ''],
+                'DEBUG': ['', ''],
+                'WARNING': ['', ''],
+                'ERROR': ['', ''],
+                'RESET': ''}
 
 
 class FM2ProfBase:
@@ -123,12 +136,14 @@ class FM2ProfBase:
         self.__logger.setLevel(logging.DEBUG)
 
         # create formatter
-        self.__logformatter = ElapsedFormatter()
+        self.__logger.__logformatter = ElapsedFormatter()
+        self.__logger._Filelogformatter=ElapsedFileFormatter()
+
 
         # create console handler
         ch = logging.StreamHandler()
         ch.setLevel(logging.DEBUG)
-        ch.setFormatter(self.__logformatter)
+        ch.setFormatter(self.__logger.__logformatter)
         self.__logger.addHandler(ch)
 
     def get_logger(self) -> Logger:
@@ -177,18 +192,18 @@ class FM2ProfBase:
 
         :param task_name: task name, will be displayed in log message
         """
-        self.get_logformatter().next_step()
+        self.get_logformatter().start_new_iteration()
         self.set_logger_message(f"Starting new task: {task_name}")
 
     def get_logformatter(self) -> ElapsedFormatter:
         """ Returns formatter """
-        return self.__logformatter
+        return self.get_logger().__logformatter
 
     def set_logfile(self, output_dir: str, filename: str='fm2prof.log') -> None:
         # create file handler
         fh = logging.FileHandler(os.path.join(output_dir, filename), encoding='utf-8')
         fh.setLevel(logging.DEBUG)
-        fh.setFormatter(self.__logformatter)
+        fh.setFormatter(self.get_logger()._Filelogformatter)
         self.__logger.addHandler(fh)
 
     def set_inifile(self, iniFilePath: str):
