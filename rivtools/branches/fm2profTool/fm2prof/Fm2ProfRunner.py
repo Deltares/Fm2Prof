@@ -1,61 +1,64 @@
-from fm2prof.common import FM2ProfBase, FmModelData
-from fm2prof.CrossSection import CrossSection
-from fm2prof import Functions as FE
+"""
+Runner class. 
+"""
 
-from fm2prof import sobek_export
-from fm2prof import IniFile
-from fm2prof.MaskOutputFile import MaskOutputFile
-from fm2prof.RegionPolygonFile import RegionPolygonFile, SectionPolygonFile
-
+# import from standard library
+import traceback
 from typing import Mapping, Sequence
 import datetime
 import itertools
 import os
+import sys
 import shutil
 import logging
 import time
+
+# import from dependencies
 import numpy as np
 from netCDF4 import Dataset
 from scipy.spatial import ConvexHull
 from geojson import Polygon, Feature, FeatureCollection
 import geojson
 
+# import from package
+from fm2prof.common import FM2ProfBase, FmModelData
+from fm2prof.CrossSection import CrossSection
+from fm2prof import Functions as FE
+from fm2prof import sobek_export
+from fm2prof.MaskOutputFile import MaskOutputFile
+from fm2prof.RegionPolygonFile import RegionPolygonFile, SectionPolygonFile
+
 
 class Fm2ProfRunner(FM2ProfBase):
-    __map_file_key = 'fm_netcdfile'
-    __css_file_key = 'crosssectionlocationfile'
-    __region_file_key = 'regionpolygonfile'
-    __section_file_key = 'sectionpolygonfile'
-    __export_mapfiles_key = "exportmapfiles"
-    __css_selection_key = "cssselection"
-    __classificationmethod_key = "classificationmethod"
+    
 
     def __init__(self, iniFilePath: str, version: float = None):
         """
-        Initializes the private variables for the Fm2ProfRunner
+        Initializes the project
 
         Arguments:
             iniFilePath {str}
                 -- File path where the IniFile is located.
-            version {float}
+            version {float} (DEPRECATED)
                 -- Current version of the software, needs to be rethought.
         """
-        self.__iniFile = IniFile.IniFile(iniFilePath)
-        self.__version = version
-
+        FmModelData: self.fm_model_data = None   
+        
+        self.set_inifile(iniFilePath)
         self._create_logger()
 
-    def run(self):
+        
+    def run(self) -> None:
         """
         Runs the Fm2Prof functionality.
         """
-        if self.__iniFile is None:
+        if self.get_inifile() is None:
             self.set_logger_message(
-                'No ini file was specified and the run cannot go further.')
+                'No ini file was specified and the run cannot go further.', 'Warning')
             return
-        self.run_inifile(self.__iniFile)
+        self.run_inifile()
 
-    def run_inifile(self, iniFile: IniFile):
+    def run_inifile(self):
         """Runs the desired emulation from 2d to 1d given the mapfile
             and the cross section file.
 
@@ -64,66 +67,16 @@ class Fm2ProfRunner(FM2ProfBase):
                 -- Object containing all the information
                     needed to execute the program
         """
-        if not self.__is_output_directory_set(iniFile):
-            return
-
-        # shorter local variables
-        map_file = iniFile._input_file_paths.get(self.__map_file_key)
-        css_file = iniFile._input_file_paths.get(self.__css_file_key)
-        region_file = iniFile._input_file_paths.get(self.__region_file_key)
-        section_file = iniFile._input_file_paths.get(self.__section_file_key)
-        output_dir = iniFile._output_dir
-        input_param_dict = iniFile._input_parameters
-
-        # Add a log file
-        self.set_logfile(
-            output_dir=output_dir,
-            filename='fm2prof.log')
-        self.set_logger_message(
-            'FM2PROF version {}'.format(self.__version__))
-        self.set_logger_message('reading FM and cross-sectional data data')
-
-        # Read region polygon
-        regions = None
-        sections = None
-        input_param_dict['sectionsmethod'] = 0
-
-        if region_file:
-            regions = RegionPolygonFile(region_file, logger=self.get_logger())
-
-        if section_file:
-            sections = SectionPolygonFile(section_file, logger=self.get_logger())
-            input_param_dict['sectionsmethod'] = 1
-
-        # Read FM model data
-        fm2prof_fm_model_data = \
-            self._set_fm_model_data(map_file, css_file, regions, sections)
-        fm_model_data = FmModelData(fm2prof_fm_model_data)
-
-        ntsteps = fm_model_data.time_dependent_data.get('waterlevel').shape[1]
-        nfaces = fm_model_data.time_dependent_data.get('waterlevel').shape[0]
-        nedges = fm_model_data.edge_data.get('x').shape[0]
-        self.set_logger_message(
-            'finished reading FM and cross-sectional data data')
-        self.set_logger_message(
-          'Number of: timesteps ({}), '.format(ntsteps) +\
-          'faces ({}), '.format(nfaces)+\
-          'edges ({})'.format(nedges), 
-          level='debug')
-        # check if edge/face data is available
-        if 'edge_faces' not in fm_model_data.edge_data:
-            if input_param_dict.get('frictionweighing') == 1:
-                self.set_logger_message(
-                    'Friction weighing set to 1 (area-weighted average' +
-                    'but FM map file does contain the *edge_faces* keyword.' +
-                    'Area weighting is not possible. Defaulting to simple unweighted' +
-                    'averaging',
-                    level='warning')
-
+        
+        try:
+            self._initialise_fm2prof()
+        except:
+            self.set_logger_message('Unexpected exception during initialisation', 'error')
+            self.set_logger_message(traceback.print_exc(file=sys.stdout), 'error')
 
         # generate all cross-sections
         cross_sections = self._generate_cross_section_list(
-            input_param_dict, fm_model_data)
+            self.get_inifile().get_parameters(), self.fm_model_data)
 
         # The roughness tables in 1D model require
         # the same discharges on the rows.
@@ -141,7 +94,7 @@ class Fm2ProfRunner(FM2ProfBase):
 
         # Generate output geojson
         try:
-            export_mapfiles = input_param_dict[self.__export_mapfiles_key]
+            export_mapfiles = iniFile.get_parameter('ExportMapFiles')
         except KeyError:
             # If key is missing, do not export files by default. 
             # We need a better solution for this (inifile.getparam?.. handle defaults there?)
@@ -158,6 +111,69 @@ class Fm2ProfRunner(FM2ProfBase):
             e_message = str(e_error)
             self.set_logger_message('Error while exporting bounding boxes', 'error')
             self.set_logger_message(e_message, "error")
+
+    def _initialise_fm2prof(self):
+        """
+        Loads data, inifile
+        """
+        iniFile = self.get_inifile()
+
+        if not iniFile.has_output_directory:
+            self.set_logger_message('Output directory must be set in configuration file', 'error')
+            return
+
+        
+        # shorter local variables
+        map_file = iniFile.get_input_file('map_file')
+        css_file = iniFile.get_input_file('css_file')
+        region_file = iniFile.get_input_file('region_file')
+        section_file = iniFile.get_input_file('section_file')
+        output_dir = iniFile.get_output_directory()
+
+        # Add a log file
+        self.set_logfile(
+            output_dir=output_dir,
+            filename='fm2prof.log')
+        self.set_logger_message(
+            'FM2PROF version {}'.format(self.__version__))
+        self.set_logger_message('reading FM and cross-sectional data data')
+
+        # Read region & section polygon
+        regions = None
+        sections = None
+
+        if region_file:
+            regions = RegionPolygonFile(region_file, logger=self.get_logger())
+
+        if bool(section_file) & iniFile.get_parameter('sectionsmethod') == 1:
+            sections = SectionPolygonFile(section_file, logger=self.get_logger())
+
+        # Read FM model data
+        fm2prof_fm_model_data = \
+            self._set_fm_model_data(map_file, css_file, regions, sections)
+        self.fm_model_data = FmModelData(fm2prof_fm_model_data)
+
+        ntsteps = self.fm_model_data.time_dependent_data.get('waterlevel').shape[1]
+        nfaces = self.fm_model_data.time_dependent_data.get('waterlevel').shape[0]
+        nedges = self.fm_model_data.edge_data.get('x').shape[0]
+        self.set_logger_message(
+            'finished reading FM and cross-sectional data data')
+        self.set_logger_message(
+          'Number of: timesteps ({}), '.format(ntsteps) +\
+          'faces ({}), '.format(nfaces)+\
+          'edges ({})'.format(nedges), 
+          level='debug')
+        # check if edge/face data is available
+        if 'edge_faces' not in self.fm_model_data.edge_data:
+            if iniFile.get_parameter('frictionweighing') == 1:
+                self.set_logger_message(
+                    'Friction weighing set to 1 (area-weighted average' +
+                    'but FM map file does contain the *edge_faces* keyword.' +
+                    'Area weighting is not possible. Defaulting to simple unweighted' +
+                    'averaging',
+                    level='warning')
+
+        self.get_logformatter().set_intro(False)
 
     def _export_envelope(self, output_dir, cross_sections):
         """
@@ -192,7 +208,7 @@ class Fm2ProfRunner(FM2ProfBase):
         :param region_file: str, path to region geojson file
         :return:
         """
-
+        ini_file = self.get_inifile()
         # Read FM map file
         self.set_logger_message('Opening FM Map file')
         (time_independent_data, edge_data, node_coordinates, time_dependent_data) = FE._read_fm_model(res_file)
@@ -204,10 +220,10 @@ class Fm2ProfRunner(FM2ProfBase):
         self.set_logger_message('Closed css file')
 
         # Classify regions & set cross-sections
-        if (self.__iniFile._input_parameters.get(self.__classificationmethod_key) == 0 ) or (regions is None):
+        if (ini_file.get_parameter('classificationmethod') == 0 ) or (regions is None):
             self.set_logger_message('All 2D points assigned to the same region and classifying points to cross-sections')
             time_independent_data, edge_data = FE.classify_without_regions(cssdata, time_independent_data, edge_data)
-        elif self.__iniFile._input_parameters.get(self.__classificationmethod_key) == 1:
+        elif ini_file.get_parameter('classificationmethod') == 1:
             self.set_logger_message('Assigning 2D points to regions using DeltaShell and classifying points to cross-sections')
             time_independent_data, edge_data = self._classify_with_deltashell(time_independent_data, edge_data, cssdata, regions, polytype='region')
         else:
@@ -215,11 +231,11 @@ class Fm2ProfRunner(FM2ProfBase):
             time_independent_data, edge_data = self._classify_with_builtin_methods(time_independent_data, edge_data, cssdata, regions)
 
         # Classify sections for roughness tables
-        if (self.__iniFile._input_parameters.get(self.__classificationmethod_key) == 0 ) or (sections is None):
+        if (ini_file.get_parameter('classificationmethod') == 0 ) or (sections is None):
             self.set_logger_message('Assigning point to sections without polygons')
             edge_data = FE.classify_roughness_sections_by_variance(edge_data, time_dependent_data['chezy_edge'])
             time_independent_data = FE.classify_roughness_sections_by_variance(time_independent_data, time_dependent_data['chezy_mean'])
-        elif self.__iniFile._input_parameters.get(self.__classificationmethod_key) == 1:
+        elif ini_file.get_parameter('classificationmethod') == 1:
             self.set_logger_message('Assigning 2D points to sections using DeltaShell')
             time_independent_data, edge_data = self._classify_section_with_deltashell(time_independent_data, edge_data)
         else:
@@ -278,7 +294,7 @@ class Fm2ProfRunner(FM2ProfBase):
 
     def _get_region_map_file(self, polytype):
         """ Returns the path to a NC file with region ifnormation in the bathymetry data"""
-        map_file_path = self.__iniFile._input_file_paths.get(self.__map_file_key)
+        map_file_path = self.get_inifile().get_input_file('map_file')
         filepath, ext = os.path.splitext(map_file_path)
         modified_file_path = f"{filepath}_{polytype.upper()}BATHY{ext}"
         return modified_file_path
@@ -373,7 +389,7 @@ class Fm2ProfRunner(FM2ProfBase):
 
     def _get_css_range(self, number_of_css: int):
         """ parses the CssSelection keyword from the inifile """
-        cssSelection = self.__iniFile._input_parameters.get(self.__css_selection_key)
+        cssSelection = self.get_inifile().get_parameter('css_selection')
         if cssSelection is None:
             cssSelection = np.arange(0, number_of_css)
         else:
@@ -730,8 +746,6 @@ class Fm2ProfRunner(FM2ProfBase):
                 'Exception thrown while trying to reduce the css points. ' +
                 '{}'.format(e_message))
 
-    
-
     def __get_time_stamp_seconds(self, start_time: datetime):
         """Returns a time stamp with the time difference
 
@@ -744,31 +758,6 @@ class Fm2ProfRunner(FM2ProfBase):
         time_now = datetime.datetime.now()
         time_difference = time_now - start_time
         return time_difference.total_seconds()
-
-    def __is_output_directory_set(self, iniFile: IniFile):
-        """
-        Verifies if the output directory has been set and exists or not.
-        Arguments:
-            iniFile {IniFile} -- [description]
-        Returns:
-            True - the output_dir is set and exists.
-            False - the output_dir is not set or does not exist.
-        """
-        if iniFile is None or iniFile._output_dir is None:
-            print("The output directory must be set before running.")
-            return False
-
-        if not os.path.exists(iniFile._output_dir):
-            try:
-                os.makedirs(iniFile._output_dir)
-            except:
-
-                print(
-                    'The output directory {}, '.format(iniFile._output_dir) +
-                    'could not be found neither created.')
-                return False
-
-        return True
 
     def __generate_output(
             self, output_directory: str, fig, figType: str, name: str):

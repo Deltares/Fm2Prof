@@ -1,48 +1,10 @@
 """
-This module contains functions used for the emulation/reduction of 2D models to 
-1D models for Delft3D FM (D-Hydro).
-
-
-Dependencies
-------------------
-Packages, between parenthesis known working version.
-
-netCDF4 (1.2.1)
-numpy (1.10.4)
-pandas (0.17.1)
-sklearn (0.15.2)
-matplotlib (1.5.1)
-
-
-Contact: K.D. Berends (koen.berends@deltares.nl, k.d.berends@utwente.nl)
-"""
-"""
-Copyright (C) Stichting Deltares 2019. All rights reserved.
-
-This file is part of the Fm2Prof.
-
-The Fm2Prof is free software: you can redistribute it and/or modify
-it under the terms of the GNU Lesser General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-GNU Affero General Public License for more details.
-
-You should have received a copy of the GNU Affero General Public License
-along with this program. If not, see <http://www.gnu.org/licenses/>.
-
-All names, logos, and references to "Deltares" are registered trademarks of
-Stichting Deltares and remain full property of Stichting Deltares at all times.
-All rights reserved.
+inifile
 """
 
 import os, sys, getopt, shutil
 import configparser
-from typing import Mapping, Sequence
-
+from typing import Mapping, Sequence, AnyStr, Union, Dict
 
 class IniFile:
     __logger = None
@@ -52,6 +14,15 @@ class IniFile:
     __input_files_key = 'InputFiles'
     __input_parameters_key = 'InputParameters'
     __output_directory_key = 'OutputDirectory'
+
+    __ini_keys = dict(
+        map_file='fm_netcdfile',
+        css_file='crosssectionlocationfile',
+        region_file='regionpolygonfile',
+        section_file='sectionpolygonfile',
+        export_mapfiles="exportmapfiles",
+        css_selection="cssselection",
+        classificationmethod="classificationmethod")
     # endregion
 
     # region Public parameters
@@ -59,6 +30,8 @@ class IniFile:
     _input_file_paths = None
     _input_parameters = None
     # endregion
+
+
 
     def __init__(self, file_path: str):
         """
@@ -97,6 +70,17 @@ class IniFile:
         self._input_parameters = self._extract_input_parameters(ini_file_params) # dictionary which contains all input parameter values
         self._input_file_paths = self._extract_input_files(ini_file_params)
 
+    def get_output_directory(self) -> AnyStr:
+        """ 
+        Use this method to return the output directory 
+        
+        Returns:
+            output directory (str)
+        
+        """
+
+        return self._output_dir
+    
     @staticmethod
     def get_inifile_params(file_path : str):
         """Extracts the parameters from an ini file.
@@ -121,6 +105,19 @@ class IniFile:
                 ini_file_params[section][option] = config.get(section, option).split(comment_delimter)[0].strip()
         
         return ini_file_params
+
+    def get_input_file(self, key: str) -> AnyStr:
+        return self._input_file_paths.get(self.__ini_keys[key])
+
+    def get_parameter(self, key: str) -> Union[str, bool, int, float]:
+        """ 
+        Use this method to return a parameter value
+        """
+        return self._input_parameters.get(key)
+
+    def get_parameters(self) -> Dict:
+        return self._input_parameters
+
 
     def _extract_input_parameters(self, inifile_parameters : Mapping[str, list]):
         """ Extract InputParameters and convert values either integer or float from string
@@ -246,4 +243,29 @@ class IniFile:
             relative_path = os.path.join(output_dir, case_name_tmp)
             
         return case_name_tmp
-  
+    
+    @property
+    def has_output_directory(self):
+        """
+        Verifies if the output directory has been set and exists or not.
+        Arguments:
+            iniFile {IniFile} -- [description]
+        Returns:
+            True - the output_dir is set and exists.
+            False - the output_dir is not set or does not exist.
+        """
+        if self._output_dir is None:
+            print("The output directory must be set before running.")
+            return False
+
+        if not os.path.exists(self._output_dir):
+            try:
+                os.makedirs(self._output_dir)
+            except:
+
+                print(
+                    'The output directory {}, '.format(self._output_dir) +
+                    'could not be found neither created.')
+                return False
+
+        return True
