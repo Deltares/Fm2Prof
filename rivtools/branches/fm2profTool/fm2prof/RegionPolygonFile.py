@@ -30,6 +30,7 @@ import logging
 import numpy as np
 import multiprocessing
 import rtree
+from fm2prof.common import FM2ProfBase
 from itertools import groupby
 
 from collections import namedtuple
@@ -37,7 +38,7 @@ from collections import namedtuple
 Polygon = namedtuple('Polygon', ['geometry', 'properties'])
 
 
-class PolygonFile:
+class PolygonFile(FM2ProfBase):
     __logger = None
 
     def __init__(self, logger):
@@ -144,13 +145,6 @@ class PolygonFile:
             return self.undefined
         return self.polygons[polygon_id].properties.get(property_name)
 
-    def set_logger(self, logger):
-        """ should be given a logger object (python standard library) """
-        assert isinstance(logger, logging.Logger), '' + \
-            'logger should be instance of logging.Logger class'
-
-        self.__logger = logger
-
     def parse_geojson_file(self, file_path):
         """ Read data from geojson file """
         PolygonFile._validate_extension(file_path)
@@ -179,30 +173,6 @@ class PolygonFile:
                 'Invalid file path extension, ' +
                 'should be .json or .geojson.')
 
-    def _set_logger_message(self, err_mssg: str, level='info'):
-        """Sets message to logger if this is set.
-
-        Arguments:
-            err_mssg {str} -- Error message to send to logger.
-        """
-        if not self.__logger:
-            return
-
-        if level.lower() not in [
-                'info', 'debug', 'warning', 'error', 'critical']:
-                self.__logger.error(
-                    "{} is not valid logging level.".format(level.lower()))
-
-        if level.lower() == 'info':
-            self.__logger.info(err_mssg)
-        elif level.lower() == 'debug':
-            self.__logger.debug(err_mssg)
-        elif level.lower() == 'warning':
-            self.__logger.warning(err_mssg)
-        elif level.lower() == 'error':
-            self.__logger.error(err_mssg)
-        elif level.lower() == 'critical':
-            self.__logger.critical(err_mssg)
 
     def _check_overlap(self):
         for polygon in self.polygons:
@@ -212,7 +182,7 @@ class PolygonFile:
                     pass
                 else:
                     if polygon.geometry.intersects(testpoly.geometry):
-                        self._set_logger_message("{} overlaps {}.".format(polygon.properties.get('name'), 
+                        self.set_logger_message("{} overlaps {}.".format(polygon.properties.get('name'), 
                                                                           testpoly.properties.get('name')),
                                                  level= 'warning')
 
@@ -232,11 +202,11 @@ class RegionPolygonFile(PolygonFile):
         self._validate_regions()
 
     def _validate_regions(self):
-        self._set_logger_message("Validating Region file")
+        self.set_logger_message("Validating Region file")
 
         number_of_regions = len(self.regions)
 
-        self._set_logger_message("{} regions found".format(number_of_regions))
+        self.set_logger_message("{} regions found".format(number_of_regions))
 
         # Test if polygons overlap
         self._check_overlap()
@@ -268,7 +238,7 @@ class SectionPolygonFile(PolygonFile):
             property_name='section')
 
     def _validate_sections(self):
-        self._set_logger_message("Validating Section file")
+        self.set_logger_message("Validating Section file")
         raise_exception = False
 
         valid_section_keys = {'main', 'floodplain1', 'floodplain2'}
@@ -281,16 +251,16 @@ class SectionPolygonFile(PolygonFile):
         for section in self.sections:
             if 'section' not in section.properties:
                 raise_exception = True
-                self._set_logger_message('Polygon {} has no property "section"'.format(section.properties.get('name')),
+                self.set_logger_message('Polygon {} has no property "section"'.format(section.properties.get('name')),
                                           level='error')
             section_key = str(section.properties.get('section')).lower()
             if section_key not in valid_section_keys:
                 if section_key not in list(map_section_keys.keys()):
                     raise_exception = True
-                    self._set_logger_message('{} is not a recognized section'.format(section_key), 
+                    self.set_logger_message('{} is not a recognized section'.format(section_key), 
                     level='error')
                 else:
-                    self._set_logger_message('remapped section {} to {}'.format(section_key, 
+                    self.set_logger_message('remapped section {} to {}'.format(section_key, 
                                                                                 map_section_keys[section_key]),
                     level='warning')
                     section.properties['section'] = map_section_keys.get(section_key)
@@ -300,4 +270,4 @@ class SectionPolygonFile(PolygonFile):
         if raise_exception:
             raise AssertionError('Section file could not validated')
         else:
-            self._set_logger_message('Section file succesfully validated')
+            self.set_logger_message('Section file succesfully validated')
