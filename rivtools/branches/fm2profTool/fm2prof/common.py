@@ -65,10 +65,14 @@ class ElapsedFormatter:
                 progress=100*self.current_iteration/self.number_of_iterations)
 
     def __format_message(self, record) -> AnyStr:
+        level = record.levelname
+        color = self.__colors[level][0]
         elapsed_seconds = record.created - self.start_time
-        return "{now} {level:>7} :: {progress:4.0f}% ::   > T+ {elapsed:.2f}s {message} ({file})".format(
+        return "{color}{now} {level:>7} :: {progress:4.0f}%{reset} ::   > T+ {elapsed:.2f}s {message} ({file})".format(
+                color=color,
                 now=self.__current_time(),
-                level=record.levelname,
+                level=level,
+                reset=self.__colors['RESET'],
                 elapsed=elapsed_seconds,
                 message=record.getMessage(),
                 file=record.filename,

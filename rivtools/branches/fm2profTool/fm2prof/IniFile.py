@@ -113,7 +113,7 @@ class IniFile:
         """ 
         Use this method to return a parameter value
         """
-        return self._input_parameters.get(key)
+        return self._input_parameters.get(self.__ini_keys[key])
 
     def get_parameters(self) -> Dict:
         return self._input_parameters
