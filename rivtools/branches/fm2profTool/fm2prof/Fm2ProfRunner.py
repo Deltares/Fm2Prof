@@ -1,6 +1,7 @@
 from fm2prof.common import FM2ProfBase, FmModelData
+from fm2prof.CrossSection import CrossSection
 from fm2prof import Functions as FE
-from fm2prof import Classes as CE
+
 from fm2prof import sobek_export
 from fm2prof import IniFile
 from fm2prof.MaskOutputFile import MaskOutputFile
@@ -21,12 +22,6 @@ import geojson
 
 
 class Fm2ProfRunner(FM2ProfBase):
-    __logger = None
-    __iniFile = None
-    __showFigures = False
-    __saveFigures = False
-    __version = 1.4
-
     __map_file_key = 'fm_netcdfile'
     __css_file_key = 'crosssectionlocationfile'
     __region_file_key = 'regionpolygonfile'
@@ -85,7 +80,7 @@ class Fm2ProfRunner(FM2ProfBase):
             output_dir=output_dir,
             filename='fm2prof.log')
         self.set_logger_message(
-            'FM2PROF version {}'.format(self.__version))
+            'FM2PROF version {}'.format(self.__version__))
         self.set_logger_message('reading FM and cross-sectional data data')
 
         # Read region polygon
@@ -373,7 +368,6 @@ class Fm2ProfRunner(FM2ProfBase):
                 css_data, input_param_dict, fm_model_data)
             if generated_cross_section is not None:
                 cross_sections.append(generated_cross_section)
-                self.__logformatter.start_new_iteration()
 
         return cross_sections
 
@@ -390,7 +384,7 @@ class Fm2ProfRunner(FM2ProfBase):
             self,
             css_data: dict,
             input_param_dict: Mapping[str, list],
-            fm_model_data: FmModelData):
+            fm_model_data: FmModelData) -> CrossSection:
         """Generates a cross section and configures its values based
         on the input parameter dictionary
 
@@ -408,7 +402,7 @@ class Fm2ProfRunner(FM2ProfBase):
             Exception: If no fm_model_data is given.
 
         Returns:
-            {CE.CrossSection} -- New Cross Section
+            {CrossSection} -- New Cross Section
         """
         if css_data is None:
             raise Exception('No data was given to create a Cross Section')
@@ -426,10 +420,7 @@ class Fm2ProfRunner(FM2ProfBase):
             raise Exception(
                 'No FM data given for new cross section {}'.format(css_name))
 
-        self.__logformatter.next_step()
-        self.set_logger_message(
-            '{}'.format(css_name))
-
+        self.start_new_log_task(f"{css_name}")
         # Create cross section
         created_css = self._get_new_cross_section(
             css_data=css_data,
@@ -453,14 +444,14 @@ class Fm2ProfRunner(FM2ProfBase):
 
     def _set_fm_data_to_cross_section(
             self,
-            cross_section: CE.CrossSection,
+            cross_section: CrossSection,
             input_param_dict: Mapping[str, list],
             fm_model_data: FmModelData,
             start_time=None):
         """Sets extra FM data to the given Cross Section
 
         Arguments:
-            cross_section {CE.CrossSection}
+            cross_section {CrossSection}
                 -- Given Cross Section.
             input_param_dict {Mapping[str, list]}
                 -- Dictionary with input parameters.
@@ -532,7 +523,7 @@ class Fm2ProfRunner(FM2ProfBase):
                 -- Dictionary with parameters for Cross Section.
 
         Returns:
-            {CE.CrossSection} -- New cross section object.
+            {CrossSection} -- New cross section object.
         """
         # Get id data and id index
         if not css_data:
@@ -555,7 +546,7 @@ class Fm2ProfRunner(FM2ProfBase):
             return None
 
         try:
-            css = CE.CrossSection(
+            css = CrossSection(
                 input_param_dict,
                 name=css_data_id,
                 length=css_data_length,
@@ -671,12 +662,12 @@ class Fm2ProfRunner(FM2ProfBase):
     def _calculate_css_correction(
             self,
             input_param_dict: Mapping[str, float],
-            css: CE.CrossSection):
+            css: CrossSection):
         """Calculates the Cross Section correction if needed.
 
         Arguments:
             input_param_dict {Mapping[str,float]} -- [description]
-            css {CE.CrossSection} -- [description]
+            css {CrossSection} -- [description]
 
         """
         if not css:
@@ -707,7 +698,7 @@ class Fm2ProfRunner(FM2ProfBase):
     def _reduce_css_points(
             self,
             input_param_dict: Mapping[str, str],
-            css: CE.CrossSection):
+            css: CrossSection):
         """Returns a valid value for the number of css points read from ini file.
 
         Arguments:
