@@ -1,63 +1,23 @@
-#! /usr/bin/env python
+# -*- coding: utf-8 -*-
 """
-This module contains functions used for the emulation/reduction of 2D models to
-1D models for Delft3D FM (D-Hydro).
-
-
-Dependencies
-------------------
-Packages, between parenthesis known working version.
-
-netCDF4 (1.2.1)
-numpy (1.10.4)
-pandas (0.17.1)
-sklearn (0.15.2)
-matplotlib (1.5.1)
-
-
-Contact: K.D. Berends (koen.berends@deltares.nl, k.d.berends@utwente.nl)
-"""
-"""
-Copyright (C) Stichting Deltares 2019. All rights reserved.
-
-This file is part of the Fm2Prof.
-
-The Fm2Prof is free software: you can redistribute it and/or modify
-it under the terms of the GNU Lesser General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-GNU Affero General Public License for more details.
-
-You should have received a copy of the GNU Affero General Public License
-along with this program. If not, see <http://www.gnu.org/licenses/>.
-
-All names, logos, and references to "Deltares" are registered trademarks of
-Stichting Deltares and remain full property of Stichting Deltares at all times.
-All rights reserved.
+Top-level file to run fm2prof
 """
 
-# region // imports
-import matplotlib.pyplot as plt
-import pandas as pd
+
+# Import from standard library
 import sys
 import getopt
 
+# Import from dependencies
+# None
+
+# Import from package
 from fm2prof import Fm2ProfRunner
 
-pd.options.mode.chained_assignment = None  # default='warn'
 
 # endregion
 
-__version__ = 1.1
-__revision__ = 2
-
 # region // Main helpers
-
-
 def __report_expected_arguments(reason):
     print('main.py -i <ini_file>')
     sys.exit("Error: {0}".format(reason))
@@ -107,7 +67,7 @@ def main(argv):
 
     # Run Fm2Prof with given arguments
     ini_file_path = opts[0][1]
-    runner = Fm2ProfRunner.Fm2ProfRunner(ini_file_path, __version__)
+    runner = Fm2ProfRunner.Fm2ProfRunner(ini_file_path)
     runner.run()
 
 
