@@ -24,7 +24,7 @@ import geojson
 from fm2prof.common import FM2ProfBase, FmModelData
 from fm2prof.CrossSection import CrossSection
 from fm2prof import Functions as FE
-from fm2prof import sobek_export
+from fm2prof.sobek_export import Export1DModelData
 from fm2prof.MaskOutputFile import MaskOutputFile
 from fm2prof.RegionPolygonFile import RegionPolygonFile, SectionPolygonFile
 
@@ -90,7 +90,7 @@ class Fm2ProfRunner(FM2ProfBase):
         
         # Finalise and write output
         try:
-            self._finalise_fm2prof(cross_sections):
+            self._finalise_fm2prof(cross_sections)
         except:
             self.set_logger_message('Unexpected exception during finalisation', 'error')
             self.set_logger_message(traceback.print_exc(file=sys.stdout), 'error')
@@ -171,7 +171,7 @@ class Fm2ProfRunner(FM2ProfBase):
         output_dir = self.get_inifile().get_output_directory()
         self.set_logger_message(
             'Export model input files to {}'.format(output_dir))
-        self._export_cross_sections(cross_sections, output_dir)
+        self._write_output(cross_sections, output_dir)
 
         # Generate output geojson
         try:
@@ -594,7 +594,7 @@ class Fm2ProfRunner(FM2ProfBase):
 
         return css
 
-    def _export_cross_sections(self, cross_sections: list, output_dir: str):
+    def _write_output(self, cross_sections: list, output_dir: str):
         """Exports all cross sections to the necessary file formats
 
         Arguments:
@@ -608,6 +608,8 @@ class Fm2ProfRunner(FM2ProfBase):
 
         if not output_dir or not os.path.exists(output_dir):
             return
+
+        OutputExporter = Export1DModelData(logger=self.get_logger())
 
         # File paths
         css_location_ini_file = os.path.join(
@@ -627,11 +629,11 @@ class Fm2ProfRunner(FM2ProfBase):
         # export fm1D format
         try:
             # Export locations
-            sobek_export.export_crossSectionLocations(
+            OutputExporter.export_crossSectionLocations(
                 cross_sections, file_path=css_location_ini_file)
             
             # Export definitions
-            sobek_export.export_geometry(
+            OutputExporter.export_geometry(
                 cross_sections,
                 file_path=css_definitions_ini_file,
                 fmt='dflow1d')
@@ -643,7 +645,7 @@ class Fm2ProfRunner(FM2ProfBase):
                                   "floodplain2": ['\\roughness-FloodPlain2.ini', "FloodPlain2"]}
             for section in sections:
                 csv_roughness_ini_file = output_dir + sectionFileKeyDict[section][0]
-                sobek_export.export_roughness(
+                OutputExporter.export_roughness(
                     cross_sections,
                     file_path=csv_roughness_ini_file,
                     fmt='dflow1d',
@@ -658,11 +660,11 @@ class Fm2ProfRunner(FM2ProfBase):
         # Eport SOBEK 3 format
         try:
             # Cross-sections
-            sobek_export.export_geometry(
+            OutputExporter.export_geometry(
                 cross_sections, file_path=csv_geometry_file, fmt='sobek3')
             
             # Roughness
-            sobek_export.export_roughness(
+            OutputExporter.export_roughness(
                 cross_sections,
                 file_path=csv_roughness_file,
                 fmt='sobek3')
@@ -675,12 +677,12 @@ class Fm2ProfRunner(FM2ProfBase):
         
         # Other files:
         try:
-            sobek_export.export_geometry(
+            OutputExporter.export_geometry(
                 cross_sections,
                 file_path=csv_geometry_test_file,
                 fmt='testformat')
 
-            sobek_export.export_volumes(
+            OutputExporter.export_volumes(
                 cross_sections,
                 file_path=csv_volumes_file)
         except Exception as e_info:
