@@ -229,7 +229,7 @@ class CrossSection(FM2ProfBase):
 
         # Correct waterdepth for deep pools (volume below deepest point in centre
         # should not be considered to be conveyance)
-        pools_id = [i[0] for i in np.argwhere(waterdepth.iloc[:, 0] > centre_depth[0])]
+        pools_id = [i[0] for i in np.argwhere(waterdepth.to_numpy()[:, 0] > centre_depth[0])]
         for pool in pools_id:
             amount_deeper = waterdepth.iloc[pool,0] - centre_depth[0]
             waterdepth.iloc[pool] -= amount_deeper 
