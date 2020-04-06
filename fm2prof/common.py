@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 Base classes and data containers
 """
@@ -5,45 +6,68 @@ Base classes and data containers
 # Imports from standard library
 import os
 import logging
+from logging import Logger, LogRecord
 import time
 from datetime import datetime
-from typing import Mapping
+from typing import Mapping, AnyStr
 
 # Import from dependencies
 import numpy as np 
+import colorama
+from colorama import Fore, Back, Style
+
+# Import from package
+from fm2prof import IniFile
 
 class ElapsedFormatter:
     """
     Logger formatting class
     """
     __new_iteration = True
+    __intro = True
+    __colors = {'INFO': [Back.BLUE, Fore.BLUE],
+                'DEBUG': [Back.CYAN, Fore.CYAN],
+                'WARNING': [Back.YELLOW + Fore.BLACK, Fore.YELLOW],
+                'ERROR': [Back.RED, Fore.RED],
+                'RESET': Style.RESET_ALL}
 
     def __init__(self):
         self.start_time = time.time()
         self.number_of_iterations = 1
         self.current_iteration = 0
+        colorama.init()
 
     def format(self, record):
         if self.__new_iteration:
             return self.__format_header(record)
+        elif self.__intro:
+            return self.__format_intro(record)
         else:
             return self.__format_message(record)
 
-    def __format_header(self, record):
+    def __current_time(self) -> AnyStr:
+        return datetime.now().strftime("%Y-%m-%d %H:%M")
+
+    def __format_intro(self, record:LogRecord) -> AnyStr:
+        level = record.levelname
+        color = self.__colors[level][0]
+        return f"{color}{self.__current_time()} {level:>7}{self.__colors['RESET']} :: {record.getMessage()}" 
+
+    def __format_header(self, record:LogRecord) -> AnyStr:
         self.__new_iteration = False
         elapsed_seconds = record.created - self.start_time
         return "{now} {level:>7} :: {progress:4.0f}% :: {message} ({file})".format(
-                now=datetime.now().strftime("%Y-%m-%d %H:%M"),
+                now=self.__current_time(),
                 level=record.levelname,
                 elapsed=elapsed_seconds,
                 message=record.getMessage(),
                 file=record.filename,
                 progress=100*self.current_iteration/self.number_of_iterations)
 
-    def __format_message(self, record):
+    def __format_message(self, record) -> AnyStr:
         elapsed_seconds = record.created - self.start_time
         return "{now} {level:>7} :: {progress:4.0f}% ::   > T+ {elapsed:.2f}s {message} ({file})".format(
-                now=datetime.now().strftime("%Y-%m-%d %H:%M"),
+                now=self.__current_time(),
                 level=record.levelname,
                 elapsed=elapsed_seconds,
                 message=record.getMessage(),
@@ -64,6 +88,9 @@ class ElapsedFormatter:
     def set_number_of_iterations(self, n):
         assert n > 0, 'Total number of iterations should be higher than zero'
         self.number_of_iterations = n
+
+    def set_intro(self, flag: bool=True):
+        self.__intro=flag
 
 
 class FM2ProfBase:
@@ -93,19 +120,19 @@ class FM2ProfBase:
         ch.setFormatter(self.__logformatter)
         self.__logger.addHandler(ch)
 
-    def get_logger(self) -> logging.Logger:
+    def get_logger(self) -> Logger:
         """ Use this method to return logger object """
         return self.__logger
 
-    def set_logger(self, logger:logging.Logger) -> None:
+    def set_logger(self, logger:Logger) -> None:
         """ 
         Use to set logger
 
         Parameters:
-            logger (logging.Logger): Logger instance
+            logger (Logger): Logger instance
         """
-        assert isinstance(logger, logging.Logger), '' + \
-            'logger should be instance of logging.Logger class'
+        assert isinstance(logger, Logger), '' + \
+            'logger should be instance of Logger class'
         self.__logger = logger
 
     def set_logger_message(self, err_mssg: str, level: str='info')->None:
@@ -152,6 +179,14 @@ class FM2ProfBase:
         fh.setLevel(logging.DEBUG)
         fh.setFormatter(self.__logformatter)
         self.__logger.addHandler(fh)
+
+    def set_inifile(self, iniFilePath: str):
+        """ Use this method to set configuration file """
+        self.__iniFile = IniFile.IniFile(iniFilePath)
+
+    def get_inifile(self) -> IniFile:
+        """"Use this method to get the inifile object """
+        return self.__iniFile
 
 
 class FmModelData:
