@@ -50,8 +50,9 @@ class ElapsedFormatter:
 
     def __format_intro(self, record:LogRecord) -> AnyStr:
         level = record.levelname
-        color = self.__colors[level][0]
-        return f"{color}{self.__current_time()} {level:>7}{self.__colors['RESET']} :: {record.getMessage()}" 
+        color = self.__colors[level]
+        reset = self.__colors['RESET']
+        return f"{color[0]}{self.__current_time()} {level:>7} {reset}{color[1]}{reset} {record.getMessage()}" 
 
     def __format_header(self, record:LogRecord) -> AnyStr:
         self.__new_iteration = False
@@ -66,10 +67,11 @@ class ElapsedFormatter:
 
     def __format_message(self, record) -> AnyStr:
         level = record.levelname
-        color = self.__colors[level][0]
+        color = self.__colors[level]
         elapsed_seconds = record.created - self.start_time
-        return "{color}{now} {level:>7} :: {progress:4.0f}%{reset} ::   > T+ {elapsed:.2f}s {message} ({file})".format(
-                color=color,
+        return "{color}{now} {level:>7} {reset}{color2}{reset} {progress:4.0f}% T+ {elapsed:.2f}s {message} ({file})".format(
+                color=color[0],
+                color2=color[1],
                 now=self.__current_time(),
                 level=level,
                 reset=self.__colors['RESET'],
@@ -108,7 +110,12 @@ class FM2ProfBase:
     __authors__ = "Koen Berends, Asako Fujisaki, Carles Soriano Perez, Ilia Awakimjan"
     __copyright__ = "Copyright 2016-2020, University of Twente & Deltares"
     __license__ = "LPGL"
-    
+
+    def __init__(self, logger:Logger = None, inifile: IniFile=None):
+        if logger:
+            self.set_logger(logger)
+        if inifile:
+            self.set_inifile(inifile)
 
     def _create_logger(self):
         # Create logger
@@ -179,7 +186,7 @@ class FM2ProfBase:
 
     def set_logfile(self, output_dir: str, filename: str='fm2prof.log') -> None:
         # create file handler
-        fh = logging.FileHandler(os.path.join(output_dir, filename))
+        fh = logging.FileHandler(os.path.join(output_dir, filename), encoding='utf-8')
         fh.setLevel(logging.DEBUG)
         fh.setFormatter(self.__logformatter)
         self.__logger.addHandler(fh)
