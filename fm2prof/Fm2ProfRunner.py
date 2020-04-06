@@ -4,7 +4,7 @@ Runner class.
 
 # import from standard library
 import traceback
-from typing import Mapping, Sequence
+from typing import Mapping, Sequence, List
 import datetime
 import itertools
 import os
@@ -30,7 +30,12 @@ from fm2prof.RegionPolygonFile import RegionPolygonFile, SectionPolygonFile
 
 
 class Fm2ProfRunner(FM2ProfBase):
-    
+    """
+    Main class that executes all functionality. 
+
+    Arguments:
+        iniFilePath (str): path to configuration file
+    """
 
     def __init__(self, iniFilePath: str, version: float = None):
         """
@@ -46,7 +51,6 @@ class Fm2ProfRunner(FM2ProfBase):
         
         self.set_inifile(iniFilePath)
         self._create_logger()
-
         
     def run(self) -> None:
         """
@@ -56,9 +60,9 @@ class Fm2ProfRunner(FM2ProfBase):
             self.set_logger_message(
                 'No ini file was specified and the run cannot go further.', 'Warning')
             return
-        self.run_inifile()
+        self._run_inifile()
 
-    def run_inifile(self):
+    def _run_inifile(self) -> None:
         """Runs the desired emulation from 2d to 1d given the mapfile
             and the cross section file.
 
@@ -67,52 +71,31 @@ class Fm2ProfRunner(FM2ProfBase):
                 -- Object containing all the information
                     needed to execute the program
         """
-        
+
+        # Initialise the project
         try:
             self._initialise_fm2prof()
         except:
             self.set_logger_message('Unexpected exception during initialisation', 'error')
             self.set_logger_message(traceback.print_exc(file=sys.stdout), 'error')
 
-        # generate all cross-sections
-        cross_sections = self._generate_cross_section_list(
-            self.get_inifile().get_parameters(), self.fm_model_data)
-
-        # The roughness tables in 1D model require
-        # the same discharges on the rows.
-        # This function interpolates to get the roughnesses
-        # at the correct discharges.
-        self.start_new_log_task('Finalizing')
-        self.set_logger_message(
-            'Interpolating roughness')
-        FE.interpolate_roughness(cross_sections)
-
-        # Export cross sections
-        self.set_logger_message(
-            'Export model input files to {}'.format(output_dir))
-        self._export_cross_sections(cross_sections, output_dir)
-
-        # Generate output geojson
+        # Generate cross-sections
         try:
-            export_mapfiles = iniFile.get_parameter('ExportMapFiles')
-        except KeyError:
-            # If key is missing, do not export files by default. 
-            # We need a better solution for this (inifile.getparam?.. handle defaults there?)
-            export_mapfiles = False
-        if export_mapfiles:
-            self.set_logger_message(
-                'Export geojson output to {}'.format(output_dir))
-            self._generate_geojson_output(output_dir, cross_sections)
+            cross_sections = self._generate_cross_section_list(
+                self.get_inifile().get_parameters(), self.fm_model_data)
+        except:
+            self.set_logger_message('Unexpected exception during generation of cross-sections. No output produced', 'error')
+            self.set_logger_message(traceback.print_exc(file=sys.stdout), 'error')
+            return
         
-        # Export bounding boxes of cross-section control volumes
+        # Finalise and write output
         try:
-            self._export_envelope(output_dir, cross_sections)
-        except Exception as e_error:
-            e_message = str(e_error)
-            self.set_logger_message('Error while exporting bounding boxes', 'error')
-            self.set_logger_message(e_message, "error")
+            self._finalise_fm2prof(cross_sections):
+        except:
+            self.set_logger_message('Unexpected exception during finalisation', 'error')
+            self.set_logger_message(traceback.print_exc(file=sys.stdout), 'error')
 
-    def _initialise_fm2prof(self):
+    def _initialise_fm2prof(self) -> None:
         """
         Loads data, inifile
         """
@@ -145,7 +128,7 @@ class Fm2ProfRunner(FM2ProfBase):
         if region_file:
             regions = RegionPolygonFile(region_file, logger=self.get_logger())
 
-        if bool(section_file) & iniFile.get_parameter('sectionsmethod') == 1:
+        if bool(section_file):
             sections = SectionPolygonFile(section_file, logger=self.get_logger())
 
         # Read FM model data
@@ -174,6 +157,41 @@ class Fm2ProfRunner(FM2ProfBase):
                     level='warning')
 
         self.get_logformatter().set_intro(False)
+
+    def _finalise_fm2prof(self, cross_sections: List) -> None:
+        """
+        Write to output, perform checks
+        """
+        self.start_new_log_task('Finalizing')
+        self.set_logger_message(
+            'Interpolating roughness')
+        FE.interpolate_roughness(cross_sections)
+
+        # Export cross sections
+        output_dir = self.get_inifile().get_output_directory()
+        self.set_logger_message(
+            'Export model input files to {}'.format(output_dir))
+        self._export_cross_sections(cross_sections, output_dir)
+
+        # Generate output geojson
+        try:
+            export_mapfiles = self.get_inifile().get_parameter('ExportMapFiles')
+        except KeyError:
+            # If key is missing, do not export files by default. 
+            # We need a better solution for this (inifile.getparam?.. handle defaults there?)
+            export_mapfiles = False
+        if export_mapfiles:
+            self.set_logger_message(
+                'Export geojson output to {}'.format(output_dir))
+            self._generate_geojson_output(output_dir, cross_sections)
+        
+        # Export bounding boxes of cross-section control volumes
+        try:
+            self._export_envelope(output_dir, cross_sections)
+        except Exception as e_error:
+            e_message = str(e_error)
+            self.set_logger_message('Error while exporting bounding boxes', 'error')
+            self.set_logger_message(e_message, "error")
 
     def _export_envelope(self, output_dir, cross_sections):
         """
@@ -284,6 +302,7 @@ class Fm2ProfRunner(FM2ProfBase):
         self.set_logger_message('Assigning edges...')
         edge_data = self._assign_polygon_using_deltashell(edge_data, dtype='edge', polytype=polytype)
 
+        self.set_logger_message('Assigning cross-sections using nearest neighbour within regions...')
         # Determine in which region each cross-section lies
         css_regions = polygons.classify_points(cssdata['xy'])
 
@@ -371,8 +390,6 @@ class Fm2ProfRunner(FM2ProfBase):
         cross_sections = list()
         if not fm_model_data or not input_param_dict:
             return cross_sections
-        
-        
         
         # Preprocess css from fm_model_data so it's easier to handle it.
         css_data_list = fm_model_data.css_data_list
