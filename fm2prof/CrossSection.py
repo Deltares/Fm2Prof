@@ -1,36 +1,27 @@
-﻿
-# region // imports
-import numpy as np
-import pandas as pd
-import logging
+﻿"""
+Contains CrossSection class
+"""
+# Imports from standard library
 from datetime import timedelta, datetime
-from functools import reduce
-import scipy.optimize as so
-from time import time
-
-from fm2prof import common
-from fm2prof import Functions as FE
-from fm2prof.MaskOutputFile import MaskOutputFile
-from fm2prof.common import FM2ProfBase
-
 from typing import Mapping, Sequence
-from .lib import polysimplify as PS
-
+from functools import reduce
+from time import time
+import logging
 import os
 
+# Imports from dependencies
+import numpy as np
+import pandas as pd
+import scipy.optimize as so
+from .lib import polysimplify as PS
+
+# Imports from package
+from fm2prof.common import FM2ProfBase, FrictionTable
+from fm2prof.MaskOutputFile import MaskOutputFile
+from fm2prof import Functions as FE
+
+
 pd.options.mode.chained_assignment = None  # default='warn'
-# endregion
-
-# Module information
-__author__ = "Koen Berends"
-__copyright__ = "Copyright 2016, University of Twente & Deltares"
-__credits__ = ["Koen Berends"]
-__license__ = "no license (restricted)"
-__version__ = "$Revision$"
-__maintainer__ = "Koen Berends"
-__email__ = "koen.berends@deltares.nl"
-__status__ = "Prototype"
-
 
 
 class CrossSection(FM2ProfBase):

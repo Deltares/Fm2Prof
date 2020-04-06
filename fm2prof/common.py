@@ -1,13 +1,21 @@
-import re
+"""
+Base classes and data containers
+"""
+
+# Imports from standard library
 import os
 import logging
 import time
 from datetime import datetime
-from collections import OrderedDict
-from typing import Mapping, Sequence, Type
+from typing import Mapping
 
+# Import from dependencies
+import numpy as np 
 
 class ElapsedFormatter:
+    """
+    Logger formatting class
+    """
     __new_iteration = True
 
     def __init__(self):
@@ -43,7 +51,7 @@ class ElapsedFormatter:
                 progress=100*self.current_iteration/self.number_of_iterations)
 
     def __reset(self):
-        self.start_time = time()
+        self.start_time = time.time()
 
     def start_new_iteration(self):
         self.current_iteration += 1
@@ -60,8 +68,16 @@ class ElapsedFormatter:
 
 class FM2ProfBase:
     """
-    Base class for FM2PROF types. 
+    Base class for FM2PROF types. Implements methods for logging, project specific parameters
     """
+    __logger = None
+    __iniFile = None
+    __version__ = 1.4
+    __contact__ = "koen.berends@deltares.nl"
+    __authors__ = "Koen Berends, Asako Fujisaki, Carles Soriano Perez, Ilia Awakimjan"
+    __copyright__ = "Copyright 2016-2020, University of Twente & Deltares"
+    __license__ = "LPGL"
+    
 
     def _create_logger(self):
         # Create logger
@@ -81,13 +97,18 @@ class FM2ProfBase:
         """ Use this method to return logger object """
         return self.__logger
 
-    def set_logger(self, logger):
-        """ should be given a logger object (python standard library) """
+    def set_logger(self, logger:logging.Logger) -> None:
+        """ 
+        Use to set logger
+
+        Parameters:
+            logger (logging.Logger): Logger instance
+        """
         assert isinstance(logger, logging.Logger), '' + \
             'logger should be instance of logging.Logger class'
         self.__logger = logger
 
-    def set_logger_message(self, err_mssg: str, level='info'):
+    def set_logger_message(self, err_mssg: str, level: str='info')->None:
         """Sets message to logger if this is set.
 
         Arguments:
@@ -118,14 +139,14 @@ class FM2ProfBase:
 
         :param task_name: task name, will be displayed in log message
         """
-        self.__logger._logformatter.new_task()
+        self.get_logformatter().next_step()
         self.set_logger_message(f"Starting new task: {task_name}")
 
     def get_logformatter(self) -> ElapsedFormatter:
         """ Returns formatter """
         return self.__logformatter
 
-    def set_logfile(self, output_dir: str, filename: str='fm2prof.log'):
+    def set_logfile(self, output_dir: str, filename: str='fm2prof.log') -> None:
         # create file handler
         fh = logging.FileHandler(os.path.join(output_dir, filename))
         fh.setLevel(logging.DEBUG)
@@ -134,6 +155,9 @@ class FM2ProfBase:
 
 
 class FmModelData:
+    """
+    Container for FmModelData
+    """
     time_dependent_data = None
     time_independent_data = None
     edge_data = None
@@ -184,6 +208,9 @@ class FmModelData:
 
 
 class FrictionTable:
+    """
+    Container for friction table
+    """
     def __init__(self, level, friction):
         if self._validate_input(level, friction):
             self.level = level
