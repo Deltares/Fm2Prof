@@ -7,6 +7,7 @@ from typing import Mapping, Sequence
 from functools import reduce
 from time import time
 import logging
+from logging import Logger
 import os
 
 # Imports from dependencies
@@ -19,7 +20,7 @@ from .lib import polysimplify as PS
 from fm2prof.common import FM2ProfBase, FrictionTable
 from fm2prof.MaskOutputFile import MaskOutputFile
 from fm2prof import Functions as FE
-
+from fm2prof.IniFile import IniFile
 
 pd.options.mode.chained_assignment = None  # default='warn'
 
@@ -42,14 +43,12 @@ class CrossSection(FM2ProfBase):
     __cs_parameter_sectionsmethod = 'sectionsmethod'
     __cs_parameter_sdoptimisationmethod = 'sdoptimisationmethod'
     __cs_parameter_skip_maps = 'skipmaps'
-    
+    __cs_parameter_floodplain_base_level = 'sdfloodplainbase'
     __logger = None
 
-    def __init__(
-            self,
-            InputParam_dict: dict,
+    def __init__(self, 
             name: str, length: float, location: tuple,
-            branchid="not defined", chainage=0):
+            branchid="not defined", chainage=0, logger: Logger=None, inifile: IniFile=None):
         """
         Arguments:
             InputParam_dict {Dictionary} -- [description]
@@ -61,6 +60,8 @@ class CrossSection(FM2ProfBase):
             branchid {str} -- [description] (default: {"not defined"})
             chainage {int} -- [description] (default: {0})
         """
+        super().__init__(logger=logger, inifile=inifile)
+
         # Cross-section meta data
         self.name = name                # cross-section id
         self.length = length            # 'vaklengte'
@@ -113,7 +114,7 @@ class CrossSection(FM2ProfBase):
         self.__output_face_list = []
         self.__output_edge_list = []
         # PARAMETERS
-        self.parameters = InputParam_dict
+        self.parameters = self.get_inifile().get_parameters()
 
         if self.parameters.get(self.__cs_parameter_skip_maps) is None:
             self._param_skip_maps = 0
@@ -487,7 +488,7 @@ class CrossSection(FM2ProfBase):
         self.extra_area_percentage = extra_area_percentage
         self._css_is_corrected = True
 
-    def assign_roughness(self, fm_data):
+    def assign_roughness(self) -> None:
         """
         This function builds a table of Chezy values as function of water level
         The roughnes is divides into two sections on the assumption of
@@ -496,13 +497,13 @@ class CrossSection(FM2ProfBase):
         """
 
         # Compute roughness tabels
-        self.set_logger_message('Building roughness table')
+        self.set_logger_message('Building roughness table', 'debug')
         self._build_roughness_tables()
         # Compute roughness widths
-        self.set_logger_message('Computing section widths')
+        self.set_logger_message('Computing section widths', 'debug')
         self._compute_section_widths()
         # Compute floodplain base level
-        self.set_logger_message('Computing base level')
+        self.set_logger_message('Computing base level', 'debug')
         self._compute_floodplain_base()
         # done
     
@@ -584,7 +585,6 @@ class CrossSection(FM2ProfBase):
             if list_points[indx] == list_points[indx-1]:
                 list_points[indx] = list_points[indx] + 0.001
         return list_points
-
 
     def set_face_output_list(self):
         """Generates a list of output mask points based on
@@ -708,7 +708,7 @@ class CrossSection(FM2ProfBase):
 
         pass
 
-    # Private Functions
+    # Private Functions (do not call from runner)
 
     def _build_roughness_tables(self):
 
@@ -736,7 +736,7 @@ class CrossSection(FM2ProfBase):
         output = link_chezy.mean(axis=0).replace(np.NaN, 0)
             
         return output.values    
-    
+
     def _friction_weighing_area(self, link_chezy, section):
         """ 
         Compute chezy by weighted average. Weights are determined based on area. 
@@ -761,15 +761,27 @@ class CrossSection(FM2ProfBase):
             self.section_widths[self._section_map[str(section)]] = np.sum(self._fm_data['area'][self._fm_data['section']==section])/self.length
             #self.section_widths[section] = self._calc_roughness_width(self._fm_data['edge_section']==section)
     
-    def _compute_floodplain_base(self):
-        # floodplain base level (temporary here)
-        self.floodplain_base = 0
-        #self.floodplain_base = self._calc_base_level(
-        #    splitpoint, C_sections_edge[1], fm_data)
-        
-        #for section_nr in range(len(C_sections)):
-        #    if C_sections_edge[section_nr]:
-        #        self._fm_data['edge_section'][np.array(C_sections_edge[section_nr])] = section_nr
+    def _compute_floodplain_base(self) -> None:
+        """
+        Sets the self.floodplain_base attribute. The floodplain
+        will be set at least 0.5 meter below the crest of the
+        embankment, and otherwise at the average hight of the floodplain
+        """
+
+        # Mean bed level in section 2 (floodplain)
+        mean_floodplain_elevation = np.mean(self._fm_data['bedlevel'][self._fm_data.get('section') == 2])
+
+        # Tolerance. Base level must at least be some below the crest to prevent
+        # numerical issues
+        tolerance = self.get_inifile().get_parameter('sdfloodplainbase')
+        if (self.crest_level - tolerance) < mean_floodplain_elevation:
+            self.floodplain_base = self.crest_level - tolerance
+            self.set_logger_message(f'Mean floodpl. elev. ({mean_floodplain_elevation:.2f} m)'+
+                                    f'higher than crest level ({self.crest_level:.2f}) + '+
+                                    f'tolerance ({tolerance} m)', 'warning')
+        else:
+            self.floodplain_base = mean_floodplain_elevation
+            self.set_logger_message(f'Floodplain base level set to {mean_floodplain_elevation:.2f} m', 'debug')
 
     def _calc_roughness_width(self, link_indices):
         # get the 2 nodes for every alluvial edge
@@ -799,31 +811,6 @@ class CrossSection(FM2ProfBase):
         section_width = np.sum(fm_data['area_full'][mask])/self.length
 
         return section_width
-
-    def _calc_base_level(self, splitpoint, link_indices, fm_data):
-        # get the 2 nodes for every alluvial edge
-        section_nodes = fm_data['edge_nodes'][link_indices]
-        section_nodes = np.unique(section_nodes.flatten())
-
-        # get the faces for every node (start at index 1)
-        faces = np.array(
-            [index
-                for index, nodes in enumerate(fm_data['face_nodes'])
-                for node in nodes if node in section_nodes])
-        faces += 1
-
-        (unique_faces, faces_count) = np.unique(faces, return_counts=True)
-
-        # only faces that occur at least 4 times (2 edges, 3 nodes)
-        # belong to the section
-        section_faces = unique_faces[faces_count >= 3]
-
-        mask = np.array(
-            [index in section_faces
-                for index in range(1, fm_data['area_full'].size + 1)])
-        bedlevels = fm_data['bedlevel_full'][mask]
-
-        return np.average(bedlevels)
 
     def _calc_chezy(self, depth, manning):
         return depth**(1/float(6)) / manning
