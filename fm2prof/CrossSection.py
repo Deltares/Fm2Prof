@@ -21,6 +21,7 @@ from fm2prof.common import FM2ProfBase, FrictionTable
 from fm2prof.MaskOutputFile import MaskOutputFile
 from fm2prof import Functions as FE
 from fm2prof.IniFile import IniFile
+from fm2prof.Import import FmModelData
 
 pd.options.mode.chained_assignment = None  # default='warn'
 
@@ -38,7 +39,7 @@ class CrossSection(FM2ProfBase):
     __cs_parameter_plassen_timesteps = 'plassen_timesteps'
     __cs_parameter_storagemethod_wli = 'storagemethod_wli'
     __cs_parameter_bedlevelcriterium = 'bedlevelcriterium'
-    __cs_parameter_SDstorage = 'SDstorage'
+    __cs_parameter_SDstorage = 'sdstorage'
     __cs_parameter_Frictionweighing = 'frictionweighing'
     __cs_parameter_sectionsmethod = 'sectionsmethod'
     __cs_parameter_sdoptimisationmethod = 'sdoptimisationmethod'
@@ -48,7 +49,9 @@ class CrossSection(FM2ProfBase):
 
     def __init__(self, 
             name: str, length: float, location: tuple,
-            branchid="not defined", chainage=0, logger: Logger=None, inifile: IniFile=None):
+            branchid="not defined", chainage=0, 
+            fm_data: FmModelData=None,
+            logger: Logger=None, inifile: IniFile=None):
         """
         Arguments:
             InputParam_dict {Dictionary} -- [description]
@@ -69,6 +72,8 @@ class CrossSection(FM2ProfBase):
         self.branch = branchid          # name of 1D branch for cross-section
         self.chainage = chainage        # offset from beginning of branch
         self.__output_mask_list = []    # initialize output mask list.
+        self._fm_data = fm_data         # dictionary with fmdata
+
         # Cross-section geometry
         self.z = np.array([])
         self.total_width = np.array([])
@@ -110,9 +115,9 @@ class CrossSection(FM2ProfBase):
         self._css_is_reduced = False
 
         # data structures
-        self._fm_data = None
         self.__output_face_list = []
         self.__output_edge_list = []
+        
         # PARAMETERS
         self.parameters = self.get_inifile().get_parameters()
 
@@ -165,13 +170,14 @@ class CrossSection(FM2ProfBase):
             raise ValueError('pointtype must be "face" or "edge"')
     
     # Public functions
-    def build_geometry(self, fm_data):
+    def build_geometry(self):
         """
         Build 1D geometrical cross-section from FM data.
 
         :param fm_data: dict
         :return:
         """
+        fm_data = self._fm_data
 
         # Unpack FM data
         waterlevel = fm_data['waterlevel'].iloc[:, self._param_skip_maps:]
@@ -291,132 +297,24 @@ class CrossSection(FM2ProfBase):
         self._css_z = np.array(self._css_z, dtype=np.dtype('float64'))
         
         fm_data['islake'] = plassen_mask
-        self._fm_data = fm_data
+
         # generate all mask points for the given cross_section
         #self.set_mask_output_list(fm_data, plassen_mask)
 
-    def _combined_optimisation_func(self, opt_in):
-        (crest_level, extra_total_volume, extra_flow_volume) = opt_in
-        transition_height = self.parameters[
-            self.__cs_parameter_transitionheight_sd]
-
-        predicted_total_volume = (
-            self._css_total_volume +
-            FE.get_extra_total_area(
-                self._css_z,
-                crest_level,
-                transition_height) * extra_total_volume)
-        
-        predicted_flow_volume = (
-            self._css_flow_volume +
-            FE.get_extra_total_area(
-                self._css_z,
-                crest_level,
-                transition_height) * extra_flow_volume)
-
-        return FE.return_volume_error(predicted_total_volume + predicted_flow_volume, 
-                                      self._fm_total_volume + self._fm_flow_volume)
-    
-    def _optimisation_func(self, opt_in, *args):
+    def check_requirements(self):
         """
-        Objective function used in optimising a delta-h correction
-        for parameters:
-            crest_level         : level at which the correction begins
-            transition_height   : height over which volume is released
-            extra_volume        : total extra volume
-
-
-        :param opt_in: tuple
-        :return:
+        Performs check on cross-section such that it 
+        hold up to requirements. 
         """
-        if args[0][0] == 'both':
-            (crest_level, extra_volume) = opt_in
-            
-        else:
-            (extra_volume) = opt_in
-            crest_level = args[0][2]
+        # Remove multiple zeroes in the bottom of the cross-section
+        self._check_remove_duplicate_zeroes()
+        self._check_remove_zero_widths()
 
-        volume = args[0][1]
-        transition_height = self.parameters[
-            self.__cs_parameter_transitionheight_sd]
+        # Check if cross-sections are in increasing order
+        self._css_z = self._check_increasing_order(self._css_z)
+        self._css_total_width = self._check_increasing_order(self._css_total_width)
+        self._css_flow_width = self._check_increasing_order(self._css_flow_width)
 
-        predicted_volume = (
-            volume +
-            FE.get_extra_total_area(
-                self._css_z,
-                crest_level,
-                transition_height) * extra_volume)
-        return FE.return_volume_error(predicted_volume, self._fm_total_volume)
-
-    def _optimize_sd_storage(self, initial_crest, initial_total_volume, initial_flow_volume):
-        
-        # Default option
-        sdoptimisationmethod = self.parameters.get(self.__cs_parameter_sdoptimisationmethod)
-        if sdoptimisationmethod not in [0, 1, 2]:
-            # this should be handled in inifile instead
-            self.set_logger_message('sdoptimisationmethod is {} but should be 0, 1, or 2. Defaulting to 0'.format(sdoptimisationmethod), 
-            level='warning')
-            sdoptimisationmethod = 0
-
-        if sdoptimisationmethod == 0:
-            self.set_logger_message('Optimising SD on total volume', level='debug')
-
-            # Optimise crest on total volume
-            opt = so.minimize(self._optimisation_func,
-                            (initial_crest, initial_total_volume),
-                            args=['both', self._css_total_volume],
-                            method='Nelder-Mead',
-                            tol=1e-6)
-            
-            
-            crest_level = opt['x'][0]
-            extra_total_volume = np.max([opt['x'][1], 0])
-            
-            # Optimise flow volume
-            opt2 = so.minimize(self._optimisation_func,
-                            (initial_flow_volume),
-                            args=['notboth', self._css_flow_volume, crest_level],
-                            method='Nelder-Mead',
-                            tol=1e-6)
-            extra_flow_volume = np.min([np.max([opt2['x'][0], 0]), extra_total_volume])
-
-        elif self.parameters.get(self.__cs_parameter_sdoptimisationmethod) == 1:
-            self.set_logger_message('Optimising SD on flow volume', level='debug')
-
-            # Optimise crest on flow volume
-            opt = so.minimize(self._optimisation_func,
-                            (initial_crest, initial_total_volume),
-                            args=['both', self._css_flow_volume],
-                            method='Nelder-Mead',
-                            tol=1e-6)
-            crest_level = opt['x'][0]
-            extra_flow_volume = np.max([opt['x'][1], 0])
-            
-            # Optimise total volume
-            opt2= so.minimize(self._optimisation_func,
-                            (initial_flow_volume),
-                            args=['notboth', self._css_total_volume, crest_level],
-                            method='Nelder-Mead',
-                            tol=1e-6)
-            extra_total_volume = np.max([np.max([opt2['x'][0], 0]), extra_flow_volume])
-        
-        elif self.parameters.get(self.__cs_parameter_sdoptimisationmethod) == 2:
-            self.set_logger_message('Optimising SD on both flow and total volumes', level='debug')
-            opt = so.minimize(self._combined_optimisation_func,
-                            (initial_crest, initial_total_volume, initial_flow_volume),
-                            method='Nelder-Mead',
-                            tol=1e-6)
-
-            crest_level = opt['x'][0]
-            extra_total_volume = np.max([opt['x'][1], 0])
-            extra_flow_volume = np.min([np.max([opt['x'][2], 0]), extra_total_volume])
-            
-        return {'crest_level': crest_level,
-                'extra_total_volume': extra_total_volume,
-                'extra_flow_volume': extra_flow_volume,
-                'final_cost': opt['fun'],
-                'message': opt['message']}
-    
     def calculate_correction(self, transition_height: float):
         """
         Function to determine delta-h correction
@@ -507,7 +405,7 @@ class CrossSection(FM2ProfBase):
         self._compute_floodplain_base()
         # done
     
-    def reduce_points(self, n, method='visvalingam_whyatt', verbose=True):
+    def reduce_points(self, count_after: int, method='visvalingam_whyatt', verbose=True):
         """
         Reduces the number of points from _css attributes to a preset maximum.
 
@@ -524,28 +422,6 @@ class CrossSection(FM2ProfBase):
         :return:
         """
 
-        # Remove multiple 0s in the total width
-        nn = 0
-        while self._css_total_width[0] == 0 and self._css_total_width[1] == 0:
-                # remove double 0 in the total width and update z and flow width arrays
-                self._css_z = self._css_z[1:]
-                self._css_total_width = self._css_total_width[1:]
-                self._css_flow_width = self._css_flow_width[1:]
-        
-        # Replace 0 total width from the first row
-        if self._css_total_width[0] == 0:
-            if self._css_total_width[1] >= 1.0:
-                # minimum of 1.0
-                self._css_total_width[0] = 1.0
-            else:
-                # 0.1m less than the second row (arbitrary)
-                self._css_total_width[0] = self._css_total_width[1]-0.1
-
-        # "increasing order" check
-        self._css_z = self._check_increasing_order(self._css_z)
-        self._css_total_width = self._check_increasing_order(self._css_total_width)
-        self._css_flow_width = self._check_increasing_order(self._css_flow_width)
-
         n_before_reduction = len(self._css_total_width)
 
         points = np.array(
@@ -556,16 +432,16 @@ class CrossSection(FM2ProfBase):
         # The number of points is equal to n, it cannot be further reduced
         reduced_index = np.array([True] * n_before_reduction)
 
-        if n_before_reduction != n:
+        if n_before_reduction != count_after:
             # default is the same value as it came
             if method.lower() == 'visvalingam_whyatt':
                 try:
                     simplifier = PS.VWSimplifier(points)
-                    reduced_index = simplifier.from_number_index(n)
+                    reduced_index = simplifier.from_number_index(count_after)
                 except Exception as e:
-                    print(
+                    self.set_logger_message(
                         'Exception thrown while using polysimplify: ' +
-                        '{}'.format(str(e)))
+                        '{}'.format(str(e)), 'error')
 
         # Write to attributes
         self.z = self._css_z[reduced_index]
@@ -578,13 +454,6 @@ class CrossSection(FM2ProfBase):
             'to {} points'.format(len(self.total_width)))
 
         self._css_is_reduced = True
-
-    def _check_increasing_order(self, list_points):
-        """ there must not be the same values; if so, assign +1mm """
-        for indx in range(1,len(list_points)):
-            if list_points[indx] == list_points[indx-1]:
-                list_points[indx] = list_points[indx] + 0.001
-        return list_points
 
     def set_face_output_list(self):
         """Generates a list of output mask points based on
@@ -708,7 +577,163 @@ class CrossSection(FM2ProfBase):
 
         pass
 
-    # Private Functions (do not call from runner)
+    def _check_remove_duplicate_zeroes(self):
+        """
+        Removes duplicate zeroes in the total width
+        """
+        
+        # Remove multiple 0s in the total width
+        index_of_first_nonzero = max(1, np.argwhere(self._css_total_width!=0)[0][0])
+        
+        self._css_z = self._css_z[index_of_first_nonzero-1:]
+        self._css_total_width = self._css_total_width[index_of_first_nonzero-1:]
+        self._css_flow_width = self._css_flow_width[index_of_first_nonzero-1:]
+        self.set_logger_message(f'Removed {index_of_first_nonzero-1} duplicate zero widths', 'debug')
+
+    def _check_remove_zero_widths(self):
+        """
+        A zero width may lead to numerical instability
+        """
+        minwidth = self.get_inifile().get_parameter('minimum_width')
+        # Replace 0 total width from the first row
+        if self._css_total_width[0] == 0:
+            if self._css_total_width[1] >= minwidth:
+                # minimum of 1.0
+                self._css_total_width[0] = minwidth
+                self.set_logger_message(f'Set minimum total width to {minwidth}', 'debug')
+            else:
+                # 0.1m less than the second row (arbitrary)
+                self._css_total_width[0] = self._css_total_width[1]-0.1
+                self.set_logger_message(f'Set minimum total width to {self._css_total_width[1]-0.1}', 'debug')
+
+    def _combined_optimisation_func(self, opt_in):
+        (crest_level, extra_total_volume, extra_flow_volume) = opt_in
+        transition_height = self.parameters[
+            self.__cs_parameter_transitionheight_sd]
+
+        predicted_total_volume = (
+            self._css_total_volume +
+            FE.get_extra_total_area(
+                self._css_z,
+                crest_level,
+                transition_height) * extra_total_volume)
+        
+        predicted_flow_volume = (
+            self._css_flow_volume +
+            FE.get_extra_total_area(
+                self._css_z,
+                crest_level,
+                transition_height) * extra_flow_volume)
+
+        return FE.return_volume_error(predicted_total_volume + predicted_flow_volume, 
+                                      self._fm_total_volume + self._fm_flow_volume)
+    
+    def _optimisation_func(self, opt_in, *args):
+        """
+        Objective function used in optimising a delta-h correction
+        for parameters:
+            crest_level         : level at which the correction begins
+            transition_height   : height over which volume is released
+            extra_volume        : total extra volume
+
+
+        :param opt_in: tuple
+        :return:
+        """
+        if args[0][0] == 'both':
+            (crest_level, extra_volume) = opt_in
+            
+        else:
+            (extra_volume) = opt_in
+            crest_level = args[0][2]
+
+        volume = args[0][1]
+        transition_height = self.parameters[
+            self.__cs_parameter_transitionheight_sd]
+
+        predicted_volume = (
+            volume +
+            FE.get_extra_total_area(
+                self._css_z,
+                crest_level,
+                transition_height) * extra_volume)
+        return FE.return_volume_error(predicted_volume, self._fm_total_volume)
+
+    def _optimize_sd_storage(self, initial_crest, initial_total_volume, initial_flow_volume):
+        
+        # Default option
+        sdoptimisationmethod = self.parameters.get(self.__cs_parameter_sdoptimisationmethod)
+        if sdoptimisationmethod not in [0, 1, 2]:
+            # this should be handled in inifile instead
+            self.set_logger_message('sdoptimisationmethod is {} but should be 0, 1, or 2. Defaulting to 0'.format(sdoptimisationmethod), 
+            level='warning')
+            sdoptimisationmethod = 0
+
+        if sdoptimisationmethod == 0:
+            self.set_logger_message('Optimising SD on total volume', level='debug')
+
+            # Optimise crest on total volume
+            opt = so.minimize(self._optimisation_func,
+                            (initial_crest, initial_total_volume),
+                            args=['both', self._css_total_volume],
+                            method='Nelder-Mead',
+                            tol=1e-6)
+            
+            
+            crest_level = opt['x'][0]
+            extra_total_volume = np.max([opt['x'][1], 0])
+            
+            # Optimise flow volume
+            opt2 = so.minimize(self._optimisation_func,
+                            (initial_flow_volume),
+                            args=['notboth', self._css_flow_volume, crest_level],
+                            method='Nelder-Mead',
+                            tol=1e-6)
+            extra_flow_volume = np.min([np.max([opt2['x'][0], 0]), extra_total_volume])
+
+        elif self.parameters.get(self.__cs_parameter_sdoptimisationmethod) == 1:
+            self.set_logger_message('Optimising SD on flow volume', level='debug')
+
+            # Optimise crest on flow volume
+            opt = so.minimize(self._optimisation_func,
+                            (initial_crest, initial_total_volume),
+                            args=['both', self._css_flow_volume],
+                            method='Nelder-Mead',
+                            tol=1e-6)
+            crest_level = opt['x'][0]
+            extra_flow_volume = np.max([opt['x'][1], 0])
+            
+            # Optimise total volume
+            opt2= so.minimize(self._optimisation_func,
+                            (initial_flow_volume),
+                            args=['notboth', self._css_total_volume, crest_level],
+                            method='Nelder-Mead',
+                            tol=1e-6)
+            extra_total_volume = np.max([np.max([opt2['x'][0], 0]), extra_flow_volume])
+        
+        elif self.parameters.get(self.__cs_parameter_sdoptimisationmethod) == 2:
+            self.set_logger_message('Optimising SD on both flow and total volumes', level='debug')
+            opt = so.minimize(self._combined_optimisation_func,
+                            (initial_crest, initial_total_volume, initial_flow_volume),
+                            method='Nelder-Mead',
+                            tol=1e-6)
+
+            crest_level = opt['x'][0]
+            extra_total_volume = np.max([opt['x'][1], 0])
+            extra_flow_volume = np.min([np.max([opt['x'][2], 0]), extra_total_volume])
+            
+        return {'crest_level': crest_level,
+                'extra_total_volume': extra_total_volume,
+                'extra_flow_volume': extra_flow_volume,
+                'final_cost': opt['fun'],
+                'message': opt['message']}
+
+    def _check_increasing_order(self, list_points):
+        """ there must not be the same values; if so, assign +1mm """
+        for indx in range(1,len(list_points)):
+            if list_points[indx] == list_points[indx-1]:
+                list_points[indx] = list_points[indx] + 0.001
+        return list_points
 
     def _build_roughness_tables(self):
 
