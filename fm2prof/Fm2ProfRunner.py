@@ -24,7 +24,8 @@ import geojson
 from fm2prof.common import FM2ProfBase, FmModelData
 from fm2prof.CrossSection import CrossSection
 from fm2prof import Functions as FE
-from fm2prof.sobek_export import Export1DModelData
+from fm2prof.Export import Export1DModelData
+from fm2prof.Import import ImportInputFiles
 from fm2prof.MaskOutputFile import MaskOutputFile
 from fm2prof.RegionPolygonFile import RegionPolygonFile, SectionPolygonFile
 
@@ -49,7 +50,7 @@ class Fm2ProfRunner(FM2ProfBase):
         """
         FmModelData: self.fm_model_data = None   
         
-        self.set_inifile(iniFilePath)
+        self.load_inifile(iniFilePath)
         self._create_logger()
         
     def run(self) -> None:
@@ -118,7 +119,11 @@ class Fm2ProfRunner(FM2ProfBase):
             output_dir=output_dir,
             filename='fm2prof.log')
         self.set_logger_message(
-            'FM2PROF version {}'.format(self.__version__))
+            f'\nFM2PROF version {self.__version__}\n'+
+            f'{self.__copyright__:>6}\n'+
+            f'{self.__authors__:>6}\n'+
+            f'{self.__contact__:>6}\n'+
+            f'{self.__license__:>6} license. For more info see LICENSE.txt\n')
         self.set_logger_message('reading FM and cross-sectional data data')
 
         # Read region & section polygon
@@ -226,7 +231,9 @@ class Fm2ProfRunner(FM2ProfBase):
         :param region_file: str, path to region geojson file
         :return:
         """
+        importer = ImportInputFiles(logger=self.get_logger())
         ini_file = self.get_inifile()
+
         # Read FM map file
         self.set_logger_message('Opening FM Map file')
         (time_independent_data, edge_data, node_coordinates, time_dependent_data) = FE._read_fm_model(res_file)
@@ -234,7 +241,7 @@ class Fm2ProfRunner(FM2ProfBase):
         
         # Load locations and names of cross-sections
         self.set_logger_message('Opening css file')
-        cssdata = FE._read_css_xyz(css_file)
+        cssdata = importer.css_file(css_file)
         self.set_logger_message('Closed css file')
 
         # Classify regions & set cross-sections
@@ -529,7 +536,7 @@ class Fm2ProfRunner(FM2ProfBase):
 
             # assign roughness
             self.set_logger_message('Starting computing roughness tables')
-            cross_section.assign_roughness(fm_data)
+            cross_section.assign_roughness()
 
             self.set_logger_message(
                 'computed roughness')
@@ -580,7 +587,8 @@ class Fm2ProfRunner(FM2ProfBase):
 
         try:
             css = CrossSection(
-                input_param_dict,
+                logger=self.get_logger(),
+                inifile=self.get_inifile(),
                 name=css_data_id,
                 length=css_data_length,
                 location=css_data_location,
@@ -589,7 +597,8 @@ class Fm2ProfRunner(FM2ProfBase):
         except Exception as e_info:
             self.set_logger_message(
                 'Exception thrown while creating cross-section ' +
-                '{}, message: {}'.format(css_data_id, str(e_info)))
+                '{}, message: {}'.format(css_data_id, str(e_info)), 'error')
+            self.set_logger_message(traceback.print_exc(file=sys.stdout), 'error')
             return None
 
         return css

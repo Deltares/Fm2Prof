@@ -11,9 +11,12 @@ from logging import Logger
 from fm2prof import Functions as FE
 from fm2prof.common import FM2ProfBase
 
+
+
 class Export1DModelData(FM2ProfBase):
     """
-    Class to export files
+    This class contains all functions related to exporting to various output export. 
+    In the future, split in different classes for SOBEK, D-Hydro etc formats
     """
 
     def export_geometry(self, cross_sections, file_path, fmt='sobek3'):
@@ -184,7 +187,7 @@ class Export1DModelData(FM2ProfBase):
 
     """.format(css.branch, 
             css.chainage, 
-            ", ".join(map("{:.4}".format, table.friction)))
+            " ".join(map("{:.4}".format, table.friction)))
             except KeyError:
                 # this section does not exist in this cross-section
                 pass
@@ -204,6 +207,7 @@ class Export1DModelData(FM2ProfBase):
         functionType          = 2                   
         numLevels             = {}                   
         levels                = {}
+        
     """.format(css.branch, 
             len(css.friction_tables[section].level),
             ", ".join(map("{:.4f}".format, css.friction_tables[section].level)))
