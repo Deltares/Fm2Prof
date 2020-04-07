@@ -4,7 +4,7 @@ Runner class.
 
 # import from standard library
 import traceback
-from typing import Mapping, Sequence, List
+from typing import Mapping, Sequence, List, Dict
 import datetime
 import itertools
 import os
@@ -21,11 +21,11 @@ from geojson import Polygon, Feature, FeatureCollection
 import geojson
 
 # import from package
-from fm2prof.common import FM2ProfBase, FmModelData
+from fm2prof.common import FM2ProfBase
 from fm2prof.CrossSection import CrossSection
 from fm2prof import Functions as FE
 from fm2prof.Export import Export1DModelData
-from fm2prof.Import import ImportInputFiles
+from fm2prof.Import import ImportInputFiles, FmModelData
 from fm2prof.MaskOutputFile import MaskOutputFile
 from fm2prof.RegionPolygonFile import RegionPolygonFile, SectionPolygonFile
 
@@ -52,7 +52,7 @@ class Fm2ProfRunner(FM2ProfBase):
         
         self.load_inifile(iniFilePath)
         self._create_logger()
-        
+
     def run(self) -> None:
         """
         Runs the Fm2Prof functionality.
@@ -82,8 +82,7 @@ class Fm2ProfRunner(FM2ProfBase):
 
         # Generate cross-sections
         try:
-            cross_sections = self._generate_cross_section_list(
-                self.get_inifile().get_parameters(), self.fm_model_data)
+            cross_sections = self._generate_cross_section_list()
         except:
             self.set_logger_message('Unexpected exception during generation of cross-sections. No output produced', 'error')
             self.set_logger_message(traceback.print_exc(file=sys.stdout), 'error')
@@ -379,10 +378,7 @@ class Fm2ProfRunner(FM2ProfBase):
                     level='error'
                 )
 
-    def _generate_cross_section_list(
-            self,
-            input_param_dict: Mapping[str, list],
-            fm_model_data: FmModelData):
+    def _generate_cross_section_list(self):
         """ Generates cross sections based on the given fm_model_data
 
         Arguments:
@@ -394,18 +390,22 @@ class Fm2ProfRunner(FM2ProfBase):
         Returns:
             {list} -- List of generated cross sections
         """
+
         cross_sections = list()
-        if not fm_model_data or not input_param_dict:
+        if not self.fm_model_data:
             return cross_sections
         
         # Preprocess css from fm_model_data so it's easier to handle it.
-        css_data_list = fm_model_data.css_data_list
+        css_data_list = self.fm_model_data.css_data_list
+
+        # Set the number of cross-section for progress bar
         css_selection = self._get_css_range(number_of_css=len(css_data_list))
-        self.get_logformatter().set_number_of_iterations(len(css_selection))
+        self.get_logformatter().set_number_of_iterations(len(css_selection)+1)
         
+        # Generate cross-sections one by one
         for css_data in np.array(css_data_list)[css_selection]:
             generated_cross_section = self._generate_cross_section(
-                css_data, input_param_dict, fm_model_data)
+                css_data, self.fm_model_data)
             if generated_cross_section is not None:
                 cross_sections.append(generated_cross_section)
 
@@ -420,11 +420,7 @@ class Fm2ProfRunner(FM2ProfBase):
             cssSelection = np.array(cssSelection)
         return cssSelection
 
-    def _generate_cross_section(
-            self,
-            css_data: dict,
-            input_param_dict: Mapping[str, list],
-            fm_model_data: FmModelData) -> CrossSection:
+    def _generate_cross_section(self, css_data: Dict, fm_model_data: FmModelData) -> CrossSection:
         """Generates a cross section and configures its values based
         on the input parameter dictionary
 
@@ -451,109 +447,76 @@ class Fm2ProfRunner(FM2ProfBase):
         if not css_name:
             css_name = 'new_cross_section'
 
-        if input_param_dict is None:
-            raise Exception(
-                'No input parameters (from ini file)' +
-                ' given for new cross section {}'.format(css_name))
-
         if fm_model_data is None:
             raise Exception(
                 'No FM data given for new cross section {}'.format(css_name))
 
         self.start_new_log_task(f"{css_name}")
+        
         # Create cross section
-        created_css = self._get_new_cross_section(
-            css_data=css_data,
-            input_param_dict=input_param_dict)
+        created_css = self._get_new_cross_section(css_data=css_data)
 
         if created_css is None:
-            raise Exception('No Cross-section could be generated')
+            self.set_logger_message(f'No Cross-section could be generated for {css_name}', 'error')
 
-        created_css.set_logger(self.get_logger())
-        self.set_logger_message(
-            'Initiated new cross-section')
+        self.set_logger_message('Initiated new cross-section', 'info')
+        self._build_cross_section_geometry(cross_section=created_css)
+        self._build_cross_section_roughness(cross_section=created_css)
 
-        self._set_fm_data_to_cross_section(
-            cross_section=created_css,
-            input_param_dict=input_param_dict,
-            fm_model_data=fm_model_data)
+        if self.get_inifile().get_parameter('export_mapfiles') == 1:
+            created_css.set_face_output_list()
+            created_css.set_edge_output_list()
 
-        self.set_logger_message(
-            'done')
+        if created_css is not None:
+            elapsed_time = self.get_logformatter().get_elapsed_time(time.time())
+            self.set_logger_message(
+                f'Cross-section {created_css.name} derived in {elapsed_time:.2f} s')
         return created_css
 
-    def _set_fm_data_to_cross_section(
-            self,
-            cross_section: CrossSection,
-            input_param_dict: Mapping[str, list],
-            fm_model_data: FmModelData,
-            start_time=None):
-        """Sets extra FM data to the given Cross Section
+    def _build_cross_section_geometry(self, cross_section: CrossSection) -> CrossSection:
+        """
+        This method manages the options of buildling the cross-section geometry 
 
-        Arguments:
+        Parameters:
             cross_section {CrossSection}
                 -- Given Cross Section.
-            input_param_dict {Mapping[str, list]}
-                -- Dictionary with input parameters.
-            fm_model_data {FmModelData}
-                -- Data to assign to the new cross section.
-
         """
 
-        if cross_section is None or fm_model_data is None:
+        if cross_section is None:
             return
-
-        # define fm_model_data variables
-        time_independent_data = fm_model_data.time_independent_data
-        edge_data = fm_model_data.edge_data
-        time_dependent_data = fm_model_data.time_dependent_data
         css_name = cross_section.name
-        try:
-            # Retrieve FM data for cross-section
-            fm_data = FE.get_fm2d_data_for_css(
-                cross_section.name,
-                time_independent_data,
-                edge_data,
-                time_dependent_data)
 
-            self.set_logger_message(
-                'Retrieved data for cross-section')
+        # Build cross-section
+        self.set_logger_message('Start building geometry', 'debug')
+        cross_section.build_geometry()
 
-            # Build cross-section
-            self.set_logger_message('Start building geometry')
-            cross_section.build_geometry(fm_data=fm_data)
+        # 2D Volume Correction (SummerDike option)
+        if self.get_inifile().get_parameter('sdstorage') == 1:
+            self.set_logger_message('Starting correction', 'debug')
+            cross_section = self.__perform_2D_volume_correction(cross_section)
+        else:
+            self.set_logger_message('SD Correction not enable in configuration file, skipping', 'info')
 
-            self.set_logger_message(
-                'Cross-section derived, starting correction.....')
+        # Perform sanity check on cross-section
+        cross_section.check_requirements()
 
-            # Delta-h correction
-            self._calculate_css_correction(
-                input_param_dict, cross_section)
+        # Reduce number of points in cross-section
+        cross_section = self._reduce_css_points(cross_section)
 
-            # Reduce number of points in cross-section
-            self._reduce_css_points(
-                input_param_dict, cross_section)
+        return cross_section
 
-            # assign roughness
-            self.set_logger_message('Starting computing roughness tables')
-            cross_section.assign_roughness()
+    def _build_cross_section_roughness(self, cross_section: CrossSection) -> CrossSection:
+        """
+        Build the roughness tables
+        """
+        # Assign roughness
+        self.set_logger_message('Starting computing roughness tables', 'debug')
+        cross_section.assign_roughness()
+        self.set_logger_message('Computed roughness', 'info')
 
-            self.set_logger_message(
-                'computed roughness')
+        return cross_section
 
-            cross_section.set_face_output_list()
-            cross_section.set_edge_output_list()
-
-        except Exception as e_info:
-            self.set_logger_message(
-                'Exception thrown while setting cross-section' +
-                ' {} details, {}'.format(css_name, str(e_info)),
-                level='error')
-
-    def _get_new_cross_section(
-            self,
-            css_data: Mapping[str, str],
-            input_param_dict: Mapping[str, str]):
+    def _get_new_cross_section(self, css_data: Mapping[str, str]):
         """Creates a cross section with the given input param dictionary.
 
         Arguments:
@@ -593,7 +556,9 @@ class Fm2ProfRunner(FM2ProfBase):
                 length=css_data_length,
                 location=css_data_location,
                 branchid=css_data_branch_id,
-                chainage=css_data_chainage)
+                chainage=css_data_chainage,
+                fm_data=self.fm_model_data.get_selection(css_data_id))
+
         except Exception as e_info:
             self.set_logger_message(
                 'Exception thrown while creating cross-section ' +
@@ -703,76 +668,27 @@ class Fm2ProfRunner(FM2ProfBase):
 
         self.set_logger_message('Exported output files, FM2PROF finished')
 
-    def _calculate_css_correction(
-            self,
-            input_param_dict: Mapping[str, float],
-            css: CrossSection):
-        """Calculates the Cross Section correction if needed.
-
-        Arguments:
-            input_param_dict {Mapping[str,float]} -- [description]
-            css {CrossSection} -- [description]
-
-        """
-        if not css:
-            self.set_logger_message('No Cross Section was provided.')
-            return
-
-        # Get value, it should already come as an integer.
-        sd_storage_key = 'sdstorage'
-        sd_storage_value = input_param_dict.get(sd_storage_key)
-
-        # Get value, it should already come as a float.
-        sd_transition_key = 'transitionheight_sd'
-        sd_transition_value = input_param_dict.get(sd_transition_key)
-
-        # Check if it should be corrected.
-        if sd_storage_value == 1:
-            try:
-                css.calculate_correction(sd_transition_value)
-                self.set_logger_message(
-                    'correction finished')
-            except Exception as e_error:
-                e_message = str(e_error)
-                self.set_logger_message(
-                    'Exception thrown ' +
-                    'while trying to calculate the correction. ' +
-                    '{}'.format(e_message))
-
-    def _reduce_css_points(
-            self,
-            input_param_dict: Mapping[str, str],
-            css: CrossSection):
+    def _reduce_css_points(self, cross_section: CrossSection):
         """Returns a valid value for the number of css points read from ini file.
 
-        Arguments:
-            input_param_dict {Mapping[str, str]}
-                -- Dictionary of elements read in the Ini File
+        Parameters:
+            cross_section (CrossSection)
 
         Returns:
-            {Integer} -- Valid number of css points (default: 20)
+            cross_section (CrossSection): modified
         """
-        num_css_pt_key = 'number_of_css_points'
-        # Will return None if not found / defined.
-        num_css_pt_value = input_param_dict.get(num_css_pt_key)
-        # 20 is our default value for css_pt_value
-        css_pt_value = 20
-        try:
-            # try to reduce points.
-            css_pt_value = int(num_css_pt_value)
-        except:
-            self.set_logger_message(
-                'number_of_css_points given is not an int;' +
-                ' Will use default (20) instead')
+
+        number_of_css_points = self.get_inifile().get_parameter('number_of_css_points')
 
         try:
-            css.reduce_points(n=css_pt_value, verbose=False)
-
+            cross_section.reduce_points(count_after=number_of_css_points)
         except Exception as e_error:
             e_message = str(e_error)
             self.set_logger_message(
                 'Exception thrown while trying to reduce the css points. ' +
-                '{}'.format(e_message))
+                '{}'.format(e_message), 'error')
+         
+        return cross_section
 
     def __get_time_stamp_seconds(self, start_time: datetime):
         """Returns a time stamp with the time difference
@@ -787,14 +703,30 @@ class Fm2ProfRunner(FM2ProfBase):
         time_difference = time_now - start_time
         return time_difference.total_seconds()
 
-    def __generate_output(
-            self, output_directory: str, fig, figType: str, name: str):
-        if not self.__saveFigures:
-            return
+    def __perform_2D_volume_correction(self, css: CrossSection) -> CrossSection:
+        """
+        In 2D, the volume available in a profile can rise rapidly
+        while the water level changes little due to compartimentalisation
+        of the floodplain. This methods calculates a logistic correction 
+        term which may be applied in 1D models. 
 
-        plotLocation = output_directory + '\\{0}_{1}.png'.format(name, figType)
-        fig.savefig(plotLocation)
-        self.set_logger_message(
-            'Saved {} for {} plot in {}.'.format(name, figType, plotLocation))
+        In SOBEK this option is available as the 'summerdike' options. 
+        Calculates the Cross Section correction if needed.
 
-        return
+        """
+
+        # Get value, it should already come as a float.
+        sd_transition_value = self.get_inifile().get_parameter('transitionheight_sd')
+
+        try:
+            css.calculate_correction(sd_transition_value)
+            self.set_logger_message(
+                'correction finished')
+        except Exception as e_error:
+            e_message = str(e_error)
+            self.set_logger_message(
+                'Exception thrown ' +
+                'while trying to calculate the correction. ' +
+                '{}'.format(e_message), 'error')
+
+        return css

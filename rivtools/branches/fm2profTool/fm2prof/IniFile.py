@@ -22,7 +22,11 @@ class IniFile:
         export_mapfiles="exportmapfiles",
         css_selection="cssselection",
         classificationmethod="classificationmethod",
-        sdfloodplainbase='sdfloodplainbase'
+        sdfloodplainbase='sdfloodplainbase',
+        sdstorage='sdstorage',
+        transitionheight_sd='transitionheight_sd',
+        number_of_css_points='number_of_css_points',
+        minimum_width='minimum_width'
         )
     # endregion
 
