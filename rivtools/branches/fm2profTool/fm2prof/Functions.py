@@ -384,42 +384,7 @@ def _read_fm_model(file_path):
 
     return df, edge_data, df_node, time_dependent
 
-def _read_css_xyz(file_path : str, delimiter=','):
-    """
-    Reads the cross-section location file
-    """
-    skipLine = False  # flag to skip line if file has header
 
-    if not file_path or not os.path.exists(file_path):
-        raise IOError('No file path for Cross Section location file was given, or could not be found at {}'.format(file_path))
-    
-    with open(file_path, 'r') as fid:
-        input_data = dict(xy=list(), id=list(), branchid=list(), length=list(), chainage=list())
-        for lineno, line in enumerate(fid):
-            try:
-                (cssid, x, y, length, branchid, chainage) = line.split(delimiter)
-            except ValueError:
-                # revert to legacy format
-                (x, y, branchid, length, chainage) = line.split(delimiter)
-                cssid = branchid + '_' + str(round(float(chainage)))
-            try:
-                float(x)
-            except ValueError:
-                if lineno == 0:
-                    # file has header. Skip header and try again next
-                    skipLine = True
-            if not skipLine:
-                input_data['xy'].append((float(x), float(y)))
-                input_data['id'].append(cssid)
-                input_data['length'].append(float(length))
-                input_data['branchid'].append(branchid)
-                input_data['chainage'].append(float(chainage))
-            skipLine = False
-
-        # Convert everything to ndarray
-        for key in input_data:
-            input_data[key] = np.array(input_data[key])
-        return input_data
 
 def _get_class_tree(xy, c):
     X = xy

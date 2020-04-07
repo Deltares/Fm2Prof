@@ -7,7 +7,6 @@ import configparser
 from typing import Mapping, Sequence, AnyStr, Union, Dict
 
 class IniFile:
-    __logger = None
     __filePath = None
 
     # region Private parameter
@@ -22,7 +21,9 @@ class IniFile:
         section_file='sectionpolygonfile',
         export_mapfiles="exportmapfiles",
         css_selection="cssselection",
-        classificationmethod="classificationmethod")
+        classificationmethod="classificationmethod",
+        sdfloodplainbase='sdfloodplainbase'
+        )
     # endregion
 
     # region Public parameters

@@ -206,13 +206,29 @@ class FM2ProfBase:
         fh.setFormatter(self.get_logger()._Filelogformatter)
         self.__logger.addHandler(fh)
 
-    def set_inifile(self, iniFilePath: str):
-        """ Use this method to set configuration file """
-        self.__iniFile = IniFile.IniFile(iniFilePath)
+    def set_inifile(self, inifile: IniFile=None):
+        """ 
+        Use this method to set configuration file object. 
+
+        For loading from file, use ``load_inifile`` instead 
+        
+        Parameters:
+            inifile (IniFile): inifile object. Obtain using e.g. ``get_inifile``. 
+        """
+        self.__iniFile = inifile
 
     def get_inifile(self) -> IniFile:
         """"Use this method to get the inifile object """
         return self.__iniFile
+
+    def load_inifile(self, iniFilePath: str):
+        """ 
+        use this method to load a configuration file from path. 
+        
+        Parameters:
+            iniFilePath (str): path to configuration file
+        """
+        self.set_inifile(IniFile.IniFile(iniFilePath))
 
 
 class FmModelData:
