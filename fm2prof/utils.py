@@ -29,6 +29,7 @@ import numpy as np
 import os
 import shutil
 import matplotlib.pyplot as plt
+from fm2prof.common import FM2ProfBase
 
 def SetDeltaresStyle(fig, legendbelow=False):
     for ax in fig.axes:
@@ -195,11 +196,11 @@ class VisualiseOutput():
                 if line.strip().lower() == '[branchproperties]':
                     if self._getValueFromLine(f).lower()==cssbranch:
                         [f.readline() for i in range(3)]
-                        levels = list(map(float, self._getValueFromLine(f).split(',')))
+                        levels = list(map(float, self._getValueFromLine(f).split()))
                 if line.strip().lower() == '[definition]':
                     if self._getValueFromLine(f).lower()==cssbranch:
                         if float(self._getValueFromLine(f).lower()) == float(csschainage):
-                            values = list(map(float, self._getValueFromLine(f).split(',')))
+                            values = list(map(float, self._getValueFromLine(f).split()))
         return levels, values
 
     def getVolumeInfoForCss(self, cssname):
@@ -281,8 +282,9 @@ class VisualiseOutput():
                 plt.tight_layout()
                 plt.savefig(f"{self.fig_dir}/{css['id']}.png")
                 print (f"processed {css['id']}")
-            except Exception:
-                print (f"error processing: {css['id']}")
+            except Exception as e:
+                print(f"error processing: {css['id']} {str(e)}")
+
             finally:
                 plt.close()
 
