@@ -210,7 +210,7 @@ class Export1DModelData(FM2ProfBase):
         
     """.format(css.branch, 
             len(css.friction_tables[section].level),
-            ", ".join(map("{:.4f}".format, css.friction_tables[section].level)))
+            " ".join(map("{:.4f}".format, css.friction_tables[section].level)))
             except KeyError:
                 # section not in this croess-section
                 pass
