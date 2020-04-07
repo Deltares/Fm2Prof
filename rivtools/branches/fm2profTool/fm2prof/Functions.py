@@ -152,62 +152,6 @@ def classify_without_regions(cssdata, time_independent_data, edge_data):
     return time_independent_data, edge_data
 
 
-def get_fm2d_data_for_css(classname, dti, edge_data, dtd):
-    """
-    create a dictionary that holds all the 2D data for the cross-section with name 'classname'
-    """
-    x = dti['x'][dti['sclass'] == classname]
-    y = dti['y'][dti['sclass'] == classname]
-    area = dti['area'][dti['sclass'] == classname]
-    region = dti['region'][dti['sclass'] == classname]
-    islake = dti['islake'][dti['sclass'] == classname]
-    waterdepth = dtd['waterdepth'][dti['sclass'] == classname]
-    waterlevel = dtd['waterlevel'][dti['sclass'] == classname]
-    vx = dtd['velocity_x'][dti['sclass'] == classname]
-    vy = dtd['velocity_y'][dti['sclass'] == classname]
-    face_section = dti['section'][dti['sclass'] == classname]
-    # find all chezy values for this cross section, note that edge coordinates are used
-    chezy = dtd['chezy_edge'][edge_data['sclass'] == classname]
-    try:
-        edge_faces = edge_data['edge_faces'][edge_data['sclass'] == classname]
-    except KeyError:
-        edge_faces = None
-    #edge_nodes = edge_data['edge_nodes'][edge_data['sclass'] == classname]
-    edge_x = edge_data['x'][edge_data['sclass'] == classname]
-    edge_y = edge_data['y'][edge_data['sclass'] == classname]
-    edge_section = edge_data['section'][edge_data['sclass'] == classname]  # roughness section number 
-
-    # retrieve the full set for face_nodes and area, needed for the roughness calculation
-    #face_nodes = edge_data['face_nodes'][dti['sclass'] == classname]
-    #face_nodes_full = edge_data['face_nodes']
-    area_full = dti['area']
-    bedlevel_full = dti['bedlevel']
-    bedlevel = dti['bedlevel'][dti['sclass'] == classname]
-
-    velocity = (vx**2+vy**2)**0.5
-    waterlevel[waterdepth == 0] = np.nan
-
-    return_dict = {
-        'x': x, 
-        'y': y, 
-        'area': area,
-        'bedlevel': bedlevel, 
-        'bedlevel_full': bedlevel_full, 
-        'waterdepth': waterdepth, 
-        'waterlevel': waterlevel, 
-        'velocity': velocity, 
-        'section': face_section,
-        'chezy': chezy, 
-        'region': region,
-        'islake': islake,
-        'edge_faces': edge_faces,
-        'edge_x': edge_x,
-        'edge_y': edge_y,
-        'edge_section': edge_section,
-        'area_full': area_full}
-
-    return return_dict
-
 def mirror(array, reverse_sign=False):
     """
     Mirrors array

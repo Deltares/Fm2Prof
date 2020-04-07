@@ -49,6 +49,8 @@ class ElapsedFormatter:
         else:
             return self.__format_message(record)
 
+    def get_elapsed_time(self, current_time):
+        return current_time - self.start_time
     def __current_time(self) -> AnyStr:
         return datetime.now().strftime("%Y-%m-%d %H:%M")
 
@@ -68,7 +70,7 @@ class ElapsedFormatter:
     def __format_message(self, record) -> AnyStr:
         level = record.levelname
         color = self._colors[level]
-        elapsed_seconds = record.created - self.start_time
+        elapsed_seconds = self.get_elapsed_time(record.created)
         return "{color}{now} {level:>7} {reset}{color2}{reset} {progress:4.0f}% T+ {elapsed:.2f}s {message}".format(
                 color=color[0],
                 color2=color[1],
@@ -229,59 +231,6 @@ class FM2ProfBase:
             iniFilePath (str): path to configuration file
         """
         self.set_inifile(IniFile.IniFile(iniFilePath))
-
-
-class FmModelData:
-    """
-    Container for FmModelData
-    """
-    time_dependent_data = None
-    time_independent_data = None
-    edge_data = None
-    node_coordinates = None
-    css_data_list = None
-
-    def __init__(self, arg_list: list):
-        if not arg_list:
-            raise Exception('FM model data was not read correctly.')
-        if len(arg_list) != 5:
-            raise Exception(
-                'Fm model data expects 5 arguments but only ' +
-                '{} were given'.format(len(arg_list)))
-        
-        (self.time_dependent_data,
-            self.time_independent_data,
-            self.edge_data,
-            self.node_coordinates,
-            css_data_dictionary) = arg_list
-        
-        self.css_data_list = self.get_ordered_css_list(css_data_dictionary)
-
-    @staticmethod
-    def get_ordered_css_list(css_data_dict: Mapping[str, str]):
-        """Returns an ordered list where every element
-        represents a Cross Section structure
-
-        Arguments:
-            css_data_dict {Mapping[str,str]} -- Dictionary ordered by the keys
-
-        Returns:
-            {list} -- List where every element contains a dictionary
-            to create a Cross Section.
-        """
-        if not css_data_dict or not isinstance(css_data_dict, dict):
-            return []
-
-        number_of_css = len(css_data_dict[next(iter(css_data_dict))])
-        css_dict_keys = css_data_dict.keys()
-        css_dict_values = css_data_dict.values()
-        css_data_list = [
-            dict(zip(
-                css_dict_keys,
-                [value[idx]
-                    for value in css_dict_values if idx < len(value)]))
-            for idx in range(number_of_css)]
-        return css_data_list
 
 
 class FrictionTable:
