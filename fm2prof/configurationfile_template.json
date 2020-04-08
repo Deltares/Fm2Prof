@@ -1,0 +1,128 @@
+{
+"sections": 
+  {
+  "input": 
+  	{
+    "2DMapOutput": {
+	    "type": "str",
+	    "hint": "Output file from FM2D model (.net file)",
+	    "value": "" 
+  	},
+  	"CrossSectionLocationFile": {
+	    "type": "str",
+	    "hint": ".csv or .txt file (, as delimiter) that contains four columns: X_coordinate,Y_coordinate,BranchName,Length,Chainage.",
+	    "value": "" 
+  	},
+	"RegionPolygonFile": {
+	    "type": "str",
+	    "hint": "User defined polygons in json format",
+	    "value": "" 
+  	},
+    "SectionPolygonFile": {
+	    "type": "str",
+	    "hint": "User defined polygons in json format",
+	    "value": "" 
+  	}
+  },
+  "parameters": {
+  	"CaseName": {
+	    "type": "str",
+	    "hint": "Subdirectory name under OutputDir (no space); if not specified, 'CaseXX' (01, 02..) are used",
+	    "value": "" 
+  	},
+  	"MaximumPointsInProfile": {
+	    "type": "int",
+	    "hint": "Number of points which are used to generate cross-sections (value = 20)",
+	    "value": 20
+  	},
+  	"AbsoluteVelocityThreshold": {
+	    "type": "float",
+	    "hint": "Absolute velocity threshold in m/s. Used to determine storage",
+	    "value": 0.05 
+  	},
+  	"RelativeVelocityThreshold": {
+	    "type": "float",
+	    "hint": "Relative velocity threshold (percent of mean flow velocity; 0-1). Used to determine storage",
+	    "value": 0.03 
+  	},
+  	"MinimumDepthThreshold": {
+	    "type": "float",
+	    "hint": "Minimum depth (m) for storage identification",
+	    "value": 0.02 
+    },
+    "BedlevelCriterium": {
+	    "type": "float",
+	    "hint": "Ignore the lowest percentage of bed level points",
+	    "value": 0.05 
+  	},
+  	"LakeTimesteps": {
+	    "type": "int",
+	    "hint": "Number of timesteps that are used for identifying lakes (value=10)",
+	    "value": 10 
+  	},
+    "ExtrapolateStorage": {
+	    "type": "fm2prof.IniFile.ImportBoolType",
+	    "hint": "Add storage to water level independent cross-section section",
+	    "value": true 
+  	},
+  	"SDCorrection": {
+	    "type": "fm2prof.IniFile.ImportBoolType",
+	    "hint": "Use summerdike volume correction",
+	    "value": true 
+  	},
+  	"SDFloodplainBase": {
+	    "type": "float",
+	    "hint": "minimum distance between floodplain base level and crest level in meters",
+	    "value": 0.5 
+  	},
+  	"SDTransitionHeight": {
+	    "type": "float",
+	    "hint": "Transition height at the summer dike (m)",
+	    "value": 0.5 
+  	},
+  	"SDOptimisationMethod": {
+	    "type": "int",
+	    "hint": "[0] Optimise on Total volume, [1] optimise  on flow volume, [2] optimise on both",
+	    "value": 0 
+  	},
+  	"FrictionWeighingMethod": {
+	    "type": "int",
+	    "hint": "Options. [0] arithmetric mean, [1] Weighted average",
+	    "value": 0 
+  	},
+  	"ExportMapFiles": {
+	    "type": "fm2prof.IniFile.ImportBoolType",
+	    "hint": "Export detailed map output. Only use for small models or limited number of cross-sections b/c output can be huge.",
+	    "value": false 
+  	},
+  	"CssSelection": {
+	    "type": "fm2prof.IniFile.ImportListType",
+	    "hint": "provide comma separated list of ints; e.g. 38, 39, 40. Leave empty to generate all cross-sections",
+	    "value": "" 
+  	},
+  	"SkipMaps": {
+	    "type": "int",
+	    "hint": "number of timesteps to skip at begin of 2D output. Use to skip problems related to initial conditions. ",
+	    "value": 0 
+  	},
+  	"ClassificationMethod": {
+	    "type": "int",
+	    "hint": "How to classify 2D output using Section and Region polygons. Options: [0] Do not classify regions or sections. [1] Use DeltaShell",
+	    "value": 0 
+  	},
+  	"MinimumTotalWidth": {
+	    "type": "float",
+	    "hint": "Minimum width in meters. Zero width may lead to numerical instability in 1D solvers",
+	    "value": 0.5 
+  	}
+  },
+  "output": 
+    {
+    "OutputDirectory": {
+      "type": "str",
+      "hint": "Output files are saved in OutputDir/CaseName; if not specified, subdirectory is created in the current directory",
+      "value": "" 
+    }
+  }
+ }
+}
