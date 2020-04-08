@@ -1,5 +1,5 @@
 """
-Runner class. 
+Runner class.
 """
 
 # import from standard library
@@ -26,13 +26,14 @@ from fm2prof.CrossSection import CrossSection
 from fm2prof import Functions as FE
 from fm2prof.Export import Export1DModelData
 from fm2prof.Import import ImportInputFiles, FmModelData
+from fm2prof.IniFile import IniFile
 from fm2prof.MaskOutputFile import MaskOutputFile
 from fm2prof.RegionPolygonFile import RegionPolygonFile, SectionPolygonFile
 
 
 class Fm2ProfRunner(FM2ProfBase):
     """
-    Main class that executes all functionality. 
+    Main class that executes all functionality.
 
     Arguments:
         iniFilePath (str): path to configuration file
@@ -48,10 +49,22 @@ class Fm2ProfRunner(FM2ProfBase):
             version {float} (DEPRECATED)
                 -- Current version of the software, needs to be rethought.
         """
-        FmModelData: self.fm_model_data = None   
-        
-        self.load_inifile(iniFilePath)
+        FmModelData: self.fm_model_data = None
+
         self._create_logger()
+        self._print_header()
+        self.load_inifile(iniFilePath)
+
+        if not self.get_inifile().has_output_directory:
+            self.set_logger_message('Output directory must be set in configuration file', 'error')
+            return
+
+        self.set_logfile(
+            output_dir=self.get_inifile().get_output_directory(),
+            filename='fm2prof.log')
+
+        # Print configuration to log
+        self.set_logger_message(self.get_inifile().print_configuration(), header=True)
 
     def run(self) -> None:
         """
@@ -62,6 +75,26 @@ class Fm2ProfRunner(FM2ProfBase):
                 'No ini file was specified and the run cannot go further.', 'Warning')
             return
         self._run_inifile()
+
+    def load_inifile(self, iniFilePath: str):
+        """
+        use this method to load a configuration file from path.
+
+        Parameters:
+            iniFilePath (str): path to configuration file
+        """
+        self.set_inifile(IniFile(iniFilePath, logger=self.get_logger()))
+
+    def _print_header(self):
+        self.set_logger_message(
+            '='*30+'\n' +
+            f'FM2PROF version {self.__version__}\n\n'+
+            f'{self.__copyright__:>6}\n\n'+
+            f'Authors: {self.__authors__:>6}\n'+
+            f'Contact: {self.__contact__:>6}\n'+
+            f'License: {self.__license__:>6} license. For more info see LICENSE.txt\n' +
+            '='*30+'\n',
+            header=True)
 
     def _run_inifile(self) -> None:
         """Runs the desired emulation from 2d to 1d given the mapfile
@@ -79,6 +112,7 @@ class Fm2ProfRunner(FM2ProfBase):
         except:
             self.set_logger_message('Unexpected exception during initialisation', 'error')
             self.set_logger_message(traceback.print_exc(file=sys.stdout), 'error')
+            return
 
         # Generate cross-sections
         try:
@@ -87,7 +121,7 @@ class Fm2ProfRunner(FM2ProfBase):
             self.set_logger_message('Unexpected exception during generation of cross-sections. No output produced', 'error')
             self.set_logger_message(traceback.print_exc(file=sys.stdout), 'error')
             return
-        
+
         # Finalise and write output
         try:
             self._finalise_fm2prof(cross_sections)
@@ -101,29 +135,13 @@ class Fm2ProfRunner(FM2ProfBase):
         """
         iniFile = self.get_inifile()
 
-        if not iniFile.has_output_directory:
-            self.set_logger_message('Output directory must be set in configuration file', 'error')
-            return
-
-        
         # shorter local variables
-        map_file = iniFile.get_input_file('map_file')
-        css_file = iniFile.get_input_file('css_file')
-        region_file = iniFile.get_input_file('region_file')
-        section_file = iniFile.get_input_file('section_file')
+        map_file = iniFile.get_input_file('2DMapOutput')
+        css_file = iniFile.get_input_file('CrossSectionLocationFile')
+        region_file = iniFile.get_input_file('RegionPolygonFile')
+        section_file = iniFile.get_input_file('SectionPolygonFile')
         output_dir = iniFile.get_output_directory()
 
-        # Add a log file
-        self.set_logfile(
-            output_dir=output_dir,
-            filename='fm2prof.log')
-        self.set_logger_message(
-            f'\nFM2PROF version {self.__version__}\n'+
-            f'{self.__copyright__:>6}\n'+
-            f'{self.__authors__:>6}\n'+
-            f'{self.__contact__:>6}\n'+
-            f'{self.__license__:>6} license. For more info see LICENSE.txt\n')
-        self.set_logger_message('reading FM and cross-sectional data data')
 
         # Read region & section polygon
         regions = None
@@ -148,19 +166,17 @@ class Fm2ProfRunner(FM2ProfBase):
         self.set_logger_message(
           'Number of: timesteps ({}), '.format(ntsteps) +\
           'faces ({}), '.format(nfaces)+\
-          'edges ({})'.format(nedges), 
+          'edges ({})'.format(nedges),
           level='debug')
         # check if edge/face data is available
         if 'edge_faces' not in self.fm_model_data.edge_data:
-            if iniFile.get_parameter('frictionweighing') == 1:
+            if iniFile.get_parameter('FrictionweighingMethod') == 1:
                 self.set_logger_message(
                     'Friction weighing set to 1 (area-weighted average' +
                     'but FM map file does contain the *edge_faces* keyword.' +
                     'Area weighting is not possible. Defaulting to simple unweighted' +
                     'averaging',
                     level='warning')
-
-        self.get_logformatter().set_intro(False)
 
     def _finalise_fm2prof(self, cross_sections: List) -> None:
         """
@@ -181,14 +197,14 @@ class Fm2ProfRunner(FM2ProfBase):
         try:
             export_mapfiles = self.get_inifile().get_parameter('ExportMapFiles')
         except KeyError:
-            # If key is missing, do not export files by default. 
+            # If key is missing, do not export files by default.
             # We need a better solution for this (inifile.getparam?.. handle defaults there?)
             export_mapfiles = False
         if export_mapfiles:
             self.set_logger_message(
                 'Export geojson output to {}'.format(output_dir))
             self._generate_geojson_output(output_dir, cross_sections)
-        
+
         # Export bounding boxes of cross-section control volumes
         try:
             self._export_envelope(output_dir, cross_sections)
@@ -237,7 +253,7 @@ class Fm2ProfRunner(FM2ProfBase):
         self.set_logger_message('Opening FM Map file')
         (time_independent_data, edge_data, node_coordinates, time_dependent_data) = FE._read_fm_model(res_file)
         self.set_logger_message('Closed FM Map file')
-        
+
         # Load locations and names of cross-sections
         self.set_logger_message('Opening css file')
         cssdata = importer.css_file(css_file)
@@ -274,21 +290,21 @@ class Fm2ProfRunner(FM2ProfBase):
             css_regions = polygons.classify_points(cssdata['xy'])
 
             # Determine in which region each 2d point lies
-            xy_tuples_2d = [(time_independent_data.get('x').values[i], 
+            xy_tuples_2d = [(time_independent_data.get('x').values[i],
                      time_independent_data.get('y').values[i]) for i in range(len(time_independent_data.get('x')))]
-    
+
             time_independent_data['region'] = regions.classify_points(xy_tuples_2d)
 
-            xy_tuples_2d = [(edge_data.get('x')[i], 
+            xy_tuples_2d = [(edge_data.get('x')[i],
                             edge_data.get('y')[i]) for i in range(len(edge_data.get('x')))]
-            
+
             edge_data['region'] = polygons.classify_points(xy_tuples_2d)
 
             # Do Nearest neighbour cross-section for each region
             time_independent_data, edge_data = FE.classify_with_regions(regions, cssdata, time_independent_data, edge_data, css_regions)
 
             return time_independent_data, edge_data
-        
+
     def _classify_section_with_deltashell(self, time_independent_data, edge_data):
 
         # Determine in which section each 2D point lies
@@ -297,11 +313,11 @@ class Fm2ProfRunner(FM2ProfBase):
         self.set_logger_message('Assigning edges...')
         edge_data = self._assign_polygon_using_deltashell(edge_data, dtype='edge', polytype='section')
 
-        
+
         return time_independent_data, edge_data
 
     def _classify_with_deltashell(self, time_independent_data, edge_data, cssdata, polygons, polytype='region'):
-        
+
         # Determine in which region each 2D point lies
         self.set_logger_message('Assigning faces...')
         time_independent_data = self._assign_polygon_using_deltashell(time_independent_data, dtype='face', polytype=polytype)
@@ -319,7 +335,7 @@ class Fm2ProfRunner(FM2ProfBase):
 
     def _get_region_map_file(self, polytype):
         """ Returns the path to a NC file with region ifnormation in the bathymetry data"""
-        map_file_path = self.get_inifile().get_input_file('map_file')
+        map_file_path = self.get_inifile().get_input_file('2DMapOutput')
         filepath, ext = os.path.splitext(map_file_path)
         modified_file_path = f"{filepath}_{polytype.upper()}BATHY{ext}"
         return modified_file_path
@@ -329,9 +345,9 @@ class Fm2ProfRunner(FM2ProfBase):
 
         # NOTE
         self.set_logger_message(f'Looking for _{polytype.upper()}BATHY.nc', 'debug')
-        
+
         path_to_modified_nc = self._get_region_map_file(polytype)
-        
+
         # Load Modified NetCDF
         with Dataset(path_to_modified_nc) as nf:
             # Data stored in node z, while fm2prof uses data at faces or edges.
@@ -345,7 +361,7 @@ class Fm2ProfRunner(FM2ProfBase):
                 node_to_edge = data['edge_nodes']
                 region_at_edge = region_at_node[node_to_edge.T[0]-1]
                 data[polytype] = region_at_edge
-            
+
         return data
 
     def _generate_geojson_output(
@@ -394,14 +410,14 @@ class Fm2ProfRunner(FM2ProfBase):
         cross_sections = list()
         if not self.fm_model_data:
             return cross_sections
-        
+
         # Preprocess css from fm_model_data so it's easier to handle it.
         css_data_list = self.fm_model_data.css_data_list
 
         # Set the number of cross-section for progress bar
         css_selection = self._get_css_range(number_of_css=len(css_data_list))
         self.get_logformatter().set_number_of_iterations(len(css_selection)+1)
-        
+
         # Generate cross-sections one by one
         for css_data in np.array(css_data_list)[css_selection]:
             generated_cross_section = self._generate_cross_section(
@@ -413,7 +429,7 @@ class Fm2ProfRunner(FM2ProfBase):
 
     def _get_css_range(self, number_of_css: int):
         """ parses the CssSelection keyword from the inifile """
-        cssSelection = self.get_inifile().get_parameter('css_selection')
+        cssSelection = self.get_inifile().get_parameter('CssSelection')
         if cssSelection is None:
             cssSelection = np.arange(0, number_of_css)
         else:
@@ -452,7 +468,7 @@ class Fm2ProfRunner(FM2ProfBase):
                 'No FM data given for new cross section {}'.format(css_name))
 
         self.start_new_log_task(f"{css_name}")
-        
+
         # Create cross section
         created_css = self._get_new_cross_section(css_data=css_data)
 
@@ -463,7 +479,7 @@ class Fm2ProfRunner(FM2ProfBase):
         self._build_cross_section_geometry(cross_section=created_css)
         self._build_cross_section_roughness(cross_section=created_css)
 
-        if self.get_inifile().get_parameter('export_mapfiles') == 1:
+        if self.get_inifile().get_parameter('ExportMapFiles'):
             created_css.set_face_output_list()
             created_css.set_edge_output_list()
 
@@ -475,7 +491,7 @@ class Fm2ProfRunner(FM2ProfBase):
 
     def _build_cross_section_geometry(self, cross_section: CrossSection) -> CrossSection:
         """
-        This method manages the options of buildling the cross-section geometry 
+        This method manages the options of buildling the cross-section geometry
 
         Parameters:
             cross_section {CrossSection}
@@ -491,7 +507,7 @@ class Fm2ProfRunner(FM2ProfBase):
         cross_section.build_geometry()
 
         # 2D Volume Correction (SummerDike option)
-        if self.get_inifile().get_parameter('sdstorage') == 1:
+        if self.get_inifile().get_parameter('SDCorrection'):
             self.set_logger_message('Starting correction', 'debug')
             cross_section = self.__perform_2D_volume_correction(cross_section)
         else:
@@ -605,7 +621,7 @@ class Fm2ProfRunner(FM2ProfBase):
             # Export locations
             OutputExporter.export_crossSectionLocations(
                 cross_sections, file_path=css_location_ini_file)
-            
+
             # Export definitions
             OutputExporter.export_geometry(
                 cross_sections,
@@ -636,7 +652,7 @@ class Fm2ProfRunner(FM2ProfBase):
             # Cross-sections
             OutputExporter.export_geometry(
                 cross_sections, file_path=csv_geometry_file, fmt='sobek3')
-            
+
             # Roughness
             OutputExporter.export_roughness(
                 cross_sections,
@@ -648,7 +664,7 @@ class Fm2ProfRunner(FM2ProfBase):
                 ' not all output files might be exported. ' +
                 '{}'.format(str(e_info)),
                 level='error')
-        
+
         # Other files:
         try:
             OutputExporter.export_geometry(
@@ -678,7 +694,7 @@ class Fm2ProfRunner(FM2ProfBase):
             cross_section (CrossSection): modified
         """
 
-        number_of_css_points = self.get_inifile().get_parameter('number_of_css_points')
+        number_of_css_points = self.get_inifile().get_parameter('MaximumPointsInProfile')
 
         try:
             cross_section.reduce_points(count_after=number_of_css_points)
@@ -687,7 +703,7 @@ class Fm2ProfRunner(FM2ProfBase):
             self.set_logger_message(
                 'Exception thrown while trying to reduce the css points. ' +
                 '{}'.format(e_message), 'error')
-         
+
         return cross_section
 
     def __get_time_stamp_seconds(self, start_time: datetime):
@@ -707,16 +723,16 @@ class Fm2ProfRunner(FM2ProfBase):
         """
         In 2D, the volume available in a profile can rise rapidly
         while the water level changes little due to compartimentalisation
-        of the floodplain. This methods calculates a logistic correction 
-        term which may be applied in 1D models. 
+        of the floodplain. This methods calculates a logistic correction
+        term which may be applied in 1D models.
 
-        In SOBEK this option is available as the 'summerdike' options. 
+        In SOBEK this option is available as the 'summerdike' options.
         Calculates the Cross Section correction if needed.
 
         """
 
         # Get value, it should already come as a float.
-        sd_transition_value = self.get_inifile().get_parameter('transitionheight_sd')
+        sd_transition_value = self.get_inifile().get_parameter('SDTransitionHeight')
 
         try:
             css.calculate_correction(sd_transition_value)

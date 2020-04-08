@@ -17,8 +17,9 @@ import colorama
 from colorama import Fore, Back, Style
 
 # Import from package
-from fm2prof import IniFile
+# none
 
+IniFile = 'fm2prof.IniFile.IniFile'
 
 class ElapsedFormatter:
     """
@@ -32,8 +33,8 @@ class ElapsedFormatter:
         self.current_iteration = 0
         
 
-        self._new_iteration = True
-        self._intro = True
+        self._new_iteration = False
+        self._intro = False
         self._colors = {'INFO': [Back.BLUE, Fore.BLUE],
                     'DEBUG': [Back.CYAN+Fore.BLACK, Fore.CYAN+Back.BLACK],
                     'WARNING': [Back.YELLOW + Fore.BLACK, Fore.YELLOW],
@@ -42,15 +43,16 @@ class ElapsedFormatter:
         colorama.init()
 
     def format(self, record):
-        if self._new_iteration:
-            return self.__format_header(record)
-        elif self._intro:
+        if self._intro:
             return self.__format_intro(record)
+        elif self._new_iteration:
+            return self.__format_header(record)
         else:
             return self.__format_message(record)
 
     def get_elapsed_time(self, current_time):
         return current_time - self.start_time
+    
     def __current_time(self) -> AnyStr:
         return datetime.now().strftime("%Y-%m-%d %H:%M")
 
@@ -58,7 +60,7 @@ class ElapsedFormatter:
         level = record.levelname
         color = self._colors[level]
         reset = self._colors['RESET']
-        return f"{color[0]}{self.__current_time()} {level:>7} {reset}{color[1]}{reset} {record.getMessage()}" 
+        return f"{record.getMessage()}"
 
     def __format_header(self, record:LogRecord) -> AnyStr:
         # Only one header
@@ -163,7 +165,7 @@ class FM2ProfBase:
             'logger should be instance of Logger class'
         self.__logger = logger
 
-    def set_logger_message(self, err_mssg: str, level: str='info')->None:
+    def set_logger_message(self, err_mssg: str, level: str='info', header: bool=False)->None:
         """Sets message to logger if this is set.
 
         Arguments:
@@ -171,6 +173,13 @@ class FM2ProfBase:
         """
         if not self.__logger:
             return
+
+        if header:
+            self.get_logformatter().set_intro(True)
+            self.get_logger()._Filelogformatter.set_intro(True)
+        else:
+            self.get_logformatter().set_intro(False)
+            self.get_logger()._Filelogformatter.set_intro(False)
 
         if level.lower() not in [
                 'info', 'debug', 'warning', 'error', 'critical']:
@@ -222,15 +231,6 @@ class FM2ProfBase:
     def get_inifile(self) -> IniFile:
         """"Use this method to get the inifile object """
         return self.__iniFile
-
-    def load_inifile(self, iniFilePath: str):
-        """ 
-        use this method to load a configuration file from path. 
-        
-        Parameters:
-            iniFilePath (str): path to configuration file
-        """
-        self.set_inifile(IniFile.IniFile(iniFilePath))
 
 
 class FrictionTable:
