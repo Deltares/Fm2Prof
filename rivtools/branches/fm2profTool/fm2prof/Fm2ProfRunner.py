@@ -474,6 +474,10 @@ class Fm2ProfRunner(FM2ProfBase):
 
         if created_css is None:
             self.set_logger_message(f'No Cross-section could be generated for {css_name}', 'error')
+            return None
+        if created_css.get_number_of_faces() < 10:
+            self.set_logger_message(f'There are too little 2D points in control volume to construct cross-section', 'error')
+            return None
 
         self.set_logger_message('Initiated new cross-section', 'info')
         self._build_cross_section_geometry(cross_section=created_css)
@@ -694,15 +698,22 @@ class Fm2ProfRunner(FM2ProfBase):
             cross_section (CrossSection): modified
         """
 
-        number_of_css_points = self.get_inifile().get_parameter('MaximumPointsInProfile')
-
-        try:
-            cross_section.reduce_points(count_after=number_of_css_points)
-        except Exception as e_error:
-            e_message = str(e_error)
+        maximum_number_of_css_points = self.get_inifile().get_parameter('MaximumPointsInProfile')
+        if maximum_number_of_css_points < cross_section.get_number_of_vertices():
+            try:
+                cross_section.reduce_points(count_after=maximum_number_of_css_points)
+            except Exception as e_error:
+                e_message = str(e_error)
+                self.set_logger_message(
+                    'Exception thrown while trying to reduce the css points. ' +
+                    '{}'.format(e_message), 'error')
+                self.set_logger_message(traceback.print_exc(file=sys.stdout), 'error')
+        else:
             self.set_logger_message(
-                'Exception thrown while trying to reduce the css points. ' +
-                '{}'.format(e_message), 'error')
+                'Number of cross-section points lower than maximum'+
+                f'({cross_section.get_number_of_vertices()} < {maximum_number_of_css_points}).'+
+                'Skipping reduction step',
+                'warning')
 
         return cross_section
 
@@ -744,5 +755,5 @@ class Fm2ProfRunner(FM2ProfBase):
                 'Exception thrown ' +
                 'while trying to calculate the correction. ' +
                 '{}'.format(e_message), 'error')
-
+            self.set_logger_message(traceback.print_exc(file=sys.stdout), 'error')
         return css

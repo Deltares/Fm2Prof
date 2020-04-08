@@ -186,7 +186,7 @@ def get_centre_values(location, x, y, waterdepth, waterlevel):
     
     return centre_depth.values[0], centre_level.values[0]
 
-def get_extra_total_area(waterlevel, crest_level, transition_height, hysteresis=False):
+def get_extra_total_area(waterlevel, crest_level, transition_height:float, hysteresis=False):
     """
     releases extra area dependent on waterlevel using a logistic (sigmoid) function
     """
