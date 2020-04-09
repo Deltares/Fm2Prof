@@ -483,9 +483,9 @@ class Fm2ProfRunner(FM2ProfBase):
         self._build_cross_section_geometry(cross_section=created_css)
         self._build_cross_section_roughness(cross_section=created_css)
 
-        if self.get_inifile().get_parameter('ExportMapFiles'):
-            created_css.set_face_output_list()
-            created_css.set_edge_output_list()
+        #if self.get_inifile().get_parameter('ExportMapFiles'):
+        created_css.set_face_output_list()
+        created_css.set_edge_output_list()
 
         if created_css is not None:
             elapsed_time = self.get_logformatter().get_elapsed_time(time.time())
