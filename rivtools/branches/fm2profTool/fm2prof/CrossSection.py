@@ -805,22 +805,26 @@ class CrossSection(FM2ProfBase):
         will be set at least 0.5 meter below the crest of the
         embankment, and otherwise at the average hight of the floodplain
         """
-
-        # Mean bed level in section 2 (floodplain)
-        mean_floodplain_elevation = np.mean(self._fm_data['bedlevel'][self._fm_data.get('section') == 2])
-
-        # Tolerance. Base level must at least be some below the crest to prevent
-        # numerical issues
         tolerance = self.get_inifile().get_parameter('sdfloodplainbase')
-        if (self.crest_level - tolerance) < mean_floodplain_elevation:
-            self.floodplain_base = self.crest_level - tolerance
-            self.set_logger_message(f'Mean floodpl. elev. ({mean_floodplain_elevation:.2f} m)'+
-                                    f'higher than crest level ({self.crest_level:.2f}) + '+
-                                    f'tolerance ({tolerance} m)', 'warning')
-        else:
-            self.floodplain_base = mean_floodplain_elevation
-            self.set_logger_message(f'Floodplain base level set to {mean_floodplain_elevation:.2f} m', 'debug')
+        # Mean bed level in section 2 (floodplain)
+        floodplain_mask = self._fm_data.get('section') == 2
+        if floodplain_mask.sum():
+            mean_floodplain_elevation = np.nanmean(self._fm_data['bedlevel'][floodplain_mask])
 
+            # Tolerance. Base level must at least be some below the crest to prevent
+            # numerical issues
+            
+            if (self.crest_level - tolerance) < mean_floodplain_elevation:
+                self.floodplain_base = self.crest_level - tolerance
+                self.set_logger_message(f'Mean floodpl. elev. ({mean_floodplain_elevation:.2f} m)'+
+                                        f'higher than crest level ({self.crest_level:.2f}) + '+
+                                        f'tolerance ({tolerance} m)', 'warning')
+            else:
+                self.floodplain_base = mean_floodplain_elevation
+                self.set_logger_message(f'Floodplain base level set to {mean_floodplain_elevation:.2f} m', 'debug')
+        else:
+            self.floodplain_base = self.crest_level - tolerance
+            self.set_logger_message(f'No Floodplain found, floodplain defaults to {self.crest_level - tolerance}')
     def _calc_roughness_width(self, link_indices):
         # get the 2 nodes for every alluvial edge
         fm_data = self._fm_data
