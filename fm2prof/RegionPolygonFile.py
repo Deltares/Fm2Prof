@@ -46,10 +46,7 @@ class PolygonFile(FM2ProfBase):
         self.polygons = list()
         self.undefined = -999
 
-    def classify_points_with_property(
-            self,
-            points: Iterable[list],
-            property_name: str = 'name'):
+    def classify_points_with_property(self, points: Iterable[list], property_name: str = 'name') -> np.array:
         """
         Classifies points as belonging to which region
 
