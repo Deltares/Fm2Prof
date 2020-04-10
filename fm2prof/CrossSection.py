@@ -453,11 +453,13 @@ class CrossSection(FM2ProfBase):
         self._css_is_reduced = True
 
     def set_face_output_list(self):
-        """Generates a list of output mask points based on
+        """
+        Generates a list of output mask points based on
         their values in the mask.
 
         writes to self.__output_mask_list
-        Arguments:
+        
+        Paramters:
             fm_data {dict} -- Dictionary containing x,y values.
             mask_array {NP.array} -- Array of values.
         """
@@ -516,11 +518,13 @@ class CrossSection(FM2ProfBase):
                 level='error')
 
     def set_edge_output_list(self):
-        """Generates a list of output mask points based on
+        """
+        Generates a list of output mask points based on
         their values in the mask.
 
         writes to self.__output_mask_list
-        Arguments:
+        
+        Parameters:
             fm_data {dict} -- Dictionary containing x,y values.
             mask_array {NP.array} -- Array of values.
         """
