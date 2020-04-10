@@ -1,5 +1,7 @@
-Installation
-================
+.. _ChapterInstallation:
+
+Installation Instructions
+================================
 
 Requirements
 ---------------------------------
@@ -30,11 +32,11 @@ Installation instructions
 Obtaining the python source
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-To get the latest version of the code, you need to have a Subversion (SVN) client installed. If you have SVN installed with cli option, simply open a command prompt/terminal and type:
+To get the latest version of the code, you need to have a Subversion (SVN) client installed. If you have SVN installed with cli option, open a command prompt/terminal and type:
 
 .. code-block:: bash
 
-	svn checkout https://repos.deltares.nl/repos/RIVmodels/rivtools/branches/fm2profTool/docs
+	svn checkout https://repos.deltares.nl/repos/RIVmodels/rivtools/branches/fm2profTool
 
 Altenatively, use a GUI (like TortoiseSVN) to do this. 
 
@@ -68,3 +70,6 @@ Then, install the package:
 	conda develop .
 
 
+
+.. note::
+    We're using ``conda develop`` because the code may change a lot during development. This ensures that all changes to the code are immediately available within your conda environment. 

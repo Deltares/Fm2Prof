@@ -1,11 +1,25 @@
 Source code documentation
 ======================================
 
-Runner module
-^^^^^^^^^^^^^^^^
 
 .. automodule:: fm2prof.Fm2ProfRunner
    :members: 
 
-.. automodule:: fm2prof.Classes
+.. _SourceUtils:
+
+Utilities
+^^^^^^^^^^^^^^^^
+.. automodule:: fm2prof.utils
+   :members: 
+
+Cross-section
+^^^^^^^^^^^^^^^^
+.. automodule:: fm2prof.CrossSection
+   :members: 
+
+
+Base types
+^^^^^^^^^^^^^^^^
+
+.. automodule:: fm2prof.common
    :members: 
