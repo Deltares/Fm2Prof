@@ -53,7 +53,11 @@ class Fm2ProfRunner(FM2ProfBase):
 
         self._create_logger()
         self._print_header()
-        self.load_inifile(iniFilePath)
+        try:
+            self.load_inifile(iniFilePath)
+        except FileNotFoundError:
+            self.set_logger_message(f"Exiting", 'error')
+            return 
 
         if not self.get_inifile().has_output_directory:
             self.set_logger_message('Output directory must be set in configuration file', 'error')
