@@ -430,7 +430,7 @@ class Fm2ProfRunner(FM2ProfBase):
     def _get_css_range(self, number_of_css: int):
         """ parses the CssSelection keyword from the inifile """
         cssSelection = self.get_inifile().get_parameter('CssSelection')
-        if cssSelection is None:
+        if not cssSelection:
             cssSelection = np.arange(0, number_of_css)
         else:
             cssSelection = np.array(cssSelection)
