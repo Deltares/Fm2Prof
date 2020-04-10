@@ -71,7 +71,7 @@ class IniFile(FM2ProfBase):
     _input_file_paths = None
     _input_parameters = None
 
-    def __init__(self, file_path: str, logger: Logger=None):
+    def __init__(self, file_path: str="", logger: Logger=None):
         """
         Initializes the object Ini File which contains the path locations of all
         parameters needed by the Fm2ProfRunner.
@@ -91,6 +91,7 @@ class IniFile(FM2ProfBase):
         """
         super().__init__(logger=logger)
         self.__filePath = file_path
+        self.set_logger_message(f'Received ini file: {self.__filePath} on {os.getcwd()}', 'debug')
         self._ini_template = self._get_template_ini()    # Template to fill defaults from
         self._configuration = self._get_template_ini()   # What will be used
 
@@ -184,7 +185,7 @@ class IniFile(FM2ProfBase):
         # parse all types
         return default_ini
 
-    def _read_inifile(self, file_path : str):
+    def _read_inifile(self, file_path: str):
         """
         Reads the inifile and extract all its parameters for later usage
 
@@ -252,8 +253,10 @@ class IniFile(FM2ProfBase):
                 if os.path.isfile(value):
                     self.set_input_file(key_default, value)
                 else:
-                    self.set_logger_message(f'Could not find {value}', 'error')
-                    raise FileNotFoundError
+                    self.set_logger_message(f'Could not find input file for {key_default}, skipping', 'warning')
+                    if key_default in ('2DMapOutput', 'CrossSectionLocationFile'):
+                        self.set_logger_message(f'Could not find input file: {key_default}', 'error')
+                        raise FileNotFoundError
 
     def _get_key_from_template(self, section, key) -> List[Union[str, Type]]:
         """ return list of lower case keys from default configuration files"""
