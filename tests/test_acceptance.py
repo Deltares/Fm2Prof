@@ -2,13 +2,13 @@ import unittest
 import pytest
 import sys
 import os
-
+import io
 import shutil
 import matplotlib.pyplot as plt
 
 from tests.TestUtils import TestUtils
 from fm2prof.Fm2ProfRunner import Fm2ProfRunner
-from fm2prof.Fm2ProfRunner import IniFile
+from fm2prof.IniFile import IniFile
 
 from ReportGenerator.latex_report import LatexReport as LatexReport
 from ReportGenerator.html_report import HtmlReport as HtmlReport
@@ -266,11 +266,14 @@ class Test_Fm2Prof_Run_IniFile:
             self, case_name, map_file, css_file, region_file, section_file):
         # 1. Set up test data.
         iniFilePath = None
-        iniFile = IniFile.IniFile(iniFilePath)
+        iniFile = IniFile(iniFilePath)
         test_data_dir = TestUtils.get_external_test_data_dir(case_name)
         base_output_dir = _get_base_output_dir()
-        iniFile._output_dir = _check_and_create_test_case_output_dir(
-            base_output_dir, case_name)
+        
+        iniFile.set_output_directory(_check_and_create_test_case_output_dir(
+            base_output_dir, case_name))
+        
+        
             
         if region_file: 
             region_file_path = os.path.join(test_data_dir, region_file)
@@ -282,40 +285,24 @@ class Test_Fm2Prof_Run_IniFile:
         else:
             section_file_path = section_file
 
-        iniFile._input_file_paths = {
-            'fm_netcdfile': os.path.join(test_data_dir, map_file),
-            'crosssectionlocationfile': os.path.join(test_data_dir, css_file),
-            'regionpolygonfile': region_file_path,
-            'sectionpolygonfile': section_file_path
-        }
-        iniFile._input_parameters = {
-            "number_of_css_points": 20,
-            "transitionheight_sd": 0.25,
-            "velocity_threshold": 0.01,
-            "relative_threshold": 0.03,
-            "min_depth_storage": 0.02,
-            "plassen_timesteps": 10,
-            "storagemethod_wli": 1,
-            "bedlevelcriterium": 0.0,
-            "sdstorage": 1,
-            "frictionweighing": 0,
-            "sectionsmethod": 0,
-            "sdoptimisationmethod": 0,
-            "exportmapfiles": 0
-        }
+        iniFile.set_input_file('2dmapoutput', os.path.join(test_data_dir, map_file))
+        iniFile.set_input_file('crosssectionlocationfile', os.path.join(test_data_dir, css_file))
+        iniFile.set_input_file('regionpolygonfile', region_file_path)
+        iniFile.set_input_file('sectionpolygonfile', section_file_path)
 
         # Create the runner and set the saving figures variable to true
-        runner = Fm2ProfRunner(iniFilePath)
+        buf = io.StringIO(iniFile.print_configuration())
+        runner = Fm2ProfRunner(buf)
 
         # 2. Verify precondition (no output generated)
-        assert (os.path.exists(iniFile._output_dir) and
-                not os.listdir(iniFile._output_dir))
+        assert (os.path.exists(iniFile.get_output_directory()) and
+                not len(os.listdir(iniFile.get_output_directory())) > 1)
 
         # 3. Run file:
-        runner.run_inifile(iniFile)
+        runner.run()
 
         # 4. Verify there is output generated:
-        assert os.listdir(iniFile._output_dir), '' + \
+        assert os.listdir(iniFile.get_output_directory()), '' + \
             'There is no output generated for {0}'.format(case_name)
 
 
