@@ -17,7 +17,7 @@ import fm2prof.Functions as FE
 from tests.TestUtils import TestUtils
 
 
-class Test_PolygonFile:
+class ARCHIVED_Test_PolygonFile:
 
     class ClassifierApproaches:
 

@@ -7,7 +7,7 @@ import numbers
 import shutil
 from tests import TestUtils
 
-import fm2prof.Classes as CE
+from fm2prof.Import import FmModelData
 
 
 class Test_FmModelData:
@@ -23,7 +23,7 @@ class Test_FmModelData:
 
         # 3. Run test
         with pytest.raises(Exception) as pytest_wrapped_e:
-            CE.FmModelData(arg_list)
+            FmModelData(arg_list)
 
         # 4. Verify final expectations
         recieved_error_message = str(pytest_wrapped_e.value)
@@ -45,7 +45,7 @@ class Test_FmModelData:
 
         # 3. Run test
         with pytest.raises(Exception) as pytest_wrapped_e:
-            CE.FmModelData(arg_list)
+            FmModelData(arg_list)
 
         # 4. Verify final expectations
         recieved_error_message = str(pytest_wrapped_e.value)
@@ -70,7 +70,7 @@ class Test_FmModelData:
         return_fm_model_data = None
         # 2. Run test
         try:
-            return_fm_model_data = CE.FmModelData(arg_list)
+            return_fm_model_data = FmModelData(arg_list)
         except:
             pytest.fail('No exception expected but was thrown')
 
@@ -109,7 +109,7 @@ class Test_FmModelData:
 
         #  3. Run test
         try:
-            return_fm_model_data = CE.FmModelData(arg_list)
+            return_fm_model_data = FmModelData(arg_list)
         except:
             pytest.fail('No exception expected but was thrown')
 
@@ -136,7 +136,7 @@ class Test_get_ordered_css_list:
 
         # 3. Run test
         try:
-            return_list = CE.FmModelData.get_ordered_css_list(test_dict)
+            return_list = FmModelData.get_ordered_css_list(test_dict)
         except:
             pytest.fail('No exception expected but was thrown')
 
@@ -160,7 +160,7 @@ class Test_get_ordered_css_list:
 
         # 3. Run test
         try:
-            return_list = CE.FmModelData.get_ordered_css_list(test_dict)
+            return_list = FmModelData.get_ordered_css_list(test_dict)
         except:
             pytest.fail('No exception expected but was thrown')
 

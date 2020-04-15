@@ -132,7 +132,7 @@ class Test_Main:
                 reason, exception_message)
 
     @pytest.mark.integrationtest
-    def test_when_giving_existent_input_file_then_does_not_raise_io_exception(
+    def ARCHIVED_test_when_giving_existent_empty_input_file_then_does_not_raise_io_exception(
             self):
         # 1. Set up test data
         test_dir = TestUtils.get_local_test_data_dir('main_test_data')
@@ -147,5 +147,5 @@ class Test_Main:
         # 3. Run test
         try:
             main.main(mainArgs)
-        except IOError:
-            pytest.fail('Unexpected IOError exception.')
+        except:
+            pytest.fail('Unexpected exception.')

@@ -10,8 +10,8 @@ import shutil
 from tests.TestUtils import TestUtils
 from fm2prof.Fm2ProfRunner import Fm2ProfRunner as Fm2ProfRunner
 from fm2prof.IniFile import IniFile
-from fm2prof.Classes import CrossSection as CS
-from fm2prof.Classes import FmModelData as FMD
+from fm2prof.CrossSection import CrossSection as CS
+from fm2prof.Import import FmModelData as FMD
 
 _root_output_dir = None
 
@@ -103,7 +103,7 @@ class Test_Fm2ProfRunner:
         assert runner is not None
 
 
-class Test_generate_cross_section_list:
+class ARCHIVED_Test_generate_cross_section_list:
 
     @pytest.mark.unittest
     def test_when_not_given_FmModelData_then_returns_empty_list(self):
@@ -285,7 +285,7 @@ class Test_generate_cross_section_list:
                 expected_data_data_chainage, return_css.chainage)
 
 
-class Test_generate_cross_section:
+class ARCHIVED_Test_generate_cross_section:
 
     @pytest.mark.unittest
     def test_when_no_css_data_is_given_then_expected_exception_risen(self):
@@ -420,7 +420,7 @@ class Test_generate_cross_section:
                 css_data_chainage, return_css.chainage)
 
 
-class Test_set_fm_data_to_cross_section:
+class ARCHIVED_Test_set_fm_data_to_cross_section:
 
     @pytest.mark.unittest
     def test_when_no_cross_section_given_then_no_exception_risen(self):
@@ -511,7 +511,7 @@ class Test_set_fm_data_to_cross_section:
             'reduced number of points, assigned roughness.')
 
 
-class Test_get_new_cross_section:
+class ARCHIVED_Test_get_new_cross_section:
 
     @pytest.mark.unittest
     @pytest.mark.parametrize('css_data', [(None), ({})])
@@ -673,7 +673,7 @@ class Test_get_new_cross_section:
                 css_data_chainage, return_css.chainage)
 
 
-class Test_export_cross_sections:
+class ARCHIVED_Test_export_cross_sections:
 
     @pytest.mark.unittest
     @pytest.mark.parametrize("cross_sections", [(None), ([]), ('')])
@@ -779,7 +779,7 @@ class Test_export_cross_sections:
         # shutil.rmtree(output_dir)
 
 
-class Test_calculate_css_correction:
+class ARCHIVED_Test_calculate_css_correction:
 
     @pytest.mark.unittest
     def test_when_cross_section_not_given_then_no_exception_risen(self):
@@ -794,8 +794,7 @@ class Test_calculate_css_correction:
 
         # 3. Run test
         try:
-            runner._calculate_css_correction(
-                input_param_dict, test_css)
+            runner._perform_2D_volume_correction(test_css)
         except:
             pytest.fail(
                 'Unexpected exception while calculating css correction.')
@@ -805,10 +804,7 @@ class Test_calculate_css_correction:
             self):
         # 1. Set up test data
         runner = Fm2ProfRunner(None)
-        input_param_dict = {
-            'sdstorage': 1,
-            'transitionheight_sd': 0.5
-            }
+
         css_name = 'dummy_name'
         css_length = 0
         css_location = (0, 0)
@@ -828,8 +824,7 @@ class Test_calculate_css_correction:
 
         # 3. Run test
         try:
-            runner._calculate_css_correction(
-                input_param_dict, test_css)
+            runner._perform_2D_volume_correction(test_css)
         except:
             pytest.fail(
                 'Unexpected exception while calculating css correction.')
@@ -839,7 +834,7 @@ class Test_calculate_css_correction:
             'The calculation did not set the flag \'is corrected \' to True'
 
 
-class Test_reduce_css_points:
+class ARCHIVED_Test_reduce_css_points:
 
     @pytest.mark.integrationtest
     def test_when_all_parameters_are_correct_then_reduce_points(self):
