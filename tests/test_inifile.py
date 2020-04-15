@@ -44,9 +44,10 @@ class Test_IniFile:
             'retrieved {}'.format(error_message)
 
 
-class Test_extract_input_parameters:
 
-    _test_scenarios_input_parameters = [
+class ARCHIVED_Test_extract_parameters:
+
+    _test_scenarios_parameters = [
         ('42', 42),
         ('4.2', 4.2),
         ('', None),
@@ -54,7 +55,7 @@ class Test_extract_input_parameters:
     ]
 
     @pytest.mark.unittest
-    def test_when_no_input_parameters_key_returns_none(self):
+    def test_when_no_parameters_key_returns_none(self):
         # 1. Set up initial test data
         iniFilePath = None
         iniFile = IniFile(iniFilePath)
@@ -63,7 +64,7 @@ class Test_extract_input_parameters:
 
         # 2. Run test
         try:
-            new_params = iniFile._extract_input_parameters(inifile_params)
+            new_params = iniFile._extract_parameters(inifile_params)
         except:
             pytest.fail('Test failed while trying to extract parameters.')
 
@@ -79,14 +80,14 @@ class Test_extract_input_parameters:
 
         # 2. Run test """
         try:
-            iniFile._extract_input_parameters(inifile_parameters)
+            iniFile._extract_parameters(inifile_parameters)
         except:
             pytest.fail('Test failed while trying to extract parameters.')
 
     @pytest.mark.unittest
     @pytest.mark.parametrize(
         "value_as_string, expected_value",
-        _test_scenarios_input_parameters)
+        _test_scenarios_parameters)
     def test_when_parameters_are_given_then_maps_as_expected(
             self, value_as_string, expected_value):
         # 1. Set up initial test data
@@ -102,7 +103,7 @@ class Test_extract_input_parameters:
 
         # 3. Run test
         try:
-            new_parameters = iniFile._extract_input_parameters(
+            new_parameters = iniFile._extract_parameters(
                 inifile_parameters)
         except:
             pytest.fail('Test failed while trying to extract parameters.')
@@ -115,7 +116,7 @@ class Test_extract_input_parameters:
             isinstance(expected_value, numbers.Integral)
 
     @pytest.mark.unittest
-    def test_when_no_input_parameters_key_returns_empty_dict(self):
+    def test_when_no_parameters_key_returns_empty_dict(self):
         # 1. Set up initial test data
         iniFilePath = None
         iniFile = IniFile(iniFilePath)
@@ -133,7 +134,7 @@ class Test_extract_input_parameters:
         assert new_parameters == {}
 
 
-class Test_extract_input_files:
+class ARCHIVED_Test_extract_input_files:
     @pytest.mark.unittest
     def test_when_given_correct_parameters_then_gets_filenames(self):
         # 1. Set up initial test data
@@ -160,7 +161,7 @@ class Test_extract_input_files:
         assert new_parameters[file_key] == file_value
 
 
-class Test_extract_output_dir:
+class ARCHIVED_Test_extract_output_dir:
     _test_scenarios_output_dir_cases = [
         (None, None, 'CaseName01'),
         ('', '', 'CaseName01'),
@@ -261,7 +262,7 @@ class Test_extract_output_dir:
         assert len(set_output_dir_list) == repeated_iterations
 
 
-class Test_gets_valid_case_name:
+class ARCHIVED_Test_gets_valid_case_name:
     _test_scenarios_case_names = [
         ('', '', 'CaseName01'),
         (None, None, 'CaseName01'),
@@ -327,7 +328,7 @@ class Test_gets_valid_case_name:
         assert len(set_case_names) == repeated_iterations
 
 
-class Test_get_valid_output_dir:
+class ARCHIVED_Test_get_valid_output_dir:
     _test_scenarios_output_dirs = [
         ('dummydir', 'dummydir'),
         ('dummydir/dummysubdir', 'dummydir\\dummysubdir'),
@@ -374,7 +375,7 @@ class Test_get_valid_output_dir:
         assert expected_value == new_output_dir
 
 
-class Test_readini_file:
+class ARCHIVED_Test_readini_file:
 
     @pytest.mark.unittest
     def test_when_no_file_path_then_io_exception_is_risen(self):
@@ -422,11 +423,11 @@ class Test_readini_file:
         assert format_output_dir == expected_output_dir
 
     @pytest.mark.systemtest
-    def test_when_inifile_contains_input_parameters_then_sets_them(self):
+    def test_when_inifile_contains_parameters_then_sets_them(self):
         # 1. Set initial test data
         test_data_dir = TestUtils.get_local_test_data_dir('IniFile')
         ini_file_path = os.path.join(test_data_dir, 'valid_ini_file.ini')
-        expected_input_parameters = {
+        expected_parameters = {
             'number_of_css_points': 20,
             'transitionheight_sd': 0.25,
             'velocity_threshold': 0.01,
@@ -453,15 +454,15 @@ class Test_readini_file:
 
         # 4. Verify final expectations
         assert ini_file is not None
-        assert ini_file._input_parameters is not None
-        for expected_input_param in expected_input_parameters:
-            expected_value = expected_input_parameters[expected_input_param]
-            read_param_value = ini_file._input_parameters.get(
+        assert ini_file._parameters is not None
+        for expected_input_param in expected_parameters:
+            expected_value = expected_parameters[expected_input_param]
+            read_param_value = ini_file._parameters.get(
                 expected_input_param)
 
             assert read_param_value is not None, '' + \
                 'Key {} was not read or '.format(expected_input_param) + \
-                'could not be found in {}'.format(ini_file._input_parameters)
+                'could not be found in {}'.format(ini_file._parameters)
 
             assert read_param_value == expected_value, '' + \
                 'Expected value does not match ' + \
@@ -491,7 +492,7 @@ class Test_readini_file:
 
         # 4. Verify final expectations
         assert ini_file is not None
-        assert ini_file._input_parameters is not None
+        assert ini_file._parameters is not None
 
         for expected_input_file in expected_input_files:
             expected_value = expected_input_files[expected_input_file]
@@ -526,7 +527,7 @@ class Test_readini_file:
         assert expected_error in str(e_info.value)
 
 
-class Test_get_inifile_params:
+class ARCHIVED_Test_get_inifile_params:
 
     @pytest.mark.unittest
     def test_when_no_file_path_then_no_except_risen_and_returns_empty_dict(
