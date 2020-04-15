@@ -10,7 +10,7 @@ from tests.TestUtils import TestUtils
 import fm2prof.Functions as Func
 
 
-class Test_read_css_xyz:
+class ARCHIVED_Test_read_css_xyz:
 
     _test_scenarios_invalid_file_paths = [
         (None),
