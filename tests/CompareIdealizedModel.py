@@ -2,13 +2,51 @@ import os
 import shutil
 import numpy as np
 import pandas as pd
-
+from typing import Tuple, List
 from tests.TestUtils import TestUtils
 
 import matplotlib
 import matplotlib.pyplot as plt
 
 
+class CompareHelper:
+    
+    @staticmethod
+    def interpolate_to_css(css: dict, xyz: Tuple[List[float]]):
+        """
+        interpolate the analytical cross-section
+        at the given chainage y (float)
+        """
+        chainage = float(css.get('id').split('_')[1])
+        xyz = np.array(xyz)
+
+        # get cross-section closest to chainage
+        chainages = xyz[:, 0]
+        closest_chainage = chainages[np.argmin(abs(chainages - chainage))]
+        css_template = xyz[xyz[:, 0] == closest_chainage]
+
+        # Shift downward 
+        z_out = []
+        for y in np.unique(xyz[:, 1]):
+            mask = xyz[:, 1] == y
+            z_out.append(np.interp(chainage, xyz[mask, 0], xyz[mask, -1]))
+        
+        w_out = np.interp(css['levels'], z_out, css_template[:, 1])
+
+        return css['levels'], w_out
+
+    @staticmethod
+    def convert_ZW_to_symmetric_css(gmlist):
+        gmlist = np.array([np.array(xi) for xi in gmlist])
+        return [np.append(list(reversed(gmlist[0])), gmlist[0]), 
+                np.append(list(reversed(-gmlist[1]/2)), gmlist[1]/2)]
+
+    @staticmethod
+    def get_analytical_roughness_for_case(
+            self, H_pos, b: float, y, MainChannel, case_name):
+
+        
+    
 class CompareIdealizedModel:
     def _compare_volume(
             self, case_name, input_volume_file, fm2prof_fig_dir):
