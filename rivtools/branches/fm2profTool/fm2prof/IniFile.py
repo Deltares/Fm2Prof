@@ -108,16 +108,16 @@ class IniFile(FM2ProfBase):
             True - the output_dir is set and exists.
             False - the output_dir is not set or does not exist.
         """
-        if self._output_dir is None:
-            self.set_logger_message("The output directory must be set before running.", 'warning')
+        if self.get_output_directory() is None:
+            self.set_logger_message("No Output Set", 'warning')
             return False
 
-        if not os.path.exists(self._output_dir):
+        if not os.path.exists(self.get_output_directory()):
             try:
-                os.makedirs(self._output_dir)
+                os.makedirs(self.get_output_directory())
             except OSError:
                 self.set_logger_message(
-                    'The output directory {}, '.format(self._output_dir) +
+                    'The output directory {}, '.format(self.get_output_directory()) +
                     'could not be found neither created.', 'warning')
                 return False
 
@@ -132,7 +132,7 @@ class IniFile(FM2ProfBase):
 
         """
 
-        return self._output_dir
+        return self._configuration['sections']['output'][self.__output_directory_key]['value']
 
     def get_input_file(self, key: str) -> AnyStr:
         """
@@ -149,18 +149,23 @@ class IniFile(FM2ProfBase):
         """
         return self._get_from_configuration('parameters', key)
     
-    def _get_from_configuration(self, section: str, key: str) -> Union[str, bool, int, float]:
-        for parameter, content in self._configuration['sections'].get(section).items():
-            if parameter.lower() == key.lower():
-                return content.get('value')
-
-    def set_input_file(self, key, value) -> None:
-        """ Use this method to set a key/value pair to the configuration """
-        self._configuration['sections']['input'][key]['value'] = value
+    def set_input_file(self, key: str, value=None) -> bool:
+        """ Use this method to set a input files the configuration """
+        self._set_config_value('input', key, value)
     
     def set_parameter(self, key, value) -> None:
         """ Use this method to set a key/value pair to the configuration """
-        self._configuration['sections'][self.__input_parameters_key][key]['value'] = value
+        self._set_config_value('parameters', key, value)
+
+    def _set_config_value(self, section, key, value) -> None:
+        """ Use this method to set a input files the configuration """
+        ckey = self._get_key_from_case_insensitive_input(section=section, key_in=key)
+        if ckey:
+            self._configuration['sections'][section][ckey]['value'] = value
+            return True
+        else:
+            self.set_logger_message(f'Unnown key. Available keys: {keys}')
+            return False
 
     def set_output_directory(self, value: str) -> None:
         """ Use this method to set the output directory """
@@ -175,6 +180,18 @@ class IniFile(FM2ProfBase):
                 f.write(f"{key:<30}= {str(contents.get('value')):<10}# {contents.get('hint')}\n")
             f.write('\n')
         return f.getvalue()
+
+    def _get_key_from_case_insensitive_input(self, section, key_in):
+        section=self._configuration['sections'][section]
+        for key in section.keys():
+            if key.lower() == key_in.lower():
+                return key
+        return ''
+
+    def _get_from_configuration(self, section: str, key: str) -> Union[str, bool, int, float]:
+        for parameter, content in self._configuration['sections'].get(section).items():
+            if parameter.lower() == key.lower():
+                return content.get('value')
 
     def _get_template_ini(self) -> Dict:
         # Open config file
@@ -194,8 +211,14 @@ class IniFile(FM2ProfBase):
         """
         if file_path is None or not file_path:
             raise IOError('No ini file was specified and no data could be read.')
-        if not os.path.exists(file_path):
-            raise IOError('The given file path {} could not be found.'.format(file_path))
+        try:
+            if not os.path.exists(file_path):
+                raise IOError('The given file path {} could not be found.'.format(file_path))
+        except TypeError:
+            if not isinstance(file_path, io.StringIO):
+                raise IOError('Unknown file format entered')
+
+
 
         try:
             supplied_ini = self._get_inifile_params(file_path)
@@ -203,9 +226,18 @@ class IniFile(FM2ProfBase):
             raise Exception('It was not possible to extract ini parameters from the file {}. Exception thrown: {}'.format(file_path, str(e_info)))
 
         # Compare supplied with default/expected inifile
-        self._extract_input_files(supplied_ini)
-        self._extract_parameters(supplied_ini)
-        self._extract_output_dir(supplied_ini)
+        try:
+            self._extract_input_files(supplied_ini)
+        except Exception as e_info:
+            self.set_logger_message('Unexpected error reading input files. Check config file', 'error')
+        try:
+            self._extract_parameters(supplied_ini)
+        except Exception:
+            self.set_logger_message('Unexpected error reading parameters. Check config file', 'error')
+        try:
+            self._extract_output_dir(supplied_ini)
+        except Exception:
+            self.set_logger_message('Unexpected error output parameters. Check config file', 'error')
 
     def _extract_parameters(self, supplied_ini: Mapping[str, list]):
         """ Extract InputParameters and convert values either integer or float from string
@@ -359,7 +391,7 @@ class IniFile(FM2ProfBase):
 
         # Create config parser (external class)
         config = configparser.ConfigParser()
-        config.read(file_path)
+        config.read_file(file_path)
 
         # Extract all sections and options
         for section in config.sections():
