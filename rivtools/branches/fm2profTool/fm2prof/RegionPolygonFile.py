@@ -29,7 +29,6 @@ from typing import Iterable, Callable, Any
 import logging
 import numpy as np
 import multiprocessing
-import rtree
 from fm2prof.common import FM2ProfBase
 from itertools import groupby
 
