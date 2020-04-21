@@ -13,11 +13,11 @@ from fm2prof.IniFile import IniFile
 from ReportGenerator.latex_report import LatexReport as LatexReport
 from ReportGenerator.html_report import HtmlReport as HtmlReport
 
-
+from fm2prof.utils import VisualiseOutput
 from tests.fm2prof_latex_report import Fm2ProfLatexReport
 from tests.CompareWaalModel import CompareWaalModel as CompareWaalModel
 from tests.CompareIdealizedModel \
-    import CompareIdealizedModel as CompareIdealizedModel
+    import CompareIdealizedModel, CompareHelper
 
 _root_output_dir = None
 
@@ -56,64 +56,64 @@ _test_scenarios_ids = [
 _test_scenarios = [
     pytest.param(
         _case01,
-        'Data\\FM\\FlowFM_fm2prof_map.nc',
-        'Data\\cross_section_locations.xyz', 
+        'Data\\2DModelOutput\\FlowFM_map.nc',
+        'Data\\cross_section_locations.xyz',
         '',
         ''),
     pytest.param(
         _case02,
         'Data\\FM\\FlowFM_fm2prof_map.nc',
-        'Data\\cross_section_locations.xyz', 
+        'Data\\cross_section_locations.xyz',
         '',
         ''),
     pytest.param(
         _case03,
         'Data\\FM\\FlowFM_fm2prof_map.nc',
-        'Data\\cross_section_locations.xyz', 
+        'Data\\cross_section_locations.xyz',
         '',
         ''),
     pytest.param(
         _case04,
         'Data\\FM\\FlowFM_fm2prof_map.nc',
-        'Data\\cross_section_locations.xyz', 
+        'Data\\cross_section_locations.xyz',
         '',
         ''),
     pytest.param(
         _case05,
         'Data\\FM\\FlowFM_fm2prof_map.nc',
-        'Data\\cross_section_locations.xyz', 
+        'Data\\cross_section_locations.xyz',
         '',
         ''),
     pytest.param(
         _case06,
         'Data\\FM\\FlowFM_fm2prof_map.nc',
-        'Data\\cross_section_locations.xyz', 
+        'Data\\cross_section_locations.xyz',
         '',
         ''),
     pytest.param(
         _case07,
         'Data\\FM\\FlowFM_fm2prof_map.nc',
-        'Data\\cross_section_locations.xyz', 
+        'Data\\cross_section_locations.xyz',
         '',
         ''),
     pytest.param(
         _case09,
         'Data\\FM\\FlowFM_fm2prof_map.nc',
-        'Data\\cross_section_locations.xyz', 
+        'Data\\cross_section_locations.xyz',
         'Data\\regions_complex.geojson',
         ''),
     pytest.param(
         _case10,
         'Data\\FM\\FlowFM_fm2prof_map.nc',
         'Data\\cross_section_locations.xyz',
-        '', 
+        '',
         'Data\\sections_complex.geojson'),
     pytest.param(
         _waal_case,
         'Data\\FM\\FlowFM_fm2prof_map.nc',
-        'Data\\cross_section_locations.xyz', 
+        'Data\\cross_section_locations.xyz',
         '',
-        '', 
+        '',
         marks=pytest.mark.slow)
 ]
 
@@ -187,7 +187,7 @@ def _check_and_create_test_case_output_dir(base_output_dir, caseName):
 
 def _get_test_case_output_dir(case_name: str):
     base_output_dir = _get_base_output_dir()
-    output_directory = base_output_dir + "\\{0}".format(case_name)
+    output_directory = os.path.join(base_output_dir, case_name, 'CaseName01')
     return output_directory
 
 
@@ -256,7 +256,7 @@ class Test_Generate_Reports:
             pytest.fail(err_mssg)
 
 
-class Test_Fm2Prof_Run_IniFile:
+class Test_Run_Testcases:
 
     @pytest.mark.acceptance
     @pytest.mark.parametrize(
@@ -269,22 +269,22 @@ class Test_Fm2Prof_Run_IniFile:
         iniFile = IniFile(iniFilePath)
         test_data_dir = TestUtils.get_external_test_data_dir(case_name)
         base_output_dir = _get_base_output_dir()
-        
+
         iniFile.set_output_directory(_check_and_create_test_case_output_dir(
             base_output_dir, case_name))
-        
-        
-            
-        if region_file: 
+
+        if region_file:
             region_file_path = os.path.join(test_data_dir, region_file)
         else:
             region_file_path = region_file
-        
-        if section_file: 
+
+        if section_file:
             section_file_path = os.path.join(test_data_dir, section_file)
         else:
             section_file_path = section_file
 
+        #iniFile.set_parameter('ExportMapFiles', True)
+        iniFile.set_parameter('skipmaps', 2)
         iniFile.set_input_file('2dmapoutput', os.path.join(test_data_dir, map_file))
         iniFile.set_input_file('crosssectionlocationfile', os.path.join(test_data_dir, css_file))
         iniFile.set_input_file('regionpolygonfile', region_file_path)
@@ -517,9 +517,9 @@ class Test_Compare_Waal_Model:
 class Test_Compare_Idealized_Model:
     # region of helpers
     __case_01_tzw = [
-        [0, 0, 0],
-        [0, 150, 0],
-        [3000, 0, -1],
+        [0, 150-1e-5, 0],
+        [0, 150-1e-5, 0],
+        [3000, 150, -1],
         [3000, 150, -1]]
 
     __case_02_tzw = [
@@ -645,7 +645,7 @@ class Test_Compare_Idealized_Model:
         # 2. Verify / create necessary folders and directories
         assert os.path.exists(input_geometry_file), '' + \
             'Input file {} could not be found'.format(input_geometry_file)
-        
+
         if os.path.exists(fm2prof_fig_dir):
             shutil.rmtree(fm2prof_fig_dir)
         os.makedirs(fm2prof_fig_dir)
@@ -751,6 +751,29 @@ class Test_Compare_Idealized_Model:
         #  4. Final expectation
         assert os.listdir(fm2prof_fig_dir), '' + \
             'There is no volume output generated for {0}'.format(case_name)
+
+    @pytest.mark.acceptance
+    @pytest.mark.requires_output
+    @pytest.mark.parametrize(
+        ("case_name"), _test_scenarios_ids, ids=_test_scenarios_ids)
+    def test_when_output_exists_then_compare_with_reference(self, case_name: str):
+        """
+        This test is supposed to supercede the others
+        """
+        # 1. Get all necessary output / input directories
+        reference_geometry = self.__case_tzw_dict.get(case_name)
+        reference_roughness = []
+        reference__volume = []
+        fm2prof_dir = _get_test_case_output_dir(case_name)
+
+        # 2. Verify / create necessary folders and directories
+        #  3. Run
+        
+        visualiser = VisualiseOutput(fm2prof_dir)
+        for css in visualiser.cross_sections():
+            ref = CompareHelper.interpolate_to_css(css, reference_geometry)
+            ref = CompareHelper.convert_ZW_to_symmetric_css(ref)
+            visualiser.make_figure(css, reference_geometry=ref)
 
 
 class Test_WaalPerformance:
