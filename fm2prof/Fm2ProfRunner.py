@@ -517,7 +517,7 @@ class Fm2ProfRunner(FM2ProfBase):
         # 2D Volume Correction (SummerDike option)
         if self.get_inifile().get_parameter('SDCorrection'):
             self.set_logger_message('Starting correction', 'debug')
-            cross_section = self.__perform_2D_volume_correction(cross_section)
+            cross_section = self._perform_2D_volume_correction(cross_section)
         else:
             self.set_logger_message('SD Correction not enable in configuration file, skipping', 'info')
 
@@ -721,7 +721,7 @@ class Fm2ProfRunner(FM2ProfBase):
 
         return cross_section
 
-    def __get_time_stamp_seconds(self, start_time: datetime):
+    def _get_time_stamp_seconds(self, start_time: datetime):
         """Returns a time stamp with the time difference
 
         Arguments:
@@ -734,7 +734,7 @@ class Fm2ProfRunner(FM2ProfBase):
         time_difference = time_now - start_time
         return time_difference.total_seconds()
 
-    def __perform_2D_volume_correction(self, css: CrossSection) -> CrossSection:
+    def _perform_2D_volume_correction(self, css: CrossSection) -> CrossSection:
         """
         In 2D, the volume available in a profile can rise rapidly
         while the water level changes little due to compartimentalisation
