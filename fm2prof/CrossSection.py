@@ -75,6 +75,9 @@ class CrossSection(FM2ProfBase):
         self._fm_data = fm_data         # dictionary with fmdata
 
         # Cross-section geometry
+        self.z = []
+        self.total_width = []
+        self.flow_width = []
         self.section_widths = {'main':0, 'floodplain1':0, 'floodplain2':0}
         self.friction_tables = dict()
         self.roughness_sections = np.array([])
