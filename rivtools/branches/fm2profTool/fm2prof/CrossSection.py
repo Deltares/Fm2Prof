@@ -263,6 +263,7 @@ class CrossSection(FM2ProfBase):
         self._extend_css_below_z0(
             centre_level,
             centre_depth,
+            waterlevel,
             bedlevel_matrix,
             area_matrix,
             plassen_mask)
@@ -983,6 +984,50 @@ class CrossSection(FM2ProfBase):
         return flow_mask
 
     def _extend_css_below_z0(
+            self,
+            centre_level, centre_depth,
+            waterlevel,
+            bedlevel_matrix,
+            area_matrix,
+            plassen_mask):
+        """ 
+        This method extends the following attributes:
+        _css_z
+        _css_total_width
+        _css_flow_width
+        _fm_wet_area
+        _fm_flow_area
+        _fm_flow_volume
+        _fm_total_volume
+        """
+        bedlevel = self._fm_data.get('bedlevel').values
+        cell_area = self._fm_data.get('area').values
+        lowest_level_of_css = centre_level[0] - centre_depth[0]
+        centre_level_at_t0 = centre_level[0]
+        waterlevel_at_t0 = waterlevel.values[:, 0]
+        waterdepth_at_t0 = waterlevel_at_t0 - bedlevel
+        
+        tolerance = -1e-3  # at last point, this is still considered wet. 
+        for dz in np.linspace(0, centre_level_at_t0-lowest_level_of_css, 10):
+            centre_level_at_dz = centre_level_at_t0 - dz
+            total_wet_area = sum(cell_area[(waterdepth_at_t0 - dz) > tolerance])
+
+            self._css_z = CrossSection.__append_to_start(self._css_z, centre_level_at_dz)
+            self._css_total_width = CrossSection.__append_to_start(self._css_total_width, total_wet_area/self.length)
+            self._css_flow_width = CrossSection.__append_to_start(self._css_flow_width, total_wet_area/self.length)
+            self._fm_wet_area = CrossSection.__append_to_start(self._fm_wet_area, total_wet_area)
+            self._fm_flow_area = CrossSection.__append_to_start(self._fm_flow_area, total_wet_area)
+            self._fm_flow_volume = np.insert(self._fm_flow_volume, 0, np.nan)
+            self._fm_total_volume = np.insert(self._fm_total_volume, 0, np.nan)
+
+    @staticmethod
+    def __append_to_start(array, to_add):
+        """
+        adds ``to add`` to beginning of array
+        """
+        return np.insert(array, 0, to_add)
+
+    def __extend_css_with_constant_waterdepth(
             self,
             centre_level, centre_depth,
             bedlevel_matrix,
