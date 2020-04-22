@@ -108,7 +108,7 @@ def classify_with_regions(regions, cssdata, time_independent_data, edge_data, cs
     """
     
 
-    time_independent_data['sclass'] = time_independent_data['region']
+    time_independent_data['sclass'] = time_independent_data['region'].astype(str)
     #edge_data['sclass'] = edge_data['region']
 
     # Nearest Neighbour within regions
