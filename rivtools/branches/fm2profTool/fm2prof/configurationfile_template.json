@@ -38,7 +38,7 @@
   	"AbsoluteVelocityThreshold": {
 	    "type": "float",
 	    "hint": "Absolute velocity threshold in m/s. Used to determine storage",
-	    "value": 0.05 
+	    "value": 0.01 
   	},
   	"RelativeVelocityThreshold": {
 	    "type": "float",
