@@ -177,14 +177,16 @@ def get_centre_values(location, x, y, waterdepth, waterlevel):
     (_, index) = nn.kneighbors(location_array)
 
     # retrieve cell characteristic waterdepth
-    centre_depth = waterdepth.iloc[index[0]]
-    centre_level = waterlevel.iloc[index[0]]
+    centre_depth = waterdepth.iloc[index[0]].to_numpy()
+    centre_level = waterlevel.iloc[index[0]].to_numpy()
 
-    # remove nan values
-    centre_depth[np.isnan(centre_depth)] = np.nanmin(centre_depth)
-    centre_level[np.isnan(centre_level)] = np.nanmin(centre_level)
+    # When starting from a dry bed, the centre_level may have nan values
+    # 
+    bed_level = np.nanmin(centre_level - centre_depth)
+    #centre_depth[np.isnan(centre_depth)] = np.nanmin(centre_depth)
+    centre_level[np.isnan(centre_level)] = bed_level
     
-    return centre_depth.values[0], centre_level.values[0]
+    return centre_depth[0], centre_level[0]
 
 def get_extra_total_area(waterlevel, crest_level, transition_height:float, hysteresis=False):
     """
