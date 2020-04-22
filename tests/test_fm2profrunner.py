@@ -83,7 +83,7 @@ class Test_Fm2ProfRunner:
     @pytest.mark.integrationtest
     def test_given_inifile_then_no_exception_is_risen(self):
         # 1. Set up initial test data
-        ini_file_name = 'fm2prof.ini'
+        ini_file_name = 'valid_ini_file.ini'
         dir_name = 'IniFile'
         test_data_dir = TestUtils.get_local_test_data_dir(dir_name)
         ini_file_path = os.path.join(test_data_dir, ini_file_name)
