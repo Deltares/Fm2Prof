@@ -27,13 +27,15 @@ class CompareHelper:
 
         # Shift downward 
         z_out = []
+        y_out = []
         for y in np.unique(xyz[:, 1]):
             mask = xyz[:, 1] == y
+            y_out.append(y)
             z_out.append(np.interp(chainage, xyz[mask, 0], xyz[mask, -1]))
         
         w_out = np.interp(css['levels'], z_out, css_template[:, 1])
 
-        return css['levels'], w_out
+        return z_out, y_out #css['levels'], w_out
 
     @staticmethod
     def convert_ZW_to_symmetric_css(gmlist):
@@ -42,11 +44,35 @@ class CompareHelper:
                 np.append(list(reversed(-gmlist[1]/2)), gmlist[1]/2)]
 
     @staticmethod
-    def get_analytical_roughness_for_case(
-            self, H_pos, b: float, y, MainChannel, case_name):
+    def get_analytical_roughness_for_case(case_name:str):
+            
+        funcdict = {
+            'case_01_rectangle': CompareHelper._friction_manning_from_deepest_point,
+            'case_02_compound': CompareHelper._friction_manning_from_deepest_point,
+            'case_03_threestage': CompareHelper._friction_manning_from_deepest_point,
+            'case_04_storage': CompareHelper._friction_manning_from_deepest_point,
+            'case_05_dyke': CompareHelper._friction_manning_from_deepest_point,
+            'case_06_plassen': CompareHelper._friction_manning_from_deepest_point,
+            'case_07_triangular': CompareHelper._friction_manning_from_deepest_point,
+        }
 
-        
+        return funcdict[case_name]
     
+    @staticmethod
+    def _friction_manning_from_deepest_point(css, manning_coefficient: float=0.03) -> Tuple:
+        depth = np.array(css.get('levels')) - css.get('levels')[0]
+        return css.get('levels'), (depth)**(1/6)/manning_coefficient
+        
+
+class RoughnessHelper:
+    def __init__(self):
+        self.bed_level = 0
+        self.manning_coefficient = 0.03
+
+    def get_roughness_for_level(self, depth):
+        return (depth)**(1/6)/self.manning_coefficient
+
+
 class CompareIdealizedModel:
     def _compare_volume(
             self, case_name, input_volume_file, fm2prof_fig_dir):
