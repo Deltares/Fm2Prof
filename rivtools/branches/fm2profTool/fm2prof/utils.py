@@ -156,6 +156,7 @@ class VisualiseOutput():
                     css_sdcrest = float(self._getValueFromLine(f))
                     css_sdflow = float(self._getValueFromLine(f))
                     css_sdtotal = float(self._getValueFromLine(f))
+                    css_sdbaselevel = float(self._getValueFromLine(f))
 
                     css = {"id":css_id.strip(),
                            "levels": css_levels,
@@ -163,13 +164,18 @@ class VisualiseOutput():
                            "total_width": css_twidth,
                            "SD_crest": css_sdcrest,
                            "SD_flow_area": css_sdflow,
-                           "SD_total_area": css_sdtotal
+                           "SD_total_area": css_sdtotal,
+                           "SD_baselevel": css_sdbaselevel
                            }
                     csslist.append(css)
 
         return csslist
 
     def getRoughnessInfoForCss(self, cssname, rtype: str='roughnessMain'):
+        """
+        Opens roughness file and reads information for a given cross-section
+        name
+        """
         levels = None
         values = None
         with open(self.files[rtype], 'r') as f:
@@ -206,7 +212,8 @@ class VisualiseOutput():
         for css in csslist:
             yield css
 
-    def make_figure(self, css, reference_geometry: tuple=(), save_to_file: bool=True):
+    def make_figure(self, css, reference_geometry: tuple=(),
+                        reference_roughness: tuple=(), save_to_file: bool=True):
         """ 
         figurerize
         """
@@ -259,7 +266,7 @@ class VisualiseOutput():
 
             # Plot Roughness
             levels, values = self.getRoughnessInfoForCss(css["id"], rtype='roughnessMain')
-            axs[2].plot(levels, values,  label='Main channel')
+            axs[2].plot(levels, values, label='Main channel')
 
             try:
                 levels, values = self.getRoughnessInfoForCss(css["id"], rtype='roughnessFP1')
@@ -267,6 +274,9 @@ class VisualiseOutput():
                     axs[2].plot(levels, values, label='Floodplain1')
             except FileNotFoundError:
                 pass
+
+            if reference_roughness:
+                axs[2].plot(reference_roughness[0], reference_roughness[1], '--r', label='Reference friction')
 
             axs[2].set_xlabel('Water level [m]')
             axs[2].set_ylabel('Manning coefficient [sm$^{-1/3}$]')
