@@ -86,13 +86,13 @@ _test_scenarios = [
         ''),
     pytest.param(
         _case06,
-        'Data\\FM\\FlowFM_fm2prof_map.nc',
+        'Data\\2DmodelOutput\\FlowFM_map.nc',
         'Data\\cross_section_locations.xyz',
         '',
         ''),
     pytest.param(
         _case07,
-        'Data\\FM\\FlowFM_fm2prof_map.nc',
+        'Data\\2DModelOutput\\FlowFM_map.nc',
         'Data\\cross_section_locations.xyz',
         '',
         ''),
@@ -261,7 +261,7 @@ class Test_Run_Testcases:
     @pytest.mark.acceptance
     @pytest.mark.parametrize(
         ("case_name", "map_file", "css_file", "region_file", "section_file"),
-        _test_scenarios, ids=_test_scenarios_ids)
+        _test_scenarios[:-3], ids=_test_scenarios_ids[:-3])
     def test_when_given_input_data_then_output_is_generated(
             self, case_name, map_file, css_file, region_file, section_file):
         # 1. Set up test data.
@@ -558,42 +558,14 @@ class Test_Compare_Idealized_Model:
         [3000, 150, 0+1e-2]]
 
     __case_07_tzw = [
-        [0, 6000, 0],
-        [0, 6125, 0],
-        [0, 6125.000001, -2],
-        [0, 6374.999999, -2],
-        [0, 6375, 0],
-        [0, 6500, 0],
-        [250, 6000, -0.1],
-        [250, 6226, -0.1],
-        [250, 6226.000001, -2.1],
-        [250, 6407.999999, -2.1],
-        [250, 6408, -0.1],
-        [250, 6500, -0.1],
-        [500, 6000, -0.2],
-        [500, 6200, -0.2],
-        [500, 6200.000001, -2.2],
-        [500, 6399.999999, -2.2],
-        [500, 6400, -0.2],
-        [500, 6500, -0.2],
-        [9500, 6000, -1.8],
-        [9500, 6200, -1.8],
-        [9500, 6200.000001, -3.8],
-        [9500, 6399.999999, -3.8],
-        [9500, 6400, -1.8],
-        [9500, 6500, -1.8],
-        [9750, 6000, -1.9],
-        [9750, 6182, -1.9],
-        [9750, 6182.000001, -3.9],
-        [9750, 6391.999999, -3.9],
-        [9750, 6392, -1.9],
-        [9750, 6500, -1.9],
-        [10000, 6000, -2],
-        [10000, 6125, -2],
-        [10000, 6125.000001, -4],
-        [10000, 6374.999999, -4],
-        [10000, 6375, -2],
-        [10000, 6500, -2]]
+        [0, 00, -2],
+        [0, 200, -2],
+        [0, 200.000001, 0],
+        [0, 500, 0],
+        [10000, 00, -4],
+        [10000, 200, -4],
+        [10000, 200.000001, -2],
+        [10000, 500, -2]]
 
     __case_tzw_dict = {
         _case01: __case_01_tzw,
@@ -612,7 +584,7 @@ class Test_Compare_Idealized_Model:
     @pytest.mark.requires_output
     @pytest.mark.parametrize(
         ("case_name"), _test_scenarios_ids, ids=_test_scenarios_ids)
-    def test_compare_generic_model_geometry(
+    def ARCHIVED_test_compare_generic_model_geometry(
             self, case_name: str):
         if case_name == _waal_case:
             # print('This case is tested on another fixture.')
@@ -661,7 +633,7 @@ class Test_Compare_Idealized_Model:
     @pytest.mark.requires_output
     @pytest.mark.parametrize(
         ("case_name"), _test_scenarios_ids, ids=_test_scenarios_ids)
-    def test_when_output_exists_then_compare_generic_model_roughness(
+    def ARCHIVED_test_when_output_exists_then_compare_generic_model_roughness(
             self, case_name: str):
         if case_name == _waal_case:
             # print('This case is tested on another fixture.')
@@ -703,7 +675,7 @@ class Test_Compare_Idealized_Model:
     @pytest.mark.requires_output
     @pytest.mark.parametrize(
         ("case_name"), _test_scenarios_ids, ids=_test_scenarios_ids)
-    def test_when_output_exists_then_compare_generic_model_volume(
+    def ARCHIVED_test_when_output_exists_then_compare_generic_model_volume(
             self, case_name: str):
         if case_name == _waal_case:
             # print('This case is tested on another fixture.')
@@ -740,7 +712,7 @@ class Test_Compare_Idealized_Model:
     @pytest.mark.acceptance
     @pytest.mark.requires_output
     @pytest.mark.parametrize(
-        ("case_name"), _test_scenarios_ids, ids=_test_scenarios_ids)
+        ("case_name"), _test_scenarios_ids[:-3], ids=_test_scenarios_ids[:-3])
     def test_when_output_exists_then_compare_with_reference(self, case_name: str):
         """
         This test is supposed to supercede the others
