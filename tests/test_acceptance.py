@@ -62,25 +62,25 @@ _test_scenarios = [
         ''),
     pytest.param(
         _case02,
-        'Data\\FM\\FlowFM_fm2prof_map.nc',
+        'Data\\2DModelOutput\\FlowFM_map.nc',
         'Data\\cross_section_locations.xyz',
         '',
         ''),
     pytest.param(
         _case03,
-        'Data\\FM\\FlowFM_fm2prof_map.nc',
+        'Data\\2DModelOutput\\FlowFM_map.nc',
         'Data\\cross_section_locations.xyz',
         '',
         ''),
     pytest.param(
         _case04,
-        'Data\\FM\\FlowFM_fm2prof_map.nc',
+        'Data\\2DmodelOutput\\FlowFM_map.nc',
         'Data\\cross_section_locations.xyz',
         '',
         ''),
     pytest.param(
         _case05,
-        'Data\\FM\\FlowFM_fm2prof_map.nc',
+        'Data\\2DmodelOutput\\FlowFM_map.nc',
         'Data\\cross_section_locations.xyz',
         '',
         ''),
@@ -191,7 +191,7 @@ def _get_test_case_output_dir(case_name: str):
     return output_directory
 
 
-class Test_Generate_Reports:
+class ARCHIVED_Test_Generate_Reports:
     _latex_report_path = None
 
     @pytest.fixture(scope='class')
@@ -284,7 +284,7 @@ class Test_Run_Testcases:
             section_file_path = section_file
 
         #iniFile.set_parameter('ExportMapFiles', True)
-        iniFile.set_parameter('skipmaps', 2)
+        iniFile.set_parameter('skipmaps', 1)
         iniFile.set_input_file('2dmapoutput', os.path.join(test_data_dir, map_file))
         iniFile.set_input_file('crosssectionlocationfile', os.path.join(test_data_dir, css_file))
         iniFile.set_input_file('regionpolygonfile', region_file_path)
@@ -306,7 +306,7 @@ class Test_Run_Testcases:
             'There is no output generated for {0}'.format(case_name)
 
 
-class Test_Main_Run_IniFile:
+class ARCHIVED_Test_Main_Run_IniFile:
 
     def __run_main_with_arguments(self, ini_file):
         pythonCall = "fm2prof\\main.py -i {0}".format(ini_file)
@@ -413,7 +413,7 @@ class Test_Main_Run_IniFile:
             assert expected_file in generated_files
 
 
-class Test_Compare_Waal_Model:
+class ARCHIVED_Test_Compare_Waal_Model:
     """Requires fm2prof output generated for waal_case
     """
 
@@ -517,60 +517,45 @@ class Test_Compare_Waal_Model:
 class Test_Compare_Idealized_Model:
     # region of helpers
     __case_01_tzw = [
-        [0, 150-1e-5, 0],
-        [0, 150-1e-5, 0],
+        [0, 150, 0],
+        [0, 150+1e-5, 0+1e-5],
         [3000, 150, -1],
         [3000, 150, -1]]
 
     __case_02_tzw = [
-        [0, 0, 0],
+        [0, 0, -2],
+        [0, 50-1e-2, -2],
         [0, 50, 0],
-        [0, 50.000001, -2],
-        [0, 99.999999, -2],
-        [0, 100, 0],
-        [0, 150, 0],
-        [3000, 0, -1],
+        [0, 150, 1e-2],
+        [3000, 0, -3],
+        [3000, 50-1e-2, -3],
         [3000, 50, -1],
-        [3000, 50.000001, -3],
-        [3000, 99.999999, -3],
-        [3000, 100, -1],
-        [3000, 150, -1]]
+        [3000, 150, -1+1e-2]]
 
     __case_03_tzw = [
-        [0, 0, 0.5],
-        [0, 25, 0.5],
-        [0, 25.000001, 0],
+        [0, 0, -2],
+        [0, 50-1e-2, -2],
         [0, 50, 0],
-        [0, 50.000001, -2],
-        [0, 99.999999, -2],
-        [0, 100, 0],
-        [0, 124.999999, 0],
-        [0, 125, 0.5],
+        [0, 100-1e-2, 0],
+        [0, 100, 0.5],
         [0, 150, 0.5],
-        [3000, 0, -0.5],
-        [3000, 25, -0.5],
-        [3000, 25.000001, -1],
+        [3000, 0, -3],
+        [3000, 50-1e-2, -3],
         [3000, 50, -1],
-        [3000, 50.000001, -3],
-        [3000, 99.999999, -3],
-        [3000, 100, -1],
-        [3000, 124.999999, -1],
-        [3000, 125, -0.5],
-        [3000, 150, -0.5]]
+        [3000, 100-1e-2, -1],
+        [3000, 100, -0.5],
+        [3000, 150, -0.5],
+       ]
 
     __case_05_tzw = [
-        [0, 0, 1],
+        [0, 0, -2],
+        [0, 50-1e-2, -2],
         [0, 50, 1],
-        [0, 50.000001, -2],
-        [0, 99.999999, -2],
-        [0, 100, 1],
-        [0, 150, 1],
-        [3000, 0, 0],
+        [0, 150, 1+1e-2],
+        [3000, 0, -3],
+        [3000, 50-1e-2, -3],
         [3000, 50, 0],
-        [3000, 50.000001, -3],
-        [3000, 99.999999, -3],
-        [3000, 100, 0],
-        [3000, 150, 0]]
+        [3000, 150, 0+1e-2]]
 
     __case_07_tzw = [
         [0, 6000, 0],
@@ -627,7 +612,7 @@ class Test_Compare_Idealized_Model:
     @pytest.mark.requires_output
     @pytest.mark.parametrize(
         ("case_name"), _test_scenarios_ids, ids=_test_scenarios_ids)
-    def test_when_output_exists_then_compare_generic_model_geometry(
+    def test_compare_generic_model_geometry(
             self, case_name: str):
         if case_name == _waal_case:
             # print('This case is tested on another fixture.')
@@ -762,7 +747,7 @@ class Test_Compare_Idealized_Model:
         """
         # 1. Get all necessary output / input directories
         reference_geometry = self.__case_tzw_dict.get(case_name)
-        reference_roughness = []
+        reference_roughness = None#CompareHelper.get_analytical_roughness_for_case(case_name)
         reference__volume = []
         fm2prof_dir = _get_test_case_output_dir(case_name)
 
@@ -770,13 +755,16 @@ class Test_Compare_Idealized_Model:
         #  3. Run
         
         visualiser = VisualiseOutput(fm2prof_dir)
+        frictionhelper = CompareHelper.get_analytical_roughness_for_case(case_name)
         for css in visualiser.cross_sections():
             ref = CompareHelper.interpolate_to_css(css, reference_geometry)
             ref = CompareHelper.convert_ZW_to_symmetric_css(ref)
-            visualiser.make_figure(css, reference_geometry=ref)
+            
+            ref_friction = frictionhelper(css)
+            visualiser.make_figure(css, reference_geometry=ref, reference_roughness=ref_friction)
 
 
-class Test_WaalPerformance:
+class ARCHIVED_Test_WaalPerformance:
 
     @pytest.mark.acceptance
     @pytest.mark.workinprogress
@@ -797,7 +785,7 @@ class Test_WaalPerformance:
 
         # 1.1. Create ini file.
         ini_file_path = None
-        test_ini_file = IniFile.IniFile(ini_file_path)
+        test_ini_file = IniFile(ini_file_path)
         base_output_dir = _get_base_output_dir()
         test_ini_file._output_dir = \
             _check_and_create_test_case_output_dir(base_output_dir, case_name)
