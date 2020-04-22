@@ -217,9 +217,6 @@ class IniFile(FM2ProfBase):
         except TypeError:
             if not isinstance(file_path, io.StringIO):
                 raise IOError('Unknown file format entered')
-
-
-
         try:
             supplied_ini = self._get_inifile_params(file_path)
         except Exception as e_info:
@@ -391,7 +388,11 @@ class IniFile(FM2ProfBase):
 
         # Create config parser (external class)
         config = configparser.ConfigParser()
-        config.read_file(file_path)
+        if isinstance(file_path, io.StringIO):
+            config.read_file(file_path)
+        else:
+            with open(file_path, 'r') as f:
+                config.read_file(f)
 
         # Extract all sections and options
         for section in config.sections():
