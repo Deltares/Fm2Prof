@@ -441,9 +441,10 @@ class CrossSection(FM2ProfBase):
                         '{}'.format(str(e)), 'error')
 
         # Write to attributes
-        self._css_z = self._css_z[reduced_index]
-        self._css_total_width = self._css_total_width[reduced_index]
-        self._css_flow_width = self._css_flow_width[reduced_index]
+        self.z = self._css_z[reduced_index]
+        self.total_width = self._css_total_width[reduced_index]
+        self.flow_width = self._css_flow_width[reduced_index]
+
 
         self.set_logger_message(
             'Cross-section reduced ' +
@@ -591,18 +592,6 @@ class CrossSection(FM2ProfBase):
         self._css_total_width = self._return_first_item_and_after_index(self._css_total_width, index_of_first_nonzero)
         self.set_logger_message(f'Removed {index_of_first_nonzero-1} duplicate zero widths', 'debug')
     
-    @property
-    def z(self):
-        return self._css_z
-
-    @property
-    def total_width(self):
-        return self._css_total_width
-
-    @property
-    def flow_width(self):
-        return self._css_flow_width
-
     @staticmethod
     def _return_first_item_and_after_index(listin, after_index):
         return np.append(listin[0], listin[after_index:].tolist())
@@ -829,6 +818,7 @@ class CrossSection(FM2ProfBase):
         else:
             self.floodplain_base = self.crest_level - tolerance
             self.set_logger_message(f'No Floodplain found, floodplain defaults to {self.crest_level - tolerance}')
+
     def _calc_roughness_width(self, link_indices):
         # get the 2 nodes for every alluvial edge
         fm_data = self._fm_data
