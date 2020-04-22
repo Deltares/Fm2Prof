@@ -240,6 +240,10 @@ class VisualiseOutput():
             if reference_geometry:
                 axs[0].plot(reference_geometry[1], reference_geometry[0], '--r', label='Reference geometry')
 
+            axs[0].plot([-tw[-1]/2, tw[-1]/2], 
+                        [css['SD_crest']]*2, 
+                        '--', linewidth=1, color='orange', label='SD crest level')
+
             # Plot Volume
             vd = self.getVolumeInfoForCss(css["id"])
 
@@ -258,7 +262,11 @@ class VisualiseOutput():
 
             axs[1].plot(vd['z'], vd['2D_total_volume'], '--k', label='2D Total Volume')
             axs[1].plot(vd['z'], vd['2D_flow_volume'], '-.k', label='2D Flow Volume')
-
+            
+            # Plot sd crest
+            axs[1].plot([css['SD_crest']]*len(vd['2D_total_volume']), 
+                        vd['2D_total_volume'],
+                        '--', linewidth=1, color='orange', label='SD crest level')
 
             axs[1].set_title('Volume graph')
             axs[1].set_xlabel('Water level [m]')
