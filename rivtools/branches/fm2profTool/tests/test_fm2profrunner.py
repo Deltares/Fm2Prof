@@ -102,7 +102,6 @@ class Test_Fm2ProfRunner:
         # 4. Verify final expectations
         assert runner is not None
 
-
 class ARCHIVED_Test_generate_cross_section_list:
 
     @pytest.mark.unittest
