@@ -1013,7 +1013,7 @@ class CrossSection(FM2ProfBase):
         tolerance = -1e-3  # at last point, this is still considered wet. 
         for dz in np.linspace(0, centre_level_at_t0-lowest_level_of_css, 10):
             centre_level_at_dz = centre_level_at_t0 - dz
-            total_wet_area = sum(cell_area[(waterdepth_at_t0 - dz) > tolerance])
+            total_wet_area = np.nansum(cell_area[((waterdepth_at_t0 - dz) > tolerance) & ~plassen_mask])
 
             self._css_z = CrossSection.__append_to_start(self._css_z, centre_level_at_dz)
             self._css_total_width = CrossSection.__append_to_start(self._css_total_width, total_wet_area/self.length)
