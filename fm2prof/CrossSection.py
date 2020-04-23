@@ -11,6 +11,7 @@ from logging import Logger
 import os
 
 # Imports from dependencies
+from scipy.integrate  import cumtrapz
 import numpy as np
 import pandas as pd
 import scipy.optimize as so
@@ -269,19 +270,17 @@ class CrossSection(FM2ProfBase):
             waterlevel,
             bedlevel_matrix,
             area_matrix,
-            plassen_mask)
+            wet_not_plas_mask[0].values)
 
         # Compute 1D volume as integral of width with respect to z times length
         self._css_total_volume = np.append(
             [0],
-            np.cumsum(
-                self._css_total_width[1:]*np.diff(self._css_z)*self.length))
+            cumtrapz(self._css_total_width, self._css_z)*self.length)
         self._css_flow_volume = np.append(
             [0],
-            np.cumsum(
-                self._css_flow_width[1:]*np.diff(self._css_z)*self.length))
+            cumtrapz(self._css_flow_width, self._css_z)*self.length)
 
-        # If sd correction is run, these attributed will be updated.
+        # If sd correction is run, these attributes will be updated.
         self._css_total_volume_corrected = self._css_total_volume
         self._css_flow_volume_corrected = self._css_flow_volume
 
@@ -992,7 +991,7 @@ class CrossSection(FM2ProfBase):
             waterlevel,
             bedlevel_matrix,
             area_matrix,
-            plassen_mask):
+            wet_not_plas_mask):
         """ 
         This method extends the following attributes:
         _css_z
@@ -1005,23 +1004,32 @@ class CrossSection(FM2ProfBase):
         """
         bedlevel = self._fm_data.get('bedlevel').values
         cell_area = self._fm_data.get('area').values
+        flow_area_at_z0 = self._fm_flow_area[0]
         lowest_level_of_css = centre_level[0] - centre_depth[0]
         centre_level_at_t0 = centre_level[0]
         waterlevel_at_t0 = waterlevel.values[:, 0]
         waterdepth_at_t0 = waterlevel_at_t0 - bedlevel
-        
+        waterdepth_at_t0[np.isnan(waterdepth_at_t0)] = 0
         tolerance = -1e-3  # at last point, this is still considered wet. 
         for dz in np.linspace(0, centre_level_at_t0-lowest_level_of_css, 10):
             centre_level_at_dz = centre_level_at_t0 - dz
-            total_wet_area = np.nansum(cell_area[((waterdepth_at_t0 - dz) > tolerance) & ~plassen_mask])
+            total_wet_area = np.nansum(cell_area[((waterdepth_at_t0 - dz) > tolerance) & wet_not_plas_mask])
+
+            # Extension of flow/storage below z0
+            if not self.get_parameter('extrapolatestorage'):
+                total_flow_area = total_wet_area
+            elif self.get_parameter('extrapolatestorage'):
+                total_flow_area = np.min([total_wet_area, flow_area_at_z0])
 
             self._css_z = CrossSection.__append_to_start(self._css_z, centre_level_at_dz)
             self._css_total_width = CrossSection.__append_to_start(self._css_total_width, total_wet_area/self.length)
-            self._css_flow_width = CrossSection.__append_to_start(self._css_flow_width, total_wet_area/self.length)
+            self._css_flow_width = CrossSection.__append_to_start(self._css_flow_width, total_flow_area/self.length)
             self._fm_wet_area = CrossSection.__append_to_start(self._fm_wet_area, total_wet_area)
-            self._fm_flow_area = CrossSection.__append_to_start(self._fm_flow_area, total_wet_area)
+            self._fm_flow_area = CrossSection.__append_to_start(self._fm_flow_area, total_flow_area)
             self._fm_flow_volume = np.insert(self._fm_flow_volume, 0, np.nan)
             self._fm_total_volume = np.insert(self._fm_total_volume, 0, np.nan)
+
+            
 
     @staticmethod
     def __append_to_start(array, to_add):

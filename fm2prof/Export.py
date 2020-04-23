@@ -47,7 +47,7 @@ class Export1DModelData(FM2ProfBase):
         """Write to file the volume/waterlevel information"""
 
         with open(file_path, 'w') as f:
-            # Write header
+            # Write header 
             f.write("id,z,2D_total_volume,2D_flow_volume,2D_wet_area,2D_flow_area,1D_total_volume_sd,1D_total_volume,1D_flow_volume_sd,1D_flow_volume,1D_total_width,1D_flow_width\n")
 
             for css in cross_sections:
