@@ -703,22 +703,16 @@ class Fm2ProfRunner(FM2ProfBase):
         """
 
         maximum_number_of_css_points = self.get_inifile().get_parameter('MaximumPointsInProfile')
-        if maximum_number_of_css_points < cross_section.get_number_of_vertices():
-            try:
-                cross_section.reduce_points(count_after=maximum_number_of_css_points)
-            except Exception as e_error:
-                e_message = str(e_error)
-                self.set_logger_message(
-                    'Exception thrown while trying to reduce the css points. ' +
-                    '{}'.format(e_message), 'error')
-                self.set_logger_message(traceback.print_exc(file=sys.stdout), 'error')
-        else:
+        
+        try:
+            cross_section.reduce_points(count_after=maximum_number_of_css_points)
+        except Exception as e_error:
+            e_message = str(e_error)
             self.set_logger_message(
-                'Number of cross-section points lower than maximum'+
-                f'({cross_section.get_number_of_vertices()} < {maximum_number_of_css_points}).'+
-                'Skipping reduction step',
-                'warning')
-
+                'Exception thrown while trying to reduce the css points. ' +
+                '{}'.format(e_message), 'error')
+            self.set_logger_message(traceback.print_exc(file=sys.stdout), 'error')
+        
         return cross_section
 
     def _get_time_stamp_seconds(self, start_time: datetime):

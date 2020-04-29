@@ -307,6 +307,9 @@ class CrossSection(FM2ProfBase):
         self._css_total_width = self._check_increasing_order(self._css_total_width)
         self._css_flow_width = self._check_increasing_order(self._css_flow_width)
 
+        # Check if total width is larger than flow width
+        self._check_total_width_greater_than_flow_width()
+
     def calculate_correction(self, transition_height: float):
         """
         Function to determine delta-h correction
@@ -424,6 +427,7 @@ class CrossSection(FM2ProfBase):
 
         n_before_reduction = self.get_number_of_vertices()
 
+        
         points = np.array(
             [
                 [self._css_z[i], self._css_total_width[i]]
@@ -432,7 +436,7 @@ class CrossSection(FM2ProfBase):
         # The number of points is equal to n, it cannot be further reduced
         reduced_index = np.array([True] * n_before_reduction)
 
-        if n_before_reduction != count_after:
+        if n_before_reduction > count_after:
             # default is the same value as it came
             if method.lower() == 'visvalingam_whyatt':
                 try:
@@ -738,7 +742,7 @@ class CrossSection(FM2ProfBase):
                 'message': opt['message']}
 
     def _check_increasing_order(self, list_points):
-        """ there must not be the same values; if so, assign +1mm """
+        """ runs """
         for indx in range(1,len(list_points)):
             if list_points[indx] == list_points[indx-1]:
                 list_points[indx] = list_points[indx] + 0.001
@@ -1138,6 +1142,14 @@ class CrossSection(FM2ProfBase):
             return mask
         elif method == 2:
             return np.argsort(arr)
+
+    def _check_total_width_greater_than_flow_width(self):
+        """
+        If total width is smaller than flow width, set flow width to total width
+        """
+        mask = self._css_flow_width > self._css_total_width
+        self._css_flow_width[mask] = self._css_total_width[mask]
+        self.set_logger_message(f'Reduces flow widths at {sum(mask)} points to be same as total', 'debug')
 
     def get_parameter(self, key: str):
         return self.get_inifile().get_parameter(key)
