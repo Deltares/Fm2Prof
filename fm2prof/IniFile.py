@@ -95,8 +95,11 @@ class IniFile(FM2ProfBase):
         self._ini_template = self._get_template_ini()    # Template to fill defaults from
         self._configuration = self._get_template_ini()   # What will be used
 
-        if not(file_path is None or not file_path):
-            self._read_inifile(file_path)
+        if file_path:
+            self.__filePath = file_path
+            self.__fileDir = os.path.split(file_path)[0]
+            if not(file_path is None or not file_path):
+                self._read_inifile(file_path)
 
     @property
     def has_output_directory(self) -> bool:
@@ -133,6 +136,15 @@ class IniFile(FM2ProfBase):
         """
 
         return self._configuration['sections']['output'][self.__output_directory_key]['value']
+
+    def get_ini_root(self, dirtype: str='relative') -> str:
+        if dirtype=='relative':
+            return self.__fileDir
+        elif dirtype=='absolute':
+            return os.path.join(os.getcwd(), self.__fileDir)
+
+    def get_relative_path(self, path: str) -> str:
+        return os.path.join(self.get_ini_root(), path)
 
     def get_input_file(self, key: str) -> AnyStr:
         """
@@ -281,6 +293,8 @@ class IniFile(FM2ProfBase):
             if key_default is not None:
                 if os.path.isfile(value):
                     self.set_input_file(key_default, value)
+                elif os.path.isfile(os.path.join(self.__fileDir, value)):
+                    self.set_input_file(key_default, os.path.join(self.__fileDir, value))
                 else:
                     self.set_logger_message(f'Could not find input file for {key_default}, skipping', 'warning')
                     if key_default in ('2DMapOutput', 'CrossSectionLocationFile'):
@@ -323,7 +337,7 @@ class IniFile(FM2ProfBase):
         """Gets a normalized output directory path.
 
         Arguments:
-            output_dir {str} -- Relative path to the output directory.
+            output_dir {str} -- Relative path to the configuration file.
 
         Returns:
             {str} -- Valid output directory path.
@@ -332,7 +346,7 @@ class IniFile(FM2ProfBase):
             return os.getcwd()
         tmp_output_dir = output_dir.replace('/','\\')
         if '..' not in tmp_output_dir:
-            return os.path.join(os.getcwd(), tmp_output_dir)
+            return os.path.join(self.__fileDir, tmp_output_dir)
         return tmp_output_dir
 
     def _get_valid_case_name(self, case_name : str, output_dir : str):
