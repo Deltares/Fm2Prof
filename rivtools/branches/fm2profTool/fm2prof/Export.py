@@ -145,9 +145,9 @@ class Export1DModelData(FM2ProfBase):
                     "\tsd_flowArea\t\t\t= {}\n".format(css.extra_flow_area)+\
                     "\tsd_totalArea\t\t= {:.4f}\n".format(css.extra_total_area)+\
                     "\tsd_baseLevel\t\t= {}\n".format(css.floodplain_base)+\
-                    "\tmain\t\t\t\t= {}\n".format(css.section_widths['main'])+\
-                    "\tfloodPlain1\t\t\t= {}\n".format(css.section_widths['floodplain1'])+\
-                    "\tfloodPlain2\t\t\t= {}\n".format(css.section_widths['floodplain2'])+\
+                    "\tmain\t\t\t\t= {:.4f}\n".format(css.section_widths['main'])+\
+                    "\tfloodPlain1\t\t\t= {:.4f}\n".format(css.section_widths['floodplain1'])+\
+                    "\tfloodPlain2\t\t\t= {:.4f}\n".format(css.section_widths['floodplain2'])+\
                     "\tgroundlayerUsed\t\t= 0\n"+\
                     "\tgroundLayer\t\t\t= 0.000\n\n"
                     )
@@ -198,22 +198,23 @@ class Export1DModelData(FM2ProfBase):
         branch_sec = ""
         branch_list = []
         for css in cross_sections:
-            try:
-                if css.branch not in branch_list:
-                    branch_list.append(css.branch)
-                    branch_sec += """[BranchProperties]
+            if section in css.friction_tables:
+                try:
+                    if css.branch not in branch_list:
+                        branch_list.append(css.branch)
+                        branch_sec += """[BranchProperties]
         branchId              = {}               
         roughnessType         = 1                   
         functionType          = 2                   
         numLevels             = {}                   
         levels                = {}
         
-    """.format(css.branch, 
-            len(css.friction_tables[section].level),
-            " ".join(map("{:.4f}".format, css.friction_tables[section].level)))
-            except KeyError:
-                # section not in this croess-section
-                pass
+""".format(css.branch, 
+                len(css.friction_tables[section].level),
+                " ".join(map("{:.4f}".format, css.friction_tables[section].level)))
+                except KeyError:
+                    # section not in this croess-section
+                    pass
         return branch_sec
 
     """ SOBEK 3 file formats """
