@@ -368,6 +368,7 @@ class IniFile(FM2ProfBase):
         # Set an index to the case
         case_name_tmp = case_name + '{:02d}'.format(case_num)
         relative_path = case_name_tmp # by default use the current directory
+        output_dir = self._get_valid_output_dir(output_dir)
         if output_dir:
             relative_path = os.path.join(output_dir, case_name_tmp)
 
