@@ -119,14 +119,11 @@ class CrossSection(FM2ProfBase):
         self.__output_face_list = []
         self.__output_edge_list = []
 
-        self._section_map = {'0': 'main',
-                             '1': 'main',
+        self._section_map = {'1': 'main',
                              '2': 'floodplain1',
                              '3': 'floodplain2',
-                             '-999': 'main',
-                             'main': 'main',
-                             'floodplain1': 'floodplain1',
-                             'floodplain2': 'floodplain2'}
+                             '-999': 'main'
+                             }
 
     @property
     def alluvial_width(self):
@@ -310,6 +307,9 @@ class CrossSection(FM2ProfBase):
         # Check if total width is larger than flow width
         self._check_total_width_greater_than_flow_width()
 
+        # Check if section widths combined are not smaller than flow width
+        #self._check_section_widths_greater_than_flow_width()
+    
     def calculate_correction(self, transition_height: float):
         """
         Function to determine delta-h correction
@@ -794,10 +794,28 @@ class CrossSection(FM2ProfBase):
         output[output==np.NaN] = 0
         return output
 
-    def _compute_section_widths(self):
-        for section in np.unique(self._fm_data['edge_section']):
-            self.section_widths[self._section_map[str(section)]] = np.sum(self._fm_data['area'][self._fm_data['section']==section])/self.length
-            #self.section_widths[section] = self._calc_roughness_width(self._fm_data['edge_section']==section)
+    def _compute_section_widths(self) -> None:
+        """
+        Computes sections widths by dividing the area assigned to a section 
+        by the length of the cross-section.    
+
+        If the sum of the section widths is smaller than the flow width, the 
+        width is increase proportionally
+        """
+        total_area = sum(self._fm_data['area'])
+        unassigned_area = sum(self._fm_data['area'][self._fm_data['section']==-999])
+        if unassigned_area > 0:
+            self.set_logger_message(f"{unassigned_area} m2 was not assigned to any section in input files, and is added to the main section", 'warning')
+        
+        for section in [1, 2, 3]:
+            if section == 1:
+                section_area = np.sum(self._fm_data['area'][self._fm_data['section']==section])/self.length  + unassigned_area
+            else:
+                section_area = np.sum(self._fm_data['area'][self._fm_data['section']==section])/self.length
+            self.section_widths[self._section_map[str(section)]] = section_area
+        
+        # Finally, the sum of section width should be greater or equal to the flow width
+        self._check_section_widths_greater_than_flow_width()
 
     def _compute_floodplain_base(self) -> None:
         """
@@ -825,35 +843,6 @@ class CrossSection(FM2ProfBase):
         else:
             self.floodplain_base = self.crest_level - tolerance
             self.set_logger_message(f'No Floodplain found, floodplain defaults to {self.crest_level - tolerance}')
-
-    def _calc_roughness_width(self, link_indices):
-        # get the 2 nodes for every alluvial edge
-        fm_data = self._fm_data
-
-        section_nodes = fm_data['edge_nodes'][link_indices]
-        section_nodes = np.unique(section_nodes.flatten())
-
-        # get the faces for every node (start at index 1)
-        faces = np.array(
-            [index
-                for index, nodes in enumerate(fm_data['face_nodes_full'])
-                for node in nodes
-                if node in section_nodes])
-        faces += 1
-
-        (unique_faces, faces_count) = np.unique(faces, return_counts=True)
-
-        # only faces that occur at least 3 times (2 edges, 3 nodes)
-        # belong to the section
-        # this approach works for both square as well as triangular meshes
-        section_faces = unique_faces[faces_count >= 3]
-
-        mask = np.array(
-            [index in section_faces
-                for index in range(1, fm_data['area_full'].size + 1)])
-        section_width = np.sum(fm_data['area_full'][mask])/self.length
-
-        return section_width
 
     def _calc_chezy(self, depth, manning):
         return depth**(1/float(6)) / manning
@@ -946,10 +935,10 @@ class CrossSection(FM2ProfBase):
                 [self._css_flow_width[-i], self._css_flow_width[-i+1]])
 
         # fix error when flow_width > total_width (due to floating points)
-        self._css_flow_width[
-            self._css_flow_width >
-            self._css_total_width] = self._css_total_width[
-                self._css_flow_width > self._css_total_width]
+        #self._css_flow_width[
+        #    self._css_flow_width >
+        #    self._css_total_width] = self._css_total_width[
+        #        self._css_flow_width > self._css_total_width]
 
     def _distinguish_flow_from_storage(self, waterdepth, velocity):
         """
@@ -1150,6 +1139,16 @@ class CrossSection(FM2ProfBase):
         mask = self._css_flow_width > self._css_total_width
         self._css_flow_width[mask] = self._css_total_width[mask]
         self.set_logger_message(f'Reduces flow widths at {sum(mask)} points to be same as total', 'debug')
+
+    def _check_section_widths_greater_than_flow_width(self):
+        total_section_width = 0
+        for key, width in self.section_widths.items():
+            total_section_width += width
+        
+        dif = self.flow_width[-1] - total_section_width
+        if dif > 0:
+            self.section_widths['main'] += dif
+            self.set_logger_message(f'Increased main section width by {dif}', 'warning')
 
     def get_parameter(self, key: str):
         return self.get_inifile().get_parameter(key)
