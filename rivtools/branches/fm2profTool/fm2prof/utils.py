@@ -207,88 +207,56 @@ class VisualiseOutput():
 
         return cssdata
 
-    def cross_sections(self):
+    def cross_sections(self) -> dict:
+        """
+        Generator to loop through all cross-sections in definition file. 
+
+        Example use:
+        for css in visualiser.cross_sections():
+            visualiser.make_figure(css)
+        """
         csslist = self._readCSSDefFile()
         for css in csslist:
             yield css
 
+    def get_cross_section_by_id(self, id: str) -> dict:
+        """
+        Get cross-section information given an id. 
+
+        Arguments:
+            id (str): cross-section name
+        """
+        csslist = self._readCSSDefFile()
+        for css in csslist:
+            if css.get('id') == id:
+                return css
+
     def make_figure(self, css, reference_geometry: tuple=(),
                         reference_roughness: tuple=(), save_to_file: bool=True):
         """ 
-        figurerize
+        Creates a figure
+
+        Arguments
+            css: dictionary containing cross-section information. Obtain with `VisualiseOutput.cross_sections`
+                 generator or `VisualiseOutput.get_cross_section_by_id` method. 
+            reference_geometry (tuple): tuple(list(y), list(z))
+            reference_roughness (tuple): tuple(list(z), list(n))
+            save_to_file (bool): if true, save figure to VisualiseOutput.fig_dir
+                                 if false, returns pyplot figure object
+    
         """
         try:
             fig = plt.figure(figsize=(8, 12))
             gs = fig.add_gridspec(2, 2)
             axs = [fig.add_subplot(gs[0, :]),
-                    fig.add_subplot(gs[1,0]),
-                    fig.add_subplot(gs[1,1])]
-            tw = np.append([0], np.array(css['total_width']))
-            fw = np.append([0], np.array(css['flow_width']))
-            l = np.append(css['levels'][0], np.array(css['levels']))
+                   fig.add_subplot(gs[1, 0]),
+                   fig.add_subplot(gs[1, 1])]
 
-            # Plot cross-section geometry
-            for side in [-1, 1]:
-                h = axs[0].fill_betweenx(l, side*fw/2, side*tw/2, color="#44B1D5AA", hatch='////')
-                axs[0].plot(side*tw/2, l, '-k')
-                axs[0].plot(side*fw/2, l, '--k')
-            h.set_label('Storage')
-            axs[0].set_title(css['id'])
-            axs[0].set_xlabel('[m]')
-            axs[0].set_ylabel('[m]')
-
-            if reference_geometry:
-                axs[0].plot(reference_geometry[1], reference_geometry[0], '--r', label='Reference geometry')
-
-            axs[0].plot([-tw[-1]/2, tw[-1]/2], 
-                        [css['SD_crest']]*2, 
-                        '--', linewidth=1, color='orange', label='SD crest level')
-
-            # Plot Volume
-            vd = self.getVolumeInfoForCss(css["id"])
-
-            axs[1].fill_between(vd['z'], 0, vd['1D_total_volume_sd'],
-                                color="#24A493",
-                                label='1D Total Volume (incl. SD)')
-            axs[1].fill_between(vd['z'], 0, vd['1D_total_volume'],
-                                color="#108A7A",
-                                label='1D Total Volume (excl. SD)')
-            axs[1].fill_between(vd['z'], 0, vd['1D_flow_volume'],
-                                color="#209AB4",
-                                label='1D Flow Volume (incl. SD)')
-            axs[1].fill_between(vd['z'], 0, vd['1D_flow_volume'],
-                                color="#0C6B7F",
-                                label='1D Flow Volume (excl. SD)')
-
-            axs[1].plot(vd['z'], vd['2D_total_volume'], '--k', label='2D Total Volume')
-            axs[1].plot(vd['z'], vd['2D_flow_volume'], '-.k', label='2D Flow Volume')
+            self._plot_geometry(css, axs[0], reference_geometry)
+            self._plot_volume(css, axs[1])
+            self._plot_roughness(css, axs[2], reference_roughness)
             
-            # Plot sd crest
-            axs[1].plot([css['SD_crest']]*len(vd['2D_total_volume']), 
-                        vd['2D_total_volume'],
-                        '--', linewidth=1, color='orange', label='SD crest level')
-
-            axs[1].set_title('Volume graph')
-            axs[1].set_xlabel('Water level [m]')
-            axs[1].set_ylabel('Volume [m$^3$]')
-
-            # Plot Roughness
-            levels, values = self.getRoughnessInfoForCss(css["id"], rtype='roughnessMain')
-            axs[2].plot(levels, values, label='Main channel')
-
-            try:
-                levels, values = self.getRoughnessInfoForCss(css["id"], rtype='roughnessFP1')
-                if levels is not None:
-                    axs[2].plot(levels, values, label='Floodplain1')
-            except FileNotFoundError:
-                pass
-
-            if reference_roughness:
-                axs[2].plot(reference_roughness[0], reference_roughness[1], '--r', label='Reference friction')
-
-            axs[2].set_xlabel('Water level [m]')
-            axs[2].set_ylabel('Manning coefficient [sm$^{-1/3}$]')
-
+            
             SetDeltaresStyle(fig)
             plt.tight_layout()
             
@@ -304,5 +272,75 @@ class VisualiseOutput():
             
         finally:
             plt.close()
+  
+    def _plot_geometry(self, css, ax, reference_geometry):
+        tw = np.append([0], np.array(css['total_width']))
+        fw = np.append([0], np.array(css['flow_width']))
+        l = np.append(css['levels'][0], np.array(css['levels']))
+
+        # Plot cross-section geometry
+        for side in [-1, 1]:
+            h = ax.fill_betweenx(l, side*fw/2, side*tw/2, color="#44B1D5AA", hatch='////')
+            ax.plot(side*tw/2, l, '-k')
+            ax.plot(side*fw/2, l, '--k')
+        h.set_label('Storage')
+        ax.set_title(css['id'])
+        ax.set_xlabel('[m]')
+        ax.set_ylabel('[m]')
+
+        if reference_geometry:
+            ax.plot(reference_geometry[1], reference_geometry[0], '--r', label='Reference geometry')
+
+        ax.plot([-tw[-1]/2, tw[-1]/2], 
+                    [css['SD_crest']]*2, 
+                    '--', linewidth=1, color='orange', label='SD crest level')
+    
+    def _plot_volume(self, css, ax):
+        # Plot Volume
+        vd = self.getVolumeInfoForCss(css["id"])
+
+        ax.fill_between(vd['z'], 0, vd['1D_total_volume_sd'],
+                            color="#24A493",
+                            label='1D Total Volume (incl. SD)')
+        ax.fill_between(vd['z'], 0, vd['1D_total_volume'],
+                            color="#108A7A",
+                            label='1D Total Volume (excl. SD)')
+        ax.fill_between(vd['z'], 0, vd['1D_flow_volume'],
+                            color="#209AB4",
+                            label='1D Flow Volume (incl. SD)')
+        ax.fill_between(vd['z'], 0, vd['1D_flow_volume'],
+                            color="#0C6B7F",
+                            label='1D Flow Volume (excl. SD)')
+
+        ax.plot(vd['z'], vd['2D_total_volume'], '--k', label='2D Total Volume')
+        ax.plot(vd['z'], vd['2D_flow_volume'], '-.k', label='2D Flow Volume')
+        
+        # Plot sd crest
+        ax.plot([css['SD_crest']]*len(vd['2D_total_volume']), 
+                    vd['2D_total_volume'],
+                    '--', linewidth=1, color='orange', label='SD crest level')
+
+        ax.set_title('Volume graph')
+        ax.set_xlabel('Water level [m]')
+        ax.set_ylabel('Volume [m$^3$]')
+    
+    def _plot_roughness(self, css, ax, reference_roughness):
+        levels, values = self.getRoughnessInfoForCss(css["id"], rtype='roughnessMain')
+        ax.plot(levels, values, label='Main channel')
+
+        try:
+            levels, values = self.getRoughnessInfoForCss(css["id"], rtype='roughnessFP1')
+            if levels is not None:
+                ax.plot(levels, values, label='Floodplain1')
+        except FileNotFoundError:
+            pass
+
+        if reference_roughness:
+            ax.plot(reference_roughness[0], reference_roughness[1], '--r', label='Reference friction')
+
+        # Limit x axis to min and maximum level in cross-section
+        ax.set_xlim(min(css['levels']), max(css['levels']))
+        ax.set_xlabel('Water level [m]')
+        ax.set_ylabel('Manning coefficient [sm$^{-1/3}$]')
 
         
