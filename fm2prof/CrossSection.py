@@ -785,12 +785,18 @@ class CrossSection(FM2ProfBase):
         """
         # Remove chezy where zero
         link_chezy = link_chezy.replace(0, np.NaN)
+        # efs are the two faces the edge connects to
         efs = self._fm_data['edge_faces'][self._fm_data['edge_section']==section]
-        link_area = [self._fm_data.get('area_full')[ef].mean() for ef in efs]
+        link_area = []
+        for ef in efs:
+            # compute the mean area for the two connecting faces
+            link_area.append(self._fm_data.get('area_full').reindex(ef).mean())
+        
+        # the weight of one link is defined as the sum of the linked areas
         link_weight = link_area / np.sum(link_area)
 
         output = np.sum(link_chezy.values.T * link_weight, axis=1)
-        output[output==np.NaN] = 0
+        output[np.isnan(output)] = 0
         return output
 
     def _compute_section_widths(self) -> None:
