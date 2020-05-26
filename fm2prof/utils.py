@@ -379,7 +379,7 @@ class VisualiseOutput():
         # Limit x axis to min and maximum level in cross-section
         ax.set_xlim(min(css['levels']), max(css['levels']))
         ax.set_xlabel('Water level [m]')
-        ax.set_ylabel('Manning coefficient [sm$^{-1/3}$]')
+        ax.set_ylabel('Chezy coefficient [m$^{1/2}$/s]')
 
     @staticmethod
     def _get_sd_plot_info(css):
