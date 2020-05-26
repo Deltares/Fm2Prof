@@ -105,12 +105,13 @@ class CrossSection(FM2ProfBase):
         self._css_flow_volume_corrected = None
         self._css_total_width = 0
         self._css_flow_width = 0
+        self._css_volume_legacy = 0
+        self._css_index_of_first_nonzero = 0
         self._fm_total_volume = 0
         self._fm_flow_volume = 0
         self._fm_wet_area = 0
         self._fm_flow_area = 0
-        self._css_volume_legacy = 0
-
+        
         # flags
         self._css_is_corrected = False
         self._css_is_reduced = False
@@ -293,11 +294,12 @@ class CrossSection(FM2ProfBase):
     def check_requirements(self):
         """
         Performs check on cross-section such that it
-        hold up to requirements.
+        hold up to requirements. 
         """
         # Remove multiple zeroes in the bottom of the cross-section
-        self._check_remove_duplicate_zeroes()
-        self._check_remove_zero_widths()
+        self._css_index_of_first_nonzero = self._check_remove_duplicate_zeroes()
+        self._css_total_width = self._check_remove_zero_widths(self._css_total_width)
+        self._css_flow_width = self._check_remove_zero_widths(self._css_flow_width)
 
         # Check if cross-sections are in increasing order
         self._css_z = self._check_increasing_order(self._css_z)
@@ -590,34 +592,31 @@ class CrossSection(FM2ProfBase):
         """
         Removes duplicate zeroes in the total width
         """
-
+        mask = np.array([True] * len(self._css_z))
+        
         # Remove multiple 0s in the total width
         index_of_first_nonzero = max(1, np.argwhere(self._css_total_width!=0)[0][0])
 
-        self._css_z = self._return_first_item_and_after_index(self._css_z, index_of_first_nonzero)
-        self._css_flow_width = self._return_first_item_and_after_index(self._css_flow_width, index_of_first_nonzero)
-        self._css_total_width = self._return_first_item_and_after_index(self._css_total_width, index_of_first_nonzero)
-        self.set_logger_message(f'Removed {index_of_first_nonzero-1} duplicate zero widths', 'debug')
+        return index_of_first_nonzero
+
+        #self._css_z = self._return_first_item_and_after_index(self._css_z, index_of_first_nonzero)
+        #self._css_flow_width = self._return_first_item_and_after_index(self._css_flow_width, index_of_first_nonzero)
+        #self._css_total_width = self._return_first_item_and_after_index(self._css_total_width, index_of_first_nonzero)
+        #self.set_logger_message(f'Removed {index_of_first_nonzero-1} duplicate zero widths', 'debug')
     
     @staticmethod
     def _return_first_item_and_after_index(listin, after_index):
         return np.append(listin[0], listin[after_index:].tolist())
     
-    def _check_remove_zero_widths(self):
+    def _check_remove_zero_widths(self, width_array):
         """
         A zero width may lead to numerical instability
         """
+
         minwidth = self.get_parameter(self.__cs_parameter_minwidth)
-        # Replace 0 total width from the first row
-        if self._css_total_width[0] == 0:
-            if self._css_total_width[1] >= minwidth:
-                # minimum of 1.0
-                self._css_total_width[0] = minwidth
-                self.set_logger_message(f'Set minimum total width to {minwidth}', 'debug')
-            else:
-                # 0.1m less than the second row (arbitrary)
-                self._css_total_width[0] = self._css_total_width[1]-0.1
-                self.set_logger_message(f'Set minimum total width to {self._css_total_width[1]-0.1}', 'debug')
+        width_array[width_array < minwidth] = minwidth
+        
+        return width_array
 
     def _combined_optimisation_func(self, opt_in):
         (crest_level, extra_total_volume, extra_flow_volume) = opt_in
@@ -743,9 +742,9 @@ class CrossSection(FM2ProfBase):
 
     def _check_increasing_order(self, list_points):
         """ runs """
-        for indx in range(1,len(list_points)):
-            if list_points[indx] == list_points[indx-1]:
-                list_points[indx] = list_points[indx] + 0.001
+        for i in range(1,len(list_points)):
+            if list_points[i] <= list_points[i-1]:
+                list_points[i] = list_points[i-1] + 0.001
         return list_points
 
     def _build_roughness_tables(self):
