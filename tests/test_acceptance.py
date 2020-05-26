@@ -284,7 +284,7 @@ class Test_Run_Testcases:
             section_file_path = section_file
 
         #iniFile.set_parameter('ExportMapFiles', True)
-        iniFile.set_parameter('skipmaps', 1)
+        iniFile.set_parameter('skipmaps', 6)
         iniFile.set_input_file('2dmapoutput', os.path.join(test_data_dir, map_file))
         iniFile.set_input_file('crosssectionlocationfile', os.path.join(test_data_dir, css_file))
         iniFile.set_input_file('regionpolygonfile', region_file_path)
