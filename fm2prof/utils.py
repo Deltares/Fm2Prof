@@ -157,6 +157,8 @@ class VisualiseOutput():
                     css_sdflow = float(self._getValueFromLine(f))
                     css_sdtotal = float(self._getValueFromLine(f))
                     css_sdbaselevel = float(self._getValueFromLine(f))
+                    css_mainsectionwidth = float(self._getValueFromLine(f))
+                    css_fp1sectionwidth = float(self._getValueFromLine(f))
 
                     css = {"id":css_id.strip(),
                            "levels": css_levels,
@@ -165,7 +167,9 @@ class VisualiseOutput():
                            "SD_crest": css_sdcrest,
                            "SD_flow_area": css_sdflow,
                            "SD_total_area": css_sdtotal,
-                           "SD_baselevel": css_sdbaselevel
+                           "SD_baselevel": css_sdbaselevel,
+                           "mainsectionwidth": css_mainsectionwidth,
+                           "fp1sectionwidth": css_fp1sectionwidth
                            }
                     csslist.append(css)
 
@@ -279,7 +283,9 @@ class VisualiseOutput():
         tw = np.append([0], np.array(css['total_width']))
         fw = np.append([0], np.array(css['flow_width']))
         l = np.append(css['levels'][0], np.array(css['levels']))
-        
+        mainsectionwidth = css['mainsectionwidth']
+        fp1sectionwidth = css['fp1sectionwidth']
+
         # Get the water level where water level independent computation takes over
         # this is the lowest level where there is 2D information on volumes
         z_waterlevel_independent = self._get_lowest_water_level_in_2D(css)
@@ -290,6 +296,11 @@ class VisualiseOutput():
             ax.plot(side*tw/2, l, '-k')
             ax.plot(side*fw/2, l, '--k')
         
+        # Plot roughness section width
+        ax.plot([-0.5*mainsectionwidth, 0.5*mainsectionwidth],[min(l)-0.25]*2, '-', linewidth=2, color='red', label='Main section')
+        ax.plot([-0.5*(mainsectionwidth+fp1sectionwidth), 0.5*(mainsectionwidth+fp1sectionwidth)],[min(l)-0.25]*2, '--', color='red', label='Floodplain section')
+        #ax.plot(tw-0.5*max(fp1sectionwidth),[min(l)]*len(l), '--', color='cyan', label='Floodplain section')
+
         # Plot water level indepentent line
         ax.plot(tw-0.5*max(tw), [z_waterlevel_independent]*len(l), 
         linestyle='--', 
