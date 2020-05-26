@@ -95,11 +95,15 @@ class IniFile(FM2ProfBase):
         self._ini_template = self._get_template_ini()    # Template to fill defaults from
         self._configuration = self._get_template_ini()   # What will be used
 
-        if file_path:
+        if isinstance(file_path, str):
             self.__filePath = file_path
             self.__fileDir = os.path.split(file_path)[0]
-            if not(file_path is None or not file_path):
-                self._read_inifile(file_path)
+        else:
+            # if no filepath, or filepath is StringIO object (for testing purposes)
+            self.__filePath = None
+            self.__fileDir = None
+        if not(file_path is None or not file_path):
+            self._read_inifile(file_path)
 
     @property
     def has_output_directory(self) -> bool:
@@ -176,11 +180,14 @@ class IniFile(FM2ProfBase):
             self._configuration['sections'][section][ckey]['value'] = value
             return True
         else:
-            self.set_logger_message(f'Unnown key. Available keys: {keys}')
+            self.set_logger_message(f'Unnown key. Available keys: ?')
             return False
 
     def set_output_directory(self, value: str) -> None:
-        """ Use this method to set the output directory """
+        """ 
+        Use this method to set the output directory 
+        
+        """
         self._configuration['sections']['output'][self.__output_directory_key]['value'] = self._get_valid_output_dir(value)
 
     def print_configuration(self) -> str:
@@ -342,12 +349,15 @@ class IniFile(FM2ProfBase):
         Returns:
             {str} -- Valid output directory path.
         """
+        return output_dir
+        """
         if not output_dir:
             return os.getcwd()
         tmp_output_dir = output_dir.replace('/','\\')
         if '..' not in tmp_output_dir:
             return os.path.join(self.__fileDir, tmp_output_dir)
         return tmp_output_dir
+        """
 
     def _get_valid_case_name(self, case_name : str, output_dir : str):
         """Gets a valid case name to avoid duplication of directories
