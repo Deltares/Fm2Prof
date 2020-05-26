@@ -361,7 +361,10 @@ class VisualiseOutput():
     
     def _plot_roughness(self, css, ax, reference_roughness):
         levels, values = self.getRoughnessInfoForCss(css["id"], rtype='roughnessMain')
-        ax.plot(levels, values, label='Main channel')
+        try:
+            ax.plot(levels, values, label='Main channel')
+        except:
+            pass
 
         try:
             levels, values = self.getRoughnessInfoForCss(css["id"], rtype='roughnessFP1')
