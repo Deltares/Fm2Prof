@@ -808,7 +808,7 @@ class CrossSection(FM2ProfBase):
         
         for section in [1, 2, 3]:
             if section == 1:
-                section_area = np.sum(self._fm_data['area'][self._fm_data['section']==section] + unassigned_area)/self.length 
+                section_area = (np.sum(self._fm_data['area'][self._fm_data['section']==section]) + unassigned_area)/self.length 
             else:
                 section_area = np.sum(self._fm_data['area'][self._fm_data['section']==section])/self.length
             self.section_widths[self._section_map[str(section)]] = section_area
