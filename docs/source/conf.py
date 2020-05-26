@@ -23,7 +23,7 @@ author = 'Koen Berends'
 contact = 'koen.berends@deltares.nl'
 
 # The full version, including alpha/beta/rc tags
-release = '1.4'
+release = '1.4.1'
 
 # To enable to inject project name in source 
 rst_epilog = f"""

@@ -69,7 +69,7 @@ def classify_roughness_sections_by_variance(data, variable):
     variance_list = list()
     split_candidates = np.arange(min(end_values), max(end_values), 1)
     if len(split_candidates) < 2: # this means that all end values are very close together, so do not split
-        data[key][:] = 'main'
+        data[key][:] = 1
     else:
         for split in split_candidates:
             variance_list.append(
@@ -80,10 +80,10 @@ def classify_roughness_sections_by_variance(data, variable):
         splitpoint = split_candidates[np.nanargmin(variance_list)]
 
         # High chezy values are assigned to section number '1' (Main channel)
-        data[key][end_values > splitpoint] = 'main'
+        data[key][end_values > splitpoint] = 1
 
         # Low chezy values are assigned to section number '2' (Flood plain) 
-        data[key][end_values <= splitpoint] = 'floodplain1'
+        data[key][end_values <= splitpoint] = 2
     return data
 
 
