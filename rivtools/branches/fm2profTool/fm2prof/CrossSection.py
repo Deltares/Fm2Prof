@@ -268,7 +268,7 @@ class CrossSection(FM2ProfBase):
             waterlevel,
             bedlevel_matrix,
             area_matrix,
-            wet_not_plas_mask[0].values)
+            wet_not_plas_mask.iloc[:,0].values)
 
         # Compute 1D volume as integral of width with respect to z times length
         self._css_total_volume = np.append(
