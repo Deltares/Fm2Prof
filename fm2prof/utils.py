@@ -273,17 +273,31 @@ class VisualiseOutput():
         finally:
             plt.close()
   
-    def _plot_geometry(self, css, ax, reference_geometry):
+    def _plot_geometry(self, css, ax, reference_geometry=None):
+        
+        # Get data
         tw = np.append([0], np.array(css['total_width']))
         fw = np.append([0], np.array(css['flow_width']))
         l = np.append(css['levels'][0], np.array(css['levels']))
-
+        
+        # Get the water level where water level independent computation takes over
+        # this is the lowest level where there is 2D information on volumes
+        z_waterlevel_independent = self._get_lowest_water_level_in_2D(css)
+        
         # Plot cross-section geometry
         for side in [-1, 1]:
             h = ax.fill_betweenx(l, side*fw/2, side*tw/2, color="#44B1D5AA", hatch='////')
             ax.plot(side*tw/2, l, '-k')
             ax.plot(side*fw/2, l, '--k')
+        
+        # Plot water level indepentent line
+        ax.plot(tw-0.5*max(tw), [z_waterlevel_independent]*len(l), 
+        linestyle='--', 
+        color='m', 
+        label='Lowest water level in 2D')
+        
         h.set_label('Storage')
+        
         ax.set_title(css['id'])
         ax.set_xlabel('[m]')
         ax.set_ylabel('[m]')
@@ -291,14 +305,23 @@ class VisualiseOutput():
         if reference_geometry:
             ax.plot(reference_geometry[1], reference_geometry[0], '--r', label='Reference geometry')
 
+        # Plot crest level height
+        sd_info = self._get_sd_plot_info(css)
+        
         ax.plot([-tw[-1]/2, tw[-1]/2], 
-                    [css['SD_crest']]*2, 
-                    '--', linewidth=1, color='orange', label='SD crest level')
+                [sd_info.get('crest')]*2, 
+                linestyle=sd_info.get('linestyle'), 
+                linewidth=1, 
+                color='orange', 
+                label=sd_info.get('label'))
+
     
     def _plot_volume(self, css, ax):
-        # Plot Volume
+        # Get data
         vd = self.getVolumeInfoForCss(css["id"])
+        z_waterlevel_independent = self._get_lowest_water_level_in_2D(css)
 
+        # Plot 1D volumes
         ax.fill_between(vd['z'], 0, vd['1D_total_volume_sd'],
                             color="#24A493",
                             label='1D Total Volume (incl. SD)')
@@ -311,14 +334,26 @@ class VisualiseOutput():
         ax.fill_between(vd['z'], 0, vd['1D_flow_volume'],
                             color="#0C6B7F",
                             label='1D Flow Volume (excl. SD)')
-
+        # Plot 2D volume
         ax.plot(vd['z'], vd['2D_total_volume'], '--k', label='2D Total Volume')
         ax.plot(vd['z'], vd['2D_flow_volume'], '-.k', label='2D Flow Volume')
         
-        # Plot sd crest
-        ax.plot([css['SD_crest']]*len(vd['2D_total_volume']), 
+        # Plot lowest point in 2D
+        ax.plot([z_waterlevel_independent]*len(vd['2D_total_volume']), 
                     vd['2D_total_volume'],
-                    '--', linewidth=1, color='orange', label='SD crest level')
+                    linestyle='--', 
+                    linewidth=1, 
+                    color='m', 
+                    label='Lowest water level in 2D')
+        
+        # Plot SD crest
+        sd_info = self._get_sd_plot_info(css)
+        ax.plot([sd_info.get('crest')]*len(vd['2D_total_volume']), 
+                    vd['2D_total_volume'],
+                    linestyle=sd_info.get('linestyle'), 
+                    linewidth=1, 
+                    color='orange', 
+                    label=sd_info.get('label'))
 
         ax.set_title('Volume graph')
         ax.set_xlabel('Water level [m]')
@@ -343,4 +378,27 @@ class VisualiseOutput():
         ax.set_xlabel('Water level [m]')
         ax.set_ylabel('Manning coefficient [sm$^{-1/3}$]')
 
+    @staticmethod
+    def _get_sd_plot_info(css):
+        l = np.append(css['levels'][0], np.array(css['levels']))
+        z_crest_level = css['SD_crest']
+        if z_crest_level <= max(l):
+            if z_crest_level >= min(l):
+                sd_linestyle='--'
+                sd_label = 'SD Crest Level'
+            else:
+                z_crest_level = min(l)
+                sd_linestyle = '-'
+                sd_label= 'SD Crest Level (cropped)'
+        else:
+            z_crest_level = max(l)
+            sd_linestyle = '-'
+            sd_label= 'SD Crest Level (cropped)'
         
+        return {'linestyle': sd_linestyle, 'label': sd_label, 'crest': z_crest_level}
+    
+    def _get_lowest_water_level_in_2D(self, css):
+        vd = self.getVolumeInfoForCss(css["id"])
+        index_waterlevel_independent = np.argmax(~np.isnan(vd.get('2D_total_volume')))
+        z_waterlevel_independent = vd.get('z')[index_waterlevel_independent]
+        return z_waterlevel_independent
