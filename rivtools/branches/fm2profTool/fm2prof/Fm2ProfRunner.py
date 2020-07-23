@@ -4,13 +4,10 @@ Runner class.
 
 # import from standard library
 import traceback
-from typing import Mapping, Sequence, List, Dict
+from typing import Mapping, List, Dict
 import datetime
-import itertools
 import os
 import sys
-import shutil
-import logging
 import time
 
 # import from dependencies
@@ -39,7 +36,7 @@ class Fm2ProfRunner(FM2ProfBase):
         iniFilePath (str): path to configuration file
     """
 
-    def __init__(self, iniFilePath: str, version: float = None):
+    def __init__(self, iniFilePath: str = '', version: float = None):
         """
         Initializes the project
 
@@ -49,7 +46,7 @@ class Fm2ProfRunner(FM2ProfBase):
             version {float} (DEPRECATED)
                 -- Current version of the software, needs to be rethought.
         """
-        FmModelData: self.fm_model_data = None
+        self.fm_model_data: FmModelData = None
 
         self._create_logger()
         self._print_header()
