@@ -13,7 +13,9 @@
 # import os
 # import sys
 # sys.path.insert(0, os.path.abspath('.'))
-
+#from jupyter_sphinx_theme import *
+#init_theme()
+import json
 
 # -- Project information -----------------------------------------------------
 
@@ -23,7 +25,8 @@ author = 'Koen Berends'
 contact = 'koen.berends@deltares.nl'
 
 # The full version, including alpha/beta/rc tags
-release = '1.4.1'
+import fm2prof
+release = fm2prof.Project().__version__
 
 # To enable to inject project name in source 
 rst_epilog = f"""
@@ -53,10 +56,55 @@ exclude_patterns = []
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-html_theme = 'sphinx_rtd_theme'
+html_theme = 'sphinx_materialdesign_theme'
+
 html_theme_options = {
-	"display_version": True,
+    # Specify a list of menu in Header.
+    # Tuples forms:
+    #  ('Name', 'external url or path of pages in the document', boolean, 'icon name')
+    #
+    # Third argument:
+    # True indicates an external link.
+    # False indicates path of pages in the document.
+    #
+    # Fourth argument:
+    # Specify the icon name.
+    # For details see link.
+    # https://material.io/icons/
+    'header_links' : [
+        ('Home', 'index', False, 'home'),
+        ("Deltares", "https://deltares.nl", True, 'launch'),
+    ],
+
+    # Customize css colors.
+    # For details see link.
+    # https://getmdl.io/customize/index.html
+    #
+    # Values: amber, blue, brown, cyan deep_orange, deep_purple, green, grey, indigo, light_blue,
+    #         light_green, lime, orange, pink, purple, red, teal, yellow(Default: indigo)
+    'primary_color': 'blue',
+    # Values: Same as primary_color. (Default: pink)
+    'accent_color': 'amber',
+
+    # Customize layout.
+    # For details see link.
+    # https://getmdl.io/components/index.html#layout-section
+    'fixed_drawer': True,
+    'fixed_header': True,
+    'header_waterfall': True,
+    'header_scroll': False,
+
+    # Render title in header.
+    # Values: True, False (Default: False)
+    'show_header_title': False,
+    # Render title in drawer.
+    # Values: True, False (Default: True)
+    'show_drawer_title': True,
+    # Render footer.
+    # Values: True, False (Default: True)
+    'show_footer': True
 }
+
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
@@ -97,7 +145,7 @@ latex_elements = {
 \publisheri{}
 \organisationi{Deltares}
 """+
-fr"""
+rf"""
 \subtitle{{Manual for version {release}}}
 \version{{{release}}}
 \versioni{{{release}}}
@@ -106,3 +154,23 @@ fr"""
 
 def setup(app):
     app.add_css_file('custom.css')
+
+def generate_files_chapters():
+    with open('../../fm2prof/configurationfile_template.json', 'r') as f:
+        data = json.load(f)
+
+        with open('chapters/files.rst', 'w') as f:
+            f.write(f"""Files
+========
+
+Configuration file
+-------------------
+Default settings
+
+.. code-block:: text
+
+""")
+            for line in fm2prof.Project().get_inifile()._print_configuration(data).splitlines():
+                f.write(f"\t{line}\n")
+
+generate_files_chapters()
