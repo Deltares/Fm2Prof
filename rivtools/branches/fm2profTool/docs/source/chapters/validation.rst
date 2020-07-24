@@ -1,4 +1,4 @@
-Validation
+Validation cases
 ====================
 
 This section presents seven idealised test cases. Every idealised case is used to validate a different aspect for river geometry. The test cases are ordered from simple to more complex. All idealised cases are straight channels of 3000m length. The slope is always 3.33e-4, making the total drop in elevation over the whole length 1m. The channel width is 150m, and if a floodplain is present, it is 50m wide:
@@ -137,6 +137,8 @@ Results
 .. image:: ../../../tests/Output/RunWithFiles_Output/case_04_storage/CaseName01/figures/case4_2000.png 
 .. image:: ../../../tests/Output/RunWithFiles_Output/case_04_storage/CaseName01/figures/case4_2500.png 
 .. image:: ../../../tests/Output/RunWithFiles_Output/case_04_storage/CaseName01/figures/case4_3000.png 
+
+.. _validation_summerdike:
 
 05 - Summer dike
 ---------------------------------

@@ -1,25 +1,17 @@
-Source code documentation
+
+.. _source documentation:
+
+API
 ======================================
 
-
-.. automodule:: fm2prof.Fm2ProfRunner
+.. autoclass:: fm2prof.Project
    :members: 
 
 .. _SourceUtils:
 
 Utilities
-^^^^^^^^^^^^^^^^
+------------
+
 .. automodule:: fm2prof.utils
    :members: 
 
-Cross-section
-^^^^^^^^^^^^^^^^
-.. automodule:: fm2prof.CrossSection
-   :members: 
-
-
-Base types
-^^^^^^^^^^^^^^^^
-
-.. automodule:: fm2prof.common
-   :members: 

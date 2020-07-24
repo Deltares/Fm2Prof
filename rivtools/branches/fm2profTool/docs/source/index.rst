@@ -1,16 +1,20 @@
-Welcome to FM2PROF's documentation!
+|project|
 ===================================
+Version: |release|
 
-FM2PROF is a python package for creating 1D model input from a 2D model. 
+
+|project| is a Python program to create automatically input for 1D models from 2D models. This is the manual. 
 
 
+Tables of content
+==================
 .. toctree::
    :maxdepth: 2
    :caption: Getting started
 
    chapters/installation
    chapters/quickstart
-   chapters/settings
+   chapters/advanced
 
 .. toctree::
    :maxdepth: 2
