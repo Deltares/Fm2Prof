@@ -122,7 +122,7 @@ class FM2ProfBase:
     """
     __logger = None
     __iniFile = None
-    __version__ = "1.4.1"
+    __version__ = "1.4.2 (dev)"
     __contact__ = "koen.berends@deltares.nl"
     __authors__ = "Koen Berends, Asako Fujisaki, Carles Soriano Perez, Ilia Awakimjan"
     __copyright__ = "Copyright 2016-2020, University of Twente & Deltares"
@@ -141,14 +141,14 @@ class FM2ProfBase:
 
         # create formatter
         self.__logger.__logformatter = ElapsedFormatter()
-        self.__logger._Filelogformatter=ElapsedFileFormatter()
-
+        self.__logger._Filelogformatter = ElapsedFileFormatter()
 
         # create console handler
-        ch = logging.StreamHandler()
-        ch.setLevel(logging.DEBUG)
-        ch.setFormatter(self.__logger.__logformatter)
-        self.__logger.addHandler(ch)
+        if logging.StreamHandler not in map(type, self.__logger.handlers):
+            ch = logging.StreamHandler()
+            ch.setLevel(logging.DEBUG)
+            ch.setFormatter(self.__logger.__logformatter)
+            self.__logger.addHandler(ch)
 
     def get_logger(self) -> Logger:
         """ Use this method to return logger object """

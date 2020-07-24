@@ -32,7 +32,7 @@
   	},
   	"MaximumPointsInProfile": {
 	    "type": "int",
-	    "hint": "Number of points which are used to generate cross-sections (value = 20)",
+	    "hint": "Number of points which are used to generate cross-sections",
 	    "value": 20
   	},
   	"AbsoluteVelocityThreshold": {
@@ -57,7 +57,7 @@
   	},
   	"LakeTimesteps": {
 	    "type": "int",
-	    "hint": "Number of timesteps that are used for identifying lakes (value=10)",
+	    "hint": "Number of timesteps that are used for identifying lakes",
 	    "value": 10 
   	},
     "ExtrapolateStorage": {
@@ -121,7 +121,7 @@
     "OutputDirectory": {
       "type": "str",
       "hint": "Output files are saved in OutputDir/CaseName; if not specified, subdirectory is created in the current directory",
-      "value": "" 
+      "value": "output" 
     }
   }
  }

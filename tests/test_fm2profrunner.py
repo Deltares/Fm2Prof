@@ -8,10 +8,11 @@ import numpy as np
 import shutil
 
 from tests.TestUtils import TestUtils
-from fm2prof.Fm2ProfRunner import Fm2ProfRunner as Fm2ProfRunner
+from fm2prof.Fm2ProfRunner import Fm2ProfRunner 
 from fm2prof.IniFile import IniFile
 from fm2prof.CrossSection import CrossSection as CS
 from fm2prof.Import import FmModelData as FMD
+from fm2prof import Project
 
 _root_output_dir = None
 
@@ -64,16 +65,170 @@ def __check_and_create_test_case_output_dir(base_output_dir, caseName):
 # endregion
 
 
+
+class Test_Project:
+
+    @pytest.mark.unittest
+    def test_when_no_file_path_then_no_exception_is_risen(self):
+        # 1. Set up initial test dat
+        project = None
+
+        # 2. Run test
+        try:
+            project = Project()
+        except Exception as e:
+            pytest.fail('No exception expected, but thrown: {}'.format(str(e)))
+
+        # 3. Verify final expectations
+
+    @pytest.mark.unittest
+    def test_run_without_input_no_exception_is_raised(self):
+        # 1. Set up initial test dat
+        project = None
+
+        # 2. Run test
+        try:
+            project = Project()
+            project.run()
+        except Exception as e:
+            pytest.fail('No exception expected, but thrown: {}'.format(str(e)))
+
+        # 3. Verify final expectations
+        
+    @pytest.mark.unittest
+    def test_if_get_existing_parameter_then_returned(self):
+        # 1. Set up initial test dat
+        project = None
+        value = None
+
+        # 2. Run test
+        try:
+            project = Project()
+            value = project.get_parameter('LakeTimeSteps')
+        except Exception as e:
+            pytest.fail('No exception expected, but thrown: {}'.format(str(e)))
+
+        # 3. Verify final expectations
+        assert project is not None 
+        assert value is not None 
+
+    @pytest.mark.unittest
+    def test_if_get_nonexisting_parameter_then_no_exception(self):
+        # 1. Set up initial test dat
+        project = None
+        value = None
+        # 2. Run test
+        try:
+            project = Project()
+            value = project.get_parameter('IDoNoTExist')
+        except Exception as e:
+            pytest.fail('No exception expected, but thrown: {}'.format(str(e)))
+
+        # 3. Verify final expectations
+        assert project is not None 
+        assert value is None 
+
+    @pytest.mark.unittest
+    def test_if_get_existing_inputfile_then_returned(self):
+        # 1. Set up initial test dat
+        project = None
+        value = None
+        # 2. Run test
+        try:
+            project = Project()
+            value = project.get_input_file('CrossSectionLocationFile')
+        except Exception as e:
+            pytest.fail('No exception expected, but thrown: {}'.format(str(e)))
+
+        # 3. Verify final expectations
+        assert project is not None 
+        assert value is not None 
+
+    @pytest.mark.unittest
+    def test_if_get_output_directory_then_returned(self):
+        # 1. Set up initial test dat
+        project = None
+        value = None
+        # 2. Run test
+        try:
+            project = Project()
+            value = project.get_output_directory()
+        except Exception as e:
+            pytest.fail('No exception expected, but thrown: {}'.format(str(e)))
+
+        # 3. Verify final expectations
+        assert project is not None 
+        assert value is not None 
+
+    @pytest.mark.unittest
+    def test_set_parameter(self):
+        # 1. Set up initial test dat
+        project = None
+        value = 150
+        # 2. Run test
+        try:
+            project = Project()
+            project.set_parameter("LakeTimeSteps", value)
+        except Exception as e:
+            pytest.fail('No exception expected, but thrown: {}'.format(str(e)))
+
+        # 3. Verify final expectations
+        assert project.get_parameter("LakeTimeSteps") == value 
+
+    @pytest.mark.unittest
+    def test_set_input_file(self):
+        # 1. Set up initial test dat
+        project = None
+        value = 'RandomString'
+        # 2. Run test
+        try:
+            project = Project()
+            project.set_input_file("CrossSectionLocationFile", value)
+        except Exception as e:
+            pytest.fail('No exception expected, but thrown: {}'.format(str(e)))
+
+        # 3. Verify final expectations
+        assert project.get_input_file("CrossSectionLocationFile") == value 
+
+    @pytest.mark.unittest
+    def test_set_output_directory(self):
+        # 1. Set up initial test dat
+        project = None
+        value = "test/subdir"
+        # 2. Run test
+        try:
+            project = Project()
+            project.set_output_directory(value)
+        except Exception as e:
+            pytest.fail('No exception expected, but thrown: {}'.format(str(e)))
+
+        # 3. Verify final expectations
+        
+    @pytest.mark.unittest
+    def test_print_configuration(self):
+        # 1. Set up initial test dat
+        project = None
+        value = None
+        # 2. Run test
+        try:
+            project = Project()
+            value = project.print_configuration()
+        except Exception as e:
+            pytest.fail('No exception expected, but thrown: {}'.format(str(e)))
+
+        # 3. Verify final expectations
+        assert value is not None
+
+
 class Test_Fm2ProfRunner:
     @pytest.mark.integrationtest
     def test_when_no_file_path_then_no_exception_is_risen(self):
-        # 1. Set up initial test data
-        iniFilePath = ''
+        # 1. Set up initial test dat
         runner = None
 
         # 2. Run test
         try:
-            runner = Fm2ProfRunner(iniFilePath)
+            runner = Fm2ProfRunner()
         except Exception as e:
             pytest.fail('No exception expected, but thrown: {}'.format(str(e)))
 
@@ -101,6 +256,7 @@ class Test_Fm2ProfRunner:
 
         # 4. Verify final expectations
         assert runner is not None
+
 
 class ARCHIVED_Test_generate_cross_section_list:
 
