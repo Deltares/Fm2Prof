@@ -9,31 +9,6 @@ import matplotlib.pyplot as plt
 from typing import Tuple
 from fm2prof.common import FM2ProfBase
 
-def SetDeltaresStyle(fig, legendbelow=False):
-    for ax in fig.axes:
-        ax.grid(False)
-        ax.spines['top'].set_visible(False)
-        ax.spines['right'].set_visible(False)
-
-        ax.xaxis.set_tick_params(width=2)
-        ax.yaxis.set_tick_params(width=2)
-        for spine in ['left', 'bottom']:
-            ax.spines[spine].set_edgecolor('#272727')
-            ax.spines[spine].set_linewidth(2)
-        if legendbelow:
-            legend = ax.legend(fancybox=True,
-                               framealpha=0.5,
-                               edgecolor='None',
-                               loc=3,
-                               ncol=3,
-                               bbox_to_anchor=(-0.02, -0.5))
-        else:
-            legend = ax.legend(fancybox=True,
-                               framealpha=0.5,
-                               edgecolor='None')
-        legend.get_frame().set_facecolor('#e5eef2')  # #e5eef2 #92b6c7
-        legend.get_frame().set_boxstyle("square", pad=0)
-
 
 def networkdeffile_to_input(networkdefinitionfile, crossectionlocationfile):
     """
@@ -41,6 +16,11 @@ def networkdeffile_to_input(networkdefinitionfile, crossectionlocationfile):
 
     The distance between cross-section is computed from the differences between the offsets/chainages.
     The beginning and end point of each branch are treated as half-distance control volumes.
+    
+    Arguments
+        networkdefinitionfile: path to the input file
+
+        crossectionlocationfile: path to the output file
     """
 
     # Open network definition file, for each branch extract necessary info
@@ -241,10 +221,14 @@ class VisualiseOutput():
         Creates a figure
 
         Arguments
+            
             css: dictionary containing cross-section information. Obtain with `VisualiseOutput.cross_sections`
                  generator or `VisualiseOutput.get_cross_section_by_id` method. 
+            
             reference_geometry (tuple): tuple(list(y), list(z))
+            
             reference_roughness (tuple): tuple(list(z), list(n))
+            
             save_to_file (bool): if true, save figure to VisualiseOutput.fig_dir
                                  if false, returns pyplot figure object
     
@@ -261,7 +245,7 @@ class VisualiseOutput():
             self._plot_roughness(css, axs[2], reference_roughness)
             
             
-            SetDeltaresStyle(fig)
+            self._SetPlotStyle(fig)
             plt.tight_layout()
             
             if save_to_file:
@@ -416,3 +400,29 @@ class VisualiseOutput():
         index_waterlevel_independent = np.argmax(~np.isnan(vd.get('2D_total_volume')))
         z_waterlevel_independent = vd.get('z')[index_waterlevel_independent]
         return z_waterlevel_independent
+
+    
+    def _SetPlotStyle(self, fig, legendbelow=False):
+        for ax in fig.axes:
+            ax.grid(False)
+            ax.spines['top'].set_visible(False)
+            ax.spines['right'].set_visible(False)
+
+            ax.xaxis.set_tick_params(width=2)
+            ax.yaxis.set_tick_params(width=2)
+            for spine in ['left', 'bottom']:
+                ax.spines[spine].set_edgecolor('#272727')
+                ax.spines[spine].set_linewidth(2)
+            if legendbelow:
+                legend = ax.legend(fancybox=True,
+                                framealpha=0.5,
+                                edgecolor='None',
+                                loc=3,
+                                ncol=3,
+                                bbox_to_anchor=(-0.02, -0.5))
+            else:
+                legend = ax.legend(fancybox=True,
+                                framealpha=0.5,
+                                edgecolor='None')
+            legend.get_frame().set_facecolor('#e5eef2')  # #e5eef2 #92b6c7
+            legend.get_frame().set_boxstyle("square", pad=0)

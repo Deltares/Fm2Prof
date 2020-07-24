@@ -180,7 +180,8 @@ class IniFile(FM2ProfBase):
             self._configuration['sections'][section][ckey]['value'] = value
             return True
         else:
-            self.set_logger_message(f'Unnown key. Available keys: ?')
+            keys = self._configuration['sections'][section].keys()
+            self.set_logger_message(f'Unknown {section}. Available keys: {list(keys)}')
             return False
 
     def set_output_directory(self, value: str) -> None:
@@ -188,12 +189,18 @@ class IniFile(FM2ProfBase):
         Use this method to set the output directory 
         
         """
-        self._configuration['sections']['output'][self.__output_directory_key]['value'] = self._get_valid_output_dir(value)
+        case_name = self._get_valid_case_name(self.get_parameter('casename'), value)
+        
+        self._configuration['sections']['output'][self.__output_directory_key]['value'] = self._get_valid_output_dir(os.path.join(value, case_name))
 
     def print_configuration(self) -> str:
         """ Use this method to print a string of the configuration used """
+        return self._print_configuration(self._configuration)
+
+    @staticmethod
+    def _print_configuration(inputdict) -> str:
         f = io.StringIO()
-        for sectionname, section in self._configuration.get('sections').items():
+        for sectionname, section in inputdict.get('sections').items():
             f.write(f'[{sectionname}]\n')
             for key, contents in section.items():
                 f.write(f"{key:<30}= {str(contents.get('value')):<10}# {contents.get('hint')}\n")
@@ -333,15 +340,16 @@ class IniFile(FM2ProfBase):
         except KeyError:
             raise InvalidConfigurationFileError
         
+
         for key, value in outputsection.items():
             if key.lower() == self.__output_directory_key.lower():
-                case_name = self._get_valid_case_name(self.get_parameter('casename'), value)
-                self.set_output_directory(os.path.join(value, case_name))
+                self.set_output_directory(value)
             else:
                 self.set_logger_message(f'Unknown key {key} found in configuration file', 'warning')
 
     def _get_valid_output_dir(self, output_dir : str ):
-        """Gets a normalized output directory path.
+        """
+        Gets a normalized output directory path.
 
         Arguments:
             output_dir {str} -- Relative path to the configuration file.
@@ -349,6 +357,10 @@ class IniFile(FM2ProfBase):
         Returns:
             {str} -- Valid output directory path.
         """
+        try:
+            os.makedirs(output_dir)
+        except FileExistsError:
+            pass
         return output_dir
         """
         if not output_dir:

@@ -4,11 +4,12 @@ Runner class.
 
 # import from standard library
 import traceback
-from typing import Mapping, List, Dict
+from typing import Mapping, List, Dict, Union, NoReturn
 import datetime
 import os
 import sys
 import time
+from pathlib import Path
 
 # import from dependencies
 import numpy as np
@@ -36,15 +37,12 @@ class Fm2ProfRunner(FM2ProfBase):
         iniFilePath (str): path to configuration file
     """
 
-    def __init__(self, iniFilePath: str = '', version: float = None):
+    def __init__(self, iniFilePath: str = ''):
         """
         Initializes the project
 
-        Arguments:
-            iniFilePath {str}
-                -- File path where the IniFile is located.
-            version {float} (DEPRECATED)
-                -- Current version of the software, needs to be rethought.
+        iniFilePath (str): path to a configuration file. If not given,
+                               default values will be used. 
         """
         self.fm_model_data: FmModelData = None
 
@@ -69,13 +67,21 @@ class Fm2ProfRunner(FM2ProfBase):
 
     def run(self) -> None:
         """
-        Runs the Fm2Prof functionality.
+        Use this method to run FM2PROF. 
+
         """
         if self.get_inifile() is None:
             self.set_logger_message(
                 'No ini file was specified and the run cannot go further.', 'Warning')
             return
-        self._run_inifile()
+        
+        succes = self._run_inifile()
+
+        if not succes:
+            self.set_logger_message('Program finished with errors', 'warning')
+        else:
+            self.set_logger_message('Program finished', 'info')
+
 
     def load_inifile(self, iniFilePath: str):
         """
@@ -88,13 +94,13 @@ class Fm2ProfRunner(FM2ProfBase):
 
     def _print_header(self):
         self.set_logger_message(
-            '='*30+'\n' +
+            '='*80+'\n' +
             f'FM2PROF version {self.__version__}\n\n'+
             f'{self.__copyright__:>6}\n\n'+
             f'Authors: {self.__authors__:>6}\n'+
             f'Contact: {self.__contact__:>6}\n'+
             f'License: {self.__license__:>6} license. For more info see LICENSE.txt\n' +
-            '='*30+'\n',
+            '='*80+'\n',
             header=True)
 
     def _run_inifile(self) -> None:
@@ -112,33 +118,39 @@ class Fm2ProfRunner(FM2ProfBase):
             self._initialise_fm2prof()
         except:
             self.set_logger_message('Unexpected exception during initialisation', 'error')
-            self.set_logger_message(traceback.print_exc(file=sys.stdout), 'error')
-            return
+            for line in traceback.format_exc().splitlines(): self.set_logger_message(line, 'debug')
+            return False
 
         # Generate cross-sections
         try:
             cross_sections = self._generate_cross_section_list()
         except:
             self.set_logger_message('Unexpected exception during generation of cross-sections. No output produced', 'error')
-            self.set_logger_message(traceback.print_exc(file=sys.stdout), 'error')
-            return
+            for line in traceback.format_exc().splitlines(): self.set_logger_message(line, 'debug')
+            return False
 
         # Finalise and write output
         try:
             self._finalise_fm2prof(cross_sections)
         except:
             self.set_logger_message('Unexpected exception during finalisation', 'error')
-            self.set_logger_message(traceback.print_exc(file=sys.stdout), 'error')
+            for line in traceback.format_exc().splitlines(): self.set_logger_message(line, 'debug')
+            return False
+        
+        return True
 
     def _initialise_fm2prof(self) -> None:
         """
         Loads data, inifile
         """
         iniFile = self.get_inifile()
+        map_key = '2DMapOutput'
+        css_key = 'CrossSectionLocationFile'
+        raiseFileNotFoundError = False
 
         # shorter local variables
-        map_file = iniFile.get_input_file('2DMapOutput')
-        css_file = iniFile.get_input_file('CrossSectionLocationFile')
+        map_file = iniFile.get_input_file(map_key)
+        css_file = iniFile.get_input_file(css_key)
         region_file = iniFile.get_input_file('RegionPolygonFile')
         section_file = iniFile.get_input_file('SectionPolygonFile')
         output_dir = iniFile.get_output_directory()
@@ -153,6 +165,15 @@ class Fm2ProfRunner(FM2ProfBase):
 
         if bool(section_file):
             sections = SectionPolygonFile(section_file, logger=self.get_logger())
+
+        # Check if input exists
+        if not Path(map_file).is_file(): 
+            self.set_logger_message(f"File for {map_key} not found at {map_file}", "warning")
+            raiseFileNotFoundError = True
+        if not Path(css_file).is_file(): 
+            self.set_logger_message(f"File for {css_key} not found at {css_file}", "warning")
+            raiseFileNotFoundError = True
+        if raiseFileNotFoundError: raise FileNotFoundError
 
         # Read FM model data
         fm2prof_fm_model_data = \
@@ -752,3 +773,85 @@ class Fm2ProfRunner(FM2ProfBase):
                 '{}'.format(e_message), 'error')
             self.set_logger_message(traceback.print_exc(file=sys.stdout), 'error')
         return css
+
+
+class Project(Fm2ProfRunner):
+    """
+    Provides the main API for running FM2PROF. 
+    """
+
+    def set_parameter(self, name  : str, value : Union[str, float, int]):
+        """
+        Use this method to set the value of a parameter
+
+        Arguments:
+            name: name of the parameter (case insensitive).
+
+            value: value of the parameter. An error will be given if the value has the wrong type (e.g. string if int was expected).
+        """
+        self.get_inifile().set_parameter(name, value)
+
+    def get_parameter(self, name: str) -> Union[str, float, int]:
+        """
+        Use this method to get the value of a parameter
+
+        Arguments:
+            name: name of the parameter (case insensitive)
+
+        Returns: 
+            The current value of the parameter 
+        """
+        return self.get_inifile().get_parameter(name)
+    
+    def set_input_file(self, name:str, value:Union[str, float, int]) -> None:
+        """
+        Use this method to set the path to an input file
+
+        Arguments:
+            name: name of the input file in the configuration (case insensitive).
+            
+            value: path to the inputfile
+        """
+        return self.get_inifile().set_input_file(name, value)
+
+    def get_input_file(self, name:str) -> Union[str,]:
+        """
+        Use this method to retrieve the path to an input file
+
+        Arguments:
+            name (str): case-insensitive key of the input file (e.g.'2dmapoutput')
+        """
+        return self.get_inifile().get_input_file(name)
+
+    def set_output_directory(self, path) -> None:
+        """
+        Use this method to set the output directory.
+
+        .. warning::
+            calling this function will also create the output directory,
+            if it does not already exists!
+
+        Arguments:
+            path: path to the output path
+        """
+        self.get_inifile().set_output_directory(path)
+
+    def get_output_directory(self) -> None:
+        """
+        Returns the current output directory
+        """
+        return self.get_inifile().get_output_directory()
+    
+    def print_configuration(self) -> str:
+        """
+        Use this method to obtain string representation of the 
+        configuration. Use this string to write to file, e.g.:
+
+            >> with open('EmptyProject.ini', 'w') as f:
+            >>     f.write(project.print_configuration())
+
+        Returns:
+            string
+
+        """
+        return self.get_inifile().print_configuration()
