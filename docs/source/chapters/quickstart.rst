@@ -64,14 +64,14 @@ Using |project| with a terminal
 .. note::
     The terminal interface is also referred to as the CLI (command line interface)
 
-First, open a command window or powershell and navigate to `<fm2prof source code>/bin`, which contains `fm2prof.console.py`. 
+First, open a command window or powershell and navigate to `<fm2prof source code>/bin`, which contains `fm2profConsole.py`. 
 
 To start a new project:
 
 .. code-block:: bash
     
     # while in ./fm2prof/bin
-    python ./fm2prof.console.py -n EmptyProject
+    python ./fm2profConsole.py -n EmptyProject
 
 this will create a new file called 'EmptyProject.ini'. This is a valid configuration file with all parameters set to their default values. In this file, manually add at least the following settings: 
 
@@ -93,7 +93,7 @@ Next, load the project:
 
 .. code-block:: bash
 
-    python ./fm2prof.console.py -f EmptyProject.ini
+    python fm2profConsole.py -f EmptyProject.ini
 
 Check the results whether everything is ok. You should also see a print-out of the configuration file. These are the settings that will be used and can be altered using a config file. The configuration file does not need all parameters to be specified. If a parameter is not in the configuration file, default values will be used. 
 
@@ -101,7 +101,7 @@ To generate output, use:
 
 .. code-block:: bash
 
-    python ./fm2prof.console.py -f EmptyProject.ini -r
+    python fm2profConsole.py -f EmptyProject.ini -r
 
 Using the Python API
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
