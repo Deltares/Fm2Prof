@@ -1,3 +1,7 @@
+* Documentation *
+
+For a full documentation, installion instructions and how-to see /doc.  
+
 * Environment: *
 A file containing the virtual environment (environment.yml) dependencies is provided and strongly recommended to use in order to execute successfully FM2PROF.
 To install it simply run the following:
