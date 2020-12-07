@@ -8,9 +8,114 @@ from typing import Dict, Mapping
 
 # import from dependencies
 import numpy as np
+from netCDF4 import Dataset
+import pandas as pd 
 
 # import from  package
 from fm2prof.common import FM2ProfBase
+
+
+class FMDataImporter(FM2ProfBase):
+
+    dflow2d_face_keys = {'x': 'mesh2d_face_x', 
+                         'y': 'mesh2d_face_y',
+                         'area': 'mesh2d_flowelem_ba',
+                         'bedlevel': 'mesh2d_flowelem_bl'
+                        }
+
+    dflow2d_edge_keys = {'x': 'mesh2d_edge_x', 
+                         'y': 'mesh2d_edge_y',
+                         'edge_faces': 'mesh2d_edge_faces',
+                         'edge_nodes': 'mesh2d_edge_nodes'
+                        }
+    
+    dflow2d_result_keys = {'waterdepth': "mesh2d_waterdepth",
+                           'waterlevel': "mesh2d_s1",
+                            'chezy_mean': "mesh2d_czs",  # not used anymore!
+                            'chezy_edge': "mesh2d_czu",
+                            'velocity_x': "mesh2d_ucx",
+                            'velocity_y': "mesh2d_ucy",
+                            'velocity_edge': "mesh2d_u1"
+                           }
+
+    def import_dflow2d(self, file_path):
+        """
+        Method to read input from a dflow2d output file
+
+        Arguments:
+            file_path: path to *_map.nc file
+
+        Results:
+            tid_face - DataFrame with time-independent data on faces (e.g. section allocation)
+            tid_edge - DataFrame with time-independent data on flow links
+            node_coordinates - 
+            td - DataFrame with time-dependent data (e.g. water levels, ..)
+        """
+        self.set_logger_message('hello from dflow2d importer')
+
+        # Open results file for reading, within context manager to ensure garbage collection
+        with Dataset(file_path, 'r') as map_file:
+
+            # Time-invariant variables from FM 2D at faces
+            # -----------------------------------------------
+            tid_face = None
+            for key, nckey in self.dflow2d_face_keys.items():
+                if tid_face is None:
+                    tid_face = pd.DataFrame(columns=[key], 
+                                            data=np.array(map_file.variables[nckey]))
+                else:
+                    tid_face[key] = np.array(map_file.variables[nckey])
+            
+            # These variables are preallocated with the correct size for later use
+            tid_face['region'] = ['']*len(tid_face['y'])  # region id (see RegionPolygon). By default, no regions
+            tid_face['section'] = ['main']*len(tid_face['y'])  # section id (see SectionPolygon). By default, all sections are 'main' 
+            tid_face['sclass'] = ['']*len(tid_face['y'])  # cross-section id 
+            tid_face['islake'] = [False]*len(tid_face['y'])  # whether or not cell is in a lake. By default, nothing is a lake
+            
+            # Time-invariant variables from FM 2D at edges
+            # -----------------------------------------------
+            internal_edges = map_file.variables['mesh2d_edge_type'][:] == 1  # edgetype 1 = 'internal'
+
+            tid_edge = dict()
+            for key, nckey in self.dflow2d_edge_keys.items():
+                try:
+                    tid_edge[key] = np.array(map_file.variables[nckey])[internal_edges]
+                except KeyError:
+                    # 'edge_faces' does not always seem to exist in the file - probably 
+                    # due to changes in dflow2d output
+                    self.set_logger_message(f"during reading of dflow2d input, it was found that {key} was not present in the file", "warning")
+  
+            tid_edge['sclass'] = np.array(['']*np.sum(internal_edges), dtype='U99')
+            tid_edge['section'] = np.array(['main']*np.sum(internal_edges), dtype='U99')
+            tid_edge['region'] = np.array(['']*np.sum(internal_edges), dtype='U99')
+
+            # node data (- Is this data still used??)
+            # ----------------------------------------------
+            node_coordinates = pd.DataFrame(columns=['x'], data=np.array(map_file.variables['mesh2d_node_x']))
+            node_coordinates['y'] = np.array(map_file.variables['mesh2d_node_y'])
+            
+            # Time-variant variables
+            # ----------------------------------------------
+            td = dict()
+            for key, nckey in self.dflow2d_result_keys.items():
+                if key == 'chezy_edge':
+                    # this one we treat slightly differently:
+                    # because is it edge_data, we need to filter on [internal_edges]
+                    # also - older dflow2d versions (before december 2020) do not have 
+                    # the 'mesh2d_czu' keyword, so we need to default back to 'mesh2d_cftrt'
+                    try:
+                        td[key] = pd.DataFrame(data=np.array(map_file.variables[nckey]).T[internal_edges],
+                                            columns=map_file.variables['time'])
+                    except KeyError:
+                        td[key] = pd.DataFrame(data=np.array(map_file.variables["mesh2d_cftrt"]).T[internal_edges],
+                                        columns=map_file.variables['time'])
+                        self.set_logger_message("The Dflow2D output does not have the 'mesh2d_czu' key. Reverting to mesh2d_cftrt. Make sure that the UnifFrictType is set to 0 (Cheyz) in the Dflow2d mdu file.", 'warning')
+                else:
+                    td[key] = pd.DataFrame(data=np.array(map_file.variables[nckey]).T,
+                                        columns=map_file.variables['time'])
+ 
+        return tid_face, tid_edge, node_coordinates, td
+
 
 
 class FmModelData:

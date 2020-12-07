@@ -1,6 +1,9 @@
 Changelog
 ===========
 
+1.4.3
+------
+- added support for mesh2d_czu output variable (following UNST-4522)
 
 1.4.2
 ------
