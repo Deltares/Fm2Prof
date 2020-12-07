@@ -23,7 +23,7 @@ from fm2prof.common import FM2ProfBase
 from fm2prof.CrossSection import CrossSection
 from fm2prof import Functions as FE
 from fm2prof.Export import Export1DModelData
-from fm2prof.Import import ImportInputFiles, FmModelData
+from fm2prof.Import import ImportInputFiles, FmModelData, FMDataImporter
 from fm2prof.IniFile import IniFile
 from fm2prof.MaskOutputFile import MaskOutputFile
 from fm2prof.RegionPolygonFile import RegionPolygonFile, SectionPolygonFile
@@ -273,7 +273,8 @@ class Fm2ProfRunner(FM2ProfBase):
 
         # Read FM map file
         self.set_logger_message('Opening FM Map file')
-        (time_independent_data, edge_data, node_coordinates, time_dependent_data) = FE._read_fm_model(res_file)
+        (time_independent_data, edge_data, node_coordinates, time_dependent_data) = FMDataImporter().import_dflow2d(res_file)
+        #(ctime_independent_data, cedge_data, cnode_coordinates, ctime_dependent_data) = FE._read_fm_model(res_file)
         self.set_logger_message('Closed FM Map file')
 
         # Load locations and names of cross-sections
