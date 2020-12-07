@@ -3,12 +3,29 @@ import pytest
 import sys
 import os
 import numbers
-
+from pathlib import Path
 import shutil
-from tests import TestUtils
+from tests.TestUtils import TestUtils
 
-from fm2prof.Import import FmModelData
+from fm2prof.Import import FmModelData, FMDataImporter
 
+
+class Test_FMDataImporter:
+    @pytest.mark.unittest
+    def test_when_map_file_without_czu_no_exception(self):
+        # 1. Set up test data
+        test_map = Path(TestUtils.get_local_test_data_dir("main_test_data")).joinpath("fm_map.nc")
+
+        # 2. Set initial expectations
+
+        # 3. Run test
+        try:
+            FMDataImporter().import_dflow2d(test_map)
+        except:
+            pytest.fail('No exception expected but was thrown')
+        
+        # 4. Verify final expectations
+        
 
 class Test_FmModelData:
 
