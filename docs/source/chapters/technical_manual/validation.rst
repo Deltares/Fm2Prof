@@ -34,13 +34,13 @@ The case is meant to test for the following:
 Results
 ..............
 
-.. image:: ../../../tests/Output/RunWithFiles_Output/case_01_rectangle/CaseName01/figures/case1_0.png 
-.. image:: ../../../tests/Output/RunWithFiles_Output/case_01_rectangle/CaseName01/figures/case1_500.png 
-.. image:: ../../../tests/Output/RunWithFiles_Output/case_01_rectangle/CaseName01/figures/case1_1000.png 
-.. image:: ../../../tests/Output/RunWithFiles_Output/case_01_rectangle/CaseName01/figures/case1_1500.png 
-.. image:: ../../../tests/Output/RunWithFiles_Output/case_01_rectangle/CaseName01/figures/case1_2000.png 
-.. image:: ../../../tests/Output/RunWithFiles_Output/case_01_rectangle/CaseName01/figures/case1_2500.png 
-.. image:: ../../../tests/Output/RunWithFiles_Output/case_01_rectangle/CaseName01/figures/case1_3000.png 
+.. image:: ../../../../tests/Output/RunWithFiles_Output/case_01_rectangle/CaseName01/figures/case1_0.png 
+.. image:: ../../../../tests/Output/RunWithFiles_Output/case_01_rectangle/CaseName01/figures/case1_500.png 
+.. image:: ../../../../tests/Output/RunWithFiles_Output/case_01_rectangle/CaseName01/figures/case1_1000.png 
+.. image:: ../../../../tests/Output/RunWithFiles_Output/case_01_rectangle/CaseName01/figures/case1_1500.png 
+.. image:: ../../../../tests/Output/RunWithFiles_Output/case_01_rectangle/CaseName01/figures/case1_2000.png 
+.. image:: ../../../../tests/Output/RunWithFiles_Output/case_01_rectangle/CaseName01/figures/case1_2500.png 
+.. image:: ../../../../tests/Output/RunWithFiles_Output/case_01_rectangle/CaseName01/figures/case1_3000.png 
 
 02 - Compound cross-section
 ---------------------------------
@@ -62,13 +62,13 @@ The case is meant to test for the following:
 
 Results
 ..............
-.. image:: ../../../tests/Output/RunWithFiles_Output/case_02_compound/CaseName01/figures/case2_0.png 
-.. image:: ../../../tests/Output/RunWithFiles_Output/case_02_compound/CaseName01/figures/case2_500.png 
-.. image:: ../../../tests/Output/RunWithFiles_Output/case_02_compound/CaseName01/figures/case2_1000.png 
-.. image:: ../../../tests/Output/RunWithFiles_Output/case_02_compound/CaseName01/figures/case2_1500.png 
-.. image:: ../../../tests/Output/RunWithFiles_Output/case_02_compound/CaseName01/figures/case2_2000.png 
-.. image:: ../../../tests/Output/RunWithFiles_Output/case_02_compound/CaseName01/figures/case2_2500.png 
-.. image:: ../../../tests/Output/RunWithFiles_Output/case_02_compound/CaseName01/figures/case2_3000.png 
+.. image:: ../../../../tests/Output/RunWithFiles_Output/case_02_compound/CaseName01/figures/case2_0.png 
+.. image:: ../../../../tests/Output/RunWithFiles_Output/case_02_compound/CaseName01/figures/case2_500.png 
+.. image:: ../../../../tests/Output/RunWithFiles_Output/case_02_compound/CaseName01/figures/case2_1000.png 
+.. image:: ../../../../tests/Output/RunWithFiles_Output/case_02_compound/CaseName01/figures/case2_1500.png 
+.. image:: ../../../../tests/Output/RunWithFiles_Output/case_02_compound/CaseName01/figures/case2_2000.png 
+.. image:: ../../../../tests/Output/RunWithFiles_Output/case_02_compound/CaseName01/figures/case2_2500.png 
+.. image:: ../../../../tests/Output/RunWithFiles_Output/case_02_compound/CaseName01/figures/case2_3000.png 
 
 03 - Threestage cross-section
 ---------------------------------
@@ -94,13 +94,13 @@ original curves (one for each stage in the floodplain).
 
 Results
 ..............
-.. image:: ../../../tests/Output/RunWithFiles_Output/case_03_threestage/CaseName01/figures/case3_0.png 
-.. image:: ../../../tests/Output/RunWithFiles_Output/case_03_threestage/CaseName01/figures/case3_500.png 
-.. image:: ../../../tests/Output/RunWithFiles_Output/case_03_threestage/CaseName01/figures/case3_1000.png 
-.. image:: ../../../tests/Output/RunWithFiles_Output/case_03_threestage/CaseName01/figures/case3_1500.png 
-.. image:: ../../../tests/Output/RunWithFiles_Output/case_03_threestage/CaseName01/figures/case3_2000.png 
-.. image:: ../../../tests/Output/RunWithFiles_Output/case_03_threestage/CaseName01/figures/case3_2500.png 
-.. image:: ../../../tests/Output/RunWithFiles_Output/case_03_threestage/CaseName01/figures/case3_3000.png 
+.. image:: ../../../../tests/Output/RunWithFiles_Output/case_03_threestage/CaseName01/figures/case3_0.png 
+.. image:: ../../../../tests/Output/RunWithFiles_Output/case_03_threestage/CaseName01/figures/case3_500.png 
+.. image:: ../../../../tests/Output/RunWithFiles_Output/case_03_threestage/CaseName01/figures/case3_1000.png 
+.. image:: ../../../../tests/Output/RunWithFiles_Output/case_03_threestage/CaseName01/figures/case3_1500.png 
+.. image:: ../../../../tests/Output/RunWithFiles_Output/case_03_threestage/CaseName01/figures/case3_2000.png 
+.. image:: ../../../../tests/Output/RunWithFiles_Output/case_03_threestage/CaseName01/figures/case3_2500.png 
+.. image:: ../../../../tests/Output/RunWithFiles_Output/case_03_threestage/CaseName01/figures/case3_3000.png 
 
 04 - Storage
 ---------------------------------
@@ -130,13 +130,13 @@ due to the build up of water that is captured in the 2D model but which is not p
 
 Results
 ..............
-.. image:: ../../../tests/Output/RunWithFiles_Output/case_04_storage/CaseName01/figures/case4_0.png 
-.. image:: ../../../tests/Output/RunWithFiles_Output/case_04_storage/CaseName01/figures/case4_500.png 
-.. image:: ../../../tests/Output/RunWithFiles_Output/case_04_storage/CaseName01/figures/case4_1000.png 
-.. image:: ../../../tests/Output/RunWithFiles_Output/case_04_storage/CaseName01/figures/case4_1500.png 
-.. image:: ../../../tests/Output/RunWithFiles_Output/case_04_storage/CaseName01/figures/case4_2000.png 
-.. image:: ../../../tests/Output/RunWithFiles_Output/case_04_storage/CaseName01/figures/case4_2500.png 
-.. image:: ../../../tests/Output/RunWithFiles_Output/case_04_storage/CaseName01/figures/case4_3000.png 
+.. image:: ../../../../tests/Output/RunWithFiles_Output/case_04_storage/CaseName01/figures/case4_0.png 
+.. image:: ../../../../tests/Output/RunWithFiles_Output/case_04_storage/CaseName01/figures/case4_500.png 
+.. image:: ../../../../tests/Output/RunWithFiles_Output/case_04_storage/CaseName01/figures/case4_1000.png 
+.. image:: ../../../../tests/Output/RunWithFiles_Output/case_04_storage/CaseName01/figures/case4_1500.png 
+.. image:: ../../../../tests/Output/RunWithFiles_Output/case_04_storage/CaseName01/figures/case4_2000.png 
+.. image:: ../../../../tests/Output/RunWithFiles_Output/case_04_storage/CaseName01/figures/case4_2500.png 
+.. image:: ../../../../tests/Output/RunWithFiles_Output/case_04_storage/CaseName01/figures/case4_3000.png 
 
 .. _validation_summerdike:
 
@@ -160,13 +160,13 @@ The case is meant to test for the following:
 
 Results
 ..............
-.. image:: ../../../tests/Output/RunWithFiles_Output/case_05_dyke/CaseName01/figures/case5_0.png 
-.. image:: ../../../tests/Output/RunWithFiles_Output/case_05_dyke/CaseName01/figures/case5_500.png 
-.. image:: ../../../tests/Output/RunWithFiles_Output/case_05_dyke/CaseName01/figures/case5_1000.png 
-.. image:: ../../../tests/Output/RunWithFiles_Output/case_05_dyke/CaseName01/figures/case5_1500.png 
-.. image:: ../../../tests/Output/RunWithFiles_Output/case_05_dyke/CaseName01/figures/case5_2000.png 
-.. image:: ../../../tests/Output/RunWithFiles_Output/case_05_dyke/CaseName01/figures/case5_2500.png 
-.. image:: ../../../tests/Output/RunWithFiles_Output/case_05_dyke/CaseName01/figures/case5_3000.png 
+.. image:: ../../../../tests/Output/RunWithFiles_Output/case_05_dyke/CaseName01/figures/case5_0.png 
+.. image:: ../../../../tests/Output/RunWithFiles_Output/case_05_dyke/CaseName01/figures/case5_500.png 
+.. image:: ../../../../tests/Output/RunWithFiles_Output/case_05_dyke/CaseName01/figures/case5_1000.png 
+.. image:: ../../../../tests/Output/RunWithFiles_Output/case_05_dyke/CaseName01/figures/case5_1500.png 
+.. image:: ../../../../tests/Output/RunWithFiles_Output/case_05_dyke/CaseName01/figures/case5_2000.png 
+.. image:: ../../../../tests/Output/RunWithFiles_Output/case_05_dyke/CaseName01/figures/case5_2500.png 
+.. image:: ../../../../tests/Output/RunWithFiles_Output/case_05_dyke/CaseName01/figures/case5_3000.png 
 
 06 - Lakes
 ---------------------------------
@@ -189,13 +189,13 @@ The case is meant to test for the following:
 
 Results
 ..............
-.. image:: ../../../tests/Output/RunWithFiles_Output/case_06_plassen/CaseName01/figures/case6_0.png 
-.. image:: ../../../tests/Output/RunWithFiles_Output/case_06_plassen/CaseName01/figures/case6_500.png 
-.. image:: ../../../tests/Output/RunWithFiles_Output/case_06_plassen/CaseName01/figures/case6_1000.png 
-.. image:: ../../../tests/Output/RunWithFiles_Output/case_06_plassen/CaseName01/figures/case6_1500.png 
-.. image:: ../../../tests/Output/RunWithFiles_Output/case_06_plassen/CaseName01/figures/case6_2000.png 
-.. image:: ../../../tests/Output/RunWithFiles_Output/case_06_plassen/CaseName01/figures/case6_2500.png 
-.. image:: ../../../tests/Output/RunWithFiles_Output/case_06_plassen/CaseName01/figures/case6_3000.png 
+.. image:: ../../../../tests/Output/RunWithFiles_Output/case_06_plassen/CaseName01/figures/case6_0.png 
+.. image:: ../../../../tests/Output/RunWithFiles_Output/case_06_plassen/CaseName01/figures/case6_500.png 
+.. image:: ../../../../tests/Output/RunWithFiles_Output/case_06_plassen/CaseName01/figures/case6_1000.png 
+.. image:: ../../../../tests/Output/RunWithFiles_Output/case_06_plassen/CaseName01/figures/case6_1500.png 
+.. image:: ../../../../tests/Output/RunWithFiles_Output/case_06_plassen/CaseName01/figures/case6_2000.png 
+.. image:: ../../../../tests/Output/RunWithFiles_Output/case_06_plassen/CaseName01/figures/case6_2500.png 
+.. image:: ../../../../tests/Output/RunWithFiles_Output/case_06_plassen/CaseName01/figures/case6_3000.png 
 
 07 - Triangular grid
 ---------------------------------
@@ -204,12 +204,12 @@ Description
 
 Results
 ..............
-.. image:: ../../../tests/Output/RunWithFiles_Output/case_07_triangular/CaseName01/figures/case7_0.png 
-.. image:: ../../../tests/Output/RunWithFiles_Output/case_07_triangular/CaseName01/figures/case7_1200.png 
-.. image:: ../../../tests/Output/RunWithFiles_Output/case_07_triangular/CaseName01/figures/case7_2400.png 
-.. image:: ../../../tests/Output/RunWithFiles_Output/case_07_triangular/CaseName01/figures/case7_3600.png 
-.. image:: ../../../tests/Output/RunWithFiles_Output/case_07_triangular/CaseName01/figures/case7_4800.png 
-.. image:: ../../../tests/Output/RunWithFiles_Output/case_07_triangular/CaseName01/figures/case7_6000.png 
-.. image:: ../../../tests/Output/RunWithFiles_Output/case_07_triangular/CaseName01/figures/case7_7200.png 
-.. image:: ../../../tests/Output/RunWithFiles_Output/case_07_triangular/CaseName01/figures/case7_8500.png 
-.. image:: ../../../tests/Output/RunWithFiles_Output/case_07_triangular/CaseName01/figures/case7_10000.png 
+.. image:: ../../../../tests/Output/RunWithFiles_Output/case_07_triangular/CaseName01/figures/case7_0.png 
+.. image:: ../../../../tests/Output/RunWithFiles_Output/case_07_triangular/CaseName01/figures/case7_1200.png 
+.. image:: ../../../../tests/Output/RunWithFiles_Output/case_07_triangular/CaseName01/figures/case7_2400.png 
+.. image:: ../../../../tests/Output/RunWithFiles_Output/case_07_triangular/CaseName01/figures/case7_3600.png 
+.. image:: ../../../../tests/Output/RunWithFiles_Output/case_07_triangular/CaseName01/figures/case7_4800.png 
+.. image:: ../../../../tests/Output/RunWithFiles_Output/case_07_triangular/CaseName01/figures/case7_6000.png 
+.. image:: ../../../../tests/Output/RunWithFiles_Output/case_07_triangular/CaseName01/figures/case7_7200.png 
+.. image:: ../../../../tests/Output/RunWithFiles_Output/case_07_triangular/CaseName01/figures/case7_8500.png 
+.. image:: ../../../../tests/Output/RunWithFiles_Output/case_07_triangular/CaseName01/figures/case7_10000.png 
