@@ -1,6 +1,6 @@
-========
+============
 User Manual
-========
+============
 
 .. toctree::
    :caption: Table of Contents
@@ -8,7 +8,8 @@ User Manual
 
    installation
    quickstart
-   settings
    advanced
+   known_issues
    source
    files
+   

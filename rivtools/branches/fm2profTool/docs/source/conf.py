@@ -39,7 +39,8 @@ rst_epilog = f"""
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = ['sphinx.ext.autodoc'
+extensions = ['sphinx.ext.autodoc', 
+              'sphinxcontrib.images'
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -89,7 +90,7 @@ html_theme_options = {
     #         light_green, lime, orange, pink, purple, red, teal, yellow(Default: indigo)
     'primary_color': 'indigo',
     # Values: Same as primary_color. (Default: pink)
-    'accent_color': 'amber',
+    'accent_color': 'indigo',
 
     # Customize layout.
     # For details see link.
@@ -164,7 +165,7 @@ def generate_files_chapters():
     with open('../../fm2prof/configurationfile_template.json', 'r') as f:
         data = json.load(f)
 
-        with open('chapters/files.rst', 'w') as f:
+        with open('chapters/user_manual/files.rst', 'w') as f:
             f.write(f"""Files
 ========
 
@@ -178,4 +179,20 @@ Default settings
             for line in fm2prof.Project().get_inifile()._print_configuration(data).splitlines():
                 f.write(f"\t{line}\n")
 
+def generate_fm_key_table():
+    from fm2prof.Import import FMDataImporter
+    
+
+    with open('chapters/tables/dflow2d_keys.csv', 'w') as f:
+        f.write(f"{project} variable, Variable in dflow2d output\n")
+        for key, value in FMDataImporter.dflow2d_face_keys.items():
+            f.write(f"{key} (at face), {value}\n")
+
+        for key, value in FMDataImporter.dflow2d_edge_keys.items():
+            f.write(f"{key} (at flow link), {value}\n")
+    
+        for key, value in FMDataImporter.dflow2d_result_keys.items():
+            f.write(f"{key}, {value}\n")
+
 generate_files_chapters()
+generate_fm_key_table()
