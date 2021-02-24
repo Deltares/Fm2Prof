@@ -1,57 +1,7 @@
-Advanced topics
-====================
-
-.. _terminology:
-
-Terminology
-^^^^^^^^^^^^^^^^^^^^^
-.. glossary::
-
-    Region
-        Regions are used to have some finer control over which 2D model output is assigned to which 1D cross-section. If no region are defined, 2D model output is assigned to cross-section using k-nearest neighbour. This is not always a good approach, for example if a tributary or retention area. In the figure a section of the River Meuse is plotted near the `Blitterswijck retention area <https://www.openstreetmap.org/search?query=blitterswijck#map=16/51.5405/6.1122>`_. The retention area is demarcated from the main river by levees. Cross-sections generated for the retention area should therefore not 'eat out of' the area of the main channel - which could results in a small cross-section non-physical constriction of the flow.  
-
-        .. figure:: ../figures/region_polygon_blitwijk.PNG
-            :align: center
-            :alt: alternate text
-            :figclass: align-center
-            :width: 100%
-
-            Region polygons are used to prevent cross-sections generated in the retention area to 'eat out of' the main channel. Within each region polygon (red borders) nearest neighour is used to assign 2D points to cross-sections. Points with the same color are associated with the same 1D cross-section. 
-
-        
-    Section
-        Section are used to divide the cross-section between floodplain and main channel (e.g. the 'floodplain' section and the 'main channel' section). This distinction is only used to assign different roughness values to each section. 
-
-    Water level (in)dependent geometry
-        It is often not possible to start the 2D computation from a completely dry bed - instead some initial water level is present in the model. This initial condition divides the 1D geometry in water level dependent part and a water level independent part. Below the initial condition, we cannot take advantage of the 2D model to tell us which cells are part of the conveyance and which cells are wet. Instead, the water level is artificially lowered in a number of steps to estimate the volume below the initial water levels. 
-
-    Summerdikes
-        Summerdikes are a Dutch term for levees that are designed to be flooded with higher discharges, but not with relatively low floods (i.e.: they withstand summer floods). They contrast with 'winterdikes', which are designed to not flood at all. Summerdikes effectively comparimentalise the floodplain. They can have a profound effect on stage-discharge relationships: as these levees overflow the compartments start flowing which leads to a retention effect. Such an effect cannot be modelled using regulare cross-sections. SOBEK therefore has a 'summerdike' functionality. See :ref:validation_summerdike for the effect of summerdikes on the volume graph. 
-
-    Control volume
-        A control volume of a cross-section is the geographical part of the 2D model that is associated with that cross-section. Contol volumes are assigned by k-Nearest Neighbour classification. 
-
-        .. figure:: ../figures/controlvolume.png
-            :align: center
-            :alt: alternate text
-            :figclass: align-center
-            :width: 50%
-
-            A control volume
-
-    Lakes
-        Lakes are water bodies that are not hydraulically connected to the main channel in the first few timesteps of the 2D model computation. They do not contribute to the volume present in the control volume until they connect with the rest of the river and will not feature in the :term:`water level independent computation<Water level (in)dependent geometry>`. Water bodies that *are* connected to the main channel in the first few timesteps **do** count as volume. However, as these likely do not contribute to conveyance, they will be flagged as 'storage' instead. 
-
-        .. figure:: ../figures/gis_visualisation_maas_03_annotated.png
-            :align: center
-            :alt: alternate text
-            :figclass: align-center
-            :width: 50%
-
 .. _diagnosis:
 
-Diagnosing output
-^^^^^^^^^^^^^^^^^^^^^
+Troubleshooting
+====================
 
 After running |project|, it is important to check its output. In this section we provide some steps to diagnose and interprete your model results. In short, the steps are the following:
 
@@ -237,45 +187,4 @@ Closer inspection is possible by setting `ExportMapFiles` to `True` in the confi
     :width: 100%
 
     Visualisation of the roughness section. The red dots are 2D points that were not within any polygon in the `SectionPolygonFile`. These are automatically added to the main section. This will yield a warning in the log file. In general it is a good idea to expand the polygons to cover all files. 
-
-
-Recommended settings
-^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-The recommendations detailed in this section are based on the Meuse River pilot project. 
-
-LakeTimesteps
-    This parameter defines the amount of 2D model timesteps used to determine if a wet cell is hydraulically connected to the main channel. It recommended to only deviate from the default value if lakes are misidentified, and to generally keep the number low. A good test to set the value for this parameter is to visualise the 'IsLake' attribute (see :ref:`diagnosis`). Too high values lead to overestimation of the total volume: everything that is identified as 'main channel' will be used in the so-called 'water-level independent' part of the geometry identification. 
-
-MinimumTotalWidth
-    The purpose of this parameter is to prevent instabilities in 1D Solvers if they are presented with a (near) zero width. It is recommended to keep this value small (at default). 
-
-ClassificationMethod
-    This parameter defines the method used to classify the region and section of each output point in the 2D output. |project| has built-in classification method. However these methods are not efficient for large models. The currently supported 'DeltaShell' method consists of a manual work-around. 
-
-    .. note:: 
-        This approach is not well documented as it involves some manual work. We expect to automise this and make it more user friendly in a future update. 
-
-AbsoluteVelocityThreshold / RelativeVelocityThreshold 
-    These thresholds are used to distinguish conveyance (effective flow) from storage (dead zones) areas. Parts of the cross-section that do not contribute to flow are called 'storage area'. A cell is considered part of the flow area if all of the following conditions are met:
-
-        - the water depth is higher than 0
-        - the (depth-averaged) velocity is larger than `AbsoluteVelocityThreshold`
-        - the (depth-averaged) velocity is larger than `RelativeVelocityThreshold` multiplied by the average velocity in the cross-section
-
-    These conditions are checked for each timestep in the 2D model output.
-
-SkipMaps
-    This parameter is used to skip the first number of output timesteps ('maps') in the 2D model output. This parameter can be useful if the 2D model is not completely in equilibrium at the start of the computation (e.g. falling water levels in the first few timesteps). However, it tests have shown that it is far better to carefully initialize the 2D model, than to skip the first few steps with this parameter. 
-
-ExportMapFiles
-    If this parameter is set to `True`, |project| will output two additional geojson files. These additional files contain diagnostic information for each 2D model output (e.g. to which cross-section a 2D point is assigned). However, for large models this output can be quite large. For detailed diagnosis, combine this parameter with `CssSelection`
-
-CssSelection
-    This parameter is used to run |project| for a subset of cross-sections in the `CrossSectionLocationFile`. Its main use is for diagnostic purposes. For example, if you want to closely inspect the 54th, 76th and 89th cross-section, use:
-
-    .. code-block:: text
-    
-        CssSelection = [54, 76, 89]
-        ExportMapFiles = True
 
