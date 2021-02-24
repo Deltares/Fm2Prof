@@ -56,8 +56,13 @@ exclude_patterns = []
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-html_theme = 'sphinx_materialdesign_theme'
 
+#html_favicon = '_static/favicon.ico'
+html_logo = '_static/logo_deltares.png'
+html_theme = 'sphinx_materialdesign_theme'
+html_sidebars = {
+   '**': ['globaltoc.html']
+}
 html_theme_options = {
     # Specify a list of menu in Header.
     # Tuples forms:
@@ -82,7 +87,7 @@ html_theme_options = {
     #
     # Values: amber, blue, brown, cyan deep_orange, deep_purple, green, grey, indigo, light_blue,
     #         light_green, lime, orange, pink, purple, red, teal, yellow(Default: indigo)
-    'primary_color': 'blue',
+    'primary_color': 'indigo',
     # Values: Same as primary_color. (Default: pink)
     'accent_color': 'amber',
 
