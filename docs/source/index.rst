@@ -9,11 +9,12 @@ Version: |release|
 Tables of content
 ==================
 .. toctree::
-   :maxdepth: 1
-   :caption: User Manual
+    :maxdepth: 1
+    :caption: Table of Contents
 
-   chapters/user_manual/index
-   chapters/technical_manual/index
+    chapters/about
+    chapters/user_manual/index
+    chapters/technical_manual/index
 
 Indices and tables
 ==================
