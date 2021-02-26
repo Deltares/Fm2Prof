@@ -90,7 +90,7 @@ html_theme_options = {
     #         light_green, lime, orange, pink, purple, red, teal, yellow(Default: indigo)
     'primary_color': 'indigo',
     # Values: Same as primary_color. (Default: pink)
-    'accent_color': 'indigo',
+    'accent_color': 'blue',
 
     # Customize layout.
     # For details see link.
