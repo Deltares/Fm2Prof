@@ -26,6 +26,7 @@ contact = 'koen.berends@deltares.nl'
 
 # The full version, including alpha/beta/rc tags
 import fm2prof
+from fm2prof.IniFile import IniFile
 release = fm2prof.Project().__version__
 
 # To enable to inject project name in source 
@@ -33,6 +34,12 @@ rst_epilog = f"""
 .. |project| replace:: {project} 
 .. |release| replace:: {release}
 """
+
+for pname, ptype, phint, pvalue in IniFile().iter_parameters():
+    if pvalue=="": pvalue = "Undefined"
+    rst_epilog += f".. |default_{pname.lower()}| replace:: {pvalue}\n" 
+    rst_epilog += f".. |type_{pname.lower()}| replace:: {ptype}\n" 
+    rst_epilog += f".. |hint_{pname.lower()}| replace:: {phint}\n" 
 
 # -- General configuration ---------------------------------------------------
 
@@ -60,6 +67,7 @@ exclude_patterns = []
 
 #html_favicon = '_static/favicon.ico'
 html_logo = '_static/logo_deltares.png'
+html_favicon = "_static/favicon.ico"
 html_theme = 'sphinx_materialdesign_theme'
 html_sidebars = {
    '**': ['globaltoc.html']

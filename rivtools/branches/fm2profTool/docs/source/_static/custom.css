@@ -9,3 +9,14 @@
 }
 
 */
+
+.dl-parameters dt {
+  border-top: 2px solid #080C80;
+  background-color: rgb(185, 192, 211);
+}
+
+.dl-parameters dd {
+  color: black;
+  background-color: #F0F4FF;
+  margin-inline-start: 0px;
+}
