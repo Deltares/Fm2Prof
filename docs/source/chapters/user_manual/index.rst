@@ -11,5 +11,4 @@ User Manual
    advanced
    known_issues
    source
-   files
    
