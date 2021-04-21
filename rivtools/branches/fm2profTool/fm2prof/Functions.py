@@ -60,32 +60,6 @@ __status__ = "Prototype"
 
 
 # region // public functions
-def classify_roughness_sections_by_variance(data, variable):
-
-    # Get chezy values at last timestep
-    end_values = variable.T.iloc[-1].values
-    key = 'section'
-    # Find split point (chezy value) by variance minimisation
-    variance_list = list()
-    split_candidates = np.arange(min(end_values), max(end_values), 1)
-    if len(split_candidates) < 2: # this means that all end values are very close together, so do not split
-        data[key][:] = 1
-    else:
-        for split in split_candidates:
-            variance_list.append(
-                np.max(
-                    [np.var(end_values[end_values > split]),
-                     np.var(end_values[end_values <= split])]))
-
-        splitpoint = split_candidates[np.nanargmin(variance_list)]
-
-        # High chezy values are assigned to section number '1' (Main channel)
-        data[key][end_values > splitpoint] = 1
-
-        # Low chezy values are assigned to section number '2' (Flood plain) 
-        data[key][end_values <= splitpoint] = 2
-    return data
-
 
 def classify_roughness_sections_by_polygon(sections, data, logger):
     """ assigns edges to a roughness section based on polygon data """
@@ -188,18 +162,6 @@ def get_centre_values(location, x, y, waterdepth, waterlevel):
     
     return centre_depth[0], centre_level[0]
 
-def get_extra_total_area(waterlevel, crest_level, transition_height:float, hysteresis=False):
-    """
-    releases extra area dependent on waterlevel using a logistic (sigmoid) function
-    """
-    return 1/(1+np.e**(np.log(0.00001)/(transition_height)*(waterlevel-(crest_level+0.5*transition_height))))
-
-def return_volume_error(predicted, measured, gof='rmse'):
-    non_nan_mask = ~np.isnan(predicted) & ~np.isnan(measured)
-    predicted = predicted[non_nan_mask]
-    measured = measured[non_nan_mask]
-    error = np.array(predicted - measured)/np.maximum(np.array(measured), np.ones(len(measured)))
-    return np.sum(error**2)
 
 def interpolate_roughness(cross_section_list):
     """

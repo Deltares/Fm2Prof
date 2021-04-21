@@ -47,7 +47,10 @@ for pname, ptype, phint, pvalue in IniFile().iter_parameters():
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = ['sphinx.ext.autodoc', 
-              'sphinxcontrib.images'
+              'sphinxcontrib.images',
+              'sphinx.ext.napoleon',  # to support google style docstrings,
+              'sphinx.ext.viewcode',
+              'sphinx.ext.mathjax'
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -173,7 +176,7 @@ def generate_files_chapters():
     with open('../../fm2prof/configurationfile_template.json', 'r') as f:
         data = json.load(f)
 
-        with open('chapters/user_manual/files.rst', 'w') as f:
+        with open('chapters/technical_manual/files.rst', 'w') as f:
             f.write(f"""Files
 ========
 
