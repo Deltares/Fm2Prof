@@ -82,7 +82,6 @@ class Fm2ProfRunner(FM2ProfBase):
         else:
             self.set_logger_message('Program finished', 'info')
 
-
     def load_inifile(self, iniFilePath: str):
         """
         use this method to load a configuration file from path.
@@ -296,8 +295,8 @@ class Fm2ProfRunner(FM2ProfBase):
         # Classify sections for roughness tables
         if (ini_file.get_parameter('classificationmethod') == 0 ) or (sections is None):
             self.set_logger_message('Assigning point to sections without polygons')
-            edge_data = FE.classify_roughness_sections_by_variance(edge_data, time_dependent_data['chezy_edge'])
-            time_independent_data = FE.classify_roughness_sections_by_variance(time_independent_data, time_dependent_data['chezy_mean'])
+            edge_data = self._classify_roughness_sections_by_variance(edge_data, time_dependent_data['chezy_edge']) 
+            time_independent_data = self._classify_roughness_sections_by_variance(time_independent_data, time_dependent_data['chezy_mean'])
         elif ini_file.get_parameter('classificationmethod') == 1:
             self.set_logger_message('Assigning 2D points to sections using DeltaShell')
             time_independent_data, edge_data = self._classify_section_with_deltashell(time_independent_data, edge_data)
@@ -355,6 +354,47 @@ class Fm2ProfRunner(FM2ProfBase):
         time_independent_data, edge_data = FE.classify_with_regions(polygons, cssdata, time_independent_data, edge_data, css_regions)
 
         return time_independent_data, edge_data
+
+    def _classify_roughness_sections_by_variance(self, data, variable):
+        """
+        This method classifies the region into main channel and floodplain based on roughness. It 
+        is used when the user does not specify a section polygon. 
+
+        This method assumes that the main channel is much deeper than the floodplain. Therefore,
+        the Chézy values will be higher than those in the floodplain. The objective is now to 
+        define a split-value that minimizes the variance of the split sets.
+
+        .. note:: 
+            Variance reduction classification is method often used in decision tree learning, 
+            e.g. see https://en.wikipedia.org/wiki/Decision_tree_learning#Variance_reduction 
+            for more information. 
+        
+        """
+        # Get chezy values at last timestep
+        end_values = variable.T.iloc[-1].values
+        key = 'section'
+
+        # Find split point (chezy value) by variance minimisation
+        variance_list = list()
+        split_candidates = np.arange(min(end_values), max(end_values), 1)
+        if len(split_candidates) < 2: # this means that all end values are very close together, so do not split
+            data[key][:] = 1
+        else:
+            for split in split_candidates:
+                variance_list.append(
+                    np.max(
+                        [np.var(end_values[end_values > split]),
+                        np.var(end_values[end_values <= split])]))
+
+            splitpoint = split_candidates[np.nanargmin(variance_list)]
+
+            # High chezy values are assigned to section number '1' (Main channel)
+            data[key][end_values > splitpoint] = 1
+
+            # Low chezy values are assigned to section number '2' (Flood plain) 
+            data[key][end_values <= splitpoint] = 2
+        return data
+
 
     def _get_region_map_file(self, polytype):
         """ Returns the path to a NC file with region ifnormation in the bathymetry data"""

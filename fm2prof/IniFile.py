@@ -197,6 +197,11 @@ class IniFile(FM2ProfBase):
         """ Use this method to print a string of the configuration used """
         return self._print_configuration(self._configuration)
 
+    def iter_parameters(self):
+        """ Use this method to iterate through the names and values of all parameters """ 
+        for parameter, content in self._configuration['sections'].get('parameters').items():
+            yield parameter, content.get('type'), content.get('hint'), content.get('value')
+
     @staticmethod
     def _print_configuration(inputdict) -> str:
         f = io.StringIO()
