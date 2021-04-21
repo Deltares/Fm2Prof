@@ -24,6 +24,10 @@ Below is a list of all parameters, categorized by which function they affect. Al
         :sep:`|` :aspect:`Default:` |default_maximumpointsinprofile|
         :sep:`|` :aspect:`Hint:` |hint_maximumpointsinprofile|
         
+        This parameter controls how many point described cross-section geometry. 
+
+        See: :ref:`simplify_css`
+
 .. _parameter_absolutevelocitythreshold:
 .. container:: dl-parameters
 
@@ -40,6 +44,8 @@ Below is a list of all parameters, categorized by which function they affect. Al
 
         These conditions are checked for each timestep in the 2D model output.
 
+        Used in: :ref:`distinguish_storage`
+
 .. _parameter_relativevelocitythreshold:
 .. container:: dl-parameters
 
@@ -49,6 +55,8 @@ Below is a list of all parameters, categorized by which function they affect. Al
         :sep:`|` :aspect:`Hint:`    |hint_relativevelocitythreshold|
     
         See :ref:`AbsoluteVelocityThreshold <parameter_absolutevelocitythreshold>`
+
+        Used in: :ref:`distinguish_storage`
 
 .. _parameter_minimumdepththreshold:
 .. container:: dl-parameters
@@ -76,6 +84,8 @@ Below is a list of all parameters, categorized by which function they affect. Al
 
         This parameter defines the amount of 2D model timesteps used to determine if a wet cell is hydraulically connected to the main channel. It recommended to only deviate from the default value if lakes are misidentified, and to generally keep the number low. A good test to set the value for this parameter is to visualise the 'IsLake' attribute (see :ref:`diagnosis`). Too high values lead to overestimation of the total volume: everything that is identified as 'main channel' will be used in the so-called 'water-level independent' part of the geometry identification. 
 
+        Used in: :ref:`identify_lakes`
+
 .. _parameter_extrapolatestorage:
 .. container:: dl-parameters
 
@@ -83,6 +93,9 @@ Below is a list of all parameters, categorized by which function they affect. Al
         :aspect:`Type:`                |type_extrapolatestorage| 
         :sep:`|` :aspect:`Default:` |default_extrapolatestorage|
         :sep:`|` :aspect:`Hint:`    |hint_extrapolatestorage|
+
+        Used in :ref:`wl_independent_css`
+
 
 .. _parameter_sdcorrection:
 .. container:: dl-parameters
@@ -92,6 +105,8 @@ Below is a list of all parameters, categorized by which function they affect. Al
         :sep:`|` :aspect:`Default:` |default_sdcorrection|
         :sep:`|` :aspect:`Hint:`    |hint_sdcorrection|
 
+    Used in :ref:`sd_optimisation`
+    
 .. _parameter_sdfloodplainbase:
 .. container:: dl-parameters
 
@@ -99,6 +114,8 @@ Below is a list of all parameters, categorized by which function they affect. Al
         :aspect:`Type:`                |type_sdfloodplainbase| 
         :sep:`|` :aspect:`Default:` |default_sdfloodplainbase|
         :sep:`|` :aspect:`Hint:`    |hint_sdfloodplainbase|
+
+    Used in :ref:`sd_optimisation`
 
 .. _parameter_sdtransitionheight:
 .. container:: dl-parameters
@@ -108,6 +125,8 @@ Below is a list of all parameters, categorized by which function they affect. Al
         :sep:`|` :aspect:`Default:` |default_sdtransitionheight|
         :sep:`|` :aspect:`Hint:`    |hint_sdtransitionheight|
 
+    Used in :ref:`sd_optimisation`
+
 .. _parameter_sdoptimisationmethod:
 .. container:: dl-parameters
 
@@ -116,6 +135,7 @@ Below is a list of all parameters, categorized by which function they affect. Al
         :sep:`|` :aspect:`Default:` |default_sdoptimisationmethod|
         :sep:`|` :aspect:`Hint:`    |hint_sdoptimisationmethod|
 
+    Used in :ref:`sd_optimisation`
 
 .. _parameter_frictionweighingmethod:
 .. container:: dl-parameters

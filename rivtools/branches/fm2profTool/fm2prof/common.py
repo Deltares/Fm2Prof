@@ -122,7 +122,7 @@ class FM2ProfBase:
     """
     __logger = None
     __iniFile = None
-    __version__ = "1.4.3"
+    __version__ = "1.4.4"
     __contact__ = "koen.berends@deltares.nl"
     __authors__ = "Koen Berends, Asako Fujisaki, Carles Soriano Perez, Ilia Awakimjan"
     __copyright__ = "Copyright 2016-2020, University of Twente & Deltares"
