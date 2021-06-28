@@ -179,10 +179,11 @@ def _check_and_create_test_case_output_dir(base_output_dir, caseName):
     if os.path.exists(output_directory) and os.listdir(output_directory):
         shutil.rmtree(output_directory)
 
-    if not os.path.exists(output_directory):
-        os.mkdir(output_directory)
+    #if not os.path.exists(output_directory):
+    #    os.mkdir(output_directory)
 
     return output_directory
+    
 
 
 def _get_test_case_output_dir(case_name: str):
@@ -270,7 +271,7 @@ class Test_Run_Testcases:
         test_data_dir = TestUtils.get_external_test_data_dir(case_name)
         base_output_dir = _get_base_output_dir()
 
-        iniFile.set_output_directory(_check_and_create_test_case_output_dir(
+        iniFile._set_output_directory_no_validation(_check_and_create_test_case_output_dir(
             base_output_dir, case_name))
 
         if region_file:

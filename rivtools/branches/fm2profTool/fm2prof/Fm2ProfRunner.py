@@ -89,7 +89,8 @@ class Fm2ProfRunner(FM2ProfBase):
         Parameters:
             iniFilePath (str): path to configuration file
         """
-        self.set_inifile(IniFile(iniFilePath, logger=self.get_logger()))
+        IniFileObject = IniFile(iniFilePath, logger=self.get_logger())
+        self.set_inifile(IniFileObject)
 
     def _print_header(self):
         self.set_logger_message(

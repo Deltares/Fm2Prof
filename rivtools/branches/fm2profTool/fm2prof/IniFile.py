@@ -99,7 +99,7 @@ class IniFile(FM2ProfBase):
             self.__filePath = file_path
             self.__fileDir = os.path.split(file_path)[0]
         else:
-            # if no filepath, or filepath is StringIO object (for testing purposes)
+            # if no filepath, or filepath is StringIO object (used in testing)
             self.__filePath = None
             self.__fileDir = None
         if not(file_path is None or not file_path):
@@ -192,6 +192,13 @@ class IniFile(FM2ProfBase):
         case_name = self._get_valid_case_name(self.get_parameter('casename'), value)
         
         self._configuration['sections']['output'][self.__output_directory_key]['value'] = self._get_valid_output_dir(os.path.join(value, case_name))
+
+    def _set_output_directory_no_validation(self, value: str) -> None:
+        """ 
+        Use this method to set the output directory within testing framework only
+        """
+        self._configuration['sections']['output'][self.__output_directory_key]['value'] = value
+
 
     def print_configuration(self) -> str:
         """ Use this method to print a string of the configuration used """
