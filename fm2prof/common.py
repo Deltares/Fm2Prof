@@ -32,7 +32,6 @@ class ElapsedFormatter:
         self.number_of_iterations = 1
         self.current_iteration = 0
         
-
         self._new_iteration = False
         self._intro = False
         self._colors = {'INFO': [Back.BLUE, Fore.BLUE],
@@ -40,6 +39,9 @@ class ElapsedFormatter:
                     'WARNING': [Back.YELLOW + Fore.BLACK, Fore.YELLOW],
                     'ERROR': [Back.RED, Fore.RED],
                     'RESET': Style.RESET_ALL}
+
+        self._loglibrary = {"INFO": 0, "DEBUG": 0, "WARNING": 0, "ERROR": 0}  # used to store the number of messages
+
         colorama.init()
 
     def format(self, record):
@@ -73,6 +75,10 @@ class ElapsedFormatter:
         level = record.levelname
         color = self._colors[level]
         elapsed_seconds = self.get_elapsed_time(record.created)
+
+        # log the number of warnings, errors
+        self._loglibrary[level] += 1
+
         return "{color}{now} {level:>7} {reset}{color2}{reset} {progress:4.0f}% T+ {elapsed:.2f}s {message}".format(
                 color=color[0],
                 color2=color[1],
