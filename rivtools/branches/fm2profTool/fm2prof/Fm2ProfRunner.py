@@ -137,6 +137,12 @@ class Fm2ProfRunner(FM2ProfBase):
             for line in traceback.format_exc().splitlines(): self.set_logger_message(line, 'debug')
             return False
         
+        # Print final report
+        try:
+            self._print_log_report()
+        except:
+            self.set_logger_message('Unexpected exception during printing of log report', 'error')
+
         return True
 
     def _initialise_fm2prof(self) -> None:
@@ -395,7 +401,6 @@ class Fm2ProfRunner(FM2ProfBase):
             # Low chezy values are assigned to section number '2' (Flood plain) 
             data[key][end_values <= splitpoint] = 2
         return data
-
 
     def _get_region_map_file(self, polytype):
         """ Returns the path to a NC file with region ifnormation in the bathymetry data"""
@@ -816,6 +821,11 @@ class Fm2ProfRunner(FM2ProfBase):
             self.set_logger_message(traceback.print_exc(file=sys.stdout), 'error')
         return css
 
+    def _print_log_report(self) -> None:
+        ll = self.get_logformatter()._loglibrary
+        self.set_logger_message(f"Warnings: {ll.get('WARNING')}")
+        self.set_logger_message(f"Errors: {ll.get('ERROR')}")
+        
 
 class Project(Fm2ProfRunner):
     """
