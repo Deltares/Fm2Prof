@@ -163,7 +163,7 @@ class VisualiseOutput():
         levels = None
         values = None
         with open(self.files[rtype], 'r') as f:
-            cssbranch, csschainage = cssname.split('_')
+            cssbranch, csschainage = self._parse_cssname(cssname)
             for line in f:
                 if line.strip().lower() == '[branchproperties]':
                     if self._getValueFromLine(f).lower()==cssbranch:
@@ -171,7 +171,7 @@ class VisualiseOutput():
                         levels = list(map(float, self._getValueFromLine(f).split()))
                 if line.strip().lower() == '[definition]':
                     if self._getValueFromLine(f).lower()==cssbranch:
-                        if float(self._getValueFromLine(f).lower()) == round(float(csschainage), 2):
+                        if float(self._getValueFromLine(f).lower()) == csschainage:
                             values = list(map(float, self._getValueFromLine(f).split()))
         return levels, values
 
@@ -401,7 +401,16 @@ class VisualiseOutput():
         z_waterlevel_independent = vd.get('z')[index_waterlevel_independent]
         return z_waterlevel_independent
 
-    
+    @staticmethod
+    def _parse_cssname(cssname):
+        """
+        returns name of branch and chainage
+        """
+        branch, chainage = cssname.rsplit('_', 1)  # rsplit prevents error if branchname contains _
+        chainage = round(float(chainage), 2)
+
+        return branch, chainage
+
     def _SetPlotStyle(self, fig, legendbelow=False):
         for ax in fig.axes:
             ax.grid(False)
