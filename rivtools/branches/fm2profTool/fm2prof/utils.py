@@ -171,7 +171,7 @@ class VisualiseOutput():
                         levels = list(map(float, self._getValueFromLine(f).split()))
                 if line.strip().lower() == '[definition]':
                     if self._getValueFromLine(f).lower()==cssbranch:
-                        if float(self._getValueFromLine(f).lower()) == float(csschainage):
+                        if float(self._getValueFromLine(f).lower()) == round(float(csschainage), 2):
                             values = list(map(float, self._getValueFromLine(f).split()))
         return levels, values
 
