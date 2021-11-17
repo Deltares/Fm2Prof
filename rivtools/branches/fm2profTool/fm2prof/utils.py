@@ -10,7 +10,7 @@ from typing import Tuple
 from fm2prof.common import FM2ProfBase
 
 
-def networkdeffile_to_input(networkdefinitionfile, crossectionlocationfile):
+def networkdeffile_to_input(networkdefinitionfile:str, crossectionlocationfile:str, branchrulefile:str()=""):
     """
     Builds a cross-section input file for FM2PROF from a DIMR network definition file.
 
@@ -21,8 +21,31 @@ def networkdeffile_to_input(networkdefinitionfile, crossectionlocationfile):
         networkdefinitionfile: path to the input file
 
         crossectionlocationfile: path to the output file
-    """
 
+        branchrulefile: path to the branchrulefile
+    """
+    if branchrulefile:
+        branchrules = _parseBranchRuleFile(branchrulefile)
+    else:
+        branchrules = dict()
+
+    x, y, cid, cdis, bid, coff = _parseNetworkDefinitionFile(networkdefinitionfile, branchrules)
+
+    _writeCrossSectionLocationFile(crossectionlocationfile, x, y, cid, cdis, bid, coff)
+
+
+def _parseNetworkDefinitionFile(networkdefinitionfile, branchrules):
+    """
+     
+    Output:
+
+        x,y : coordinates of cross-section
+        cid : name of the cross-section
+        cdis: half-way distance between cross-section points on either side
+        bid : name of the branch
+        coff:  chainage of cross-section on branch
+    
+    """
     # Open network definition file, for each branch extract necessary info
     x = []          # x-coordinate of cross-section centre
     y = []			# y-coordinate of cross-section centre
@@ -51,7 +74,10 @@ def networkdeffile_to_input(networkdefinitionfile, crossectionlocationfile):
                         cdistmp = np.append(np.diff(cofftmp)/2, [0]) + np.append([0], np.diff(cofftmp)/2)
 
                 # Append branchids
-                bid.extend([branchid] * len(xtmp))
+                bidtmp = [branchid] * len(xtmp)
+
+                # strip cross-section ids
+                cidtmp = [c.strip() for c in cidtmp]
 
                 # Correct end points (: at end of branch, gridpoints of this branch and previous branch
                 # occupy the same position, which does not go over well with fm2profs classification algo)
@@ -62,15 +88,70 @@ def networkdeffile_to_input(networkdefinitionfile, crossectionlocationfile):
                 xtmp[-1] = np.interp(offset, cofftmp, xtmp)
                 ytmp[-1] = np.interp(offset, cofftmp, ytmp)
 
+                # Apply Branchrules
+                if branchid in branchrules:
+                    rule = branchrules[branchid]
+                    xtmp, ytmp, cidtmp, cdistmp, bidtmp, cofftmp = _applyBranchRules(rule, xtmp, ytmp, cidtmp, cdistmp, bidtmp, cofftmp)
 
-                # Append all poitns
+                    c = len(xtmp)
+                    for ic in xtmp, ytmp, cidtmp, cdistmp, bidtmp, cofftmp:
+                        if len(ic) != c:
+                            print ('koen')
+
+                # Append all points
                 x.extend(xtmp)
                 y.extend(ytmp)
-                cid.extend([c.strip() for c in cidtmp])
-                coff.extend(cofftmp)
+                cid.extend(cidtmp)
                 cdis.extend(cdistmp)
+                bid.extend(bidtmp)
+                coff.extend(cofftmp)
 
 
+            
+
+    return x, y, cid, cdis, bid, coff
+
+def _applyBranchRules(rule, x, y, cid, cdis, bid, coff):
+    bfunc = {"onlyedges": lambda x: [x[0], x[-1]],
+             "ignoreedges": lambda x: x[1:-1],
+             "ignorelast": lambda x: x[:-1],
+             "ignorefirst": lambda x: x[1:]}
+
+    disfunc = {"onlyedges": lambda x: [sum(x)/2]*2,
+               "ignoreedges": lambda x: [sum(x[:2]), *x[2:-2], sum(x[-2:])],
+               "ignorelast": lambda x: [*x[:-2], sum(x[-2:])],
+               "ignorefirst": lambda x: [sum(x[:2]), *x[2:]]}
+    
+    try:
+        bf = bfunc[rule.lower().strip()]
+        df = disfunc[rule.lower().strip()]
+        return bf(x), bf(y), bf(cid), df(cdis), bf(bid), bf(coff)
+    except KeyError:
+        raise NotImplementedError(rule)
+        
+
+
+def _parseBranchRuleFile(branchrulefile):
+    branchrules = {}
+    with open(branchrulefile, "r") as f:
+        for line in f:
+            key = line.split(',')[0].strip()
+            value = line.split(',')[1].strip()
+            
+            branchrules[key] = value
+    
+    return branchrules
+
+def _writeCrossSectionLocationFile(crossectionlocationfile, x, y, cid, cdis, bid, coff):
+    """
+    List inputs:
+
+    x,y : coordinates of cross-section
+    cid : name of the cross-section
+    cdis: half-way distance between cross-section points on either side
+    bid : name of the branch
+    coff:  chainage of cross-section on branch
+    """
     with open(crossectionlocationfile, 'w') as f:
         f.write('name,x,y,length,branch,offset\n')
         for i in range(len(x)):
@@ -401,7 +482,7 @@ class VisualiseOutput():
         z_waterlevel_independent = vd.get('z')[index_waterlevel_independent]
         return z_waterlevel_independent
 
-    @staticmethod
+
     def _parse_cssname(cssname):
         """
         returns name of branch and chainage
