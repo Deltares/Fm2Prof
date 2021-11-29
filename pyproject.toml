@@ -30,6 +30,7 @@ isort = "^5.10.1"
 Sphinx = "^4.3.1"
 commitizen = "^2.20.0"
 pre-commit = "^2.15.0"
+poetry2conda = "^0.3.0"
 
 [tool.commitizen]
 name = "cz_conventional_commits"
@@ -81,3 +82,7 @@ line_length = 88
 [build-system]
 requires = ["poetry-core>=1.0.4"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.poetry2conda.dependencies]
+pandas = { channel = "conda-forge" }
+netCDF4 = { channel = "conda-forge" }
