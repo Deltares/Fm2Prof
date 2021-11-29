@@ -1,15 +1,24 @@
-import sys
+import contextlib
 import os
+import shutil
+import sys
+from pathlib import Path
+from typing import List
+
+import pytest
+
 try:
     from pip import main as pipmain
-except:
+except Exception as e_info:
     from pip._internal import main as pipmain
 
 
 class TestUtils:
 
-    _name_external = 'external_test_data'
-    _name_local = 'test_data'
+    _name_external = "external_test_data"
+    _name_local = "test_data"
+    _name_artifacts = "artifacts"
+    _temp_copies = "temp-copies"
 
     @staticmethod
     def install_package(package: str):
@@ -19,70 +28,53 @@ class TestUtils:
         Arguments:
             package {str} -- Name of the PIP package.
         """
-        pipmain(['install', package])
+        pipmain(["install", package])
 
     @staticmethod
-    def get_local_test_data_dir(dir_name: str):
+    def get_external_test_data_dir() -> Path:
+        return Path(__file__).parent / TestUtils._name_external
+
+    @staticmethod
+    def get_local_test_data_dir(dir_name: str) -> Path:
         """
         Returns the desired directory relative to the test data.
         Avoiding extra code on the tests.
         """
-        directory = TestUtils.get_test_data_dir(
-            dir_name, TestUtils._name_local)
+        directory = TestUtils.get_test_data_dir(dir_name, TestUtils._name_local)
         return directory
 
     @staticmethod
-    def get_external_test_data_dir(dir_name: str):
+    def get_external_repo(dir_name: str) -> Path:
+        """
+        Returns the parent directory of this repo directory.
+
+        Args:
+            dir_name (str): Repo 'sibbling' of the current one.
+
+        Returns:
+            Path: Path to the sibbling repo.
+        """
+        return Path(__file__).parent.parent.parent / dir_name
+
+    @staticmethod
+    def get_test_data_dir(dir_name: str, test_data_name: str) -> Path:
         """
         Returns the desired directory relative to the test external data.
         Avoiding extra code on the tests.
         """
-        directory = TestUtils.get_test_data_dir(
-            dir_name, TestUtils._name_external)
-        return directory
+        return Path(__file__).parent / test_data_name / dir_name
 
     @staticmethod
-    def get_test_data_dir(dir_name: str, test_data_name: str):
-        """
-        Returns the desired directory relative to the test external data.
-        Avoiding extra code on the tests.
-        """
-        test_dir = os.path.dirname(__file__)
+    def get_local_test_file(filepath: str) -> Path:
+        return Path(__file__).parent / TestUtils._name_local / filepath
+
+    @staticmethod
+    @contextlib.contextmanager
+    def working_directory(path: Path):
+        """Changes working directory and returns to previous on exit."""
+        prev_cwd = Path.cwd()
+        os.chdir(path)
         try:
-            dir_path = '{}\\{}\\'.format(test_data_name, dir_name)
-            test_dir = os.path.join(test_dir, dir_path)
-        except Exception:
-            print("An error occurred trying to find {}".format(dir_name))
-        return test_dir
-
-    @staticmethod
-    def get_test_dir(dir_name: str):
-        """Returns the desired directory inside the Tests folder
-
-        Arguments:
-            dir_name {str} -- Target directory.
-
-        Returns:
-            {str} -- Path to the target directory.
-        """
-        test_dir = os.path.dirname(__file__)
-        dir_path = os.path.join(test_dir, dir_name)
-        return dir_path
-
-    @staticmethod
-    def get_test_dir_output(dir_name: str) -> str:
-        """Returns the path to the output test data.
-        If it does not exist already it is created.
-
-        Arguments:
-            dir_name {str} -- Name of the folder under Output.
-
-        Returns:
-            str -- Path to the test output dir.
-        """
-        output_dir = os.path.join('Output', dir_name)
-        test_dir = TestUtils.get_test_dir(output_dir)
-        # Create it if it does not exist
-        if not os.path.exists(test_dir):
-            os.mkdir(test_dir)
-        return test_dir
+            yield
+        finally:
+            os.chdir(prev_cwd)
