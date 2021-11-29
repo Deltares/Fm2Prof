@@ -30,6 +30,53 @@ isort = "^5.10.1"
 Sphinx = "^4.3.1"
 commitizen = "^2.20.0"
 
+[tool.commitizen]
+name = "cz_conventional_commits"
+changelog_file = "docs/CHANGELOG.rst"
+update_changelog_on_bump = true
+version = "0.8.0"
+tag_format = "v$major.$minor.$patch"
+version_files = [
+    "fm2prof/__init__.py",
+    "pyproject.toml:version"
+]
+
+[tool.commitizen.custommize]
+bump_pattern = "^(break|new|fix|hotfix|refactor|docs)"
+bump_map = {"break" = "MAJOR", "new" = "MINOR", "fix" = "PATCH", "hotfix" = "PATCH", "refactor"="PATCH", "docs" = "PATCH"}
+
+[tool.coverage.run]
+omit = [
+    "test/*",
+    "docs/*"
+    ]
+
+[tool.black]
+line-length = 88
+target-version = ['py38', 'py39']
+exclude = '''
+(
+  /(
+      \.eggs         # exclude a few common directories in the
+    | \.git          # root of the project
+    | \.hg
+    | \.mypy_cache
+    | \.tox
+    | \.venv
+    | _build
+    | buck-out
+    | build
+    | dist
+    | \.virtualenvs
+  )/
+)
+'''
+
+[tool.isort]
+profile = "black"
+multi_line_output = 3
+line_length = 88
+
 [build-system]
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"

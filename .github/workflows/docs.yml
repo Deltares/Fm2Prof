@@ -34,4 +34,4 @@ jobs:
         run: poetry install
         if: steps.cache.outputs.cache-hit != 'true'
 
-      - run: poetry run mkdocs gh-deploy --force
+      # - run: poetry run mkdocs gh-deploy --force
