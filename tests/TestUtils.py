@@ -78,3 +78,9 @@ class TestUtils:
             yield
         finally:
             os.chdir(prev_cwd)
+
+
+skipwhenexternalsmissing = pytest.mark.skipif(
+    not (TestUtils.get_external_test_data_dir().is_dir()),
+    reason="Only to be run to generate expected data from local machines.",
+)

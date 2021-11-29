@@ -7,7 +7,7 @@ import numbers
 import shutil
 import json
 import geojson
-
+from pathlib import Path
 
 from fm2prof.MaskOutputFile import MaskOutputFile
 from tests.TestUtils import TestUtils
@@ -156,22 +156,21 @@ class Test_read_mask_output_file:
     @pytest.mark.integrationtest
     def test_when_file_path_wrong_extension_then_raise_exception(self):
         # 1. Set up test data
-        test_dir = TestUtils.get_local_test_data_dir("maskoutputfile_test_data")
-        file_name = "test_file.wrongextension"
-        file_path = os.path.join(test_dir, file_name)
+        file_path = (
+            TestUtils.get_local_test_data_dir("maskoutputfile_test_data")
+            / "test_file.wrongextension"
+        )
         read_geojson_data = None
 
         # 2. Set expectations
-        assert os.path.exists(file_path), "" + "File {} could not be found.".format(
-            file_path
-        )
+        assert file_path.exists(), "" + "File {} could not be found.".format(file_path)
         expected_error = (
             "" + "Invalid file path extension, should be .json or .geojson."
         )
 
         # 3. Run test
         with pytest.raises(IOError) as e_info:
-            read_geojson_data = MaskOutputFile.read_mask_output_file(file_path)
+            read_geojson_data = MaskOutputFile.read_mask_output_file(str(file_path))
 
         # 4. Verify final expectations
         assert not read_geojson_data
@@ -190,40 +189,35 @@ class Test_read_mask_output_file:
         self, file_name
     ):
         # 1. Set up test data
-        test_dir = TestUtils.get_local_test_data_dir("maskoutputfile_test_data")
-        file_path = os.path.join(test_dir, file_name)
+        file_path: Path = (
+            TestUtils.get_local_test_data_dir("maskoutputfile_test_data") / file_name
+        )
 
-        # 2. Set up initial expectations
         expected_geojson = geojson.FeatureCollection(None)
-        assert os.path.exists(file_path), "" + "File not found at {}".format(file_path)
+        assert file_path.is_file(), "File not found at {}".format(file_path)
 
         # 2. Read data
-        try:
-            read_geojson = MaskOutputFile.read_mask_output_file(file_path)
-        except:
-            pytest.fail("Exception thrown but not expected.")
+        read_geojson = MaskOutputFile.read_mask_output_file(str(file_path))
 
         # 3. Verify final expectations
-        assert read_geojson, "" + "No geojson data was generated."
-        assert read_geojson == expected_geojson, "" + "Expected {} but got {}".format(
-            expected_geojson, read_geojson
-        )
+        assert read_geojson, "No geojson data was generated."
+        assert (
+            read_geojson == expected_geojson
+        ), f"Expected {expected_geojson} but got {read_geojson}"
 
     @pytest.mark.systemtest
     def test_when_valid_file_with_content_then_returns_expected_geojson(self):
         # 1. Set up test data
-        test_dir = TestUtils.get_local_test_data_dir("maskoutputfile_test_data")
-        file_name = "mask_points.geojson"
-        file_path = os.path.join(test_dir, file_name)
+        file_path = (
+            TestUtils.get_local_test_data_dir("maskoutputfile_test_data")
+            / "mask_points.geojson"
+        )
 
         # 2. Verify initial expectations
-        assert os.path.exists(file_path), "" + "File not found at {}".format(file_path)
+        assert file_path.exists(), f"File not found at {file_path}"
 
         # 2. Read data
-        try:
-            read_geojson = MaskOutputFile.read_mask_output_file(file_path)
-        except:
-            pytest.fail("Exception thrown but not expected.")
+        read_geojson = MaskOutputFile.read_mask_output_file(str(file_path))
 
         # 3. Verify final expectations
         assert read_geojson, "" + "No geojson data was generated."

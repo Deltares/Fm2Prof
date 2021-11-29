@@ -7,7 +7,7 @@ import io
 import shutil
 import matplotlib.pyplot as plt
 
-from tests.TestUtils import TestUtils
+from tests.TestUtils import TestUtils, skipwhenexternalsmissing
 from fm2prof.Fm2ProfRunner import Fm2ProfRunner
 from fm2prof.IniFile import IniFile
 
@@ -19,10 +19,7 @@ from tests.fm2prof_latex_report import Fm2ProfLatexReport
 from tests.CompareWaalModel import CompareWaalModel as CompareWaalModel
 from tests.CompareIdealizedModel import CompareIdealizedModel, CompareHelper
 
-skipwhenexternalsmissing = pytest.mark.skipif(
-    not (TestUtils.get_external_test_data_dir().is_dir()),
-    reason="Only to be run to generate expected data from local machines.",
-)
+
 
 _root_output_dir = None
 
