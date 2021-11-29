@@ -10,7 +10,6 @@ dependencies:
   - matplotlib
   - shapely
   - pylint
-  - netcdf4
   - scikit-learn
   - pytest
   - jupyter

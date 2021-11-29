@@ -86,3 +86,4 @@ build-backend = "poetry.core.masonry.api"
 [tool.poetry2conda.dependencies]
 pandas = { channel = "conda-forge" }
 netCDF4 = { channel = "conda-forge" }
+shapely = { channel = "conda-forge" }
