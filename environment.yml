@@ -2,7 +2,7 @@ name: fm2prof
 channels:
   - defaults
 dependencies:
-  - python=3.6
+  - python=3.7
   - netCDF4
   - scipy
   - numpy
@@ -10,7 +10,6 @@ dependencies:
   - matplotlib
   - shapely
   - pylint
-  - netcdf4
   - scikit-learn
   - pytest
   - jupyter
