@@ -34,7 +34,7 @@ commitizen = "^2.20.0"
 name = "cz_conventional_commits"
 changelog_file = "docs/CHANGELOG.rst"
 update_changelog_on_bump = true
-version = "0.8.0"
+version = "1.4.3"
 tag_format = "v$major.$minor.$patch"
 version_files = [
     "fm2prof/__init__.py",
