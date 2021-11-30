@@ -572,7 +572,7 @@ class VisualiseOutput:
         z_waterlevel_independent = vd.get("z")[index_waterlevel_independent]
         return z_waterlevel_independent
 
-    def _parse_cssname(cssname):
+    def _parse_cssname(self, cssname):
         """
         returns name of branch and chainage
         """
