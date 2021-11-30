@@ -294,7 +294,7 @@ class Test_write_mask_output_file:
     ):
         # 1. Set up test data
         file_name = "mask_points.geojson"
-        file_path =str(test_folder / file_name)
+        file_path = str(test_folder / file_name)
         mask_points = [
             geojson.Feature(geometry=MaskOutputFileHelper.get_mask_point()),
             geojson.Feature(geometry=MaskOutputFileHelper.get_mask_point()),
