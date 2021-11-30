@@ -1,30 +1,31 @@
+import functools
 import os
 import shutil
-import functools
+
 import ReportGenerator.report_helper as ReportHelper
 from ReportGenerator.report_content import ReportContent
 
 
 class HtmlReport:
 
-    __html_report_name = 'index.html'
+    __html_report_name = "index.html"
 
-    __html_template_dir = 'html_report'
-    __html_idx_temp_name = 'index_template.html'
-    __html_sec_temp_name = 'section_template.html'
-    __html_fig_temp_name = 'figure_template.html'
-    __html_car_temp_name = 'carousel_sec_template.html'
+    __html_template_dir = "html_report"
+    __html_idx_temp_name = "index_template.html"
+    __html_sec_temp_name = "section_template.html"
+    __html_fig_temp_name = "figure_template.html"
+    __html_car_temp_name = "carousel_sec_template.html"
 
-    __sec_name_key = 'SECTION_NAME'
-    __sec_link_key = 'SECTION_LINK_LINK'
-    __sec_link_text_key = 'SECTION_LINK_TEXT'
-    __sec_subsections_key = 'SUB_SECTIONS_CONTENT'
+    __sec_name_key = "SECTION_NAME"
+    __sec_link_key = "SECTION_LINK_LINK"
+    __sec_link_text_key = "SECTION_LINK_TEXT"
+    __sec_subsections_key = "SUB_SECTIONS_CONTENT"
 
-    __sec_car_id_key = 'SECTION_CAROUSEL_ID'
-    __sec_car_ind_key = 'SECTION_CAROUSEL_INDICATORS'
-    __sec_car_img_key = 'SECTION_CAROUSEL_IMGS'
+    __sec_car_id_key = "SECTION_CAROUSEL_ID"
+    __sec_car_ind_key = "SECTION_CAROUSEL_INDICATORS"
+    __sec_car_img_key = "SECTION_CAROUSEL_IMGS"
 
-    __template_replace_code = 'PYTHON_CODE_HERE'
+    __template_replace_code = "PYTHON_CODE_HERE"
 
     def __init__(self, report_content: ReportContent):
         self.report_content = report_content
@@ -51,12 +52,13 @@ class HtmlReport:
         for html_report in html_reports:
             html_path = os.path.join(report_dir, html_report)
             html_content = html_reports[html_report]
-            with open(html_path, 'w') as f:
+            with open(html_path, "w") as f:
                 f.write(html_content)
             # Verify HTML has been generated.
             if not os.path.exists(html_path):
                 raise Exception(
-                    'HTML report was not generated at {}.'.format(html_path))
+                    "HTML report was not generated at {}.".format(html_path)
+                )
 
         return html_reports
 
@@ -70,12 +72,11 @@ class HtmlReport:
             {tuple} -- Tuple of three templates.
         """
         # Get the HTML Templates folder.
-        template_dir = ReportHelper._get_template_folder(
-            self.__html_template_dir)
+        template_dir = ReportHelper._get_template_folder(self.__html_template_dir)
         if not os.path.exists(template_dir):
             raise IOError(
-                'Template directory could not be found at ' +
-                '{}'.format(template_dir))
+                "Template directory could not be found at " + "{}".format(template_dir)
+            )
 
         template_path = os.path.join(template_dir, template_name)
         template_content = self.__get_html_template_content(template_path)
@@ -95,9 +96,9 @@ class HtmlReport:
             {str} -- String with HTML code.
         """
         if not os.path.exists(file_path):
-            raise IOError('HTML Template not found at {}'.format(file_path))
+            raise IOError("HTML Template not found at {}".format(file_path))
 
-        template_content = ''
+        template_content = ""
         with open(file_path) as f:
             template_content = f.read()
 
@@ -116,14 +117,12 @@ class HtmlReport:
         # Insert generated HTML into highest template.
         reports = {}
         idx_html = self.__get_html_template(self.__html_idx_temp_name)
-        report_html = \
-            idx_html.replace(self.__template_replace_code, sections_html)
+        report_html = idx_html.replace(self.__template_replace_code, sections_html)
         reports[self.__html_report_name] = report_html
         # Create an entry per each section page.
         for page in sections_pages:
             page_html = sections_pages[page]
-            content_html = \
-                idx_html.replace(self.__template_replace_code, page_html)
+            content_html = idx_html.replace(self.__template_replace_code, page_html)
             reports[page] = content_html
 
         return reports
@@ -140,12 +139,14 @@ class HtmlReport:
         """
         cases_dict = self.report_content.cases_and_figures
         if not cases_dict:
-            error_mssg = '' + \
-                'No HTML content was generated from, ' + \
-                'because no data was found'
+            error_mssg = (
+                ""
+                + "No HTML content was generated from, "
+                + "because no data was found"
+            )
             raise ValueError(error_mssg)
 
-        html_sections = ''
+        html_sections = ""
         html_page_sections = {}
         if not cases_dict:
             return html_sections, html_page_sections
@@ -159,16 +160,14 @@ class HtmlReport:
             section_dict = self.__get_sec_map_values(case_dict)
 
             # Get HTML content based on the templates.
-            carousel_html = self.__set_content_in_template(
-                car_temp, carousel_dict)
-            section_html = self.__set_content_in_template(
-                sec_temp, section_dict)
+            carousel_html = self.__set_content_in_template(car_temp, carousel_dict)
+            section_html = self.__set_content_in_template(sec_temp, section_dict)
 
             # Set values to lists
             html_link = carousel_dict.get(self.__sec_link_key)
             html_page_sections[html_link] = section_html
             # Add new content to existent one.
-            html_sections = html_sections + '\n' + carousel_html
+            html_sections = html_sections + "\n" + carousel_html
 
         return html_sections, html_page_sections
 
@@ -208,8 +207,8 @@ class HtmlReport:
         # Get carousel elements.
         carousel_elements = self.__get_section_carousel(case_figs)
         car_ind, car_img = carousel_elements
-        html_indicators = ''.join(car_ind)
-        html_carousel_imgs = ''.join(car_img)
+        html_indicators = "".join(car_ind)
+        html_carousel_imgs = "".join(car_img)
 
         # Get default dictionary
         combined_dict = self.__get_default_sec_values(case_dict)
@@ -220,8 +219,8 @@ class HtmlReport:
         combined_dict[self.__sec_car_img_key] = html_carousel_imgs
 
         # Update values from default dictionary.
-        html_link = case_name.replace(' ', '') + '.html'
-        text_back = 'See {} results in detail.'.format(case_name)
+        html_link = case_name.replace(" ", "") + ".html"
+        text_back = "See {} results in detail.".format(case_name)
         combined_dict[self.__sec_link_key] = html_link
         combined_dict[self.__sec_link_text_key] = text_back
 
@@ -267,7 +266,7 @@ class HtmlReport:
         case_key = case_dict.get(ReportHelper._case_key_key)
 
         # Set dictionary.
-        text_back = 'Go back to overview.'
+        text_back = "Go back to overview."
         default_dict = {
             self.__sec_name_key: case_name,
             self.__sec_link_key: self.__html_report_name,
@@ -290,41 +289,47 @@ class HtmlReport:
 
     def __get_carousel_img(self, figure: dict, idx: int):
         if not figure:
-            return ''
+            return ""
         # Get values from the figure dictionary.
         alt_text = figure.get(ReportHelper._fig_name_key)
         fig_path = figure.get(ReportHelper._fig_rel_path_key)
         fig_caption = figure.get(ReportHelper._fig_name_key)
 
         # Determine class of parent div.
-        div_class = 'carousel-item'
+        div_class = "carousel-item"
         if idx == 0:
-            div_class = 'carousel-item active'
+            div_class = "carousel-item active"
 
         # Create HTML code for the figure
-        element = '' + \
-            '\t\t\t\t<div class="{}">\n'.format(div_class) + \
-            '\t\t\t\t<img src="{}"'.format(fig_path) + \
-            ' class="d-block w-100"' + \
-            ' alt="{}">\n'.format(alt_text) +\
-            '\t\t\t\t</div>\n'
+        element = (
+            ""
+            + '\t\t\t\t<div class="{}">\n'.format(div_class)
+            + '\t\t\t\t<img src="{}"'.format(fig_path)
+            + ' class="d-block w-100"'
+            + ' alt="{}">\n'.format(alt_text)
+            + "\t\t\t\t</div>\n"
+        )
         return element
 
     def __get_carousel_img_caption(self, caption: str):
-        element = '' + \
-            '<div class="carousel-caption d-none d-md-block">\n' + \
-            '\t\t\t\t\t<h5>{}</h5>'.format(caption) + \
-            '</div>\n'
+        element = (
+            ""
+            + '<div class="carousel-caption d-none d-md-block">\n'
+            + "\t\t\t\t\t<h5>{}</h5>".format(caption)
+            + "</div>\n"
+        )
         return element
 
     def __get_carousel_indicator(self, idx: int):
-        li_class = ''
+        li_class = ""
         if idx == 0:
             li_class = 'class="active" '
-        indicator = '' + \
-            '\t\t\t\t<li {}'.format(li_class) + \
-            'data-target="carouselIndicators" ' + \
-            'data-slide-to="{}"/>\n'.format(idx)
+        indicator = (
+            ""
+            + "\t\t\t\t<li {}".format(li_class)
+            + 'data-target="carouselIndicators" '
+            + 'data-slide-to="{}"/>\n'.format(idx)
+        )
 
         return indicator
 
@@ -337,12 +342,12 @@ class HtmlReport:
         Returns:
             {str} -- HTML formatted code.
         """
-        html_figures = ''
+        html_figures = ""
         if not case_figures:
             return html_figures
-        fig_capt_key = 'FIGURE_NAME_HERE'
-        fig_path_key = 'FIGURE_PATH'
-        fig_alt_txt_key = 'FIGURE_ALT_TEXT'
+        fig_capt_key = "FIGURE_NAME_HERE"
+        fig_path_key = "FIGURE_PATH"
+        fig_alt_txt_key = "FIGURE_ALT_TEXT"
         template = self.__get_html_template(self.__html_fig_temp_name)
         for section in case_figures:
             for figure in case_figures[section]:
@@ -355,6 +360,6 @@ class HtmlReport:
                 fig_html = fig_html.replace(fig_path_key, fig_path)
                 fig_html = fig_html.replace(fig_alt_txt_key, fig_capt)
                 # Add to existent content.
-                html_figures = html_figures + '\n' + fig_html
+                html_figures = html_figures + "\n" + fig_html
 
         return html_figures

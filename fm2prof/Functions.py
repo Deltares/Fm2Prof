@@ -36,14 +36,14 @@ All names, logos, and references to "Deltares" are registered trademarks of
 Stichting Deltares and remain full property of Stichting Deltares at all times.
 All rights reserved.
 """
+import csv
+import os
+
 # region // imports
 import netCDF4
 import numpy as np
 import pandas as pd
 from sklearn.neighbors import KNeighborsClassifier, NearestNeighbors
-import csv
-
-import os
 
 # endregion
 
@@ -61,67 +61,72 @@ __status__ = "Prototype"
 
 # region // public functions
 
+
 def classify_roughness_sections_by_polygon(sections, data, logger):
-    """ assigns edges to a roughness section based on polygon data """
-    logger.debug('....gathering points')
-    points = [(data['x'][i], data['y'][i])
-              for i in range(len(data['x']))]
-    logger.debug('....classifying points')
-    data['section'] = sections.classify_points(points)
+    """assigns edges to a roughness section based on polygon data"""
+    logger.debug("....gathering points")
+    points = [(data["x"][i], data["y"][i]) for i in range(len(data["x"]))]
+    logger.debug("....classifying points")
+    data["section"] = sections.classify_points(points)
     return data
 
 
 def extract_point_from_np(data: dict, pos: int) -> list:
-    return (data['x'][pos], data['y'][pos])
+    return (data["x"][pos], data["y"][pos])
 
 
-def classify_with_regions(regions, cssdata, time_independent_data, edge_data, css_regions):
+def classify_with_regions(
+    regions, cssdata, time_independent_data, edge_data, css_regions
+):
     """
-        Assigns cross-section id's based on region polygons.
-        Within a region, assignment will be done by k nearest neighbour
+    Assigns cross-section id's based on region polygons.
+    Within a region, assignment will be done by k nearest neighbour
     """
-    
 
-    time_independent_data['sclass'] = time_independent_data['region'].astype(str)
-    #edge_data['sclass'] = edge_data['region']
+    time_independent_data["sclass"] = time_independent_data["region"].astype(str)
+    # edge_data['sclass'] = edge_data['region']
 
     # Nearest Neighbour within regions
     for region in np.unique(css_regions):
         # Select cross-sections within this region
-        css_xy = cssdata['xy'][css_regions==region]
-        css_id = cssdata['id'][css_regions==region]
+        css_xy = cssdata["xy"][css_regions == region]
+        css_id = cssdata["id"][css_regions == region]
 
         # Select 2d points within region
-        node_mask = time_independent_data['region'] == region
-        x_2d_node = time_independent_data['x'][node_mask]
-        y_2d_node = time_independent_data['y'][node_mask]
+        node_mask = time_independent_data["region"] == region
+        x_2d_node = time_independent_data["x"][node_mask]
+        y_2d_node = time_independent_data["y"][node_mask]
 
-        edge_mask = edge_data['region'] == region
-        x_2d_edge = edge_data['x'][edge_mask]
-        y_2d_edge = edge_data['y'][edge_mask]
+        edge_mask = edge_data["region"] == region
+        x_2d_edge = edge_data["x"][edge_mask]
+        y_2d_edge = edge_data["y"][edge_mask]
 
         # Do Nearest Neighour
         neigh = _get_class_tree(css_xy, css_id)
-        css_2d_nodes = neigh.predict(np.array([x_2d_node, y_2d_node]).T)        
+        css_2d_nodes = neigh.predict(np.array([x_2d_node, y_2d_node]).T)
         css_2d_edges = neigh.predict(np.array([x_2d_edge, y_2d_edge]).T)
 
         # Update data in main structures
-        time_independent_data['sclass'][node_mask] = css_2d_nodes # sclass = cross-section id
-        
-        edge_data['sclass'][edge_mask] = css_2d_edges
-    
+        time_independent_data["sclass"][
+            node_mask
+        ] = css_2d_nodes  # sclass = cross-section id
+
+        edge_data["sclass"][edge_mask] = css_2d_edges
+
     return time_independent_data, edge_data
 
 
 def classify_without_regions(cssdata, time_independent_data, edge_data):
     # Create a class identifier to map points to cross-sections
-    neigh = _get_class_tree(cssdata['xy'], cssdata['id'])
+    neigh = _get_class_tree(cssdata["xy"], cssdata["id"])
 
     # Expand time-independent dataset with cross-section names
-    time_independent_data['sclass'] = neigh.predict(np.array([time_independent_data['x'], time_independent_data['y']]).T)
+    time_independent_data["sclass"] = neigh.predict(
+        np.array([time_independent_data["x"], time_independent_data["y"]]).T
+    )
 
     # Assign cross-section names to edge coordinates as well
-    edge_data['sclass'] = neigh.predict(np.array([edge_data['x'], edge_data['y']]).T)
+    edge_data["sclass"] = neigh.predict(np.array([edge_data["x"], edge_data["y"]]).T)
 
     return time_independent_data, edge_data
 
@@ -135,16 +140,17 @@ def mirror(array, reverse_sign=False):
     :return:
     """
     if reverse_sign:
-        return np.append(np.flipud(array)*-1, array)
+        return np.append(np.flipud(array) * -1, array)
     else:
         return np.append(np.flipud(array), array)
+
 
 def get_centre_values(location, x, y, waterdepth, waterlevel):
     """
     Find output point closest to x,y location, output depth and water level as nd arrays
-    
+
     """
-    nn = NearestNeighbors(n_neighbors=1, algorithm='ball_tree').fit(np.array([x, y]).T)
+    nn = NearestNeighbors(n_neighbors=1, algorithm="ball_tree").fit(np.array([x, y]).T)
 
     # conversion to 2d array, as 1d arrays are deprecated for kneighbors
     location_array = np.array(location).reshape(1, -1)
@@ -155,11 +161,11 @@ def get_centre_values(location, x, y, waterdepth, waterlevel):
     centre_level = waterlevel.iloc[index[0]].to_numpy()
 
     # When starting from a dry bed, the centre_level may have nan values
-    # 
+    #
     bed_level = np.nanmin(centre_level - centre_depth)
-    #centre_depth[np.isnan(centre_depth)] = np.nanmin(centre_depth)
+    # centre_depth[np.isnan(centre_depth)] = np.nanmin(centre_depth)
     centre_level[np.isnan(centre_level)] = bed_level
-    
+
     return centre_depth[0], centre_level[0]
 
 
@@ -178,15 +184,18 @@ def interpolate_roughness(cross_section_list):
         maximal_z = -1e20
         for css in cross_section_list:
             if section in list(css.friction_tables.keys()):
-                minimal_z = np.min([minimal_z,
-                                    np.min(css.friction_tables.get(section).level)])
-                maximal_z = np.max([maximal_z,
-                                    np.max(css.friction_tables.get(section).level)])
+                minimal_z = np.min(
+                    [minimal_z, np.min(css.friction_tables.get(section).level)]
+                )
+                maximal_z = np.max(
+                    [maximal_z, np.max(css.friction_tables.get(section).level)]
+                )
 
         for css in cross_section_list:
             if section in list(css.friction_tables.keys()):
                 minmaxrange = np.arange(minimal_z, maximal_z, zstep)
                 css.friction_tables.get(section).interpolate(minmaxrange)
+
 
 def empirical_ppf(qs, p, val=None, single_value=False):
     """
@@ -196,20 +205,21 @@ def empirical_ppf(qs, p, val=None, single_value=False):
 
     return
     """
-    if val is None: 
+    if val is None:
         p, val = get_empirical_cdf(p)
 
     if not single_value:
         output = list()
         for q in qs:
-            output.append(np.interp(q / 100., p, val))
+            output.append(np.interp(q / 100.0, p, val))
     else:
-        output = np.interp(qs / 100., p, val)
+        output = np.interp(qs / 100.0, p, val)
     return output
+
 
 def get_empirical_cdf(sample, n=100, method=1, ignore_nan=True):
     """
-    Returns an experimental/empirical cdf from data. 
+    Returns an experimental/empirical cdf from data.
 
     Arguments:
 
@@ -231,9 +241,11 @@ def get_empirical_cdf(sample, n=100, method=1, ignore_nan=True):
 
     return p, val
 
+
 # endregion
 
 # region // protected functions
+
 
 def _get_class_tree(xy, c):
     X = xy
@@ -241,6 +253,7 @@ def _get_class_tree(xy, c):
     neigh = KNeighborsClassifier(n_neighbors=1)
     neigh.fit(X, y)
     return neigh
+
 
 def _interpolate_roughness_css(cross_section, alluvial_range, nonalluvial_range):
     # change nan's to zeros
@@ -259,16 +272,24 @@ def _interpolate_roughness_css(cross_section, alluvial_range, nonalluvial_range)
 
     # only interpolate and assign if nonzero elements exist in the chezy table
     if np.sum(alluvial_nonzero_mask) > 0:
-        waterlevel_alluvial_trimmed = waterlevel_alluvial[alluvial_nonzero_mask[0]:alluvial_nonzero_mask[-1] + 1]
-        alluvial_interp = np.interp(alluvial_range, waterlevel_alluvial_trimmed, chezy_alluvial_trimmed)
+        waterlevel_alluvial_trimmed = waterlevel_alluvial[
+            alluvial_nonzero_mask[0] : alluvial_nonzero_mask[-1] + 1
+        ]
+        alluvial_interp = np.interp(
+            alluvial_range, waterlevel_alluvial_trimmed, chezy_alluvial_trimmed
+        )
 
         # assign
         cross_section.alluvial_friction_table[0] = alluvial_range
         cross_section.alluvial_friction_table[1] = pd.Series(data=alluvial_interp)
 
     if np.sum(nonalluvial_nonzero_mask) > 0:
-        waterlevel_nonalluvial_trimmed = waterlevel_nonalluvial[nonalluvial_nonzero_mask[0]:nonalluvial_nonzero_mask[-1] + 1]
-        nonalluvial_interp = np.interp(nonalluvial_range, waterlevel_nonalluvial_trimmed, chezy_nonalluvial_trimmed)
+        waterlevel_nonalluvial_trimmed = waterlevel_nonalluvial[
+            nonalluvial_nonzero_mask[0] : nonalluvial_nonzero_mask[-1] + 1
+        ]
+        nonalluvial_interp = np.interp(
+            nonalluvial_range, waterlevel_nonalluvial_trimmed, chezy_nonalluvial_trimmed
+        )
 
         # assign
         cross_section.nonalluvial_friction_table[0] = nonalluvial_range

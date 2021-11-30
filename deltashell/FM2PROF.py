@@ -21,14 +21,16 @@ Python 2.7 syntax!
 
 """
 
+import json
 import os
 import sys
-from datetime import datetime
 import time
-import json
-import Libraries.StandardFunctions as sf
-import Libraries.SpatialOperations as so
+from datetime import datetime
+
 import Libraries.FlowFlexibleMeshFunctions as fmf
+import Libraries.SpatialOperations as so
+import Libraries.StandardFunctions as sf
+
 import DeltaShell.Plugins.SharpMapGis.ImportExport as ie
 
 # Set PATHS HERE
@@ -36,55 +38,79 @@ _gridFile = r"c:\Users\berend_kn\projects\2017_fm2prof\_dev\src\trunk\Maas_dir\M
 _polyFile = r"c:\Users\berend_kn\projects\2017_fm2prof\_dev\src\trunk\Maas_dir\input\section_polygon.geojson"
 _logFile = r"c:\Users\berend_kn\projects\2020_03_fm2prof\03_model_development\m3\f2p_ds_log.txt"
 
-#region helper functions
+# region helper functions
 def ReadPolygonFromFile(filename):
-	with open(filename, 'r') as f:
-		poly = json.load(f)
-	
-	features = poly.get('features')
-	print "Polygon consists of {} features".format(len(features))
-	for feature in features:
-		yield {'name': feature.get('properties').get('name'),
-			   'id': feature.get('properties').get('id'),
-		       'coords': feature.get('geometry').get('coordinates')[0]}
+    with open(filename, "r") as f:
+        poly = json.load(f)
+
+    features = poly.get("features")
+    print("Polygon consists of {} features".format(len(features)))
+    for feature in features:
+        yield {
+            "name": feature.get("properties").get("name"),
+            "id": feature.get("properties").get("id"),
+            "coords": feature.get("geometry").get("coordinates")[0],
+        }
+
 
 def CreateModel():
-	# Create a Delft3D flow model
-	model = fmf.WaterFlowFMModel() 
-	
-	# Add model to current project
-	sf.AddToProject(model)
-	
-	return model
+    # Create a Delft3D flow model
+    model = fmf.WaterFlowFMModel()
+
+    # Add model to current project
+    sf.AddToProject(model)
+
+    return model
+
 
 def ImportGridToModel(model):
-	model.Grid = ie.NetFileImporter.ImportGrid(_gridFile)
-	return model
+    model.Grid = ie.NetFileImporter.ImportGrid(_gridFile)
+    return model
 
 
 def AssignToBathymetry():
-	operationName = "SetValue"
-	model = sf.GetModelByName("FlowFM")
-	object = model.Bathymetry
-	polygon = [[185714, 349311],[187450, 349352],[157510, 348026],[185653, 348077]]
-	
-	with open(_logFile, "w") as f:
-		start = time.time()
-		f.write('FM2PROF Preprocessing tool\n')
-		f.write('Writing region polygons to bathymetry\n')
-		f.write('Setting default value to -999\n')
-		so.AddSpatialOperationByPolygon(operationName, model, object, 'Envelope', values=[-999], pointwiseType="Overwrite")
-		f.write('done in {:.1f} seconds\n'.format(time.time()-start))
-	
-	# Loop through polygons
-	for i, polygon in enumerate(ReadPolygonFromFile(_polyFile)):
-		# Each polygon should have a field named 'id', which is an integer. This integer is assigned to the bathymetry
-		poly_id = int(polygon.get("id"))
-		
-		with open(_logFile, 'a') as f:
-			start = time.time()
-			f.write(("Assigning name: {}, id {} to bathymetry with value {}\n").format(polygon.get('name'), poly_id, poly_id))
-			so.AddSpatialOperationByPolygon(operationName, model, object, polygon.get('coords')[0], values=[poly_id], pointwiseType="Overwrite")
-			f.write('done in {:.1f} seconds\n'.format(time.time()-start))
-#endregion
+    operationName = "SetValue"
+    model = sf.GetModelByName("FlowFM")
+    object = model.Bathymetry
+    polygon = [[185714, 349311], [187450, 349352], [157510, 348026], [185653, 348077]]
+
+    with open(_logFile, "w") as f:
+        start = time.time()
+        f.write("FM2PROF Preprocessing tool\n")
+        f.write("Writing region polygons to bathymetry\n")
+        f.write("Setting default value to -999\n")
+        so.AddSpatialOperationByPolygon(
+            operationName,
+            model,
+            object,
+            "Envelope",
+            values=[-999],
+            pointwiseType="Overwrite",
+        )
+        f.write("done in {:.1f} seconds\n".format(time.time() - start))
+
+    # Loop through polygons
+    for i, polygon in enumerate(ReadPolygonFromFile(_polyFile)):
+        # Each polygon should have a field named 'id', which is an integer. This integer is assigned to the bathymetry
+        poly_id = int(polygon.get("id"))
+
+        with open(_logFile, "a") as f:
+            start = time.time()
+            f.write(
+                ("Assigning name: {}, id {} to bathymetry with value {}\n").format(
+                    polygon.get("name"), poly_id, poly_id
+                )
+            )
+            so.AddSpatialOperationByPolygon(
+                operationName,
+                model,
+                object,
+                polygon.get("coords")[0],
+                values=[poly_id],
+                pointwiseType="Overwrite",
+            )
+            f.write("done in {:.1f} seconds\n".format(time.time() - start))
+
+
+# endregion
 AssignToBathymetry()

@@ -1,13 +1,13 @@
-import unittest
-import pytest
-import sys
-import os
-import numbers
-
-import shutil
 import json
-import geojson
+import numbers
+import os
+import shutil
+import sys
+import unittest
 from pathlib import Path
+
+import geojson
+import pytest
 
 from fm2prof.MaskOutputFile import MaskOutputFile
 from tests.TestUtils import TestUtils

@@ -4,22 +4,23 @@ Top-level file to run fm2prof
 """
 
 
-# Import from standard library
-import sys
 import getopt
 
-# Import from dependencies
-# None
+# Import from standard library
+import sys
 
 # Import from package
 from fm2prof import Fm2ProfRunner
+
+# Import from dependencies
+# None
 
 
 # endregion
 
 # region // Main helpers
 def __report_expected_arguments(reason):
-    print('main.py -i <ini_file>')
+    print("main.py -i <ini_file>")
     sys.exit("Error: {0}".format(reason))
 
 
@@ -38,11 +39,12 @@ def __is_output(argument):
     argType = argument[0]
     return argType in ("-o", "--ofile")
 
+
 # endregion
 
 
 def main(argv):
-    """ Main class, should contain three input arguments and one output.
+    """Main class, should contain three input arguments and one output.
     Otherwise the execution will end with an error.
 
     Arguments:
@@ -60,9 +62,11 @@ def main(argv):
 
     # Check if input parameters are in expected order
     if not __is_input(opts[0]):
-        err_mssg = '' + \
-            'The first argument should be an input file.\n' + \
-            'Given: {}\n'.format(opts[0])
+        err_mssg = (
+            ""
+            + "The first argument should be an input file.\n"
+            + "Given: {}\n".format(opts[0])
+        )
         __report_expected_arguments(err_mssg)
 
     # Run Fm2Prof with given arguments
@@ -71,5 +75,5 @@ def main(argv):
     runner.run()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main(sys.argv[1:])
