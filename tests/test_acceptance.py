@@ -2,9 +2,9 @@ import io
 import os
 import shutil
 import sys
-from typing import Optional
 import unittest
 from pathlib import Path
+from typing import Optional
 
 import matplotlib.pyplot as plt
 import pytest

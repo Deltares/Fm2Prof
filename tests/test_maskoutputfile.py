@@ -215,14 +215,14 @@ class Test_read_mask_output_file:
 
 class Test_write_mask_output_file:
     @pytest.fixture(scope="class")
-    def test_folder(self):
+    def test_folder(self) -> Path:
         """Prepares the class properties to be used in the tests."""
         test_dir = (
-            TestUtils.get_artifacts_test_data_dir("Output") / "WriteMaskOutputFile"
+            TestUtils.get_artifacts_test_data_dir() / "Output" / "WriteMaskOutputFile"
         )
         if not test_dir.is_dir():
             test_dir.mkdir(parents=True, exist_ok=True)
-        yield test_dir
+        return test_dir
 
     def test_when_no_file_path_given_then_exception_not_risen(self):
         # 1. Set up test data
@@ -257,11 +257,11 @@ class Test_write_mask_output_file:
         )
 
     def test_when_valid_file_path_and_no_mask_point_then_writes_expectations(
-        self, test_folder
+        self, test_folder: Path
     ):
         # 1. Set up test data
         file_name = "no_mask_points.geojson"
-        file_path = os.path.join(test_folder, file_name)
+        file_path = str(test_folder / file_name)
         mask_points = None
 
         # 2. Set expectations
@@ -290,11 +290,11 @@ class Test_write_mask_output_file:
         )
 
     def test_when_valid_file_path_and_mask_points_then_writes_expectations(
-        self, test_folder
+        self, test_folder: Path
     ):
         # 1. Set up test data
         file_name = "mask_points.geojson"
-        file_path = os.path.join(test_folder, file_name)
+        file_path = str(test_folder / file_name)
         mask_points = [
             geojson.Feature(geometry=MaskOutputFileHelper.get_mask_point()),
             geojson.Feature(geometry=MaskOutputFileHelper.get_mask_point()),

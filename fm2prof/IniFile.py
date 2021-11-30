@@ -419,14 +419,6 @@ class IniFile(FM2ProfBase):
         except FileExistsError:
             pass
         return output_dir
-        """
-        if not output_dir:
-            return os.getcwd()
-        tmp_output_dir = output_dir.replace('/','\\')
-        if '..' not in tmp_output_dir:
-            return os.path.join(self.__fileDir, tmp_output_dir)
-        return tmp_output_dir
-        """
 
     def _get_valid_case_name(self, case_name: str, output_dir: str):
         """Gets a valid case name to avoid duplication of directories
