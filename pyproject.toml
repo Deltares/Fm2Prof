@@ -22,6 +22,9 @@ Shapely = "^1.8.0"
 click = "^8.0.3"
 matplotlib = "^3.5.0"
 geos = "^0.2.3"
+Sphinx = "^4.3.1"
+Cython = "^0.29.24"
+sphinx-rtd-theme = "^1.0.0"
 
 [tool.poetry.dev-dependencies]
 pytest = "^6.2.5"
@@ -89,3 +92,6 @@ pandas = { channel = "conda-forge" }
 netCDF4 = { channel = "conda-forge" }
 shapely = { channel = "conda-forge" }
 geos = {channel = "conda-forge"}
+
+[tool.poetry.extras]
+docs = ["sphinx", "sphinx_rtd_theme"]
