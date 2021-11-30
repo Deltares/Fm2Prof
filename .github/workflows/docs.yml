@@ -32,14 +32,8 @@ jobs:
           poetry config virtualenvs.path ~/.virtualenvs
 
       - name: Install Dependencies
-        run: |
-          poetry install
-        # if: steps.cache.outputs.cache-hit != 'true'
-      
-      - name: Build SPHINX docs
-        uses: ammaraskar/sphinx-action@master
-        with:
-          docs-folder: "./docs/"
+        run: poetry install
+        if: steps.cache.outputs.cache-hit != 'true'
 
       - name: Deploy
         uses: JamesIves/github-pages-deploy-action@4.1.7
