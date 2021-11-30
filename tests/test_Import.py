@@ -12,7 +12,6 @@ from tests.TestUtils import TestUtils, skipwhenexternalsmissing
 
 
 class Test_FMDataImporter:
-    @pytest.mark.unittest
     @skipwhenexternalsmissing
     def test_when_map_file_without_czu_no_exception(self):
         # 1. Set up test data
@@ -29,7 +28,6 @@ class Test_FMDataImporter:
 
 
 class Test_FmModelData:
-    @pytest.mark.unittest
     @pytest.mark.parametrize("arg_list", [(""), (None)])
     def test_when_no_arguments_exception_is_risen(self, arg_list):
         # 1. Set up test data
@@ -50,7 +48,6 @@ class Test_FmModelData:
             + " does not match generated {}".format(recieved_error_message)
         )
 
-    @pytest.mark.unittest
     @pytest.mark.parametrize("arg_list", [(""), (None)])
     def test_when_argument_length_not_as_expected_then_exception_is_risen(
         self, arg_list
@@ -77,7 +74,6 @@ class Test_FmModelData:
             + " does not match generated {}".format(recieved_error_message)
         )
 
-    @pytest.mark.unittest
     def test_when_given_expected_arguments_then_object_is_created(self):
         # 1. Set up test data
         time_dependent_data = "arg1"
@@ -107,7 +103,6 @@ class Test_FmModelData:
         assert return_fm_model_data.node_coordinates == node_coordinates
         assert return_fm_model_data.css_data_list == []
 
-    @pytest.mark.unittest
     def test_when_given_data_dictionary_then_css_data_list_is_set(self):
         # 1. Set up test data
         time_dependent_data = "arg1"
@@ -145,7 +140,6 @@ class Test_FmModelData:
 
 
 class Test_get_ordered_css_list:
-    @pytest.mark.unittest
     def test_when_given_dictionary_then_returns_list(self):
         # 1. Set up test_data
         return_list = None
@@ -172,7 +166,6 @@ class Test_get_ordered_css_list:
             + " but return {} instead.".format(return_list)
         )
 
-    @pytest.mark.unittest
     @pytest.mark.parametrize("test_dict", [(""), (None), ({})])
     def test_when_given_unexpected_value_then_returns_empty_list(self, test_dict):
         # 1. Set up test_data

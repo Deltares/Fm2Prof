@@ -43,7 +43,6 @@ class Test_Main:
         if os.path.exists(outputtestdir):
             os.rmdir(outputtestdir)
 
-    @pytest.mark.unittest
     def test_when_incorrect_args_then_systemexit_risen_with_expected_message(self):
         # 1. Set up test data
         mainArgs = [""]
@@ -60,7 +59,6 @@ class Test_Main:
         assert pytest_wrapped_e.type == SystemExit
         assert pytest_wrapped_e.value.code == expectedMssg
 
-    @pytest.mark.unittest
     def test_when_incorrect_input_args_systemexit_risen_with_expected_message(self):
         # 1. Set up test data
         mainArgs = ["-o", "test1"]
@@ -79,7 +77,6 @@ class Test_Main:
         assert pytest_wrapped_e.type == SystemExit
         assert pytest_wrapped_e.value.code == expectedMssg
 
-    @pytest.mark.unittest
     def test_when_giving_correct_arguments_then_does_not_raise_systemexit(self):
         # 1. Set up test data
         test_dir = "output_test_main_unit"
@@ -107,7 +104,6 @@ class Test_Main:
         except:
             pass
 
-    @pytest.mark.integrationtest
     def test_when_giving_non_existent_input_file_then_raises_io_exception(self):
         # 1. Set up test data
         file_path = "test1"
@@ -128,7 +124,6 @@ class Test_Main:
             reason, exception_message
         )
 
-    @pytest.mark.integrationtest
     def ARCHIVED_test_when_giving_existent_empty_input_file_then_does_not_raise_io_exception(
         self,
     ):
