@@ -20,3 +20,4 @@ help:
 %: Makefile
 	@$(SPHINXBUILD) -M $@ "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
 	mv -rT $(BUILDDIR)/html $(HTMLCOPYDIR)
+	touch $(HTMLCOPYDIR)/.nojekyll
