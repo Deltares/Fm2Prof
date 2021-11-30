@@ -13,7 +13,6 @@ _root_output_dir = None
 
 
 class Test_IniFile:
-    @pytest.mark.unittest
     def test_when_no_file_path_then_no_exception_is_risen(self):
         # 1. Set up initial test data
         iniFilePath = ""
@@ -24,7 +23,6 @@ class Test_IniFile:
         except:
             pytest.fail("No exception expected.")
 
-    @pytest.mark.unittest
     def test_when_non_existent_file_path_then_io_exception_is_risen(self):
         # 1. Set up initial test data
         ini_file_path = "nonexistent_ini_file.ini"
@@ -56,7 +54,6 @@ class ARCHIVED_Test_extract_parameters:
         ("dummy", None),
     ]
 
-    @pytest.mark.unittest
     def test_when_no_parameters_key_returns_none(self):
         # 1. Set up initial test data
         iniFilePath = None
@@ -73,7 +70,6 @@ class ARCHIVED_Test_extract_parameters:
         # 3. Verify final expectations
         assert new_params is None
 
-    @pytest.mark.unittest
     def test_when_no_parameters_no_exception_is_risen(self):
         # 1. Set up initial test data
         iniFilePath = None
@@ -86,7 +82,6 @@ class ARCHIVED_Test_extract_parameters:
         except:
             pytest.fail("Test failed while trying to extract parameters.")
 
-    @pytest.mark.unittest
     @pytest.mark.parametrize(
         "value_as_string, expected_value", _test_scenarios_parameters
     )
@@ -118,7 +113,6 @@ class ARCHIVED_Test_extract_parameters:
             expected_value, numbers.Integral
         )
 
-    @pytest.mark.unittest
     def test_when_no_parameters_key_returns_empty_dict(self):
         # 1. Set up initial test data
         iniFilePath = None
@@ -138,7 +132,6 @@ class ARCHIVED_Test_extract_parameters:
 
 
 class ARCHIVED_Test_extract_input_files:
-    @pytest.mark.unittest
     def test_when_given_correct_parameters_then_gets_filenames(self):
         # 1. Set up initial test data
         iniFilePath = None
@@ -173,7 +166,6 @@ class ARCHIVED_Test_extract_output_dir:
         ("dummydir", "dummycase", "dummydir/dummycase01"),
     ]
 
-    @pytest.mark.unittest
     def test_when_no_outputdir_key_then_returns_none(self):
         # 1. Set initial test data
         ini_file_path = None
@@ -190,7 +182,6 @@ class ARCHIVED_Test_extract_output_dir:
         # 3. Verify final expectations
         assert new_output_dir_value is None
 
-    @pytest.mark.integrationtest
     @pytest.mark.parametrize(
         "param_output_dir_value, param_case_name_value, expected_value",
         _test_scenarios_output_dir_cases,
@@ -218,7 +209,6 @@ class ARCHIVED_Test_extract_output_dir:
         # 3. Verify final expectations
         assert expected_value in new_output_dir_value
 
-    @pytest.mark.integrationtest
     def test_when_dirs_exist_then_returns_new_values(self):
         # 1. Set initial test data
         ini_file_path = None
@@ -264,7 +254,6 @@ class ARCHIVED_Test_gets_valid_case_name:
         ("dummyCase", "dummyDir", "dummyCase01"),
     ]
 
-    @pytest.mark.unittest
     @pytest.mark.parametrize(
         "case_name, output_dir, expected_value", _test_scenarios_case_names
     )
@@ -285,7 +274,6 @@ class ARCHIVED_Test_gets_valid_case_name:
         # 3. Verify final expectations
         assert new_case_name == expected_value
 
-    @pytest.mark.integrationtest
     def test_when_dirs_exist_then_returns_new_valid_case_name(self):
         # 1. Set initial test data
         ini_file_path = None
@@ -328,7 +316,6 @@ class ARCHIVED_Test_get_valid_output_dir:
         ("../dummysubdir", "\\dummysubdir"),
     ]
 
-    @pytest.mark.unittest
     @pytest.mark.parametrize("output_dir, expected_value", _test_scenarios_output_dirs)
     def test_when_given_valid_parameters_then_returns_expected_values(
         self, output_dir, expected_value
@@ -348,7 +335,6 @@ class ARCHIVED_Test_get_valid_output_dir:
         # 3. Verify final expectations
         assert expected_value in new_output_dir
 
-    @pytest.mark.unittest
     def test_when_no_output_dir_then_returns_current_path(self):
         # 1. Set initial test data
         ini_file_path = None
@@ -368,7 +354,6 @@ class ARCHIVED_Test_get_valid_output_dir:
 
 
 class ARCHIVED_Test_readini_file:
-    @pytest.mark.unittest
     def test_when_no_file_path_then_io_exception_is_risen(self):
         # 1. Set up initial test data """
         iniFilePath = ""
@@ -389,7 +374,6 @@ class ARCHIVED_Test_readini_file:
             + "retrieved {}".format(error_message)
         )
 
-    @pytest.mark.systemtest
     def test_when_inifile_contains_output_dir_then_sets_output_dir(self):
         # 1. Set initial test data
         test_data_dir = TestUtils.get_local_test_data_dir("IniFile")
@@ -415,7 +399,6 @@ class ARCHIVED_Test_readini_file:
         assert output_dir in format_output_dir
         assert format_output_dir == expected_output_dir
 
-    @pytest.mark.systemtest
     def test_when_inifile_contains_parameters_then_sets_them(self):
         # 1. Set initial test data
         test_data_dir = TestUtils.get_local_test_data_dir("IniFile")
@@ -464,7 +447,6 @@ class ARCHIVED_Test_readini_file:
                 + "for key {}".format(expected_input_param)
             )
 
-    @pytest.mark.systemtest
     def test_when_inifile_contains_input_files_then_sets_input_file_paths(self):
         # 1. Set initial test data
         test_data_dir = TestUtils.get_local_test_data_dir("IniFile")
@@ -503,7 +485,6 @@ class ARCHIVED_Test_readini_file:
                 expected_input_file
             )
 
-    @pytest.mark.systemtest
     def test_when_inifile_is_not_valid_then_raises_exception(self):
         # 1. Set initial test data
         test_data_dir = TestUtils.get_local_test_data_dir("IniFile")
@@ -528,7 +509,6 @@ class ARCHIVED_Test_readini_file:
 
 
 class ARCHIVED_Test_get_inifile_params:
-    @pytest.mark.unittest
     def test_when_no_file_path_then_no_except_risen_and_returns_empty_dict(self):
         # 1. Set up initial test data """
         ini_file_path = ""
@@ -548,7 +528,6 @@ class ARCHIVED_Test_get_inifile_params:
         # 4. Verify final expectations
         assert return_value == expected_return_value
 
-    @pytest.mark.unittest
     def test_when_given_invalid_inifile_then_exception_is_risen(self):
         # 1. Set up initial test data """
         test_data_dir = TestUtils.get_local_test_data_dir("IniFile")
@@ -565,7 +544,6 @@ class ARCHIVED_Test_get_inifile_params:
         # 4. Verify final expectations
         assert return_value == expected_return_value
 
-    @pytest.mark.systemtest
     def test_when_given_valid_inifile_then_gets_expected_values(self):
         # 1. Set initial test data
         test_data_dir = TestUtils.get_local_test_data_dir("IniFile")

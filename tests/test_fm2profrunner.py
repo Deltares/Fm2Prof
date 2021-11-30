@@ -68,34 +68,15 @@ def __check_and_create_test_case_output_dir(base_output_dir, caseName):
 
 
 class Test_Project:
-    @pytest.mark.unittest
     def test_when_no_file_path_then_no_exception_is_risen(self):
         # 1. Set up initial test dat
-        project = None
+        project = Project()
+        assert project is not None
 
-        # 2. Run test
-        try:
-            project = Project()
-        except Exception as e:
-            pytest.fail("No exception expected, but thrown: {}".format(str(e)))
-
-        # 3. Verify final expectations
-
-    @pytest.mark.unittest
     def test_run_without_input_no_exception_is_raised(self):
-        # 1. Set up initial test dat
-        project = None
+        project = Project()
+        project.run()
 
-        # 2. Run test
-        try:
-            project = Project()
-            project.run()
-        except Exception as e:
-            pytest.fail("No exception expected, but thrown: {}".format(str(e)))
-
-        # 3. Verify final expectations
-
-    @pytest.mark.unittest
     def test_if_get_existing_parameter_then_returned(self):
         # 1. Set up initial test dat
         project = None
@@ -112,7 +93,6 @@ class Test_Project:
         assert project is not None
         assert value is not None
 
-    @pytest.mark.unittest
     def test_if_get_nonexisting_parameter_then_no_exception(self):
         # 1. Set up initial test dat
         project = None
@@ -128,7 +108,6 @@ class Test_Project:
         assert project is not None
         assert value is None
 
-    @pytest.mark.unittest
     def test_if_get_existing_inputfile_then_returned(self):
         # 1. Set up initial test dat
         project = None
@@ -144,7 +123,6 @@ class Test_Project:
         assert project is not None
         assert value is not None
 
-    @pytest.mark.unittest
     def test_if_get_output_directory_then_returned(self):
         # 1. Set up initial test dat
         project = None
@@ -160,7 +138,6 @@ class Test_Project:
         assert project is not None
         assert value is not None
 
-    @pytest.mark.unittest
     def test_set_parameter(self):
         # 1. Set up initial test dat
         project = None
@@ -175,7 +152,6 @@ class Test_Project:
         # 3. Verify final expectations
         assert project.get_parameter("LakeTimeSteps") == value
 
-    @pytest.mark.unittest
     def test_set_input_file(self):
         # 1. Set up initial test dat
         project = None
@@ -190,7 +166,6 @@ class Test_Project:
         # 3. Verify final expectations
         assert project.get_input_file("CrossSectionLocationFile") == value
 
-    @pytest.mark.unittest
     def test_set_output_directory(self):
         # 1. Set up initial test dat
         project = None
@@ -204,7 +179,6 @@ class Test_Project:
 
         # 3. Verify final expectations
 
-    @pytest.mark.unittest
     def test_print_configuration(self):
         # 1. Set up initial test dat
         project = None
@@ -221,7 +195,6 @@ class Test_Project:
 
 
 class Test_Fm2ProfRunner:
-    @pytest.mark.integrationtest
     def test_when_no_file_path_then_no_exception_is_risen(self):
         # 1. Set up initial test dat
         runner = None
@@ -235,7 +208,6 @@ class Test_Fm2ProfRunner:
         # 3. Verify final expectations
         assert runner is not None
 
-    @pytest.mark.integrationtest
     def test_given_inifile_then_no_exception_is_risen(self):
         # 1. Set up initial test data
         ini_file_name = "valid_ini_file.ini"
@@ -260,7 +232,6 @@ class Test_Fm2ProfRunner:
 
 
 class ARCHIVED_Test_generate_cross_section_list:
-    @pytest.mark.unittest
     def test_when_not_given_FmModelData_then_returns_empty_list(self):
         # 1. Set up test data
         runner = Fm2ProfRunner(None)
@@ -283,7 +254,6 @@ class ARCHIVED_Test_generate_cross_section_list:
         assert return_value is not None
         assert len(return_value) == 0
 
-    @pytest.mark.unittest
     def test_when_not_given_input_param_dict_then_returns_empty_list(self):
         # 1. Set up test data
         runner = Fm2ProfRunner(None)
@@ -307,7 +277,6 @@ class ARCHIVED_Test_generate_cross_section_list:
         assert return_value is not None
         assert len(return_value) == 0
 
-    @pytest.mark.integrationtest
     def test_when_given_correct_parameters_then_returns_list_with_expected_css(self):
         # 1. Set up test data
         runner = Fm2ProfRunner(None)
@@ -394,7 +363,6 @@ class ARCHIVED_Test_generate_cross_section_list:
                 expected_data_data_chainage, return_css.chainage
             )
 
-    @pytest.mark.integrationtest
     def test_when_given_correct_parameters_then_returns_list_with_only_valid_css(self):
         # 1. Set up test data
         runner = Fm2ProfRunner(None)
@@ -460,7 +428,6 @@ class ARCHIVED_Test_generate_cross_section_list:
 
 
 class ARCHIVED_Test_generate_cross_section:
-    @pytest.mark.unittest
     def test_when_no_css_data_is_given_then_expected_exception_risen(self):
         # 1. Set up test data
         runner = Fm2ProfRunner(None)
@@ -482,7 +449,6 @@ class ARCHIVED_Test_generate_cross_section:
             + " retrieved {}".format(error_message)
         )
 
-    @pytest.mark.unittest
     def test_when_no_input_param_dict_is_given_then_expected_exception_risen(self):
         # 1. Set up test data
         runner = Fm2ProfRunner(None)
@@ -508,7 +474,6 @@ class ARCHIVED_Test_generate_cross_section:
             + " retrieved {}".format(error_message)
         )
 
-    @pytest.mark.unittest
     def test_when_no_fm_model_data_is_given_then_expected_exception_risen(self):
         # 1. Set up test data
         runner = Fm2ProfRunner(None)
@@ -535,7 +500,6 @@ class ARCHIVED_Test_generate_cross_section:
             + " retrieved {}".format(error_message)
         )
 
-    @pytest.mark.integrationtest
     def test_when_all_parameters_are_correct_then_returns_expected_css(self):
         # 1. Set up test data
         runner = Fm2ProfRunner(None)
@@ -607,7 +571,6 @@ class ARCHIVED_Test_generate_cross_section:
 
 
 class ARCHIVED_Test_set_fm_data_to_cross_section:
-    @pytest.mark.unittest
     def test_when_no_cross_section_given_then_no_exception_risen(self):
         # 1. Set up test data
         runner = Fm2ProfRunner(None)
@@ -634,7 +597,6 @@ class ARCHIVED_Test_set_fm_data_to_cross_section:
         except Exception as e_info:
             pytest.fail("No expected exception but was thrown: {}".format(str(e_info)))
 
-    @pytest.mark.unittest
     def test_when_no_fm_model_data_given_then_no_exception_risen(self):
         # 1. Set up test data
         runner = Fm2ProfRunner(None)
@@ -660,7 +622,6 @@ class ARCHIVED_Test_set_fm_data_to_cross_section:
         except Exception as e_info:
             pytest.fail("No expected exception but was thrown: {}".format(str(e_info)))
 
-    @pytest.mark.integrationtest
     def test_when_given_invalid_parameters_then_no_exception_risen(self):
         # 1. Set up test data
         runner = Fm2ProfRunner(None)
@@ -688,7 +649,6 @@ class ARCHIVED_Test_set_fm_data_to_cross_section:
         except Exception as e_info:
             pytest.fail("No expected exception but was thrown: {}".format(str(e_info)))
 
-    @pytest.mark.integrationtest
     def test_when_given_correct_values_then_fm_data_set_to_css(self):
         pytest.fail(
             "To do. This test should verify fm_data is set, "
@@ -698,7 +658,6 @@ class ARCHIVED_Test_set_fm_data_to_cross_section:
 
 
 class ARCHIVED_Test_get_new_cross_section:
-    @pytest.mark.unittest
     @pytest.mark.parametrize("css_data", [(None), ({})])
     def test_when_not_given_css_data_then_returns_none(self, css_data):
         # 1. Set up test data
@@ -718,7 +677,6 @@ class ARCHIVED_Test_get_new_cross_section:
         # 4. Verify final expectations
         assert return_value is None
 
-    @pytest.mark.unittest
     def test_when_css_data_id_not_found_then_returns_none(self):
         # 1. Set up test data
         runner = Fm2ProfRunner(None)
@@ -739,7 +697,6 @@ class ARCHIVED_Test_get_new_cross_section:
         # 4. Verify final expectations
         assert return_value is None
 
-    @pytest.mark.unittest
     def test_when_css_data_misses_rest_of_key_values_then_returns_none(self):
         # 1. Set up test data
         runner = Fm2ProfRunner(None)
@@ -760,7 +717,6 @@ class ARCHIVED_Test_get_new_cross_section:
         # 4. Verify final expectations
         assert return_value is None
 
-    @pytest.mark.integrationtest
     def test_when_given_css_data_but_no_input_params_then_returns_css(self):
         # 1. Set up test data
         runner = Fm2ProfRunner(None)
@@ -815,7 +771,6 @@ class ARCHIVED_Test_get_new_cross_section:
             css_data_chainage, return_css.chainage
         )
 
-    @pytest.mark.integrationtest
     def test_when_given_valid_arguments_then_returns_expected_css(self):
         # 1. Set up test data
         runner = Fm2ProfRunner(None)
@@ -872,7 +827,6 @@ class ARCHIVED_Test_get_new_cross_section:
 
 
 class ARCHIVED_Test_export_cross_sections:
-    @pytest.mark.unittest
     @pytest.mark.parametrize("cross_sections", [(None), ([]), ("")])
     def test_when_no_cross_sections_then_does_not_raise(self, cross_sections):
         # 1. Set up test data
@@ -886,7 +840,6 @@ class ARCHIVED_Test_export_cross_sections:
             e_message = str(e)
             pytest.fail("No exception was expected, but given: {}".format(e_message))
 
-    @pytest.mark.unittest
     @pytest.mark.parametrize("output_dir", [(None), ([]), ("")])
     def test_when_no_output_dir_then_does_not_raise(self, output_dir):
         # 1. Set up test data
@@ -905,7 +858,6 @@ class ARCHIVED_Test_export_cross_sections:
             e_message = str(e)
             pytest.fail("No exception was expected, but given: {}".format(e_message))
 
-    @pytest.mark.integrationtest
     def test_when_given_invalid_parameters_then_does_not_raise(self):
         # 1. Set up test data
         runner = Fm2ProfRunner(None)
@@ -933,7 +885,6 @@ class ARCHIVED_Test_export_cross_sections:
         # 4. Clean up directory
         shutil.rmtree(output_dir)
 
-    @pytest.mark.integrationtest
     def test_when_given_valid_parameters_then_css_are_exported(self):
         # 1. Set up test data
         runner = Fm2ProfRunner(None)
@@ -973,7 +924,6 @@ class ARCHIVED_Test_export_cross_sections:
 
 
 class ARCHIVED_Test_calculate_css_correction:
-    @pytest.mark.unittest
     def test_when_cross_section_not_given_then_no_exception_risen(self):
         # 1. Set up test data
         runner = Fm2ProfRunner(None)
@@ -990,7 +940,6 @@ class ARCHIVED_Test_calculate_css_correction:
         except:
             pytest.fail("Unexpected exception while calculating css correction.")
 
-    @pytest.mark.integrationtest
     def test_when_all_parameters_are_correct_then_calculates_css_correction(self):
         # 1. Set up test data
         runner = Fm2ProfRunner(None)
@@ -1025,7 +974,6 @@ class ARCHIVED_Test_calculate_css_correction:
 
 
 class ARCHIVED_Test_reduce_css_points:
-    @pytest.mark.integrationtest
     def test_when_all_parameters_are_correct_then_reduce_points(self):
         # set up test data
         new_number_of_css_points = 25

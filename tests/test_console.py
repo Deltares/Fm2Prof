@@ -10,7 +10,6 @@ from bin.fm2profConsole import cli
 
 
 class Test_Console:
-    @pytest.mark.unittest
     def test_no_flag(self):
         # 1. Set up initial test data
         runner = CliRunner()

@@ -15,7 +15,6 @@ class ARCHIVED_Test_read_css_xyz:
 
     _test_scenarios_invalid_file_paths = [(None), (""), ("dummyFilePath")]
 
-    @pytest.mark.unittest
     @pytest.mark.parametrize("file_path", _test_scenarios_invalid_file_paths)
     def test_read_css_xyz_given_nofilepath_then_no_exception_is_risen(self, file_path):
         # 1. Prepare test data
@@ -28,7 +27,6 @@ class ARCHIVED_Test_read_css_xyz:
         # 3. Verify final expectations
         assert return_value is None
 
-    @pytest.mark.systemtest
     def test_read_css_xyz_valid_file_path_returns_expected_input_data(self):
         # 1. Prepare test data
         dir_name = "functions_test_data"

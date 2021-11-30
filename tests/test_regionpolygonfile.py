@@ -171,11 +171,13 @@ class ARCHIVED_Test_PolygonFile:
         assert polygon is not None
 
         # Read NC File
-        waal_data_dir = TestUtils.get_external_test_data_dir("case_08_waal\\Data\\FM")
-        waal_nc_file = os.path.join(waal_data_dir, "FlowFM_fm2prof_map.nc")
-        assert os.path.exists(waal_nc_file)
+        waal_data_dir = (
+            TestUtils.get_external_test_data_subdir("case_08_waal") / "Data" / "FM"
+        )
+        waal_nc_file = waal_data_dir / "FlowFM_fm2prof_map.nc"
+        assert waal_nc_file.is_file()
 
-        _, edge_data, _, _ = FE._read_fm_model(waal_nc_file)
+        _, edge_data, _, _ = FE._read_fm_model(str(waal_nc_file))
         points = [
             (edge_data["x"][i], edge_data["y"][i]) for i in range(len(edge_data["x"]))
         ]

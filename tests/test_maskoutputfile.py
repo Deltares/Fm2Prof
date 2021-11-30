@@ -21,7 +21,6 @@ class MaskOutputFileHelper:
 
 
 class Test_create_mask_point:
-    @pytest.mark.unittest
     def test_when_no_coords_does_not_raise(self):
         # 1. Set up test model
         coords = None
@@ -37,7 +36,6 @@ class Test_create_mask_point:
         # 4. Verify final expectations
         assert mask_point is not None, "" + "No mask_point generated"
 
-    @pytest.mark.unittest
     @pytest.mark.parametrize("coords_values", [(4.2, 2.4), (4.2, 2.4, 42)])
     def test_when_valid_coords_does_not_raise(self, coords_values: tuple):
         # 1. Set up test model
@@ -53,7 +51,6 @@ class Test_create_mask_point:
         # 3. Verify final expectations
         assert mask_point is not None, "" + "No mask_point generated"
 
-    @pytest.mark.unittest
     @pytest.mark.parametrize("coords_values", [(4.2)])
     def test_when_invalid_coords_raises(self, coords_values: tuple):
         # 1. Set up test model
@@ -71,7 +68,6 @@ class Test_create_mask_point:
         assert exception_thrown, "" + "No exception was thrown but it was expected."
         assert mask_point is None, "" + "Mask point generated but was not expected."
 
-    @pytest.mark.unittest
     def test_when_no_properties_does_not_raise(self):
         # 1. Set up test model
         coords = (4.2, 2.4)
@@ -89,7 +85,6 @@ class Test_create_mask_point:
 
 
 class Test_validate_extension:
-    @pytest.mark.unittest
     @pytest.mark.parametrize("file_name", [(None), ("")])
     def test_when_no_file_path_doesnot_raise(self, file_name):
         try:
@@ -97,7 +92,6 @@ class Test_validate_extension:
         except:
             pytest.fail("Exception risen but not expected.")
 
-    @pytest.mark.unittest
     def test_when_invalid_extension_raises_expected_exception(self):
         # 1. Set up test data
         file_name = "test_file.wrongextension"
@@ -119,7 +113,6 @@ class Test_validate_extension:
             + "retrieved {}".format(error_message)
         )
 
-    @pytest.mark.unittest
     @pytest.mark.parametrize("file_name", [("n.json"), ("n.geojson")])
     def test_when_valid_extension_does_not_raise(self, file_name):
         try:
@@ -129,7 +122,6 @@ class Test_validate_extension:
 
 
 class Test_read_mask_output_file:
-    @pytest.mark.unittest
     @pytest.mark.parametrize(
         "file_path_name",
         [(None), ("invalidfile.geojson"), ("invalidfile.json"), ("invalidfile.xyz")],
@@ -153,7 +145,6 @@ class Test_read_mask_output_file:
             expected_geojson, read_geojson
         )
 
-    @pytest.mark.integrationtest
     def test_when_file_path_wrong_extension_then_raise_exception(self):
         # 1. Set up test data
         file_path = (
@@ -181,7 +172,6 @@ class Test_read_mask_output_file:
             + "retrieved {}".format(error_message)
         )
 
-    @pytest.mark.systemtest
     @pytest.mark.parametrize(
         "file_name", [("no_mask_points.geojson"), ("no_content.geojson")]
     )
@@ -205,7 +195,6 @@ class Test_read_mask_output_file:
             read_geojson == expected_geojson
         ), f"Expected {expected_geojson} but got {read_geojson}"
 
-    @pytest.mark.systemtest
     def test_when_valid_file_with_content_then_returns_expected_geojson(self):
         # 1. Set up test data
         file_path = (
@@ -235,7 +224,6 @@ class Test_write_mask_output_file:
             test_dir.mkdir(parents=True, exist_ok=True)
         yield test_dir
 
-    @pytest.mark.unittest
     def test_when_no_file_path_given_then_exception_not_risen(self):
         # 1. Set up test data
         file_path = None
@@ -246,7 +234,6 @@ class Test_write_mask_output_file:
         except:
             pytest.fail("Exception thrown but not expected.")
 
-    @pytest.mark.integrationtest
     def test_when_file_path_with_wrong_extension_then_exception_is_risen(self):
         # 1. Set up test data
         file_path = "test_file.wrongextension"
@@ -269,7 +256,6 @@ class Test_write_mask_output_file:
             + "retrieved {}".format(error_message)
         )
 
-    @pytest.mark.systemtest
     def test_when_valid_file_path_and_no_mask_point_then_writes_expectations(
         self, test_folder
     ):
@@ -303,7 +289,6 @@ class Test_write_mask_output_file:
             + "but got {}".format(read_mask_points)
         )
 
-    @pytest.mark.systemtest
     def test_when_valid_file_path_and_mask_points_then_writes_expectations(
         self, test_folder
     ):

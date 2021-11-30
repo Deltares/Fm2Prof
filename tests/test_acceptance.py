@@ -268,7 +268,7 @@ class Test_Run_Testcases:
         # 1. Set up test data.
         iniFilePath = None
         iniFile = IniFile(iniFilePath)
-        test_data_dir = TestUtils.get_external_test_data_dir(case_name)
+        test_data_dir = TestUtils.get_external_test_data_subdir(case_name)
         base_output_dir = _get_base_output_dir()
 
         iniFile._set_output_directory_no_validation(
@@ -276,20 +276,20 @@ class Test_Run_Testcases:
         )
 
         if region_file:
-            region_file_path = os.path.join(test_data_dir, region_file)
+            region_file_path = test_data_dir / region_file
         else:
             region_file_path = region_file
 
         if section_file:
-            section_file_path = os.path.join(test_data_dir, section_file)
+            section_file_path = test_data_dir / section_file
         else:
             section_file_path = section_file
 
         # iniFile.set_parameter('ExportMapFiles', True)
         iniFile.set_parameter("skipmaps", 6)
-        iniFile.set_input_file("2dmapoutput", os.path.join(test_data_dir, map_file))
+        iniFile.set_input_file("2dmapoutput", str(test_data_dir / map_file))
         iniFile.set_input_file(
-            "crosssectionlocationfile", os.path.join(test_data_dir, css_file)
+            "crosssectionlocationfile", str(test_data_dir / css_file)
         )
         iniFile.set_input_file("regionpolygonfile", region_file_path)
         iniFile.set_input_file("sectionpolygonfile", section_file_path)
@@ -378,7 +378,6 @@ class ARCHIVED_Test_Main_Run_IniFile:
             os.mkdir(output_dir)
         return output_dir
 
-    @pytest.mark.systemtest
     def test_when_given_inifile_then_output_is_generated(self):
         # 1. Set up test data.
         case_name = "main_case"
@@ -427,9 +426,9 @@ class ARCHIVED_Test_Compare_Waal_Model:
     @pytest.mark.requires_output
     def test_when_fm2prof_output_then_use_it_for_sobek_model_input(self):
         # 1. Set up test data
-        waal_test_folder = TestUtils.get_external_test_data_dir(_waal_case)
-        sobek_dir = os.path.join(waal_test_folder, "Model_SOBEK")
-        fm_dir = os.path.join(waal_test_folder, "Model_FM")
+        waal_test_folder = TestUtils.get_external_test_data_subdir(_waal_case)
+        sobek_dir = str(waal_test_folder / "Model_SOBEK")
+        fm_dir = str(waal_test_folder / "Model_FM")
         fm2prof_dir = _get_test_case_output_dir(_waal_case)
 
         result_figures = []
@@ -456,9 +455,9 @@ class ARCHIVED_Test_Compare_Waal_Model:
 
     def test_when_sobek_output_exist_then_create_figures(self):
         # 1. Set up test data
-        waal_test_folder = TestUtils.get_external_test_data_dir(_waal_case)
-        sobek_dir = os.path.join(waal_test_folder, "Model_SOBEK")
-        fm_dir = os.path.join(waal_test_folder, "Model_FM")
+        waal_test_folder = TestUtils.get_external_test_data_subdir(_waal_case)
+        sobek_dir = str(waal_test_folder / "Model_SOBEK")
+        fm_dir = str(waal_test_folder / "Model_FM")
         fm2prof_dir = _get_test_case_output_dir(_waal_case)
 
         result_figures = []
@@ -770,11 +769,11 @@ class ARCHIVED_Test_WaalPerformance:
         # 1. Set up test model.
         case_name = "case_08_waal"
         local_test_dir = TestUtils.get_local_test_data_dir("performance_waal")
-        ini_file = os.path.join(local_test_dir, "fm2prof_08.ini")
-        json_file = os.path.join(local_test_dir, "SectionPolygonDissolved.json")
-        external_test_dir = TestUtils.get_external_test_data_dir(case_name)
-        map_file = os.path.join(external_test_dir, "Data\\FM\\FlowFM_fm2prof_map.nc")
-        css_file = os.path.join(external_test_dir, "Data\\cross_section_locations.xyz")
+        ini_file = str(local_test_dir / "fm2prof_08.ini")
+        json_file = str(local_test_dir / "SectionPolygonDissolved.json")
+        external_test_dir = TestUtils.get_external_test_data_subdir(case_name)
+        map_file = str(external_test_dir / "Data\\FM\\FlowFM_fm2prof_map.nc")
+        css_file = str(external_test_dir / "Data\\cross_section_locations.xyz")
 
         # 1.1. Create ini file.
         ini_file_path = None
