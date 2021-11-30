@@ -2,6 +2,7 @@ import io
 import os
 import shutil
 import sys
+from typing import Optional
 import unittest
 from pathlib import Path
 
@@ -127,7 +128,6 @@ _test_scenarios = [
 ]
 
 _run_with_files_dir_name = "RunWithFiles_Output"
-_base_output_dir_name = "Output"
 
 
 def get_valid_inifile_input_parameters():
@@ -151,40 +151,42 @@ def _get_base_output_dir() -> Path:
     """
     Sets up the necessary data for MainMethodTest
     """
-    output_dir = _create_test_root_output_dir(_run_with_files_dir_name)
+    output_dir = _create_artifact_dir(_run_with_files_dir_name)
     # Create it if it does not exist
     if not output_dir.is_dir():
         output_dir.mkdir()
     return output_dir
 
 
-def _create_test_root_output_dir(dirName=None) -> Path:
+def _create_artifact_dir(dirName: Optional[str] = None) -> Path:
     """
     Create test output directory
     so it's easier to collect output afterwards.
     """
-    _root_output_dir = Path(__file__).parent / _base_output_dir_name
-    if not _root_output_dir.is_dir():
-        _root_output_dir.mkdir()
+    artifacts_dir: Path = TestUtils.get_artifacts_test_data_dir()
+    if not artifacts_dir.is_dir():
+        artifacts_dir.mkdir()
 
-    if dirName is not None:
-        subOutputDir: Path = _root_output_dir / dirName
-        if not subOutputDir.is_dir():
-            subOutputDir.mkdir()
-        return subOutputDir
+    if dirName is None:
+        return artifacts_dir
 
-    return _root_output_dir
+    subOutputDir: Path = artifacts_dir / dirName
+    if not subOutputDir.is_dir():
+        subOutputDir.mkdir()
+    return subOutputDir
 
 
-def _check_and_create_test_case_output_dir(base_output_dir, caseName):
+def _check_and_create_test_case_output_dir(
+    base_output_dir: Path, caseName: str
+) -> Path:
     """
     Helper to split to set up an output directory
     for the generated data of each test case.
     """
-    output_directory = base_output_dir + "\\{0}".format(caseName)
+    output_directory = base_output_dir / caseName
 
     # clean up the test case output directory if it is no empty
-    if os.path.exists(output_directory) and os.listdir(output_directory):
+    if output_directory.is_dir() and output_directory.iterdir():
         shutil.rmtree(output_directory)
 
     # if not os.path.exists(output_directory):
@@ -269,10 +271,12 @@ class Test_Run_Testcases:
         iniFilePath = None
         iniFile = IniFile(iniFilePath)
         test_data_dir = TestUtils.get_external_test_data_subdir(case_name)
+        if not test_data_dir.is_dir():
+            pytest.fail(f"Test dir not found at {test_data_dir}")
         base_output_dir = _get_base_output_dir()
 
         iniFile._set_output_directory_no_validation(
-            _check_and_create_test_case_output_dir(base_output_dir, case_name)
+            str(_check_and_create_test_case_output_dir(base_output_dir, case_name))
         )
 
         if region_file:
@@ -368,15 +372,11 @@ class ARCHIVED_Test_Main_Run_IniFile:
         f.close()
         return (file_path, output_dir)
 
-    def _get_custom_dir(self):
+    def _get_custom_dir(self) -> Path:
         """
         Sets up the necessary data for MainMethodTest
         """
-        output_dir = _create_test_root_output_dir("RunWithCustom_IniFile")
-        # Create it if it does not exist
-        if not os.path.exists(output_dir):
-            os.mkdir(output_dir)
-        return output_dir
+        return _create_artifact_dir("RunWithCustom_IniFile")
 
     def test_when_given_inifile_then_output_is_generated(self):
         # 1. Set up test data.
@@ -731,6 +731,7 @@ class Test_Compare_Idealized_Model:
         ), "" + "There is no volume output generated for {0}".format(case_name)
 
     @pytest.mark.acceptance
+    @pytest.mark.requireoutput
     @pytest.mark.parametrize(
         ("case_name"), _test_scenarios_ids[:-3], ids=_test_scenarios_ids[:-3]
     )
@@ -779,8 +780,8 @@ class ARCHIVED_Test_WaalPerformance:
         ini_file_path = None
         test_ini_file = IniFile(ini_file_path)
         base_output_dir = _get_base_output_dir()
-        test_ini_file._output_dir = _check_and_create_test_case_output_dir(
-            base_output_dir, case_name
+        test_ini_file._output_dir = str(
+            _check_and_create_test_case_output_dir(base_output_dir, case_name)
         )
 
         test_ini_file._input_file_paths = {
