@@ -34,8 +34,9 @@ jobs:
       - name: Install Dependencies
         run: |
           poetry install
+          cd docs
           ls -l
-          ./docs/make html
+          make html
         # if: steps.cache.outputs.cache-hit != 'true'
       
       - name: Build SPHINX docs
