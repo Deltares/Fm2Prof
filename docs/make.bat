@@ -26,6 +26,7 @@ if errorlevel 9009 (
 )
 
 %SPHINXBUILD% -M %1 %SOURCEDIR% %BUILDDIR% %SPHINXOPTS% %O%
+move %BUILDDIR%\html %BUILDDIR%\docs
 goto end
 
 :help
