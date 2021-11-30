@@ -222,7 +222,7 @@ class Test_write_mask_output_file:
         )
         if not test_dir.is_dir():
             test_dir.mkdir(parents=True, exist_ok=True)
-        yield test_dir
+        return test_dir
 
     def test_when_no_file_path_given_then_exception_not_risen(self):
         # 1. Set up test data
