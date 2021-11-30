@@ -228,7 +228,9 @@ class Test_write_mask_output_file:
     @pytest.fixture(scope="class")
     def test_folder(self):
         """Prepares the class properties to be used in the tests."""
-        test_dir = TestUtils.get_local_test_data_dir("Output") / "WriteMaskOutputFile"
+        test_dir = (
+            TestUtils.get_artifacts_test_data_dir("Output") / "WriteMaskOutputFile"
+        )
         if not test_dir.is_dir():
             test_dir.mkdir(parents=True, exist_ok=True)
         yield test_dir

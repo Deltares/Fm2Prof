@@ -35,6 +35,10 @@ class TestUtils:
         return Path(__file__).parent / TestUtils._name_external
 
     @staticmethod
+    def get_artifacts_test_data_dir(dir_name: str) -> Path:
+        return Path(__file__).parent / TestUtils._name_artifacts
+
+    @staticmethod
     def get_local_test_data_dir(dir_name: str) -> Path:
         """
         Returns the desired directory relative to the test data.
