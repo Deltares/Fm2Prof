@@ -35,7 +35,7 @@ jobs:
           poetry install
           docs/make html
 
-        if: steps.cache.outputs.cache-hit != 'true'
+        # if: steps.cache.outputs.cache-hit != 'true'
 
       - name: Deploy
         uses: JamesIves/github-pages-deploy-action@4.1.7
