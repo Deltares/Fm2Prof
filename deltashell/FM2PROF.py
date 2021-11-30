@@ -27,11 +27,10 @@ import sys
 import time
 from datetime import datetime
 
+import DeltaShell.Plugins.SharpMapGis.ImportExport as ie
 import Libraries.FlowFlexibleMeshFunctions as fmf
 import Libraries.SpatialOperations as so
 import Libraries.StandardFunctions as sf
-
-import DeltaShell.Plugins.SharpMapGis.ImportExport as ie
 
 # Set PATHS HERE
 _gridFile = r"c:\Users\berend_kn\projects\2017_fm2prof\_dev\src\trunk\Maas_dir\Model_FM\Maas_2_merged_map.nc"
