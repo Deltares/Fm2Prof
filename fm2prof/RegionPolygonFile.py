@@ -21,20 +21,20 @@ Stichting Deltares and remain full property of Stichting Deltares at all times.
 All rights reserved.
 """
 
-import os 
 import json
-
-from shapely.geometry import shape, GeometryCollection, Point, MultiPolygon
-from typing import Iterable, Callable, Any
 import logging
-import numpy as np
 import multiprocessing
-from fm2prof.common import FM2ProfBase
-from itertools import groupby
-
+import os
 from collections import namedtuple
+from itertools import groupby
+from typing import Any, Callable, Iterable
 
-Polygon = namedtuple('Polygon', ['geometry', 'properties'])
+import numpy as np
+from shapely.geometry import GeometryCollection, MultiPolygon, Point, shape
+
+from fm2prof.common import FM2ProfBase
+
+Polygon = namedtuple("Polygon", ["geometry", "properties"])
 
 
 class PolygonFile(FM2ProfBase):
@@ -45,7 +45,9 @@ class PolygonFile(FM2ProfBase):
         self.polygons = list()
         self.undefined = -999
 
-    def classify_points_with_property(self, points: Iterable[list], property_name: str = 'name') -> np.array:
+    def classify_points_with_property(
+        self, points: Iterable[list], property_name: str = "name"
+    ) -> np.array:
         """
         Classifies points as belonging to which region
 
@@ -53,7 +55,7 @@ class PolygonFile(FM2ProfBase):
         """
         # Convert to shapely point
         points = [Point(xy) for xy in points]
-        points_regions = [self.undefined]*len(points)
+        points_regions = [self.undefined] * len(points)
 
         # Assign point to region
         for i, point in enumerate(points):
@@ -65,18 +67,18 @@ class PolygonFile(FM2ProfBase):
         return np.array(points_regions)
 
     def classify_points_with_property_shapely_prep(
-            self,
-            points: Iterable[list],
-            property_name: str = 'name'):
+        self, points: Iterable[list], property_name: str = "name"
+    ):
         """
         Classifies points as belonging to which region
 
         Points = list of tuples [(x,y), (x,y)]
         """
         from shapely.prepared import prep
+
         # Convert to shapely point
         points = [Point(xy) for xy in points]
-        points_regions = [self.undefined]*len(points)
+        points_regions = [self.undefined] * len(points)
 
         prep_polygons = [prep(p.geometry) for p in self.polygons]
 
@@ -84,16 +86,16 @@ class PolygonFile(FM2ProfBase):
         for i, point in enumerate(points):
             for p_id, polygon in enumerate(prep_polygons):
                 if polygon.intersects(point):
-                    points_regions[i] = \
-                        self.polygons[p_id].properties.get(property_name)
+                    points_regions[i] = self.polygons[p_id].properties.get(
+                        property_name
+                    )
                     break
 
         return np.array(points_regions)
 
     def classify_points_with_property_rtree_by_polygons(
-            self,
-            iterable_points: Iterable[list],
-            property_name: str = 'name') -> list:
+        self, iterable_points: Iterable[list], property_name: str = "name"
+    ) -> list:
         """Applies RTree index to quickly classify points in polygons.
 
         Arguments:
@@ -112,20 +114,20 @@ class PolygonFile(FM2ProfBase):
 
         point_properties_list = []
         for point in map(Point, iterable_points):
-            point_properties_polygon = \
-                next(
-                    iter(
-                        self.polygons[polygon_id].properties.get(property_name)
-                        for polygon_id in idx.intersection(point.bounds)
-                        if self.polygons[polygon_id].geometry.intersects(point)),
-                    self.undefined)
+            point_properties_polygon = next(
+                iter(
+                    self.polygons[polygon_id].properties.get(property_name)
+                    for polygon_id in idx.intersection(point.bounds)
+                    if self.polygons[polygon_id].geometry.intersects(point)
+                ),
+                self.undefined,
+            )
             point_properties_list.append(point_properties_polygon)
 
         del idx
         return np.array(point_properties_list)
 
-    def __get_polygon_property(
-            self, grouped_values: list, property_name: str) -> str:
+    def __get_polygon_property(self, grouped_values: list, property_name: str) -> str:
         """Retrieves the polygon property from the internal list of polygons.
 
         Arguments:
@@ -142,49 +144,54 @@ class PolygonFile(FM2ProfBase):
         return self.polygons[polygon_id].properties.get(property_name)
 
     def parse_geojson_file(self, file_path):
-        """ Read data from geojson file """
+        """Read data from geojson file"""
         PolygonFile._validate_extension(file_path)
 
         with open(file_path) as geojson_file:
             geojson_data = json.load(geojson_file).get("features")
 
         for feature in geojson_data:
-            feature_props = {k.lower(): v for k, v in feature.get('properties').items()}
-            self.polygons.append(Polygon(geometry=shape(feature["geometry"]).buffer(0),
-                                         properties=feature_props))
-        #polygons = GeometryCollection([shape(feature["geometry"]).buffer(0) for feature in geojson_data])
-        #polygon_names = [feature.get('properties').get('Name') for feature in geojson_data]
+            feature_props = {k.lower(): v for k, v in feature.get("properties").items()}
+            self.polygons.append(
+                Polygon(
+                    geometry=shape(feature["geometry"]).buffer(0),
+                    properties=feature_props,
+                )
+            )
+        # polygons = GeometryCollection([shape(feature["geometry"]).buffer(0) for feature in geojson_data])
+        # polygon_names = [feature.get('properties').get('Name') for feature in geojson_data]
 
-        #for polygon, polygon_name in zip(polygons, polygon_names):
+        # for polygon, polygon_name in zip(polygons, polygon_names):
         #    self.polygons[polygon_name] = polygon
 
     @staticmethod
     def _validate_extension(file_path: str):
-        if (not file_path):
+        if not file_path:
             # Should not be evaluated
             return
-        if (not file_path.endswith('.json') and
-                not file_path.endswith('.geojson')):
+        if not file_path.endswith(".json") and not file_path.endswith(".geojson"):
             raise IOError(
-                'Invalid file path extension, ' +
-                'should be .json or .geojson.')
-
+                "Invalid file path extension, " + "should be .json or .geojson."
+            )
 
     def _check_overlap(self):
         for polygon in self.polygons:
             for testpoly in self.polygons:
-                if polygon.properties.get('name') == testpoly.properties.get('name'):
+                if polygon.properties.get("name") == testpoly.properties.get("name"):
                     # polygon will obviously overlap with itself
                     pass
                 else:
                     if polygon.geometry.intersects(testpoly.geometry):
-                        self.set_logger_message("{} overlaps {}.".format(polygon.properties.get('name'), 
-                                                                          testpoly.properties.get('name')),
-                                                 level= 'warning')
+                        self.set_logger_message(
+                            "{} overlaps {}.".format(
+                                polygon.properties.get("name"),
+                                testpoly.properties.get("name"),
+                            ),
+                            level="warning",
+                        )
 
 
 class RegionPolygonFile(PolygonFile):
-
     def __init__(self, region_file_path, logger):
         super().__init__(logger)
         self.read_region_file(region_file_path)
@@ -208,17 +215,14 @@ class RegionPolygonFile(PolygonFile):
         self._check_overlap()
 
     def classify_points(self, points: Iterable[list]):
-        return self.classify_points_with_property(
-            points,
-            property_name='id')
+        return self.classify_points_with_property(points, property_name="id")
 
 
 class SectionPolygonFile(PolygonFile):
-
     def __init__(self, section_file_path, logger):
         super().__init__(logger)
         self.read_section_file(section_file_path)
-        self.undefined = 1 # 1 is main
+        self.undefined = 1  # 1 is main
 
     @property
     def sections(self):
@@ -229,41 +233,49 @@ class SectionPolygonFile(PolygonFile):
         self._validate_sections()
 
     def classify_points(self, points: Iterable[list]):
-        return self.classify_points_with_property(
-            points,
-            property_name='section')
+        return self.classify_points_with_property(points, property_name="section")
 
     def _validate_sections(self):
         self.set_logger_message("Validating Section file")
         raise_exception = False
 
-        valid_section_keys = {'main', 'floodplain1', 'floodplain2'}
-        map_section_keys = {'1': 'main',
-                            '2': 'floodplain1',
-                            '3': 'floodplain2',
-                            }
+        valid_section_keys = {"main", "floodplain1", "floodplain2"}
+        map_section_keys = {
+            "1": "main",
+            "2": "floodplain1",
+            "3": "floodplain2",
+        }
 
         # each polygon must have a 'section' property
         for section in self.sections:
-            if 'section' not in section.properties:
+            if "section" not in section.properties:
                 raise_exception = True
-                self.set_logger_message('Polygon {} has no property "section"'.format(section.properties.get('name')),
-                                          level='error')
-            section_key = str(section.properties.get('section')).lower()
+                self.set_logger_message(
+                    'Polygon {} has no property "section"'.format(
+                        section.properties.get("name")
+                    ),
+                    level="error",
+                )
+            section_key = str(section.properties.get("section")).lower()
             if section_key not in valid_section_keys:
                 if section_key not in list(map_section_keys.keys()):
                     raise_exception = True
-                    self.set_logger_message('{} is not a recognized section'.format(section_key), 
-                    level='error')
+                    self.set_logger_message(
+                        "{} is not a recognized section".format(section_key),
+                        level="error",
+                    )
                 else:
-                    self.set_logger_message('remapped section {} to {}'.format(section_key, 
-                                                                                map_section_keys[section_key]),
-                    level='warning')
-                    section.properties['section'] = map_section_keys.get(section_key)
+                    self.set_logger_message(
+                        "remapped section {} to {}".format(
+                            section_key, map_section_keys[section_key]
+                        ),
+                        level="warning",
+                    )
+                    section.properties["section"] = map_section_keys.get(section_key)
         # check for overlap (only raise a warning)
         self._check_overlap()
 
         if raise_exception:
-            raise AssertionError('Section file could not validated')
+            raise AssertionError("Section file could not validated")
         else:
-            self.set_logger_message('Section file succesfully validated')
+            self.set_logger_message("Section file succesfully validated")

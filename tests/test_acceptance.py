@@ -1,25 +1,22 @@
-from pathlib import Path
-import unittest
-import pytest
-import sys
-import os
 import io
+import os
 import shutil
-import matplotlib.pyplot as plt
+import sys
+import unittest
+from pathlib import Path
 
-from tests.TestUtils import TestUtils, skipwhenexternalsmissing
+import matplotlib.pyplot as plt
+import pytest
+
 from fm2prof.Fm2ProfRunner import Fm2ProfRunner
 from fm2prof.IniFile import IniFile
-
-from ReportGenerator.latex_report import LatexReport as LatexReport
-from ReportGenerator.html_report import HtmlReport as HtmlReport
-
 from fm2prof.utils import VisualiseOutput
-from tests.fm2prof_latex_report import Fm2ProfLatexReport
+from ReportGenerator.html_report import HtmlReport as HtmlReport
+from ReportGenerator.latex_report import LatexReport as LatexReport
+from tests.CompareIdealizedModel import CompareHelper, CompareIdealizedModel
 from tests.CompareWaalModel import CompareWaalModel as CompareWaalModel
-from tests.CompareIdealizedModel import CompareIdealizedModel, CompareHelper
-
-
+from tests.fm2prof_latex_report import Fm2ProfLatexReport
+from tests.TestUtils import TestUtils, skipwhenexternalsmissing
 
 _root_output_dir = None
 
@@ -847,8 +844,8 @@ class ARCHIVED_Test_WaalPerformance:
         return val
 
     def test_dummy_mp(self):
-        from itertools import product
         import multiprocessing
+        from itertools import product
 
         names = ["Brown", "Wilson", "Bartlett", "Rivera", "Molloy", "Opie"]
         with multiprocessing.Pool(processes=3) as pool:

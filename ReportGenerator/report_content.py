@@ -1,15 +1,11 @@
-from typing import List, Set, Dict, Tuple, Optional
 from abc import ABC, abstractmethod
+from typing import Dict, List, Optional, Set, Tuple
 
 import ReportGenerator.report_helper as ReportHelper
 
 
 class ReportContent(ABC):
-
-    def __init__(
-            self,
-            scenarios_ids: List[str] = None,
-            data_dir: str = None):
+    def __init__(self, scenarios_ids: List[str] = None, data_dir: str = None):
         """Creates a report content with optional parameters. The concrete
         classes can define all the needed information to generate reports.
 
@@ -24,28 +20,28 @@ class ReportContent(ABC):
     @property
     def cases_and_figures(self) -> dict:
         return ReportHelper._get_all_cases_and_figures(
-                scenarios=self.scenarios_ids,
-                data_dir=self.data_dir)
+            scenarios=self.scenarios_ids, data_dir=self.data_dir
+        )
 
     @property
     @abstractmethod
     def project_name(self) -> str:
-        raise NotImplementedError('Implement in child class.')
+        raise NotImplementedError("Implement in child class.")
 
     @property
     @abstractmethod
     def project_version(self) -> str:
-        raise NotImplementedError('Implement in child class.')
+        raise NotImplementedError("Implement in child class.")
 
     @property
     @abstractmethod
     def project_number(self) -> str:
-        raise NotImplementedError('Implement in child class.')
+        raise NotImplementedError("Implement in child class.")
 
     @property
     @abstractmethod
     def authors_list(self) -> List[str]:
-        raise NotImplementedError('Implement in child class.')
+        raise NotImplementedError("Implement in child class.")
 
     @property
     @abstractmethod
@@ -58,4 +54,4 @@ class ReportContent(ABC):
         Returns:
             Dict[str, str] -- Dictionary with case's description.
         """
-        raise NotImplementedError('Implement in child class.')
+        raise NotImplementedError("Implement in child class.")

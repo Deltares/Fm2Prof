@@ -2,21 +2,25 @@
 Utilities for FM2PROF
 """
 
-import numpy as np
 import os
 import shutil
-import matplotlib.pyplot as plt
 from typing import Tuple
+
+import matplotlib.pyplot as plt
+import numpy as np
+
 from fm2prof.common import FM2ProfBase
 
 
-def networkdeffile_to_input(networkdefinitionfile:str, crossectionlocationfile:str, branchrulefile:str()=""):
+def networkdeffile_to_input(
+    networkdefinitionfile: str, crossectionlocationfile: str, branchrulefile: str() = ""
+):
     """
     Builds a cross-section input file for FM2PROF from a DIMR network definition file.
 
     The distance between cross-section is computed from the differences between the offsets/chainages.
     The beginning and end point of each branch are treated as half-distance control volumes.
-    
+
     Arguments
         networkdefinitionfile: path to the input file
 
@@ -29,14 +33,16 @@ def networkdeffile_to_input(networkdefinitionfile:str, crossectionlocationfile:s
     else:
         branchrules = dict()
 
-    x, y, cid, cdis, bid, coff = _parseNetworkDefinitionFile(networkdefinitionfile, branchrules)
+    x, y, cid, cdis, bid, coff = _parseNetworkDefinitionFile(
+        networkdefinitionfile, branchrules
+    )
 
     _writeCrossSectionLocationFile(crossectionlocationfile, x, y, cid, cdis, bid, coff)
 
 
 def _parseNetworkDefinitionFile(networkdefinitionfile, branchrules):
     """
-     
+
     Output:
 
         x,y : coordinates of cross-section
@@ -44,34 +50,36 @@ def _parseNetworkDefinitionFile(networkdefinitionfile, branchrules):
         cdis: half-way distance between cross-section points on either side
         bid : name of the branch
         coff:  chainage of cross-section on branch
-    
+
     """
     # Open network definition file, for each branch extract necessary info
-    x = []          # x-coordinate of cross-section centre
-    y = []			# y-coordinate of cross-section centre
-    cid = []		# id of cross-section
-    bid = []		# id of 1D branch
-    coff = []		# offset of cross-section on 1D branch ('chainage')
-    cdis = []		# distance of 1D branch influenced by crosss-section ('vaklengte')
+    x = []  # x-coordinate of cross-section centre
+    y = []  # y-coordinate of cross-section centre
+    cid = []  # id of cross-section
+    bid = []  # id of 1D branch
+    coff = []  # offset of cross-section on 1D branch ('chainage')
+    cdis = []  # distance of 1D branch influenced by crosss-section ('vaklengte')
 
-    with open(networkdefinitionfile, 'r') as f:
+    with open(networkdefinitionfile, "r") as f:
         for line in f:
             if line.strip().lower() == "[branch]":
-                branchid = f.readline().split('=')[1].strip()
+                branchid = f.readline().split("=")[1].strip()
                 xlength = 0
                 for i in range(10):
-                    bline = f.readline().strip().lower().split('=')
+                    bline = f.readline().strip().lower().split("=")
                     if bline[0].strip() == "gridpointx":
                         xtmp = list(map(float, bline[1].split()))
                     elif bline[0].strip() == "gridpointy":
                         ytmp = list(map(float, bline[1].split()))
                     elif bline[0].strip() == "gridpointids":
-                        cidtmp = bline[1].split(';')
+                        cidtmp = bline[1].split(";")
                     elif bline[0].strip() == "gridpointoffsets":
                         cofftmp = list(map(float, bline[1].split()))
 
                         # compute distance between control volumes
-                        cdistmp = np.append(np.diff(cofftmp)/2, [0]) + np.append([0], np.diff(cofftmp)/2)
+                        cdistmp = np.append(np.diff(cofftmp) / 2, [0]) + np.append(
+                            [0], np.diff(cofftmp) / 2
+                        )
 
                 # Append branchids
                 bidtmp = [branchid] * len(xtmp)
@@ -84,19 +92,21 @@ def _parseNetworkDefinitionFile(networkdefinitionfile, branchrules):
                 offset = 1
                 xtmp[0] = np.interp(offset, cofftmp, xtmp)
                 ytmp[0] = np.interp(offset, cofftmp, ytmp)
-                offset = cofftmp[-1]-1
+                offset = cofftmp[-1] - 1
                 xtmp[-1] = np.interp(offset, cofftmp, xtmp)
                 ytmp[-1] = np.interp(offset, cofftmp, ytmp)
 
                 # Apply Branchrules
                 if branchid in branchrules:
                     rule = branchrules[branchid]
-                    xtmp, ytmp, cidtmp, cdistmp, bidtmp, cofftmp = _applyBranchRules(rule, xtmp, ytmp, cidtmp, cdistmp, bidtmp, cofftmp)
+                    xtmp, ytmp, cidtmp, cdistmp, bidtmp, cofftmp = _applyBranchRules(
+                        rule, xtmp, ytmp, cidtmp, cdistmp, bidtmp, cofftmp
+                    )
 
                     c = len(xtmp)
                     for ic in xtmp, ytmp, cidtmp, cdistmp, bidtmp, cofftmp:
                         if len(ic) != c:
-                            print ('koen')
+                            print("koen")
 
                 # Append all points
                 x.extend(xtmp)
@@ -106,41 +116,43 @@ def _parseNetworkDefinitionFile(networkdefinitionfile, branchrules):
                 bid.extend(bidtmp)
                 coff.extend(cofftmp)
 
-
-            
-
     return x, y, cid, cdis, bid, coff
 
-def _applyBranchRules(rule, x, y, cid, cdis, bid, coff):
-    bfunc = {"onlyedges": lambda x: [x[0], x[-1]],
-             "ignoreedges": lambda x: x[1:-1],
-             "ignorelast": lambda x: x[:-1],
-             "ignorefirst": lambda x: x[1:]}
 
-    disfunc = {"onlyedges": lambda x: [sum(x)/2]*2,
-               "ignoreedges": lambda x: [sum(x[:2]), *x[2:-2], sum(x[-2:])],
-               "ignorelast": lambda x: [*x[:-2], sum(x[-2:])],
-               "ignorefirst": lambda x: [sum(x[:2]), *x[2:]]}
-    
+def _applyBranchRules(rule, x, y, cid, cdis, bid, coff):
+    bfunc = {
+        "onlyedges": lambda x: [x[0], x[-1]],
+        "ignoreedges": lambda x: x[1:-1],
+        "ignorelast": lambda x: x[:-1],
+        "ignorefirst": lambda x: x[1:],
+    }
+
+    disfunc = {
+        "onlyedges": lambda x: [sum(x) / 2] * 2,
+        "ignoreedges": lambda x: [sum(x[:2]), *x[2:-2], sum(x[-2:])],
+        "ignorelast": lambda x: [*x[:-2], sum(x[-2:])],
+        "ignorefirst": lambda x: [sum(x[:2]), *x[2:]],
+    }
+
     try:
         bf = bfunc[rule.lower().strip()]
         df = disfunc[rule.lower().strip()]
         return bf(x), bf(y), bf(cid), df(cdis), bf(bid), bf(coff)
     except KeyError:
         raise NotImplementedError(rule)
-        
 
 
 def _parseBranchRuleFile(branchrulefile):
     branchrules = {}
     with open(branchrulefile, "r") as f:
         for line in f:
-            key = line.split(',')[0].strip()
-            value = line.split(',')[1].strip()
-            
+            key = line.split(",")[0].strip()
+            value = line.split(",")[1].strip()
+
             branchrules[key] = value
-    
+
     return branchrules
+
 
 def _writeCrossSectionLocationFile(crossectionlocationfile, x, y, cid, cdis, bid, coff):
     """
@@ -152,20 +164,24 @@ def _writeCrossSectionLocationFile(crossectionlocationfile, x, y, cid, cdis, bid
     bid : name of the branch
     coff:  chainage of cross-section on branch
     """
-    with open(crossectionlocationfile, 'w') as f:
-        f.write('name,x,y,length,branch,offset\n')
+    with open(crossectionlocationfile, "w") as f:
+        f.write("name,x,y,length,branch,offset\n")
         for i in range(len(x)):
-            f.write(f'{cid[i]}, {x[i]:.4f}, {y[i]:.4f}, {cdis[i]:.2f}, {bid[i]}, {coff[i]:.2f}\n')
-            #f.write('{}, {:.4f}, {:.4f}, {:.2f}, {}, {:.2f}\n'.format(cid[i], x[i], y[i], cdis[i], bid[i], coff[i]))
+            f.write(
+                f"{cid[i]}, {x[i]:.4f}, {y[i]:.4f}, {cdis[i]:.2f}, {bid[i]}, {coff[i]:.2f}\n"
+            )
+            # f.write('{}, {:.4f}, {:.4f}, {:.2f}, {}, {:.2f}\n'.format(cid[i], x[i], y[i], cdis[i], bid[i], coff[i]))
 
 
-class VisualiseOutput():
-    __cssdeffile = 'CrossSectionDefinitions.ini'
-    __volumefile = 'volumes.csv'
-    __rmainfile = 'roughness-Main.ini'
-    __rfp1file = 'roughness-FloodPlain1.ini'
+class VisualiseOutput:
+    __cssdeffile = "CrossSectionDefinitions.ini"
+    __volumefile = "volumes.csv"
+    __rmainfile = "roughness-Main.ini"
+    __rfp1file = "roughness-FloodPlain1.ini"
 
-    def __init__(self, output_directory: str, figure_type: str="png", overwrite: bool=True):
+    def __init__(
+        self, output_directory: str, figure_type: str = "png", overwrite: bool = True
+    ):
         self.output_dir = output_directory
         self.fig_dir = self.generate_output_dir(output_directory)
         self._set_files()
@@ -173,7 +189,9 @@ class VisualiseOutput():
         self._ref_geom_tw = []
         self._ref_geom_fw = []
 
-    def generate_output_dir(self, output_directory, figure_type: str="png", overwrite: bool=True):
+    def generate_output_dir(
+        self, output_directory, figure_type: str = "png", overwrite: bool = True
+    ):
         """
         Creates a new directory in the output map to store figures for each cross-section
 
@@ -184,8 +202,7 @@ class VisualiseOutput():
             png images saved to file
         """
 
-
-        figdir = os.path.join(output_directory, 'figures')
+        figdir = os.path.join(output_directory, "figures")
         if os.path.isdir(figdir) & overwrite:
             shutil.rmtree(figdir)
             os.mkdir(figdir)
@@ -194,22 +211,23 @@ class VisualiseOutput():
         return figdir
 
     def _set_files(self):
-        self.files = {'css_def': os.path.join(self.output_dir, self.__cssdeffile),
-                      'volumes': os.path.join(self.output_dir, self.__volumefile),
-                      'roughnessMain': os.path.join(self.output_dir, self.__rmainfile),
-                      'roughnessFP1': os.path.join(self.output_dir, self.__rfp1file)
-                      }
+        self.files = {
+            "css_def": os.path.join(self.output_dir, self.__cssdeffile),
+            "volumes": os.path.join(self.output_dir, self.__volumefile),
+            "roughnessMain": os.path.join(self.output_dir, self.__rmainfile),
+            "roughnessFP1": os.path.join(self.output_dir, self.__rfp1file),
+        }
 
     def _getValueFromLine(self, f):
-        return f.readline().strip().split('=')[1].strip()
+        return f.readline().strip().split("=")[1].strip()
 
     def _readCSSDefFile(self):
         csslist = list()
 
-        with open(self.files.get('css_def'), 'r') as f:
+        with open(self.files.get("css_def"), "r") as f:
             for line in f:
                 if line.lower().strip() == "[definition]":
-                    css_id = f.readline().strip().split('=')[1]
+                    css_id = f.readline().strip().split("=")[1]
                     [f.readline() for i in range(3)]
                     css_levels = list(map(float, self._getValueFromLine(f).split()))
                     css_fwidth = list(map(float, self._getValueFromLine(f).split()))
@@ -221,60 +239,72 @@ class VisualiseOutput():
                     css_mainsectionwidth = float(self._getValueFromLine(f))
                     css_fp1sectionwidth = float(self._getValueFromLine(f))
 
-                    css = {"id":css_id.strip(),
-                           "levels": css_levels,
-                           "flow_width": css_fwidth,
-                           "total_width": css_twidth,
-                           "SD_crest": css_sdcrest,
-                           "SD_flow_area": css_sdflow,
-                           "SD_total_area": css_sdtotal,
-                           "SD_baselevel": css_sdbaselevel,
-                           "mainsectionwidth": css_mainsectionwidth,
-                           "fp1sectionwidth": css_fp1sectionwidth
-                           }
+                    css = {
+                        "id": css_id.strip(),
+                        "levels": css_levels,
+                        "flow_width": css_fwidth,
+                        "total_width": css_twidth,
+                        "SD_crest": css_sdcrest,
+                        "SD_flow_area": css_sdflow,
+                        "SD_total_area": css_sdtotal,
+                        "SD_baselevel": css_sdbaselevel,
+                        "mainsectionwidth": css_mainsectionwidth,
+                        "fp1sectionwidth": css_fp1sectionwidth,
+                    }
                     csslist.append(css)
 
         return csslist
 
-    def getRoughnessInfoForCss(self, cssname, rtype: str='roughnessMain'):
+    def getRoughnessInfoForCss(self, cssname, rtype: str = "roughnessMain"):
         """
         Opens roughness file and reads information for a given cross-section
         name
         """
         levels = None
         values = None
-        with open(self.files[rtype], 'r') as f:
+        with open(self.files[rtype], "r") as f:
             cssbranch, csschainage = self._parse_cssname(cssname)
             for line in f:
-                if line.strip().lower() == '[branchproperties]':
-                    if self._getValueFromLine(f).lower()==cssbranch:
+                if line.strip().lower() == "[branchproperties]":
+                    if self._getValueFromLine(f).lower() == cssbranch:
                         [f.readline() for i in range(3)]
                         levels = list(map(float, self._getValueFromLine(f).split()))
-                if line.strip().lower() == '[definition]':
-                    if self._getValueFromLine(f).lower()==cssbranch:
+                if line.strip().lower() == "[definition]":
+                    if self._getValueFromLine(f).lower() == cssbranch:
                         if float(self._getValueFromLine(f).lower()) == csschainage:
                             values = list(map(float, self._getValueFromLine(f).split()))
         return levels, values
 
     def getVolumeInfoForCss(self, cssname):
-        column_names = ["z","2D_total_volume","2D_flow_volume","2D_wet_area","2D_flow_area","1D_total_volume_sd",
-                        "1D_total_volume","1D_flow_volume_sd","1D_flow_volume","1D_total_width","1D_flow_width"]
+        column_names = [
+            "z",
+            "2D_total_volume",
+            "2D_flow_volume",
+            "2D_wet_area",
+            "2D_flow_area",
+            "1D_total_volume_sd",
+            "1D_total_volume",
+            "1D_flow_volume_sd",
+            "1D_flow_volume",
+            "1D_total_width",
+            "1D_flow_width",
+        ]
         cssdata = {}
         for column in column_names:
             cssdata[column] = list()
 
-        with open(self.files['volumes'], 'r') as f:
+        with open(self.files["volumes"], "r") as f:
             for line in f:
-                values = line.strip().split(',')
+                values = line.strip().split(",")
                 if values[0] == cssname:
                     for i, column in enumerate(column_names):
-                        cssdata[column].append(float(values[i+1]))
+                        cssdata[column].append(float(values[i + 1]))
 
         return cssdata
 
     def cross_sections(self) -> dict:
         """
-        Generator to loop through all cross-sections in definition file. 
+        Generator to loop through all cross-sections in definition file.
 
         Example use:
         for css in visualiser.cross_sections():
@@ -286,208 +316,269 @@ class VisualiseOutput():
 
     def get_cross_section_by_id(self, id: str) -> dict:
         """
-        Get cross-section information given an id. 
+        Get cross-section information given an id.
 
         Arguments:
             id (str): cross-section name
         """
         csslist = self._readCSSDefFile()
         for css in csslist:
-            if css.get('id') == id:
+            if css.get("id") == id:
                 return css
 
-    def make_figure(self, css, reference_geometry: tuple=(),
-                        reference_roughness: tuple=(), save_to_file: bool=True):
-        """ 
+    def make_figure(
+        self,
+        css,
+        reference_geometry: tuple = (),
+        reference_roughness: tuple = (),
+        save_to_file: bool = True,
+    ):
+        """
         Creates a figure
 
         Arguments
-            
+
             css: dictionary containing cross-section information. Obtain with `VisualiseOutput.cross_sections`
-                 generator or `VisualiseOutput.get_cross_section_by_id` method. 
-            
+                 generator or `VisualiseOutput.get_cross_section_by_id` method.
+
             reference_geometry (tuple): tuple(list(y), list(z))
-            
+
             reference_roughness (tuple): tuple(list(z), list(n))
-            
+
             save_to_file (bool): if true, save figure to VisualiseOutput.fig_dir
                                  if false, returns pyplot figure object
-    
+
         """
         try:
             fig = plt.figure(figsize=(8, 12))
             gs = fig.add_gridspec(2, 2)
-            axs = [fig.add_subplot(gs[0, :]),
-                   fig.add_subplot(gs[1, 0]),
-                   fig.add_subplot(gs[1, 1])]
+            axs = [
+                fig.add_subplot(gs[0, :]),
+                fig.add_subplot(gs[1, 0]),
+                fig.add_subplot(gs[1, 1]),
+            ]
 
             self._plot_geometry(css, axs[0], reference_geometry)
             self._plot_volume(css, axs[1])
             self._plot_roughness(css, axs[2], reference_roughness)
-            
-            
+
             self._SetPlotStyle(fig)
             plt.tight_layout()
-            
+
             if save_to_file:
-                print (f"saved to {self.fig_dir}/{css['id']}.png")
+                print(f"saved to {self.fig_dir}/{css['id']}.png")
                 plt.savefig(f"{self.fig_dir}/{css['id']}.png")
             else:
                 return fig
-            
+
         except Exception as e:
             print(f"error processing: {css['id']} {str(e)}")
             return None
-            
+
         finally:
             plt.close()
-  
+
     def _plot_geometry(self, css, ax, reference_geometry=None):
-        
+
         # Get data
-        tw = np.append([0], np.array(css['total_width']))
-        fw = np.append([0], np.array(css['flow_width']))
-        l = np.append(css['levels'][0], np.array(css['levels']))
-        mainsectionwidth = css['mainsectionwidth']
-        fp1sectionwidth = css['fp1sectionwidth']
+        tw = np.append([0], np.array(css["total_width"]))
+        fw = np.append([0], np.array(css["flow_width"]))
+        l = np.append(css["levels"][0], np.array(css["levels"]))
+        mainsectionwidth = css["mainsectionwidth"]
+        fp1sectionwidth = css["fp1sectionwidth"]
 
         # Get the water level where water level independent computation takes over
         # this is the lowest level where there is 2D information on volumes
         z_waterlevel_independent = self._get_lowest_water_level_in_2D(css)
-        
+
         # Plot cross-section geometry
         for side in [-1, 1]:
-            h = ax.fill_betweenx(l, side*fw/2, side*tw/2, color="#44B1D5AA", hatch='////')
-            ax.plot(side*tw/2, l, '-k')
-            ax.plot(side*fw/2, l, '--k')
-        
+            h = ax.fill_betweenx(
+                l, side * fw / 2, side * tw / 2, color="#44B1D5AA", hatch="////"
+            )
+            ax.plot(side * tw / 2, l, "-k")
+            ax.plot(side * fw / 2, l, "--k")
+
         # Plot roughness section width
-        ax.plot([-0.5*mainsectionwidth, 0.5*mainsectionwidth],[min(l)-0.25]*2, '-', linewidth=2, color='red', label='Main section')
-        ax.plot([-0.5*(mainsectionwidth+fp1sectionwidth), 0.5*(mainsectionwidth+fp1sectionwidth)],[min(l)-0.25]*2, '--', color='red', label='Floodplain section')
-        #ax.plot(tw-0.5*max(fp1sectionwidth),[min(l)]*len(l), '--', color='cyan', label='Floodplain section')
+        ax.plot(
+            [-0.5 * mainsectionwidth, 0.5 * mainsectionwidth],
+            [min(l) - 0.25] * 2,
+            "-",
+            linewidth=2,
+            color="red",
+            label="Main section",
+        )
+        ax.plot(
+            [
+                -0.5 * (mainsectionwidth + fp1sectionwidth),
+                0.5 * (mainsectionwidth + fp1sectionwidth),
+            ],
+            [min(l) - 0.25] * 2,
+            "--",
+            color="red",
+            label="Floodplain section",
+        )
+        # ax.plot(tw-0.5*max(fp1sectionwidth),[min(l)]*len(l), '--', color='cyan', label='Floodplain section')
 
         # Plot water level indepentent line
-        ax.plot(tw-0.5*max(tw), [z_waterlevel_independent]*len(l), 
-        linestyle='--', 
-        color='m', 
-        label='Lowest water level in 2D')
-        
-        h.set_label('Storage')
-        
-        ax.set_title(css['id'])
-        ax.set_xlabel('[m]')
-        ax.set_ylabel('[m]')
+        ax.plot(
+            tw - 0.5 * max(tw),
+            [z_waterlevel_independent] * len(l),
+            linestyle="--",
+            color="m",
+            label="Lowest water level in 2D",
+        )
+
+        h.set_label("Storage")
+
+        ax.set_title(css["id"])
+        ax.set_xlabel("[m]")
+        ax.set_ylabel("[m]")
 
         if reference_geometry:
-            ax.plot(reference_geometry[1], reference_geometry[0], '--r', label='Reference geometry')
+            ax.plot(
+                reference_geometry[1],
+                reference_geometry[0],
+                "--r",
+                label="Reference geometry",
+            )
 
         # Plot crest level height
         sd_info = self._get_sd_plot_info(css)
-        
-        ax.plot([-tw[-1]/2, tw[-1]/2], 
-                [sd_info.get('crest')]*2, 
-                linestyle=sd_info.get('linestyle'), 
-                linewidth=1, 
-                color='orange', 
-                label=sd_info.get('label'))
 
-    
+        ax.plot(
+            [-tw[-1] / 2, tw[-1] / 2],
+            [sd_info.get("crest")] * 2,
+            linestyle=sd_info.get("linestyle"),
+            linewidth=1,
+            color="orange",
+            label=sd_info.get("label"),
+        )
+
     def _plot_volume(self, css, ax):
         # Get data
         vd = self.getVolumeInfoForCss(css["id"])
         z_waterlevel_independent = self._get_lowest_water_level_in_2D(css)
 
         # Plot 1D volumes
-        ax.fill_between(vd['z'], 0, vd['1D_total_volume_sd'],
-                            color="#24A493",
-                            label='1D Total Volume (incl. SD)')
-        ax.fill_between(vd['z'], 0, vd['1D_total_volume'],
-                            color="#108A7A",
-                            label='1D Total Volume (excl. SD)')
-        ax.fill_between(vd['z'], 0, vd['1D_flow_volume'],
-                            color="#209AB4",
-                            label='1D Flow Volume (incl. SD)')
-        ax.fill_between(vd['z'], 0, vd['1D_flow_volume'],
-                            color="#0C6B7F",
-                            label='1D Flow Volume (excl. SD)')
+        ax.fill_between(
+            vd["z"],
+            0,
+            vd["1D_total_volume_sd"],
+            color="#24A493",
+            label="1D Total Volume (incl. SD)",
+        )
+        ax.fill_between(
+            vd["z"],
+            0,
+            vd["1D_total_volume"],
+            color="#108A7A",
+            label="1D Total Volume (excl. SD)",
+        )
+        ax.fill_between(
+            vd["z"],
+            0,
+            vd["1D_flow_volume"],
+            color="#209AB4",
+            label="1D Flow Volume (incl. SD)",
+        )
+        ax.fill_between(
+            vd["z"],
+            0,
+            vd["1D_flow_volume"],
+            color="#0C6B7F",
+            label="1D Flow Volume (excl. SD)",
+        )
         # Plot 2D volume
-        ax.plot(vd['z'], vd['2D_total_volume'], '--k', label='2D Total Volume')
-        ax.plot(vd['z'], vd['2D_flow_volume'], '-.k', label='2D Flow Volume')
-        
+        ax.plot(vd["z"], vd["2D_total_volume"], "--k", label="2D Total Volume")
+        ax.plot(vd["z"], vd["2D_flow_volume"], "-.k", label="2D Flow Volume")
+
         # Plot lowest point in 2D
-        ax.plot([z_waterlevel_independent]*len(vd['2D_total_volume']), 
-                    vd['2D_total_volume'],
-                    linestyle='--', 
-                    linewidth=1, 
-                    color='m', 
-                    label='Lowest water level in 2D')
-        
+        ax.plot(
+            [z_waterlevel_independent] * len(vd["2D_total_volume"]),
+            vd["2D_total_volume"],
+            linestyle="--",
+            linewidth=1,
+            color="m",
+            label="Lowest water level in 2D",
+        )
+
         # Plot SD crest
         sd_info = self._get_sd_plot_info(css)
-        ax.plot([sd_info.get('crest')]*len(vd['2D_total_volume']), 
-                    vd['2D_total_volume'],
-                    linestyle=sd_info.get('linestyle'), 
-                    linewidth=1, 
-                    color='orange', 
-                    label=sd_info.get('label'))
+        ax.plot(
+            [sd_info.get("crest")] * len(vd["2D_total_volume"]),
+            vd["2D_total_volume"],
+            linestyle=sd_info.get("linestyle"),
+            linewidth=1,
+            color="orange",
+            label=sd_info.get("label"),
+        )
 
-        ax.set_title('Volume graph')
-        ax.set_xlabel('Water level [m]')
-        ax.set_ylabel('Volume [m$^3$]')
-    
+        ax.set_title("Volume graph")
+        ax.set_xlabel("Water level [m]")
+        ax.set_ylabel("Volume [m$^3$]")
+
     def _plot_roughness(self, css, ax, reference_roughness):
-        levels, values = self.getRoughnessInfoForCss(css["id"], rtype='roughnessMain')
+        levels, values = self.getRoughnessInfoForCss(css["id"], rtype="roughnessMain")
         try:
-            ax.plot(levels, values, label='Main channel')
+            ax.plot(levels, values, label="Main channel")
         except:
             pass
 
         try:
-            levels, values = self.getRoughnessInfoForCss(css["id"], rtype='roughnessFP1')
+            levels, values = self.getRoughnessInfoForCss(
+                css["id"], rtype="roughnessFP1"
+            )
             if levels is not None:
-                ax.plot(levels, values, label='Floodplain1')
+                ax.plot(levels, values, label="Floodplain1")
         except FileNotFoundError:
             pass
 
         if reference_roughness:
-            ax.plot(reference_roughness[0], reference_roughness[1], '--r', label='Reference friction')
+            ax.plot(
+                reference_roughness[0],
+                reference_roughness[1],
+                "--r",
+                label="Reference friction",
+            )
 
         # Limit x axis to min and maximum level in cross-section
-        ax.set_xlim(min(css['levels']), max(css['levels']))
-        ax.set_xlabel('Water level [m]')
-        ax.set_ylabel('Chezy coefficient [m$^{1/2}$/s]')
+        ax.set_xlim(min(css["levels"]), max(css["levels"]))
+        ax.set_xlabel("Water level [m]")
+        ax.set_ylabel("Chezy coefficient [m$^{1/2}$/s]")
 
     @staticmethod
     def _get_sd_plot_info(css):
-        l = np.append(css['levels'][0], np.array(css['levels']))
-        z_crest_level = css['SD_crest']
+        l = np.append(css["levels"][0], np.array(css["levels"]))
+        z_crest_level = css["SD_crest"]
         if z_crest_level <= max(l):
             if z_crest_level >= min(l):
-                sd_linestyle='--'
-                sd_label = 'SD Crest Level'
+                sd_linestyle = "--"
+                sd_label = "SD Crest Level"
             else:
                 z_crest_level = min(l)
-                sd_linestyle = '-'
-                sd_label= 'SD Crest Level (cropped)'
+                sd_linestyle = "-"
+                sd_label = "SD Crest Level (cropped)"
         else:
             z_crest_level = max(l)
-            sd_linestyle = '-'
-            sd_label= 'SD Crest Level (cropped)'
-        
-        return {'linestyle': sd_linestyle, 'label': sd_label, 'crest': z_crest_level}
-    
+            sd_linestyle = "-"
+            sd_label = "SD Crest Level (cropped)"
+
+        return {"linestyle": sd_linestyle, "label": sd_label, "crest": z_crest_level}
+
     def _get_lowest_water_level_in_2D(self, css):
         vd = self.getVolumeInfoForCss(css["id"])
-        index_waterlevel_independent = np.argmax(~np.isnan(vd.get('2D_total_volume')))
-        z_waterlevel_independent = vd.get('z')[index_waterlevel_independent]
+        index_waterlevel_independent = np.argmax(~np.isnan(vd.get("2D_total_volume")))
+        z_waterlevel_independent = vd.get("z")[index_waterlevel_independent]
         return z_waterlevel_independent
-
 
     def _parse_cssname(cssname):
         """
         returns name of branch and chainage
         """
-        branch, chainage = cssname.rsplit('_', 1)  # rsplit prevents error if branchname contains _
+        branch, chainage = cssname.rsplit(
+            "_", 1
+        )  # rsplit prevents error if branchname contains _
         chainage = round(float(chainage), 2)
 
         return branch, chainage
@@ -495,24 +586,24 @@ class VisualiseOutput():
     def _SetPlotStyle(self, fig, legendbelow=False):
         for ax in fig.axes:
             ax.grid(False)
-            ax.spines['top'].set_visible(False)
-            ax.spines['right'].set_visible(False)
+            ax.spines["top"].set_visible(False)
+            ax.spines["right"].set_visible(False)
 
             ax.xaxis.set_tick_params(width=2)
             ax.yaxis.set_tick_params(width=2)
-            for spine in ['left', 'bottom']:
-                ax.spines[spine].set_edgecolor('#272727')
+            for spine in ["left", "bottom"]:
+                ax.spines[spine].set_edgecolor("#272727")
                 ax.spines[spine].set_linewidth(2)
             if legendbelow:
-                legend = ax.legend(fancybox=True,
-                                framealpha=0.5,
-                                edgecolor='None',
-                                loc=3,
-                                ncol=3,
-                                bbox_to_anchor=(-0.02, -0.5))
+                legend = ax.legend(
+                    fancybox=True,
+                    framealpha=0.5,
+                    edgecolor="None",
+                    loc=3,
+                    ncol=3,
+                    bbox_to_anchor=(-0.02, -0.5),
+                )
             else:
-                legend = ax.legend(fancybox=True,
-                                framealpha=0.5,
-                                edgecolor='None')
-            legend.get_frame().set_facecolor('#e5eef2')  # #e5eef2 #92b6c7
+                legend = ax.legend(fancybox=True, framealpha=0.5, edgecolor="None")
+            legend.get_frame().set_facecolor("#e5eef2")  # #e5eef2 #92b6c7
             legend.get_frame().set_boxstyle("square", pad=0)

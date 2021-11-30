@@ -1,26 +1,24 @@
 import os
 import shutil
-import numpy as np
-import pandas as pd
-
-from tests.TestUtils import TestUtils
 
 import matplotlib
 import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
 from netCDF4 import Dataset
+
+from tests.TestUtils import TestUtils
 
 
 class CompareWaalModel:
 
-    __sobek_runner_dir_name = 'waal_sobek_runner'
-    __runner_script = 'dimr\\scripts\\run_dimr.bat'
-    __1d_dir_name = 'dflow1d'
+    __sobek_runner_dir_name = "waal_sobek_runner"
+    __runner_script = "dimr\\scripts\\run_dimr.bat"
+    __1d_dir_name = "dflow1d"
 
     def _run_waal_1d_model(
-            self,
-            case_name: str,
-            results_dir: str,
-            sobek_dir: str, fm_dir: str):
+        self, case_name: str, results_dir: str, sobek_dir: str, fm_dir: str
+    ):
         """Compares the output of a sobek and fm model run
         based on the results obtained from a fm2prof run
         (in results dir).
@@ -40,18 +38,15 @@ class CompareWaalModel:
             {list} -- List of generated figures.
         """
         # 1. Set up test data
-        figure_dir = os.path.join(results_dir, 'Figures')
+        figure_dir = os.path.join(results_dir, "Figures")
 
         # 2. Verify existent output dir
         if not os.path.exists(results_dir):
-            raise IOError(
-                'Fm2Prof output dir {} not found.'.format(results_dir))
+            raise IOError("Fm2Prof output dir {} not found.".format(results_dir))
         if not os.path.exists(sobek_dir):
-            raise IOError(
-                'Sobek directory not found. {}'.format(sobek_dir))
+            raise IOError("Sobek directory not found. {}".format(sobek_dir))
         if not os.path.exists(fm_dir):
-            raise IOError(
-                f'FM directory not found. {fm_dir}')
+            raise IOError(f"FM directory not found. {fm_dir}")
 
         # 3. Clean up output directory of figures.
         if os.path.exists(figure_dir):
@@ -59,28 +54,31 @@ class CompareWaalModel:
         os.makedirs(figure_dir)
 
         # 4. Copy FM2PROF output to DIMR dir
-        for FileName in ['CrossSectionDefinitions.ini', 'CrossSectionLocations.ini', 
-                         'roughness-FloodPlain1.ini', 'roughness-Main.ini']:
-            shutil.copyfile(src=os.path.join(results_dir, FileName),
-                            dst=os.path.join(sobek_dir, 'dflow1d', FileName))
+        for FileName in [
+            "CrossSectionDefinitions.ini",
+            "CrossSectionLocations.ini",
+            "roughness-FloodPlain1.ini",
+            "roughness-Main.ini",
+        ]:
+            shutil.copyfile(
+                src=os.path.join(results_dir, FileName),
+                dst=os.path.join(sobek_dir, "dflow1d", FileName),
+            )
 
         # 5. Create xml
         sobek_xml_location = self.__create_xml_waal(case_name, sobek_dir)
 
         # 6. Run DIMR
-        self.__run_dimr_from_command(sobek_xml_location)     
+        self.__run_dimr_from_command(sobek_xml_location)
 
         # 7. Get observations.nc
-        output_1d, output_2d = self.__get_observations(
-            sobek_dir, fm_dir, results_dir)   
+        output_1d, output_2d = self.__get_observations(sobek_dir, fm_dir, results_dir)
 
         return output_1d, output_2d
 
     def _compare_waal(
-            self,
-            case_name: str,
-            results_dir: str,
-            sobek_dir: str, fm_dir: str):
+        self, case_name: str, results_dir: str, sobek_dir: str, fm_dir: str
+    ):
         """Compares the output of a sobek and fm model run
         based on the results obtained from a fm2prof run
         (in results dir).
@@ -100,20 +98,19 @@ class CompareWaalModel:
             {list} -- List of generated figures.
         """
         # 1. Set up test data
-        figure_dir = os.path.join(results_dir, 'Figures')
-        
+        figure_dir = os.path.join(results_dir, "Figures")
+
         # 2. Get observations.nc
-        output_1d, output_2d = self.__get_observations(
-            sobek_dir, fm_dir, results_dir)
+        output_1d, output_2d = self.__get_observations(sobek_dir, fm_dir, results_dir)
 
         # 3. Compare values Generate figures.
         figure_list = self.__compare_1d_2d_output_and_generate_plots(
-            case_name, output_1d, output_2d, figure_dir)
+            case_name, output_1d, output_2d, figure_dir
+        )
 
         return figure_list
 
-    def __get_observations(
-            self, sobek_dir: str, fm_dir: str, results_dir: str):
+    def __get_observations(self, sobek_dir: str, fm_dir: str, results_dir: str):
         """Gets the path to observation files for 1d and 2d.
 
         Arguments:
@@ -133,21 +130,19 @@ class CompareWaalModel:
         output_2d = self.__get_2d_observations_file(fm_dir)
 
         # Create NC Output folder.
-        compare_dir = os.path.join(results_dir, 'NC_Output')
+        compare_dir = os.path.join(results_dir, "NC_Output")
         if os.path.exists(compare_dir):
             shutil.rmtree(compare_dir)
         os.makedirs(compare_dir)
         shutil.copy(output_1d, compare_dir)
         shutil.copy(output_2d, compare_dir)
-        output_1d = os.path.join(compare_dir, 'observations.nc')
-        output_2d = os.path.join(compare_dir, 'FlowFM_his.nc')
+        output_1d = os.path.join(compare_dir, "observations.nc")
+        output_2d = os.path.join(compare_dir, "FlowFM_his.nc")
 
         if not os.path.exists(output_1d):
-            raise Exception(
-                '1D output was not found at{}.'.format(output_2d))
+            raise Exception("1D output was not found at{}.".format(output_2d))
         if not os.path.exists(output_2d):
-            raise Exception(
-                '2D output was not found at{}.'.format(output_2d))
+            raise Exception("2D output was not found at{}.".format(output_2d))
         return output_1d, output_2d
 
     def __copy_output_to_sobek_dir(self, output_dir: str, target_dir: str):
@@ -159,7 +154,7 @@ class CompareWaalModel:
             target_dir {str} -- Path location for the directory.
         """
         if not os.path.exists(output_dir):
-            raise IOError('Output directory {} not found.'.format(output_dir))
+            raise IOError("Output directory {} not found.".format(output_dir))
 
         shutil.move(output_dir, target_dir)
 
@@ -175,37 +170,38 @@ class CompareWaalModel:
         """
 
         # write file
-        file_name = case_name + '.xml'
+        file_name = case_name + ".xml"
         file_path = os.path.join(working_dir, file_name)
         if os.path.exists(file_path):
             os.remove(file_path)
         flow1d_working_dir = os.path.join(working_dir, self.__1d_dir_name)
-        f = open(file_path, 'w+')
+        f = open(file_path, "w+")
         f.write(
-            '<?xml version="1.0" encoding="utf-8" standalone="yes"?>\n' +
-            '<dimrConfig xmlns="http://schemas.deltares.nl/dimr"' +
-            ' xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"' +
-            ' xsi:schemaLocation="http://schemas.deltares.nl/dimr' +
-            ' http://content.oss.deltares.nl/schemas/dimr-1.2.xsd">\n' +
-            '<documentation>\n' +
-            '<fileVersion>1.2</fileVersion>\n' +
-            '<createdBy>Deltares, Coupling Team</createdBy>\n' +
-            '<creationDate>2019-03-28T08:04:13.0106499Z</creationDate>\n' +
-            '</documentation>\n' +
-            '<control>\n' +
-            '<start name="rijn-flow-model" />\n' +
-            '</control>\n' +
-            '<component name="rijn-flow-model">\n' +
-            '<library>cf_dll</library>\n' +
-            '<workingDir>{}</workingDir>\n'.format(flow1d_working_dir) +
-            '<inputFile>rijn-flow-model.md1d</inputFile>\n' +
-            '</component>\n' +
-            '</dimrConfig>\n')
+            '<?xml version="1.0" encoding="utf-8" standalone="yes"?>\n'
+            + '<dimrConfig xmlns="http://schemas.deltares.nl/dimr"'
+            + ' xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"'
+            + ' xsi:schemaLocation="http://schemas.deltares.nl/dimr'
+            + ' http://content.oss.deltares.nl/schemas/dimr-1.2.xsd">\n'
+            + "<documentation>\n"
+            + "<fileVersion>1.2</fileVersion>\n"
+            + "<createdBy>Deltares, Coupling Team</createdBy>\n"
+            + "<creationDate>2019-03-28T08:04:13.0106499Z</creationDate>\n"
+            + "</documentation>\n"
+            + "<control>\n"
+            + '<start name="rijn-flow-model" />\n'
+            + "</control>\n"
+            + '<component name="rijn-flow-model">\n'
+            + "<library>cf_dll</library>\n"
+            + "<workingDir>{}</workingDir>\n".format(flow1d_working_dir)
+            + "<inputFile>rijn-flow-model.md1d</inputFile>\n"
+            + "</component>\n"
+            + "</dimrConfig>\n"
+        )
         f.close()
         return file_path
 
     def __run_dimr_from_command(self, sobek_xml_location: str):
-        """ Runs created xml with dimr script.
+        """Runs created xml with dimr script.
 
         Arguments:
             sobek_xml_location {str}
@@ -214,17 +210,17 @@ class CompareWaalModel:
         runner_dir = TestUtils.get_test_dir(self.__sobek_runner_dir_name)
         dimr_runner_path = os.path.join(runner_dir, self.__runner_script)
         if not os.path.exists(dimr_runner_path):
-            raise IOError(
-                'DIMR Runner not found at {}.'.format(dimr_runner_path))
+            raise IOError("DIMR Runner not found at {}.".format(dimr_runner_path))
 
-        dimr_call = '{} {} -d 0 > out.txt 2>&1'.format(
-                    dimr_runner_path, sobek_xml_location)
+        dimr_call = "{} {} -d 0 > out.txt 2>&1".format(
+            dimr_runner_path, sobek_xml_location
+        )
         try:
             os.system(dimr_call)
         except Exception as e_error:
             raise Exception(
-                'Exception thrown while doing DIMR call.' +
-                ' {}'.format(str(e_error)))
+                "Exception thrown while doing DIMR call." + " {}".format(str(e_error))
+            )
 
     def __get_2d_observations_file(self, fm_dir: str):
         """Finds the observation file for a 2d model
@@ -238,11 +234,10 @@ class CompareWaalModel:
         Returns:
             {str} -- Path to observation file.
         """
-        obs_2d_rel_path = 'resultaten\\FlowFM_his.nc'
+        obs_2d_rel_path = "resultaten\\FlowFM_his.nc"
         output_2d = os.path.join(fm_dir, obs_2d_rel_path)
         if not os.path.exists(output_2d):
-            raise Exception(
-                '2D output was not found at{}.'.format(output_2d))
+            raise Exception("2D output was not found at{}.".format(output_2d))
         return output_2d
 
     def __get_1d_observations_file(self, sobek_dir: str):
@@ -254,30 +249,26 @@ class CompareWaalModel:
         Returns:
             {str} -- File path where the observation file has been generated.
         """
-        dflow1d_output = os.path.join(
-            sobek_dir, self.__1d_dir_name + '\\output')
+        dflow1d_output = os.path.join(sobek_dir, self.__1d_dir_name + "\\output")
         if not os.path.exists(dflow1d_output):
             raise IOError(
-                'Sobek output folder not created at' +
-                ' {}.'.format(dflow1d_output))
+                "Sobek output folder not created at" + " {}.".format(dflow1d_output)
+            )
 
         if not os.listdir(dflow1d_output):
-            raise IOError(
-                'No output generated at' +
-                '{}.'.format(dflow1d_output))
+            raise IOError("No output generated at" + "{}.".format(dflow1d_output))
 
-        observations_file = os.path.join(dflow1d_output, 'observations.nc')
+        observations_file = os.path.join(dflow1d_output, "observations.nc")
         if not os.path.exists(observations_file):
             raise IOError(
-                'Observation file was not found at' +
-                ' {}.'.format(observations_file))
+                "Observation file was not found at" + " {}.".format(observations_file)
+            )
 
         return observations_file
 
     def __compare_1d_2d_output_and_generate_plots(
-            self, case_name: str,
-            output_1d: str, output_2d: str,
-            fig_dir: str):
+        self, case_name: str, output_1d: str, output_2d: str, fig_dir: str
+    ):
         """Compares two .nc files and outputs its result as plots
 
         Arguments:
@@ -292,53 +283,59 @@ class CompareWaalModel:
         try:
             from tqdm import tqdm
         except:
-            TestUtils.install_package('tqdm')
+            TestUtils.install_package("tqdm")
             from tqdm import tqdm
 
-        fig_dir_diff = os.path.join(fig_dir, 'Difference')
+        fig_dir_diff = os.path.join(fig_dir, "Difference")
         if not os.path.exists(fig_dir_diff):
             os.makedirs(fig_dir_diff)
 
-        fig_dir_stats = os.path.join(fig_dir, 'Statistics')
+        fig_dir_stats = os.path.join(fig_dir, "Statistics")
         if not os.path.exists(fig_dir_stats):
             os.makedirs(fig_dir_stats)
 
-        fig_dir_volume = os.path.join(fig_dir, 'Volume')
+        fig_dir_volume = os.path.join(fig_dir, "Volume")
         if not os.path.exists(fig_dir_volume):
             os.makedirs(fig_dir_volume)
 
+        font = {
+            "family": "sans-serif",
+            "sans-serif": ["Sansa Pro, sans-serif"],
+            "weight": "normal",
+            "size": 20,
+        }
 
-
-        font = {'family': 'sans-serif',
-                'sans-serif': ['Sansa Pro, sans-serif'],
-                'weight': 'normal',
-                'size': 20}
-
-        matplotlib.rc('font', **font)
+        matplotlib.rc("font", **font)
         list_of_figures = []
         # Read data
         df_1d = Dataset(output_1d)
         df_2d = Dataset(output_2d)
-        econding = 'utf-8'
+        econding = "utf-8"
 
         # Parse station names
         stations_1d = np.array(
-            ["".join(
-                [i.decode(econding).strip() for i in row]
-                ) for row in df_1d.variables['observation_id'][:]])
+            [
+                "".join([i.decode(econding).strip() for i in row])
+                for row in df_1d.variables["observation_id"][:]
+            ]
+        )
         stations_2d = np.array(
-            ["".join(
-                [i.decode(econding) for i in row.compressed()]
-                ) for row in df_2d.variables['station_name'][:]])
+            [
+                "".join([i.decode(econding) for i in row.compressed()])
+                for row in df_2d.variables["station_name"][:]
+            ]
+        )
         qstations_2d = np.array(
-            ["".join(
-                [i.decode(econding) for i in row.compressed()]
-                ) for row in df_2d.variables['cross_section_name'][:]])
+            [
+                "".join([i.decode(econding) for i in row.compressed()])
+                for row in df_2d.variables["cross_section_name"][:]
+            ]
+        )
 
         # Parse time (to days)
-        time_key = 'time'
-        t_1d = df_1d.variables[time_key][:]/3600/24
-        t_2d = df_2d.variables[time_key][:]/3600/24
+        time_key = "time"
+        t_1d = df_1d.variables[time_key][:] / 3600 / 24
+        t_2d = df_2d.variables[time_key][:] / 3600 / 24
 
         # times at which to compare
         tbnd = [np.max((t_1d[0], t_2d[0])), np.min((t_1d[-1], t_2d[-2]))]
@@ -351,13 +348,13 @@ class CompareWaalModel:
         plot_at = np.arange(880, 960, 5)
 
         # Keys
-        key_1d_water_level = 'water_level'
-        key_1d_water_disch = 'water_discharge'
-        key_2d_water_level = 'waterlevel'
-        key_2d_water_disch = 'cross_section_discharge'
+        key_1d_water_level = "water_level"
+        key_1d_water_disch = "water_discharge"
+        key_2d_water_level = "waterlevel"
+        key_2d_water_disch = "cross_section_discharge"
 
         for km in tqdm(kms):
-            stat = '{}.00_WA'.format(km)
+            stat = "{}.00_WA".format(km)
 
             # Find corresponding station for both models
             id_1d = np.argwhere(stations_1d == stat)[0]
@@ -371,7 +368,7 @@ class CompareWaalModel:
             # compare the two
             interp1d = np.interp(tinterp, t_1d, wl_1d)
             interp2d = np.interp(tinterp, t_2d, wl_2d)
-            diffd = interp1d-interp2d
+            diffd = interp1d - interp2d
 
             # append to lists
             bias.append(np.mean(diffd))
@@ -380,33 +377,35 @@ class CompareWaalModel:
             # If plot, plot
             if km in plot_at:
                 fig, axh = plt.subplots(1, figsize=(10, 4))
-                axh.plot(t_1d, wl_1d, label='SOBEK')
-                axh.plot(t_2d, wl_2d, label='FM-2D')
-                
+                axh.plot(t_1d, wl_1d, label="SOBEK")
+                axh.plot(t_2d, wl_2d, label="FM-2D")
+
                 axdiff = axh.twinx()
-                axdiff.plot(tinterp, diffd, '--', color=[0.2, 0.8, 0.2])
-                axdiff.tick_params(axis='y', labelcolor=[0.2, 0.8, 0.2])
-                axdiff.set_ylabel('Verschil [m]', color=[0.2, 0.8, 0.2])  # we already handled the x-label with ax1
+                axdiff.plot(tinterp, diffd, "--", color=[0.2, 0.8, 0.2])
+                axdiff.tick_params(axis="y", labelcolor=[0.2, 0.8, 0.2])
+                axdiff.set_ylabel(
+                    "Verschil [m]", color=[0.2, 0.8, 0.2]
+                )  # we already handled the x-label with ax1
 
                 axh.set_ylim()
-                axh.set_xlabel('Tijd [dagen]')
-                axh.set_ylabel('Waterstand [m + NAP]')
+                axh.set_xlabel("Tijd [dagen]")
+                axh.set_ylabel("Waterstand [m + NAP]")
                 axh.legend()
                 axh.set_title(stat)
                 plt.tight_layout()
                 # Avoid inserting points in file names.
-                stat_fig_name = stat.replace('.', '_')
+                stat_fig_name = stat.replace(".", "_")
                 fig_name = os.path.join(
-                    fig_dir_diff,
-                    '{}_{}.png'.format(case_name, stat_fig_name))
+                    fig_dir_diff, "{}_{}.png".format(case_name, stat_fig_name)
+                )
                 fig.savefig(fig_name)
                 list_of_figures.append(fig_name)
 
         # Plot bias/std
         fig, ax = plt.subplots(1, figsize=(10, 4))
-        ax.plot(kms, bias, label='bias')
-        ax.plot(kms, std, label='$\\sigma$')
-        ax.plot([kms[0], kms[-1]], [0, 0], '--k')
+        ax.plot(kms, bias, label="bias")
+        ax.plot(kms, std, label="$\\sigma$")
+        ax.plot([kms[0], kms[-1]], [0, 0], "--k")
         # ax.plot([913.5]*2, [0, 0.75], '-r')
         ax.legend()
         ax.set_xlabel("Rivierkilometer")
@@ -415,9 +414,7 @@ class CompareWaalModel:
         ax.set_xlim([kms[0], kms[-1]])
 
         plt.tight_layout()
-        fig_name = os.path.join(
-            fig_dir_stats,
-            '{}_statistics.png'.format(case_name))
+        fig_name = os.path.join(fig_dir_stats, "{}_statistics.png".format(case_name))
         fig.savefig(fig_name)
         list_of_figures.append(fig_name)
 
@@ -452,28 +449,29 @@ class CompareWaalModel:
         # fig_path = os.path.join(fig_dir, '{}.png'.format(case_name))
         # plt.savefig(fig_path)
         """
-        plt.close('all')
+        plt.close("all")
         return list_of_figures
 
-    def _compare_volume(
-            self, case_name, input_volume_file, fm2prof_fig_dir):
+    def _compare_volume(self, case_name, input_volume_file, fm2prof_fig_dir):
         # Read data
         df = pd.read_csv(input_volume_file, index_col=1)
 
         # Loop over each cross-sections
         cs = np.unique(df.id)
-        crosssections = cs#[cs[i].strip() for i in range(len(cs))]
-        for branchnr in range(1,7):  # waal1 to waal6
-            branchstr = f'waal{str(branchnr)}'
+        crosssections = cs  # [cs[i].strip() for i in range(len(cs))]
+        for branchnr in range(1, 7):  # waal1 to waal6
+            branchstr = f"waal{str(branchnr)}"
             waallist = []
             waalind_tmp = []
             for cs_index in range(len(crosssections)):
                 if branchstr in crosssections[cs_index]:
                     waallist.append(crosssections[cs_index])
                     waalind_tmp.append(cs_index)
-            
-            waallist = np.array(waallist)[np.argsort([float(w.split('_')[1]) for w in waallist])]
-            
+
+            waallist = np.array(waallist)[
+                np.argsort([float(w.split("_")[1]) for w in waallist])
+            ]
+
             # Under the assumption that the cross-sections for the Waal was made every 500m
             for cs5000 in range(0, len(waallist), 5):
                 crosssection = waallist[cs5000]
@@ -482,28 +480,30 @@ class CompareWaalModel:
 
     def __plot_volume(self, df, cs, output_folder):
         fig, axs = plt.subplots(1, 2, figsize=(10, 4))
-        tv_1d = df[df.id == cs]['1D_total_volume']
-        tv_1dsd = df[df.id == cs]['1D_total_volume_sd']
-        tv_2d = df[df.id == cs]['2D_total_volume']
-        fv_1d = df[df.id == cs]['1D_flow_volume']
-        fv_1dsd = df[df.id == cs]['1D_flow_volume_sd']
-        fv_2d = df[df.id == cs]['2D_flow_volume']
-        axs[0].plot(tv_2d, '-', linewidth=5, color=[0.4]*3, label='2D')
-        axs[0].plot(tv_1d, '--r', label='1D without correction')
-        axs[0].plot(tv_1dsd, '-r', label='1D with correction')
-        axs[1].plot(fv_2d, '-', linewidth=5, color=[0.2]*3, label='2D')
-        axs[1].plot(fv_1d, '--b', label='1D without correction')
-        axs[1].plot(fv_1dsd, '-b', label='1D with correction')
-        
+        tv_1d = df[df.id == cs]["1D_total_volume"]
+        tv_1dsd = df[df.id == cs]["1D_total_volume_sd"]
+        tv_2d = df[df.id == cs]["2D_total_volume"]
+        fv_1d = df[df.id == cs]["1D_flow_volume"]
+        fv_1dsd = df[df.id == cs]["1D_flow_volume_sd"]
+        fv_2d = df[df.id == cs]["2D_flow_volume"]
+        axs[0].plot(tv_2d, "-", linewidth=5, color=[0.4] * 3, label="2D")
+        axs[0].plot(tv_1d, "--r", label="1D without correction")
+        axs[0].plot(tv_1dsd, "-r", label="1D with correction")
+        axs[1].plot(fv_2d, "-", linewidth=5, color=[0.2] * 3, label="2D")
+        axs[1].plot(fv_1d, "--b", label="1D without correction")
+        axs[1].plot(fv_1dsd, "-b", label="1D with correction")
+
         fig.suptitle(cs)
-        axs[0].set_title('Total volume')
-        axs[1].set_title('Flow volume')
+        axs[0].set_title("Total volume")
+        axs[1].set_title("Flow volume")
         for ax in axs:
             ax.legend()
-            ax.set_xlabel('Water level [m]')
-            ax.set_ylabel('Volume [m$^3$]')
+            ax.set_xlabel("Water level [m]")
+            ax.set_ylabel("Volume [m$^3$]")
         plt.grid()
         # make valid cs name (no periods in name)
-        cs_name = cs.replace('.', 'x')
-        cs_name = cs_name.replace(' ', '')
-        plt.savefig(os.path.join(output_folder, "Volume/{}_volumegraph.png".format(cs_name)))
+        cs_name = cs.replace(".", "x")
+        cs_name = cs_name.replace(" ", "")
+        plt.savefig(
+            os.path.join(output_folder, "Volume/{}_volumegraph.png".format(cs_name))
+        )

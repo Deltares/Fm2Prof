@@ -21,11 +21,11 @@ Stichting Deltares and remain full property of Stichting Deltares at all times.
 All rights reserved.
 """
 import os
+
 import geojson
 
 
 class MaskOutputFile:
-
     @staticmethod
     def create_mask_point(coords: geojson.coords, properties: dict):
         """Creates a Point based on the properties and coordinates given.
@@ -42,14 +42,13 @@ class MaskOutputFile:
 
     @staticmethod
     def validate_extension(file_path: str):
-        if (not file_path):
+        if not file_path:
             # Should not be evaluated
             return
-        if (not file_path.endswith('.json') and
-                not file_path.endswith('.geojson')):
+        if not file_path.endswith(".json") and not file_path.endswith(".geojson"):
             raise IOError(
-                'Invalid file path extension, ' +
-                'should be .json or .geojson.')
+                "Invalid file path extension, " + "should be .json or .geojson."
+            )
 
     @staticmethod
     def read_mask_output_file(file_path: str):
@@ -83,8 +82,5 @@ class MaskOutputFile:
         if file_path:
             MaskOutputFile.validate_extension(file_path)
             feature_collection = geojson.FeatureCollection(mask_points)
-            with open(file_path, 'w') as f:
-                geojson.dump(
-                    feature_collection,
-                    f,
-                    indent=4)
+            with open(file_path, "w") as f:
+                geojson.dump(feature_collection, f, indent=4)

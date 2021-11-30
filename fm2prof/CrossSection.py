@@ -1,28 +1,32 @@
 ﻿"""
 Contains CrossSection class
 """
-# Imports from standard library
-from datetime import timedelta, datetime
-from typing import Mapping, Sequence
-from functools import reduce
-from time import time
 import logging
-from logging import Logger
 import os
 
-# Imports from dependencies
-from scipy.integrate  import cumtrapz
+# Imports from standard library
+from datetime import datetime, timedelta
+from functools import reduce
+from logging import Logger
+from time import time
+from typing import Mapping, Sequence
+
 import numpy as np
 import pandas as pd
 import scipy.optimize as so
-from .lib import polysimplify as PS
+
+# Imports from dependencies
+from scipy.integrate import cumtrapz
+
+from fm2prof import Functions as FE
 
 # Imports from package
 from fm2prof.common import FM2ProfBase, FrictionTable
-from fm2prof.MaskOutputFile import MaskOutputFile
-from fm2prof import Functions as FE
-from fm2prof.IniFile import IniFile
 from fm2prof.Import import FmModelData
+from fm2prof.IniFile import IniFile
+from fm2prof.MaskOutputFile import MaskOutputFile
+
+from .lib import polysimplify as PS
 
 pd.options.mode.chained_assignment = None  # default='warn'
 
@@ -32,27 +36,34 @@ class CrossSection(FM2ProfBase):
     Use this class to derive cross-sections from fm_data (2D model results).
     See docs how to acquire fm_data and how to prepare a proper 2D model.
     """
-    __cs_parameter_css_points = 'MaximumPointsInProfile'
-    __cs_parameter_transitionheight_sd = 'SDTransitionHeight'
-    __cs_parameter_velocity_threshold = 'AbsoluteVelocityThreshold'
-    __cs_parameter_relative_threshold = 'RelativeVelocityThreshold'
-    __cs_parameter_min_depth_storage = 'MinimumDepthThreshold'
-    __cs_parameter_plassen_timesteps = 'LakeTimesteps'
-    __cs_parameter_storagemethod_wli = 'ExtrapolateStorage'
-    __cs_parameter_bedlevelcriterium = 'BedlevelCriterium'
-    __cs_parameter_SDstorage = 'SDCorrection'
-    __cs_parameter_Frictionweighing = 'FrictionweighingMethod'
-    __cs_parameter_sdoptimisationmethod = 'sdoptimisationmethod'
-    __cs_parameter_skip_maps = 'SkipMaps'
-    __cs_parameter_floodplain_base_level = 'SDFloodplainBase'
-    __cs_parameter_minwidth = 'MinimumTotalWidth'
+
+    __cs_parameter_css_points = "MaximumPointsInProfile"
+    __cs_parameter_transitionheight_sd = "SDTransitionHeight"
+    __cs_parameter_velocity_threshold = "AbsoluteVelocityThreshold"
+    __cs_parameter_relative_threshold = "RelativeVelocityThreshold"
+    __cs_parameter_min_depth_storage = "MinimumDepthThreshold"
+    __cs_parameter_plassen_timesteps = "LakeTimesteps"
+    __cs_parameter_storagemethod_wli = "ExtrapolateStorage"
+    __cs_parameter_bedlevelcriterium = "BedlevelCriterium"
+    __cs_parameter_SDstorage = "SDCorrection"
+    __cs_parameter_Frictionweighing = "FrictionweighingMethod"
+    __cs_parameter_sdoptimisationmethod = "sdoptimisationmethod"
+    __cs_parameter_skip_maps = "SkipMaps"
+    __cs_parameter_floodplain_base_level = "SDFloodplainBase"
+    __cs_parameter_minwidth = "MinimumTotalWidth"
     __logger = None
 
-    def __init__(self,
-            name: str, length: float, location: tuple,
-            branchid="not defined", chainage=0,
-            fm_data: FmModelData=None,
-            logger: Logger=None, inifile: IniFile=None):
+    def __init__(
+        self,
+        name: str,
+        length: float,
+        location: tuple,
+        branchid="not defined",
+        chainage=0,
+        fm_data: FmModelData = None,
+        logger: Logger = None,
+        inifile: IniFile = None,
+    ):
         """
         Arguments:
             InputParam_dict {Dictionary} -- [description]
@@ -67,19 +78,19 @@ class CrossSection(FM2ProfBase):
         super().__init__(logger=logger, inifile=inifile)
 
         # Cross-section meta data
-        self.name = name                # cross-section id
-        self.length = length            # 'vaklengte'
-        self.location = location        # (x,y)
-        self.branch = branchid          # name of 1D branch for cross-section
-        self.chainage = chainage        # offset from beginning of branch
-        self.__output_mask_list = []    # initialize output mask list.
-        self._fm_data = fm_data         # dictionary with fmdata
+        self.name = name  # cross-section id
+        self.length = length  # 'vaklengte'
+        self.location = location  # (x,y)
+        self.branch = branchid  # name of 1D branch for cross-section
+        self.chainage = chainage  # offset from beginning of branch
+        self.__output_mask_list = []  # initialize output mask list.
+        self._fm_data = fm_data  # dictionary with fmdata
 
         # Cross-section geometry
         self.z = []
         self.total_width = []
         self.flow_width = []
-        self.section_widths = {'main':0, 'floodplain1':0, 'floodplain2':0}
+        self.section_widths = {"main": 0, "floodplain1": 0, "floodplain2": 0}
         self.friction_tables = dict()
         self.roughness_sections = np.array([])
 
@@ -120,15 +131,16 @@ class CrossSection(FM2ProfBase):
         self.__output_face_list = []
         self.__output_edge_list = []
 
-        self._section_map = {'1': 'main',
-                             '2': 'floodplain1',
-                             '3': 'floodplain2',
-                             '-999': 'main'
-                             }
+        self._section_map = {
+            "1": "main",
+            "2": "floodplain1",
+            "3": "floodplain2",
+            "-999": "main",
+        }
 
     @property
     def alluvial_width(self):
-        for key in [1, '1', 'main', 'Main']:
+        for key in [1, "1", "main", "Main"]:
             try:
                 return self.section_widths[key]
             except KeyError:
@@ -137,7 +149,7 @@ class CrossSection(FM2ProfBase):
 
     @property
     def nonalluvial_width(self):
-        for key in [2, '2', 'floodplain', 'FloodPlain1']:
+        for key in [2, "2", "floodplain", "FloodPlain1"]:
             try:
                 return self.section_widths[key]
             except KeyError:
@@ -153,9 +165,9 @@ class CrossSection(FM2ProfBase):
         return self.__output_edge_list
 
     def get_point_list(self, pointtype):
-        if pointtype == 'face':
+        if pointtype == "face":
             return self.face_points_list
-        elif pointtype == 'edge':
+        elif pointtype == "edge":
             return self.edge_points_list
         else:
             raise ValueError('pointtype must be "face" or "edge"')
@@ -171,11 +183,17 @@ class CrossSection(FM2ProfBase):
         fm_data = self._fm_data
 
         # Unpack FM data
-        waterlevel = fm_data['waterlevel'].iloc[:, self.get_parameter(self.__cs_parameter_skip_maps):]
-        waterdepth = fm_data['waterdepth'].iloc[:, self.get_parameter(self.__cs_parameter_skip_maps):]
-        velocity = fm_data['velocity'].iloc[:, self.get_parameter(self.__cs_parameter_skip_maps):]
-        area = fm_data['area']
-        bedlevel = fm_data['bedlevel']
+        waterlevel = fm_data["waterlevel"].iloc[
+            :, self.get_parameter(self.__cs_parameter_skip_maps) :
+        ]
+        waterdepth = fm_data["waterdepth"].iloc[
+            :, self.get_parameter(self.__cs_parameter_skip_maps) :
+        ]
+        velocity = fm_data["velocity"].iloc[
+            :, self.get_parameter(self.__cs_parameter_skip_maps) :
+        ]
+        area = fm_data["area"]
+        bedlevel = fm_data["bedlevel"]
 
         # Convert area to a matrix for matrix operations
         # (much more efficient than for-loops)
@@ -189,30 +207,29 @@ class CrossSection(FM2ProfBase):
 
         # Retrieve the water-depth
         # & water level nearest to the cross-section location
-        self.set_logger_message('Retrieving centre point values')
+        self.set_logger_message("Retrieving centre point values")
         (centre_depth, centre_level) = FE.get_centre_values(
-            self.location,
-            fm_data['x'],
-            fm_data['y'],
-            waterdepth,
-            waterlevel)
+            self.location, fm_data["x"], fm_data["y"], waterdepth, waterlevel
+        )
 
         # apply rolling average over the velocities
         # to smooth out extreme values
         velocity = velocity.rolling(
-            window=10,
-            min_periods=1,
-            center=True,
-            axis=1).mean()
+            window=10, min_periods=1, center=True, axis=1
+        ).mean()
 
         # Identify river lakes (plassen)
-        self.set_logger_message('Identifying lakes')
-        (plassen_mask,
+        self.set_logger_message("Identifying lakes")
+        (
+            plassen_mask,
             wet_not_plas_mask,
-            plassen_depth_correction) = self._identify_lakes(waterdepth) # plassen_mask needed for arrays in output
+            plassen_depth_correction,
+        ) = self._identify_lakes(
+            waterdepth
+        )  # plassen_mask needed for arrays in output
 
         # Masks for wet and flow cells (stroomvoeringscriteria)
-        self.set_logger_message('Seperating flow from storage')
+        self.set_logger_message("Seperating flow from storage")
         flow_mask = self._distinguish_flow_from_storage(waterdepth, velocity)
 
         # Calculate area and volume as function of waterlevel & waterdepth
@@ -225,22 +242,24 @@ class CrossSection(FM2ProfBase):
 
         # Correct waterdepth for deep pools (volume below deepest point in centre
         # should not be considered to be conveyance)
-        pools_id = [i[0] for i in np.argwhere(waterdepth.to_numpy()[:, 0] > centre_depth[0])]
+        pools_id = [
+            i[0] for i in np.argwhere(waterdepth.to_numpy()[:, 0] > centre_depth[0])
+        ]
         for pool in pools_id:
-            amount_deeper = waterdepth.iloc[pool,0] - centre_depth[0]
+            amount_deeper = waterdepth.iloc[pool, 0] - centre_depth[0]
             waterdepth.iloc[pool] -= amount_deeper
 
-        #waterdepth[waterdepth > centre_depth[0]] = centre_depth[0]
+        # waterdepth[waterdepth > centre_depth[0]] = centre_depth[0]
 
         # Compute 2D volume as sum of area times depth
         self._fm_total_volume = np.array(
             np.nansum(
-                area_matrix[wet_not_plas_mask] * waterdepth[wet_not_plas_mask],
-                axis=0))
+                area_matrix[wet_not_plas_mask] * waterdepth[wet_not_plas_mask], axis=0
+            )
+        )
         self._fm_flow_volume = np.array(
-            np.nansum(
-                area_matrix[flow_mask] * waterdepth[flow_mask],
-                axis=0))
+            np.nansum(area_matrix[flow_mask] * waterdepth[flow_mask], axis=0)
+        )
 
         # For roughness we will need the original z-levels,
         # since geometry z will change below
@@ -255,26 +274,27 @@ class CrossSection(FM2ProfBase):
         self._fm_flow_area = self._fm_flow_area[mono_mask]
 
         # Compute geometry above z0 - Water level dependent calculation
-        self.set_logger_message('Computing cross-section from water levels')
+        self.set_logger_message("Computing cross-section from water levels")
         self._compute_css_above_z0(centre_level)
 
         # Compute geometry below z0 - Water level independent calculation
-        self.set_logger_message('Computing cross-section from bed levels')
+        self.set_logger_message("Computing cross-section from bed levels")
         self._extend_css_below_z0(
             centre_level,
             centre_depth,
             waterlevel,
             bedlevel_matrix,
             area_matrix,
-            wet_not_plas_mask.iloc[:,0].values)
+            wet_not_plas_mask.iloc[:, 0].values,
+        )
 
         # Compute 1D volume as integral of width with respect to z times length
         self._css_total_volume = np.append(
-            [0],
-            cumtrapz(self._css_total_width, self._css_z)*self.length)
+            [0], cumtrapz(self._css_total_width, self._css_z) * self.length
+        )
         self._css_flow_volume = np.append(
-            [0],
-            cumtrapz(self._css_flow_width, self._css_z)*self.length)
+            [0], cumtrapz(self._css_flow_width, self._css_z) * self.length
+        )
 
         # If sd correction is run, these attributes will be updated.
         self._css_total_volume_corrected = self._css_total_volume
@@ -282,12 +302,12 @@ class CrossSection(FM2ProfBase):
 
         # convert to float64 array for uniformity
         # (apparently entries can be float32)
-        self._css_z = np.array(self._css_z, dtype=np.dtype('float64'))
+        self._css_z = np.array(self._css_z, dtype=np.dtype("float64"))
 
-        fm_data['islake'] = plassen_mask
+        fm_data["islake"] = plassen_mask
 
         # generate all mask points for the given cross_section
-        #self.set_mask_output_list(fm_data, plassen_mask)
+        # self.set_mask_output_list(fm_data, plassen_mask)
 
     def check_requirements(self):
         """
@@ -308,9 +328,9 @@ class CrossSection(FM2ProfBase):
         self._check_total_width_greater_than_flow_width()
 
         # Check if section widths combined are not smaller than flow width
-        #self._check_section_widths_greater_than_flow_width()
+        # self._check_section_widths_greater_than_flow_width()
 
-    def calculate_correction(self, transition_height:float) -> None:
+    def calculate_correction(self, transition_height: float) -> None:
         """
         This method computes a volume correction that cannot be captured within the
         constraints of 1D cross-sectional geometry, which forces an increasing width
@@ -328,29 +348,29 @@ class CrossSection(FM2ProfBase):
         - The crest level of the summerdike
         - The total volume behind the summerdike
         - The total volume behind the summerdike
-        - The :ref:`transition height <parameter_sdtransitionheight>` 
-          over which the volumes are added to the geometry. This variable is set globally. 
+        - The :ref:`transition height <parameter_sdtransitionheight>`
+          over which the volumes are added to the geometry. This variable is set globally.
 
         We refer to the SOBEK technical manual for details on the implementation.
 
         The algorithm works as follows:
 
         1. The initial attributes (crest and volumes) are set and outputted (in debug mode)
-        2. Optimise the attributes by minimising the cost function. For the cost function we 
-           use the squared relative error. The parameter :ref:`SDOptimisationMethod<parameter_sdoptimisationmethod>` 
-           is used to determine which output variables are used to compute the error. 
+        2. Optimise the attributes by minimising the cost function. For the cost function we
+           use the squared relative error. The parameter :ref:`SDOptimisationMethod<parameter_sdoptimisationmethod>`
+           is used to determine which output variables are used to compute the error.
         3. Add the extra volume to the css volume given the water level (see note below)
 
         .. note::
-            In SOBEK, the extra volume is released following a polynomial function. In |project|, we approximate 
+            In SOBEK, the extra volume is released following a polynomial function. In |project|, we approximate
             this with the following logistic function:
 
             :math:`C(h_k)=\Xi(1+e^{\log(\delta)\\tau^{-1}(h_k-(\gamma+\\tau/2))})^{-1}`
 
-            where :math:`\Xi` is the volume correction (m3/s), :math:`\\tau` is the transition height, 
-            :math:`\delta` is an accuracy parameter, :math:`\gamma` is the crest level, and :math:`C(h_k)` 
-            is the added volume given water level :math:`h_k`. The default value of :math:`\delta` is 
-            0.00001, and not configurable. 
+            where :math:`\Xi` is the volume correction (m3/s), :math:`\\tau` is the transition height,
+            :math:`\delta` is an accuracy parameter, :math:`\gamma` is the crest level, and :math:`C(h_k)`
+            is the added volume given water level :math:`h_k`. The default value of :math:`\delta` is
+            0.00001, and not configurable.
 
         """
 
@@ -363,45 +383,63 @@ class CrossSection(FM2ProfBase):
         initial_flow_volume = np.abs(initial_flow_error[-1])
 
         self.set_logger_message(
-            "Initial crest: {:.4f} m".format(initial_crest), level='debug')
+            "Initial crest: {:.4f} m".format(initial_crest), level="debug"
+        )
         self.set_logger_message(
-            "Initial extra total area: {:.4f} m2".format(initial_total_volume/self.length), level='debug')
+            "Initial extra total area: {:.4f} m2".format(
+                initial_total_volume / self.length
+            ),
+            level="debug",
+        )
         self.set_logger_message(
-            "Initial extra flow area: {:.4f} m2".format(initial_flow_volume/self.length), level='debug')
+            "Initial extra flow area: {:.4f} m2".format(
+                initial_flow_volume / self.length
+            ),
+            level="debug",
+        )
 
         # Optimise attributes
-        opt = self._optimize_sd_storage(initial_crest=initial_crest,
-                                        initial_total_volume=initial_total_volume,
-                                        initial_flow_volume=initial_flow_volume,
-                                        )
+        opt = self._optimize_sd_storage(
+            initial_crest=initial_crest,
+            initial_total_volume=initial_total_volume,
+            initial_flow_volume=initial_flow_volume,
+        )
 
         # Unpack optimisation results
         transition_height = self.get_parameter(self.__cs_parameter_transitionheight_sd)
-        crest_level = opt.get('crest_level')
-        extra_total_volume = opt.get('extra_total_volume')
-        extra_flow_volume = opt.get('extra_flow_volume')
+        crest_level = opt.get("crest_level")
+        extra_total_volume = opt.get("extra_total_volume")
+        extra_flow_volume = opt.get("extra_flow_volume")
 
         self.set_logger_message(
-            "final costs: {:.2f}".format(opt.get('final_cost')), level='debug')
+            "final costs: {:.2f}".format(opt.get("final_cost")), level="debug"
+        )
         self.set_logger_message(
-            "Optimizer msg: {}".format(opt.get('message')), level='debug')
+            "Optimizer msg: {}".format(opt.get("message")), level="debug"
+        )
         self.set_logger_message(
-            "Final crest: {:.4f} m".format(crest_level), level='debug')
+            "Final crest: {:.4f} m".format(crest_level), level="debug"
+        )
         self.set_logger_message(
-            "Final total area: {:.4f} m2".format(extra_total_volume/self.length), level='debug')
+            "Final total area: {:.4f} m2".format(extra_total_volume / self.length),
+            level="debug",
+        )
         self.set_logger_message(
-            "Final flow area: {:.4f} m2".format(extra_flow_volume/self.length), level='debug')
+            "Final flow area: {:.4f} m2".format(extra_flow_volume / self.length),
+            level="debug",
+        )
 
         extra_area_percentage = self.__get_extra_total_area(
-            self._css_z,
-            crest_level,
-            transition_height)
+            self._css_z, crest_level, transition_height
+        )
 
         # Write to attributes
         self._css_total_volume_corrected = (
-            self._css_total_volume + extra_area_percentage * extra_total_volume)
+            self._css_total_volume + extra_area_percentage * extra_total_volume
+        )
         self._css_flow_volume_corrected = (
-            self._css_flow_volume + extra_area_percentage * extra_flow_volume)
+            self._css_flow_volume + extra_area_percentage * extra_flow_volume
+        )
         self.crest_level = crest_level
         self.transition_height = transition_height
         self.extra_total_volume = extra_total_volume
@@ -420,25 +458,30 @@ class CrossSection(FM2ProfBase):
         """
 
         # Compute roughness tabels
-        self.set_logger_message('Building roughness table', 'debug')
+        self.set_logger_message("Building roughness table", "debug")
         self._build_roughness_tables()
         # Compute roughness widths
-        self.set_logger_message('Computing section widths', 'debug')
+        self.set_logger_message("Computing section widths", "debug")
         self._compute_section_widths()
         # Compute floodplain base level
-        self.set_logger_message('Computing base level', 'debug')
+        self.set_logger_message("Computing base level", "debug")
         self._compute_floodplain_base()
         # done
 
     def get_number_of_faces(self) -> int:
-        """ use this method to return the number of 2D faces within control volume """
-        return len(self._fm_data.get('x'))
+        """use this method to return the number of 2D faces within control volume"""
+        return len(self._fm_data.get("x"))
 
     def get_number_of_vertices(self) -> int:
-        """ Use this method to return the current number of geometry vertices """
+        """Use this method to return the current number of geometry vertices"""
         return len(self._css_total_width)
 
-    def reduce_points(self, count_after:int=20, method:str='visvalingam_whyatt', verbose:bool=True) -> None:
+    def reduce_points(
+        self,
+        count_after: int = 20,
+        method: str = "visvalingam_whyatt",
+        verbose: bool = True,
+    ) -> None:
         """
         The cross-section geometry generated by |project| contains one point per output
         timestep in the 2D map file. This resolution is often too high given the
@@ -466,36 +509,39 @@ class CrossSection(FM2ProfBase):
 
         n_before_reduction = self.get_number_of_vertices()
 
-
         points = np.array(
             [
                 [self._css_z[i], self._css_total_width[i]]
-                for i in range(n_before_reduction)])
+                for i in range(n_before_reduction)
+            ]
+        )
 
         # The number of points is equal to n, it cannot be further reduced
         reduced_index = np.array([True] * n_before_reduction)
 
         if n_before_reduction > count_after:
             # default is the same value as it came
-            if method.lower() == 'visvalingam_whyatt':
+            if method.lower() == "visvalingam_whyatt":
                 try:
                     simplifier = PS.VWSimplifier(points)
                     reduced_index = simplifier.from_number_index(count_after)
                 except Exception as e:
                     self.set_logger_message(
-                        'Exception thrown while using polysimplify: ' +
-                        '{}'.format(str(e)), 'error')
+                        "Exception thrown while using polysimplify: "
+                        + "{}".format(str(e)),
+                        "error",
+                    )
 
         # Write to attributes
         self.z = self._css_z[reduced_index]
         self.total_width = self._css_total_width[reduced_index]
         self.flow_width = self._css_flow_width[reduced_index]
 
-
         self.set_logger_message(
-            'Cross-section reduced ' +
-            'from {} '.format(n_before_reduction) +
-            'to {} points'.format(len(self.total_width)))
+            "Cross-section reduced "
+            + "from {} ".format(n_before_reduction)
+            + "to {} points".format(len(self.total_width))
+        )
 
         self._css_is_reduced = True
 
@@ -513,21 +559,21 @@ class CrossSection(FM2ProfBase):
         fm_data = self._fm_data
 
         # Properties keys
-        cross_section_id_key = 'cross_section_id'
-        cross_section_region_key = 'region'
-        is_lake_key = 'is_lake'
-        bedlevel_key = 'bedlevel'
-        section_key = 'section'
-        region_key = 'region'
+        cross_section_id_key = "cross_section_id"
+        cross_section_region_key = "region"
+        is_lake_key = "is_lake"
+        bedlevel_key = "bedlevel"
+        section_key = "section"
+        region_key = "region"
 
         try:
             # Normalize np arrays to list for correct access
-            x_coords = fm_data.get('x').tolist()
-            y_coords = fm_data.get('y').tolist()
-            region_list = fm_data.get('region').tolist()
-            section_list = fm_data.get('section').tolist()
-            bedlevel_list = fm_data.get('bedlevel').tolist()
-            is_lake_mask_list = fm_data.get('islake').tolist()
+            x_coords = fm_data.get("x").tolist()
+            y_coords = fm_data.get("y").tolist()
+            region_list = fm_data.get("region").tolist()
+            section_list = fm_data.get("section").tolist()
+            bedlevel_list = fm_data.get("bedlevel").tolist()
+            is_lake_mask_list = fm_data.get("islake").tolist()
 
             # Assume same length for x and y coords.
             for i in range(len(x_coords)):
@@ -537,32 +583,34 @@ class CrossSection(FM2ProfBase):
                     cross_section_region_key: region_list[i],
                     bedlevel_key: bedlevel_list[i],
                     region_key: region_list[i],
-                    section_key: section_list[i]
+                    section_key: section_list[i],
                 }
                 mask_coords = (x_coords[i], y_coords[i])
                 # Create the actual geojson element.
                 output_mask = MaskOutputFile.create_mask_point(
-                    mask_coords,
-                    mask_properties)
+                    mask_coords, mask_properties
+                )
 
                 if output_mask.is_valid:
                     self.__output_face_list.append(output_mask)
-                    #self.set_logger_message(
+                    # self.set_logger_message(
                     #    'Added output mask at {} '.format(mask_coords) +
                     #    'for Cross Section {}.'.format(self.name),
                     #     level='debug')
                 else:
                     self.set_logger_message(
-                        'Invalid output mask at {} '.format(mask_coords) +
-                        'for Cross Section {}, not added. '.format(self.name) +
-                        'Reason {}'.format(output_mask.errors()),
-                        level='error')
+                        "Invalid output mask at {} ".format(mask_coords)
+                        + "for Cross Section {}, not added. ".format(self.name)
+                        + "Reason {}".format(output_mask.errors()),
+                        level="error",
+                    )
         except Exception as e_error:
             self.set_logger_message(
-                'Error setting output masks ' +
-                'for Cross Section {}. '.format(self.name) +
-                'Reason: {}'.format(str(e_error)),
-                level='error')
+                "Error setting output masks "
+                + "for Cross Section {}. ".format(self.name)
+                + "Reason: {}".format(str(e_error)),
+                level="error",
+            )
 
     def set_edge_output_list(self):
         """
@@ -578,47 +626,49 @@ class CrossSection(FM2ProfBase):
         fm_data = self._fm_data
 
         # Properties keys
-        cross_section_id_key = 'cross_section_id'
-        cross_section_region_key = 'region'
-        roughness_section_key = 'section'
+        cross_section_id_key = "cross_section_id"
+        cross_section_region_key = "region"
+        roughness_section_key = "section"
 
         try:
             # Normalize np arrays to list for correct access
-            x_coords = fm_data.get('edge_x').tolist()
-            y_coords = fm_data.get('edge_y').tolist()
-            section_list = fm_data.get('edge_section').tolist()
+            x_coords = fm_data.get("edge_x").tolist()
+            y_coords = fm_data.get("edge_y").tolist()
+            section_list = fm_data.get("edge_section").tolist()
             # Assume same length for x and y coords.
             for i in range(len(x_coords)):
                 mask_properties = {
                     cross_section_id_key: self.name,
-                    roughness_section_key: section_list[i]
+                    roughness_section_key: section_list[i],
                 }
                 mask_coords = (x_coords[i], y_coords[i])
                 # Create the actual geojson element.
                 output_mask = MaskOutputFile.create_mask_point(
-                    mask_coords,
-                    mask_properties)
+                    mask_coords, mask_properties
+                )
 
                 if output_mask.is_valid:
                     self.__output_edge_list.append(output_mask)
                 else:
                     self.set_logger_message(
-                        'Invalid output mask at {} '.format(mask_coords) +
-                        'for Cross Section {}, not added. '.format(self.name) +
-                        'Reason {}'.format(output_mask.errors()),
-                        level='error')
+                        "Invalid output mask at {} ".format(mask_coords)
+                        + "for Cross Section {}, not added. ".format(self.name)
+                        + "Reason {}".format(output_mask.errors()),
+                        level="error",
+                    )
         except Exception as e_error:
             self.set_logger_message(
-                'Error setting output masks ' +
-                'for Cross Section {}. '.format(self.name) +
-                'Reason: {}'.format(str(e_error)),
-                level='error')
+                "Error setting output masks "
+                + "for Cross Section {}. ".format(self.name)
+                + "Reason: {}".format(str(e_error)),
+                level="error",
+            )
 
     def interpolate_roughness_table(self, tablename, z_values):
         """
         Interpolates the roughness table to z values
         """
-        table_name_list = ['main', 'floodplain1']
+        table_name_list = ["main", "floodplain1"]
 
         if tablename not in table_name_list:
             raise KeyError("tablename not in list {}".format(table_name_list))
@@ -632,14 +682,14 @@ class CrossSection(FM2ProfBase):
         mask = np.array([True] * len(self._css_z))
 
         # Remove multiple 0s in the total width
-        index_of_first_nonzero = max(1, np.argwhere(self._css_total_width!=0)[0][0])
+        index_of_first_nonzero = max(1, np.argwhere(self._css_total_width != 0)[0][0])
 
         return index_of_first_nonzero
 
-        #self._css_z = self._return_first_item_and_after_index(self._css_z, index_of_first_nonzero)
-        #self._css_flow_width = self._return_first_item_and_after_index(self._css_flow_width, index_of_first_nonzero)
-        #self._css_total_width = self._return_first_item_and_after_index(self._css_total_width, index_of_first_nonzero)
-        #self.set_logger_message(f'Removed {index_of_first_nonzero-1} duplicate zero widths', 'debug')
+        # self._css_z = self._return_first_item_and_after_index(self._css_z, index_of_first_nonzero)
+        # self._css_flow_width = self._return_first_item_and_after_index(self._css_flow_width, index_of_first_nonzero)
+        # self._css_total_width = self._return_first_item_and_after_index(self._css_total_width, index_of_first_nonzero)
+        # self.set_logger_message(f'Removed {index_of_first_nonzero-1} duplicate zero widths', 'debug')
 
     @staticmethod
     def _return_first_item_and_after_index(listin, after_index):
@@ -660,25 +710,24 @@ class CrossSection(FM2ProfBase):
         Cost function, combines total volume error and flow volume error
         """
         (crest_level, extra_total_volume, extra_flow_volume) = opt_in
-        transition_height = self.get_parameter(
-            self.__cs_parameter_transitionheight_sd)
+        transition_height = self.get_parameter(self.__cs_parameter_transitionheight_sd)
 
         predicted_total_volume = (
-            self._css_total_volume +
-            self.__get_extra_total_area(
-                self._css_z,
-                crest_level,
-                transition_height) * extra_total_volume)
+            self._css_total_volume
+            + self.__get_extra_total_area(self._css_z, crest_level, transition_height)
+            * extra_total_volume
+        )
 
         predicted_flow_volume = (
-            self._css_flow_volume +
-            self.__get_extra_total_area(
-                self._css_z,
-                crest_level,
-                transition_height) * extra_flow_volume)
+            self._css_flow_volume
+            + self.__get_extra_total_area(self._css_z, crest_level, transition_height)
+            * extra_flow_volume
+        )
 
-        return self.__return_volume_error(predicted_total_volume + predicted_flow_volume,
-                                          self._fm_total_volume + self._fm_flow_volume)
+        return self.__return_volume_error(
+            predicted_total_volume + predicted_flow_volume,
+            self._fm_total_volume + self._fm_flow_volume,
+        )
 
     def _optimisation_func(self, opt_in, *args):
         """
@@ -692,7 +741,7 @@ class CrossSection(FM2ProfBase):
         :param opt_in: tuple
         :return:
         """
-        if args[0][0] == 'both':
+        if args[0][0] == "both":
             (crest_level, extra_volume) = opt_in
 
         else:
@@ -700,18 +749,18 @@ class CrossSection(FM2ProfBase):
             crest_level = args[0][2]
 
         volume = args[0][1]
-        transition_height = self.get_parameter(
-            self.__cs_parameter_transitionheight_sd)
+        transition_height = self.get_parameter(self.__cs_parameter_transitionheight_sd)
 
         predicted_volume = (
-            volume +
-            self.__get_extra_total_area(
-                self._css_z,
-                crest_level,
-                transition_height) * extra_volume)
+            volume
+            + self.__get_extra_total_area(self._css_z, crest_level, transition_height)
+            * extra_volume
+        )
         return self.__return_volume_error(predicted_volume, self._fm_total_volume)
 
-    def _optimize_sd_storage(self, initial_crest, initial_total_volume, initial_flow_volume) -> dict:
+    def _optimize_sd_storage(
+        self, initial_crest, initial_total_volume, initial_flow_volume
+    ) -> dict:
         """
         Optimised the crest level and volumes
 
@@ -719,100 +768,126 @@ class CrossSection(FM2ProfBase):
             Dictionary with optimised values, final cost and optimisation message
         """
         # Default option
-        sdoptimisationmethod = self.get_parameter(self.__cs_parameter_sdoptimisationmethod)
+        sdoptimisationmethod = self.get_parameter(
+            self.__cs_parameter_sdoptimisationmethod
+        )
         if sdoptimisationmethod not in [0, 1, 2]:
             # this should be handled in inifile instead
-            self.set_logger_message('sdoptimisationmethod is {} but should be 0, 1, or 2. Defaulting to 0'.format(sdoptimisationmethod),
-            level='warning')
+            self.set_logger_message(
+                "sdoptimisationmethod is {} but should be 0, 1, or 2. Defaulting to 0".format(
+                    sdoptimisationmethod
+                ),
+                level="warning",
+            )
             sdoptimisationmethod = 0
 
         if sdoptimisationmethod == 0:
-            self.set_logger_message('Optimising SD on total volume', level='debug')
+            self.set_logger_message("Optimising SD on total volume", level="debug")
 
             # Optimise crest on total volume
-            opt = so.minimize(self._optimisation_func,
-                            (initial_crest, initial_total_volume),
-                            args=['both', self._css_total_volume],
-                            method='Nelder-Mead',
-                            tol=1e-6)
+            opt = so.minimize(
+                self._optimisation_func,
+                (initial_crest, initial_total_volume),
+                args=["both", self._css_total_volume],
+                method="Nelder-Mead",
+                tol=1e-6,
+            )
 
-
-            crest_level = opt['x'][0]
-            extra_total_volume = np.max([opt['x'][1], 0])
+            crest_level = opt["x"][0]
+            extra_total_volume = np.max([opt["x"][1], 0])
 
             # Optimise flow volume
-            opt2 = so.minimize(self._optimisation_func,
-                            (initial_flow_volume),
-                            args=['notboth', self._css_flow_volume, crest_level],
-                            method='Nelder-Mead',
-                            tol=1e-6)
-            extra_flow_volume = np.min([np.max([opt2['x'][0], 0]), extra_total_volume])
+            opt2 = so.minimize(
+                self._optimisation_func,
+                (initial_flow_volume),
+                args=["notboth", self._css_flow_volume, crest_level],
+                method="Nelder-Mead",
+                tol=1e-6,
+            )
+            extra_flow_volume = np.min([np.max([opt2["x"][0], 0]), extra_total_volume])
 
         elif self.get_parameter(self.__cs_parameter_sdoptimisationmethod) == 1:
-            self.set_logger_message('Optimising SD on flow volume', level='debug')
+            self.set_logger_message("Optimising SD on flow volume", level="debug")
 
             # Optimise crest on flow volume
-            opt = so.minimize(self._optimisation_func,
-                            (initial_crest, initial_total_volume),
-                            args=['both', self._css_flow_volume],
-                            method='Nelder-Mead',
-                            tol=1e-6)
-            crest_level = opt['x'][0]
-            extra_flow_volume = np.max([opt['x'][1], 0])
+            opt = so.minimize(
+                self._optimisation_func,
+                (initial_crest, initial_total_volume),
+                args=["both", self._css_flow_volume],
+                method="Nelder-Mead",
+                tol=1e-6,
+            )
+            crest_level = opt["x"][0]
+            extra_flow_volume = np.max([opt["x"][1], 0])
 
             # Optimise total volume
-            opt2= so.minimize(self._optimisation_func,
-                            (initial_flow_volume),
-                            args=['notboth', self._css_total_volume, crest_level],
-                            method='Nelder-Mead',
-                            tol=1e-6)
-            extra_total_volume = np.max([np.max([opt2['x'][0], 0]), extra_flow_volume])
+            opt2 = so.minimize(
+                self._optimisation_func,
+                (initial_flow_volume),
+                args=["notboth", self._css_total_volume, crest_level],
+                method="Nelder-Mead",
+                tol=1e-6,
+            )
+            extra_total_volume = np.max([np.max([opt2["x"][0], 0]), extra_flow_volume])
 
         elif self.get_parameter(self.__cs_parameter_sdoptimisationmethod) == 2:
-            self.set_logger_message('Optimising SD on both flow and total volumes', level='debug')
-            opt = so.minimize(self._combined_optimisation_func,
-                            (initial_crest, initial_total_volume, initial_flow_volume),
-                            method='Nelder-Mead',
-                            tol=1e-6)
+            self.set_logger_message(
+                "Optimising SD on both flow and total volumes", level="debug"
+            )
+            opt = so.minimize(
+                self._combined_optimisation_func,
+                (initial_crest, initial_total_volume, initial_flow_volume),
+                method="Nelder-Mead",
+                tol=1e-6,
+            )
 
-            crest_level = opt['x'][0]
-            extra_total_volume = np.max([opt['x'][1], 0])
-            extra_flow_volume = np.min([np.max([opt['x'][2], 0]), extra_total_volume])
+            crest_level = opt["x"][0]
+            extra_total_volume = np.max([opt["x"][1], 0])
+            extra_flow_volume = np.min([np.max([opt["x"][2], 0]), extra_total_volume])
 
-        return {'crest_level': crest_level,
-                'extra_total_volume': extra_total_volume,
-                'extra_flow_volume': extra_flow_volume,
-                'final_cost': opt['fun'],
-                'message': opt['message']}
+        return {
+            "crest_level": crest_level,
+            "extra_total_volume": extra_total_volume,
+            "extra_flow_volume": extra_flow_volume,
+            "final_cost": opt["fun"],
+            "message": opt["message"],
+        }
 
     def _check_increasing_order(self, list_points):
-        """ runs """
-        for i in range(1,len(list_points)):
-            if list_points[i] <= list_points[i-1]:
-                list_points[i] = list_points[i-1] + 0.001
+        """runs"""
+        for i in range(1, len(list_points)):
+            if list_points[i] <= list_points[i - 1]:
+                list_points[i] = list_points[i - 1] + 0.001
         return list_points
 
     def _build_roughness_tables(self):
 
         # Find roughness tables for each section
-        chezy_fm = self._fm_data.get('chezy').iloc[:, self.get_parameter(self.__cs_parameter_skip_maps):]
+        chezy_fm = self._fm_data.get("chezy").iloc[
+            :, self.get_parameter(self.__cs_parameter_skip_maps) :
+        ]
 
-        sections = np.unique(self._fm_data.get('edge_section'))
+        sections = np.unique(self._fm_data.get("edge_section"))
 
         for section in sections:
-            chezy_section = chezy_fm[self._fm_data['edge_section']==section]
+            chezy_section = chezy_fm[self._fm_data["edge_section"] == section]
             if self.get_parameter(self.__cs_parameter_Frictionweighing) == 0:
                 friction = self._friction_weighing_simple(chezy_section, section)
             elif self.get_parameter(self.__cs_parameter_Frictionweighing) == 1:
                 friction = self._friction_weighing_area(chezy_section, section)
             else:
-                raise ValueError("unknown option for roughness weighing: {}".format(self.get_parameter(self.__cs_parameter_Frictionweighing)))
+                raise ValueError(
+                    "unknown option for roughness weighing: {}".format(
+                        self.get_parameter(self.__cs_parameter_Frictionweighing)
+                    )
+                )
 
-            self.friction_tables[self._section_map[str(section)]] = FrictionTable(level=self._css_z_roughness,
-                                                              friction=friction)
+            self.friction_tables[self._section_map[str(section)]] = FrictionTable(
+                level=self._css_z_roughness, friction=friction
+            )
 
     def _friction_weighing_simple(self, link_chezy, section):
-        """ Simple mean, no weight """
+        """Simple mean, no weight"""
         # Remove chezy where zero
         link_chezy = link_chezy.replace(0, np.NaN)
         output = link_chezy.mean(axis=0).replace(np.NaN, 0)
@@ -831,11 +906,11 @@ class CrossSection(FM2ProfBase):
         # Remove chezy where zero
         link_chezy = link_chezy.replace(0, np.NaN)
         # efs are the two faces the edge connects to
-        efs = self._fm_data['edge_faces'][self._fm_data['edge_section']==section]
+        efs = self._fm_data["edge_faces"][self._fm_data["edge_section"] == section]
         link_area = []
         for ef in efs:
             # compute the mean area for the two connecting faces
-            link_area.append(self._fm_data.get('area_full').reindex(ef).mean())
+            link_area.append(self._fm_data.get("area_full").reindex(ef).mean())
 
         # the weight of one link is defined as the sum of the linked areas
         link_weight = link_area / np.sum(link_area)
@@ -852,16 +927,25 @@ class CrossSection(FM2ProfBase):
         If the sum of the section widths is smaller than the flow width, the
         width is increase proportionally
         """
-        total_area = sum(self._fm_data['area'])
-        unassigned_area = sum(self._fm_data['area'][self._fm_data['section']==-999])
+        total_area = sum(self._fm_data["area"])
+        unassigned_area = sum(self._fm_data["area"][self._fm_data["section"] == -999])
         if unassigned_area > 0:
-            self.set_logger_message(f"{unassigned_area} m2 was not assigned to any section in input files, and is added to the main section", 'warning')
+            self.set_logger_message(
+                f"{unassigned_area} m2 was not assigned to any section in input files, and is added to the main section",
+                "warning",
+            )
 
         for section in [1, 2, 3]:
             if section == 1:
-                section_area = (np.sum(self._fm_data['area'][self._fm_data['section']==section]) + unassigned_area)/self.length
+                section_area = (
+                    np.sum(self._fm_data["area"][self._fm_data["section"] == section])
+                    + unassigned_area
+                ) / self.length
             else:
-                section_area = np.sum(self._fm_data['area'][self._fm_data['section']==section])/self.length
+                section_area = (
+                    np.sum(self._fm_data["area"][self._fm_data["section"] == section])
+                    / self.length
+                )
             self.section_widths[self._section_map[str(section)]] = section_area
 
         # Finally, the sum of section width should be greater or equal to the flow width
@@ -873,29 +957,39 @@ class CrossSection(FM2ProfBase):
         will be set at least 0.5 meter below the crest of the
         embankment, and otherwise at the average hight of the floodplain
         """
-        tolerance = self.get_inifile().get_parameter('sdfloodplainbase')
+        tolerance = self.get_inifile().get_parameter("sdfloodplainbase")
         # Mean bed level in section 2 (floodplain)
-        floodplain_mask = self._fm_data.get('section') == 2
+        floodplain_mask = self._fm_data.get("section") == 2
         if floodplain_mask.sum():
-            mean_floodplain_elevation = np.nanmean(self._fm_data['bedlevel'][floodplain_mask])
+            mean_floodplain_elevation = np.nanmean(
+                self._fm_data["bedlevel"][floodplain_mask]
+            )
 
             # Tolerance. Base level must at least be some below the crest to prevent
             # numerical issues
 
             if (self.crest_level - tolerance) < mean_floodplain_elevation:
                 self.floodplain_base = self.crest_level - tolerance
-                self.set_logger_message(f'Mean floodpl. elev. ({mean_floodplain_elevation:.2f} m)'+
-                                        f'higher than crest level ({self.crest_level:.2f}) + '+
-                                        f'tolerance ({tolerance} m)', 'warning')
+                self.set_logger_message(
+                    f"Mean floodpl. elev. ({mean_floodplain_elevation:.2f} m)"
+                    + f"higher than crest level ({self.crest_level:.2f}) + "
+                    + f"tolerance ({tolerance} m)",
+                    "warning",
+                )
             else:
                 self.floodplain_base = mean_floodplain_elevation
-                self.set_logger_message(f'Floodplain base level set to {mean_floodplain_elevation:.2f} m', 'debug')
+                self.set_logger_message(
+                    f"Floodplain base level set to {mean_floodplain_elevation:.2f} m",
+                    "debug",
+                )
         else:
             self.floodplain_base = self.crest_level - tolerance
-            self.set_logger_message(f'No Floodplain found, floodplain defaults to {self.crest_level - tolerance}')
+            self.set_logger_message(
+                f"No Floodplain found, floodplain defaults to {self.crest_level - tolerance}"
+            )
 
     def _calc_chezy(self, depth, manning):
-        return depth**(1/float(6)) / manning
+        return depth ** (1 / float(6)) / manning
 
     def _identify_lakes(self, waterdepth):
         """
@@ -932,21 +1026,22 @@ class CrossSection(FM2ProfBase):
 
         # find all lakes
         lake_mask = (
-            waterdepth.T.iloc[
-                self.get_parameter(
-                    self.__cs_parameter_plassen_timesteps)] > 0) & \
-            (np.abs(
+            waterdepth.T.iloc[self.get_parameter(self.__cs_parameter_plassen_timesteps)]
+            > 0
+        ) & (
+            np.abs(
                 waterdepth.T.iloc[
-                    self.get_parameter(
-                        self.__cs_parameter_plassen_timesteps
-            )] - waterdepth.T.iloc[0]) <= 0.01)
+                    self.get_parameter(self.__cs_parameter_plassen_timesteps)
+                ]
+                - waterdepth.T.iloc[0]
+            )
+            <= 0.01
+        )
 
         self.plassen_mask = lake_mask
 
         # Plassen_mask_time is to determine at whata timestep the lake starts rising again.
-        plassen_mask_time = np.zeros(
-            (len(waterdepth.T), len(lake_mask)),
-            dtype=bool)
+        plassen_mask_time = np.zeros((len(waterdepth.T), len(lake_mask)), dtype=bool)
 
         # At t=0, all lakes are inactive
         plassen_mask_time[0, :] = lake_mask
@@ -955,25 +1050,20 @@ class CrossSection(FM2ProfBase):
         # when to unmask a plassen cell
         for i, diff in enumerate(waterdepth_diff.T):
             final_mask = reduce(
-                np.logical_and,
-                [
-                    (diff <= 0.001),
-                    (plassen_mask_time[i] == True)])
+                np.logical_and, [(diff <= 0.001), (plassen_mask_time[i] == True)]
+            )
             plassen_mask_time[i + 1, :] = final_mask
 
         plassen_mask_time = pd.DataFrame(plassen_mask_time).T
 
         # The depth of a lake is the waterdepth at t=0
         for i, depths in enumerate(waterdepth):
-            plassen_depth_correction[lake_mask, i] = \
-                -waterdepth.T.iloc[0][lake_mask]
+            plassen_depth_correction[lake_mask, i] = -waterdepth.T.iloc[0][lake_mask]
 
         # correct wet cells for plassen
         wet_not_plas_mask = reduce(
-            np.logical_and,
-            [
-                (wet_mask == True),
-                (plassen_mask_time == False)])
+            np.logical_and, [(wet_mask == True), (plassen_mask_time == False)]
+        )
 
         return lake_mask, wet_not_plas_mask, plassen_depth_correction
 
@@ -1001,13 +1091,14 @@ class CrossSection(FM2ProfBase):
         self._css_z[np.isnan(self._css_z)] = np.nanmin(self._css_z)
 
         # Compute widths
-        self._css_total_width = np.array(self._fm_wet_area)/self.length
-        self._css_flow_width = np.array(self._fm_flow_area)/self.length
+        self._css_total_width = np.array(self._fm_wet_area) / self.length
+        self._css_flow_width = np.array(self._fm_flow_area) / self.length
 
         # Flow width must increase at each z
-        for i in range(2, len(self._css_flow_width)+1):
+        for i in range(2, len(self._css_flow_width) + 1):
             self._css_flow_width[-i] = np.min(
-                [self._css_flow_width[-i], self._css_flow_width[-i+1]])
+                [self._css_flow_width[-i], self._css_flow_width[-i + 1]]
+            )
 
     def _distinguish_flow_from_storage_2(self, waterdepth, velocity):
         """
@@ -1026,18 +1117,21 @@ class CrossSection(FM2ProfBase):
         Returns:
             flow_mask (pandas Dataframe) with cell id for index and time in columns. True for flow, False for storage
         """
-        flow_mask = (waterdepth > 0) & \
-                    (velocity > self.get_parameter(
-                        self.__cs_parameter_velocity_threshold)) & \
-                    (velocity > self.get_parameter(
-                        self.__cs_parameter_relative_threshold
-                     ) * np.mean(velocity))
+        flow_mask = (
+            (waterdepth > 0)
+            & (velocity > self.get_parameter(self.__cs_parameter_velocity_threshold))
+            & (
+                velocity
+                > self.get_parameter(self.__cs_parameter_relative_threshold)
+                * np.mean(velocity)
+            )
+        )
 
         # shallow flows should not be used for identifying storage
         # (cells with small velocities are uncorrectly seen as storage)
-        waterdepth_correction = (waterdepth > 0) & \
-            (waterdepth < self.get_parameter(
-                self.__cs_parameter_min_depth_storage))
+        waterdepth_correction = (waterdepth > 0) & (
+            waterdepth < self.get_parameter(self.__cs_parameter_min_depth_storage)
+        )
 
         # combine flow and depth mask to avoid assigning shallow flows
         flow_mask = flow_mask | waterdepth_correction
@@ -1061,31 +1155,36 @@ class CrossSection(FM2ProfBase):
         Returns:
             flow_mask (pandas Dataframe) with cell id for index and time in columns. True for flow, False for storage
         """
-        flow_mask = (waterdepth > 0) & \
-                    (velocity > self.get_parameter(
-                        self.__cs_parameter_velocity_threshold)) & \
-                    (velocity > self.get_parameter(
-                        self.__cs_parameter_relative_threshold
-                     ) * np.mean(velocity))
+        flow_mask = (
+            (waterdepth > 0)
+            & (velocity > self.get_parameter(self.__cs_parameter_velocity_threshold))
+            & (
+                velocity
+                > self.get_parameter(self.__cs_parameter_relative_threshold)
+                * np.mean(velocity)
+            )
+        )
 
         # shallow flows should not be used for identifying storage
         # (cells with small velocities are uncorrectly seen as storage)
-        waterdepth_correction = (waterdepth > 0) & \
-            (waterdepth < self.get_parameter(
-                self.__cs_parameter_min_depth_storage))
+        waterdepth_correction = (waterdepth > 0) & (
+            waterdepth < self.get_parameter(self.__cs_parameter_min_depth_storage)
+        )
 
         # combine flow and depth mask to avoid assigning shallow flows
-        #flow_mask = flow_mask | waterdepth_correction
+        # flow_mask = flow_mask | waterdepth_correction
 
         return flow_mask
 
     def _extend_css_below_z0(
-            self,
-            centre_level, centre_depth,
-            waterlevel,
-            bedlevel_matrix,
-            area_matrix,
-            wet_not_plas_mask) -> None:
+        self,
+        centre_level,
+        centre_depth,
+        waterlevel,
+        bedlevel_matrix,
+        area_matrix,
+        wet_not_plas_mask,
+    ) -> None:
         """
         This methods computeS for level (z) below the water level at the first 2D output (z0) the corresponding
         :term:`Total width` and :term:`Flow width`. This is done in the following way:
@@ -1115,10 +1214,12 @@ class CrossSection(FM2ProfBase):
                     _fm_total_volume
         """
 
-        bedlevel = self._fm_data.get('bedlevel').values
-        cell_area = self._fm_data.get('area').values
+        bedlevel = self._fm_data.get("bedlevel").values
+        cell_area = self._fm_data.get("area").values
         flow_area_at_z0 = self._fm_flow_area[0]
-        lowest_level_of_css = centre_level[0] - centre_depth[0]  # this is in fact the bed level at centre point
+        lowest_level_of_css = (
+            centre_level[0] - centre_depth[0]
+        )  # this is in fact the bed level at centre point
         centre_level_at_t0 = centre_level[0]
         waterlevel_at_t0 = waterlevel.values[:, 0]
         waterdepth_at_t0 = waterlevel_at_t0 - bedlevel
@@ -1126,31 +1227,53 @@ class CrossSection(FM2ProfBase):
         tolerance = -1e-3  # at last point, this is still considered wet.
 
         # Take steps from z0 downward to the lowest level
-        for dz in np.linspace(0, centre_level_at_t0-lowest_level_of_css, 10):
+        for dz in np.linspace(0, centre_level_at_t0 - lowest_level_of_css, 10):
             centre_level_at_dz = centre_level_at_t0 - dz
-            total_wet_area = np.nansum(cell_area[((waterdepth_at_t0 - dz) > tolerance) & wet_not_plas_mask])
+            total_wet_area = np.nansum(
+                cell_area[((waterdepth_at_t0 - dz) > tolerance) & wet_not_plas_mask]
+            )
 
             # Extension of flow/storage below z0
-            if not self.get_parameter('extrapolatestorage'):
+            if not self.get_parameter("extrapolatestorage"):
                 total_flow_area = total_wet_area
-            elif self.get_parameter('extrapolatestorage'):
+            elif self.get_parameter("extrapolatestorage"):
                 total_flow_area = np.min([total_wet_area, flow_area_at_z0])
 
-            self._css_z = CrossSection.__append_to_start(self._css_z, centre_level_at_dz)
-            self._css_total_width = CrossSection.__append_to_start(self._css_total_width, total_wet_area/self.length)
-            self._css_flow_width = CrossSection.__append_to_start(self._css_flow_width, total_flow_area/self.length)
-            self._fm_wet_area = CrossSection.__append_to_start(self._fm_wet_area, total_wet_area)
-            self._fm_flow_area = CrossSection.__append_to_start(self._fm_flow_area, total_flow_area)
+            self._css_z = CrossSection.__append_to_start(
+                self._css_z, centre_level_at_dz
+            )
+            self._css_total_width = CrossSection.__append_to_start(
+                self._css_total_width, total_wet_area / self.length
+            )
+            self._css_flow_width = CrossSection.__append_to_start(
+                self._css_flow_width, total_flow_area / self.length
+            )
+            self._fm_wet_area = CrossSection.__append_to_start(
+                self._fm_wet_area, total_wet_area
+            )
+            self._fm_flow_area = CrossSection.__append_to_start(
+                self._fm_flow_area, total_flow_area
+            )
             self._fm_flow_volume = np.insert(self._fm_flow_volume, 0, np.nan)
             self._fm_total_volume = np.insert(self._fm_total_volume, 0, np.nan)
 
     @staticmethod
-    def __get_extra_total_area(waterlevel, crest_level, transition_height:float, hysteresis=False):
+    def __get_extra_total_area(
+        waterlevel, crest_level, transition_height: float, hysteresis=False
+    ):
         """
         releases extra area dependent on waterlevel using a logistic (sigmoid) function
         """
         delta = 0.00001  # accuracy parameter
-        return 1/(1+np.e**(np.log(delta)/(transition_height)*(waterlevel-(crest_level+0.5*transition_height))))
+        return 1 / (
+            1
+            + np.e
+            ** (
+                np.log(delta)
+                / (transition_height)
+                * (waterlevel - (crest_level + 0.5 * transition_height))
+            )
+        )
 
     @staticmethod
     def __append_to_start(array, to_add):
@@ -1160,11 +1283,8 @@ class CrossSection(FM2ProfBase):
         return np.insert(array, 0, to_add)
 
     def __extend_css_with_constant_waterdepth(
-            self,
-            centre_level, centre_depth,
-            bedlevel_matrix,
-            area_matrix,
-            plassen_mask):
+        self, centre_level, centre_depth, bedlevel_matrix, area_matrix, plassen_mask
+    ):
         """
         Extends the cross-sectional information below the water level
         at the first timestep,
@@ -1175,17 +1295,28 @@ class CrossSection(FM2ProfBase):
         At each step, we sum the area of cells width bedlevels which
         would be submerged at that virtual water level.
         """
-        filter_by_depth_percentage = self.get_parameter(self.__cs_parameter_bedlevelcriterium) * 100
-        filter_value = FE.empirical_ppf([filter_by_depth_percentage], bedlevel_matrix.values.T[0])[0]
-        self.set_logger_message("Lowest {}% of bed levels are filtered (z<{:.4f}m)".format(filter_by_depth_percentage,
-                                                                                         filter_value),
-                                 level='debug')
+        filter_by_depth_percentage = (
+            self.get_parameter(self.__cs_parameter_bedlevelcriterium) * 100
+        )
+        filter_value = FE.empirical_ppf(
+            [filter_by_depth_percentage], bedlevel_matrix.values.T[0]
+        )[0]
+        self.set_logger_message(
+            "Lowest {}% of bed levels are filtered (z<{:.4f}m)".format(
+                filter_by_depth_percentage, filter_value
+            ),
+            level="debug",
+        )
         level_z0 = centre_level[0]
         bdata = bedlevel_matrix[~plassen_mask]
         bmask = (bdata < level_z0) & (bdata >= filter_value)
 
-        self.set_logger_message("Number of points below z0 after applying filter: {}".format(np.sum(bmask.values.T[0])),
-                                  level='debug')
+        self.set_logger_message(
+            "Number of points below z0 after applying filter: {}".format(
+                np.sum(bmask.values.T[0])
+            ),
+            level="debug",
+        )
 
         # Compute values at z0
         bedlevels_below_z0 = bdata[bmask]
@@ -1194,53 +1325,53 @@ class CrossSection(FM2ProfBase):
         total_area_at_z0 = self._fm_wet_area[0]
 
         for unique_level_below_z0 in reversed(
-                np.linspace(lowest_level_below_z0, level_z0, 10)):
+            np.linspace(lowest_level_below_z0, level_z0, 10)
+        ):
 
             # count area
             areas = area_matrix[bedlevels_below_z0 <= unique_level_below_z0]
 
             # Set area, such that the width computed from this area is equal or lower
             # than the minimum width from the flow-dependent level
-            area_at_unique_level = np.min([np.nansum(areas.values.T[-1]),
-                                           total_area_at_z0])
+            area_at_unique_level = np.min(
+                [np.nansum(areas.values.T[-1]), total_area_at_z0]
+            )
 
             # Extension of flow/storage below z0
             if self.get_parameter(self.__cs_parameter_storagemethod_wli) == 0:
                 flow_area_at_unique_level = area_at_unique_level
             elif self.get_parameter(self.__cs_parameter_storagemethod_wli) == 1:
-                flow_area_at_unique_level = np.min([area_at_unique_level, flow_area_at_z0])
+                flow_area_at_unique_level = np.min(
+                    [area_at_unique_level, flow_area_at_z0]
+                )
 
             # Insert values in existing arrays
             self._css_z = np.insert(self._css_z, 0, unique_level_below_z0)
             self._css_flow_width = np.insert(
-                self._css_flow_width,
-                0,
-                flow_area_at_unique_level/self.length)
+                self._css_flow_width, 0, flow_area_at_unique_level / self.length
+            )
             self._css_total_width = np.insert(
-                self._css_total_width,
-                0,
-                area_at_unique_level/self.length)
-            self._fm_wet_area = np.insert(
-                self._fm_wet_area,
-                0,
-                area_at_unique_level)
+                self._css_total_width, 0, area_at_unique_level / self.length
+            )
+            self._fm_wet_area = np.insert(self._fm_wet_area, 0, area_at_unique_level)
             self._fm_flow_area = np.insert(
-                self._fm_flow_area,
-                0,
-                flow_area_at_unique_level)
+                self._fm_flow_area, 0, flow_area_at_unique_level
+            )
             self._fm_flow_volume = np.insert(self._fm_flow_volume, 0, np.nan)
             self._fm_total_volume = np.insert(self._fm_total_volume, 0, np.nan)
 
     @staticmethod
-    def __return_volume_error(predicted, measured, gof='rmse'):
+    def __return_volume_error(predicted, measured, gof="rmse"):
         """
         Returns the squared relative error
         """
         non_nan_mask = ~np.isnan(predicted) & ~np.isnan(measured)
         predicted = predicted[non_nan_mask]
         measured = measured[non_nan_mask]
-        error = np.array(predicted - measured)/np.maximum(np.array(measured), np.ones(len(measured)))
-        return np.sum(error**2)
+        error = np.array(predicted - measured) / np.maximum(
+            np.array(measured), np.ones(len(measured))
+        )
+        return np.sum(error ** 2)
 
     @staticmethod
     def _check_monotonicity(arr, method=2):
@@ -1277,7 +1408,9 @@ class CrossSection(FM2ProfBase):
         """
         mask = self._css_flow_width > self._css_total_width
         self._css_flow_width[mask] = self._css_total_width[mask]
-        self.set_logger_message(f'Reduces flow widths at {sum(mask)} points to be same as total', 'debug')
+        self.set_logger_message(
+            f"Reduces flow widths at {sum(mask)} points to be same as total", "debug"
+        )
 
     def _check_section_widths_greater_than_flow_width(self):
         total_section_width = 0
@@ -1286,8 +1419,8 @@ class CrossSection(FM2ProfBase):
 
         dif = self.flow_width[-1] - total_section_width
         if dif > 0:
-            self.section_widths['main'] += dif
-            self.set_logger_message(f'Increased main section width by {dif}', 'warning')
+            self.section_widths["main"] += dif
+            self.set_logger_message(f"Increased main section width by {dif}", "warning")
 
     def get_parameter(self, key: str):
         return self.get_inifile().get_parameter(key)

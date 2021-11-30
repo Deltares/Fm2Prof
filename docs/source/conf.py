@@ -13,48 +13,51 @@
 # import os
 # import sys
 # sys.path.insert(0, os.path.abspath('.'))
-#from jupyter_sphinx_theme import *
-#init_theme()
+# from jupyter_sphinx_theme import *
+# init_theme()
 import json
 
 # -- Project information -----------------------------------------------------
 
-project = 'FM2PROF'
-copyright = '2020, Deltares'
-author = 'Koen Berends'
-contact = 'koen.berends@deltares.nl'
+project = "FM2PROF"
+copyright = "2020, Deltares"
+author = "Koen Berends"
+contact = "koen.berends@deltares.nl"
 
 # The full version, including alpha/beta/rc tags
 import fm2prof
 from fm2prof.IniFile import IniFile
+
 release = fm2prof.Project().__version__
 
-# To enable to inject project name in source 
+# To enable to inject project name in source
 rst_epilog = f"""
 .. |project| replace:: {project} 
 .. |release| replace:: {release}
 """
 
 for pname, ptype, phint, pvalue in IniFile().iter_parameters():
-    if pvalue=="": pvalue = "Undefined"
-    rst_epilog += f".. |default_{pname.lower()}| replace:: {pvalue}\n" 
-    rst_epilog += f".. |type_{pname.lower()}| replace:: {ptype}\n" 
-    rst_epilog += f".. |hint_{pname.lower()}| replace:: {phint}\n" 
+    if pvalue == "":
+        pvalue = "Undefined"
+    rst_epilog += f".. |default_{pname.lower()}| replace:: {pvalue}\n"
+    rst_epilog += f".. |type_{pname.lower()}| replace:: {ptype}\n"
+    rst_epilog += f".. |hint_{pname.lower()}| replace:: {phint}\n"
 
 # -- General configuration ---------------------------------------------------
 
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = ['sphinx.ext.autodoc', 
-              'sphinxcontrib.images',
-              'sphinx.ext.napoleon',  # to support google style docstrings,
-              'sphinx.ext.viewcode',
-              'sphinx.ext.mathjax'
+extensions = [
+    "sphinx.ext.autodoc",
+    "sphinxcontrib.images",
+    "sphinx.ext.napoleon",  # to support google style docstrings,
+    "sphinx.ext.viewcode",
+    "sphinx.ext.mathjax",
 ]
 
 # Add any paths that contain templates here, relative to this directory.
-templates_path = ['_templates']
+templates_path = ["_templates"]
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
@@ -68,13 +71,11 @@ exclude_patterns = []
 # a list of builtin themes.
 #
 
-#html_favicon = '_static/favicon.ico'
-html_logo = '_static/logo_deltares.png'
+# html_favicon = '_static/favicon.ico'
+html_logo = "_static/logo_deltares.png"
 html_favicon = "_static/favicon.ico"
-html_theme = 'sphinx_materialdesign_theme'
-html_sidebars = {
-   '**': ['globaltoc.html']
-}
+html_theme = "sphinx_materialdesign_theme"
+html_sidebars = {"**": ["globaltoc.html"]}
 html_theme_options = {
     # Specify a list of menu in Header.
     # Tuples forms:
@@ -88,64 +89,60 @@ html_theme_options = {
     # Specify the icon name.
     # For details see link.
     # https://material.io/icons/
-    'header_links' : [
-        ('Home', 'index', False, 'home'),
-        ("Deltares", "https://deltares.nl", True, 'launch'),
+    "header_links": [
+        ("Home", "index", False, "home"),
+        ("Deltares", "https://deltares.nl", True, "launch"),
     ],
-
     # Customize css colors.
     # For details see link.
     # https://getmdl.io/customize/index.html
     #
     # Values: amber, blue, brown, cyan deep_orange, deep_purple, green, grey, indigo, light_blue,
     #         light_green, lime, orange, pink, purple, red, teal, yellow(Default: indigo)
-    'primary_color': 'indigo',
+    "primary_color": "indigo",
     # Values: Same as primary_color. (Default: pink)
-    'accent_color': 'blue',
-
+    "accent_color": "blue",
     # Customize layout.
     # For details see link.
     # https://getmdl.io/components/index.html#layout-section
-    'fixed_drawer': True,
-    'fixed_header': True,
-    'header_waterfall': True,
-    'header_scroll': False,
-
+    "fixed_drawer": True,
+    "fixed_header": True,
+    "header_waterfall": True,
+    "header_scroll": False,
     # Render title in header.
     # Values: True, False (Default: False)
-    'show_header_title': False,
+    "show_header_title": False,
     # Render title in drawer.
     # Values: True, False (Default: True)
-    'show_drawer_title': True,
+    "show_drawer_title": True,
     # Render footer.
     # Values: True, False (Default: True)
-    'show_footer': True
+    "show_footer": True,
 }
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = ['_static']
+html_static_path = ["_static"]
 
 # -- Options for LaTeX output -------------------------------------------------
 
 latex_docclass = {
-   'howto': 'article',
-   'manual': 'deltares_report',
+    "howto": "article",
+    "manual": "deltares_report",
 }
 
-latex_additional_files = [
-'latex_additional_files/sphinx.sty']
+latex_additional_files = ["latex_additional_files/sphinx.sty"]
 
 
 latex_elements = {
-'papersize': 'a4paper',
-'tableofcontents': '' ,
-'fncychap': '',
-'geometry': '',
-'maketitle': '\\deltarestitle',
-'fontpkg': '',
-'preamble':r"""
+    "papersize": "a4paper",
+    "tableofcontents": "",
+    "fncychap": "",
+    "geometry": "",
+    "maketitle": "\\deltarestitle",
+    "fontpkg": "",
+    "preamble": r"""
 \fancypagestyle{normal}{\pagestyle{plain}}
 \partner{}
 \client{}
@@ -161,23 +158,26 @@ latex_elements = {
 \approvali{}
 \publisheri{}
 \organisationi{Deltares}
-"""+
-rf"""
+"""
+    + rf"""
 \subtitle{{Manual for version {release}}}
 \version{{{release}}}
 \versioni{{{release}}}
-"""
+""",
 }
 
+
 def setup(app):
-    app.add_css_file('custom.css')
+    app.add_css_file("custom.css")
+
 
 def generate_files_chapters():
-    with open('../../fm2prof/configurationfile_template.json', 'r') as f:
+    with open("../../fm2prof/configurationfile_template.json", "r") as f:
         data = json.load(f)
 
-        with open('chapters/technical_manual/files.rst', 'w') as f:
-            f.write(f"""Files
+        with open("chapters/technical_manual/files.rst", "w") as f:
+            f.write(
+                f"""Files
 ========
 
 Configuration file
@@ -186,24 +186,28 @@ Default settings
 
 .. code-block:: text
 
-""")
-            for line in fm2prof.Project().get_inifile()._print_configuration(data).splitlines():
+"""
+            )
+            for line in (
+                fm2prof.Project().get_inifile()._print_configuration(data).splitlines()
+            ):
                 f.write(f"\t{line}\n")
+
 
 def generate_fm_key_table():
     from fm2prof.Import import FMDataImporter
-    
 
-    with open('chapters/tables/dflow2d_keys.csv', 'w') as f:
+    with open("chapters/tables/dflow2d_keys.csv", "w") as f:
         f.write(f"{project} variable, Variable in dflow2d output\n")
         for key, value in FMDataImporter.dflow2d_face_keys.items():
             f.write(f"{key} (at face), {value}\n")
 
         for key, value in FMDataImporter.dflow2d_edge_keys.items():
             f.write(f"{key} (at flow link), {value}\n")
-    
+
         for key, value in FMDataImporter.dflow2d_result_keys.items():
             f.write(f"{key}, {value}\n")
+
 
 generate_files_chapters()
 generate_fm_key_table()

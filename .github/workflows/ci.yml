@@ -47,7 +47,7 @@ jobs:
         run: poetry run pytest --cov . --cov-report xml:coverage-reports/coverage-fm2prof-src.xml --junitxml=xunit-reports/xunit-result-fm2prof-src.xml
 
       - name: Autoformat code if the check fails
-        if: ${{ (matrix.os == 'ubuntu-18.04') && (matrix.python-version == 3.8) }}
+        if: ${{ (matrix.os == 'ubuntu-18.04') && (matrix.python-version == 3.7) }}
         run: |
           poetry run isort .
           poetry run black .
@@ -59,7 +59,7 @@ jobs:
 
       - name: SonarCloud Scan
         uses: SonarSource/sonarcloud-github-action@master
-        if: ${{ (matrix.os == 'ubuntu-18.04') && (matrix.python-version == 3.8) }}
+        if: ${{ (matrix.os == 'ubuntu-18.04') && (matrix.python-version == 3.7) }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}

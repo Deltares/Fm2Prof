@@ -1,13 +1,14 @@
-import unittest
-import pytest
-import sys
-import os
 import numbers
-from pathlib import Path
+import os
 import shutil
-from tests.TestUtils import TestUtils, skipwhenexternalsmissing
+import sys
+import unittest
+from pathlib import Path
 
-from fm2prof.Import import FmModelData, FMDataImporter
+import pytest
+
+from fm2prof.Import import FMDataImporter, FmModelData
+from tests.TestUtils import TestUtils, skipwhenexternalsmissing
 
 
 class Test_FMDataImporter:
