@@ -3,3 +3,4 @@
 **__pycache__**
 /tests/artifacts/**
 .devcontainer
+/docs/source/output/**
