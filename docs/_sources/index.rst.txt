@@ -13,6 +13,7 @@ Tables of content
     :caption: Table of Contents
 
     chapters/about
+    chapters/CHANGELOG
     chapters/user_manual/index
     chapters/technical_manual/index
 
