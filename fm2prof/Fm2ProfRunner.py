@@ -30,6 +30,7 @@ from fm2prof.Import import FMDataImporter, FmModelData, ImportInputFiles
 from fm2prof.IniFile import IniFile
 from fm2prof.MaskOutputFile import MaskOutputFile
 from fm2prof.RegionPolygonFile import RegionPolygonFile, SectionPolygonFile
+from fm2prof import __version__
 
 
 class Fm2ProfRunner(FM2ProfBase):
@@ -102,7 +103,7 @@ class Fm2ProfRunner(FM2ProfBase):
         self.set_logger_message(
             "=" * 80
             + "\n"
-            + f"FM2PROF version {self.__version__}\n\n"
+            + f"FM2PROF version {__version__}\n\n"
             + f"{self.__copyright__:>6}\n\n"
             + f"Authors: {self.__authors__:>6}\n"
             + f"Contact: {self.__contact__:>6}\n"
