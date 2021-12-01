@@ -33,8 +33,9 @@ jobs:
       - name: Install Dependencies
         run: poetry install
         if: steps.cache.outputs.cache-hit != 'true'
-      
-      - name: Build SPHINX docs
-        uses: ammaraskar/sphinx-action@master
+
+      - name: Deploy
+        uses: JamesIves/github-pages-deploy-action@4.1.7
         with:
-          docs-folder: "docs/"
+          branch: gh-pages # The branch the action should deploy to.
+          folder: ./docs/build # The folder the action should deploy.
