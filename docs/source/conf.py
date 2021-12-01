@@ -25,10 +25,10 @@ author = "Koen Berends"
 contact = "koen.berends@deltares.nl"
 
 # The full version, including alpha/beta/rc tags
-import fm2prof
+from fm2prof import __version__
 from fm2prof.IniFile import IniFile
 
-release = fm2prof.Project().__version__
+release = __version__
 
 # To enable to inject project name in source
 rst_epilog = f"""
