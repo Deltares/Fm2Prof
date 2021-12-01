@@ -210,4 +210,4 @@ def generate_fm_key_table():
 
 
 generate_files_chapters()
-# generate_fm_key_table()
+generate_fm_key_table()
