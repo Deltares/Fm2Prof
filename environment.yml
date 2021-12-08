@@ -19,6 +19,7 @@ dependencies:
   - sphinx_rtd_theme
   - colorama
   - click
+  - poetry
   - pip
   - pip:
       - geojson
