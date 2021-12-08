@@ -25,6 +25,7 @@ author = "Koen Berends"
 contact = "koen.berends@deltares.nl"
 
 # The full version, including alpha/beta/rc tags
+import fm2prof
 from fm2prof import __version__
 from fm2prof.IniFile import IniFile
 
@@ -210,4 +211,4 @@ def generate_fm_key_table():
 
 
 generate_files_chapters()
-generate_fm_key_table()
+# generate_fm_key_table()
