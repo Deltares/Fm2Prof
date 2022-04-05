@@ -1,18 +1,9 @@
-* Documentation *
+[![ci](https://github.com/Deltares/fm2prof/actions/workflows/ci.yml/badge.svg)](https://github.com/Deltares/fm2prof/actions/workflows/ci.yml)
+[![docs](https://github.com/Deltares/fm2prof/actions/workflows/docs.yml/badge.svg)](https://github.com/Deltares/fm2prof/actions/workflows/docs.yml)
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=Deltares_Fm2Prof&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=Deltares_Fm2Prof)
 
-For a full documentation, installion instructions and how-to see /doc.  
+![GitHub release (latest by date)](https://img.shields.io/github/v/release/Deltares/fm2prof)
+![GitHub tag (latest by date)](https://img.shields.io/github/v/tag/Deltares/fm2prof)
 
-* Environment: *
-A file containing the virtual environment (environment.yml) dependencies is provided and strongly recommended to use in order to execute successfully FM2PROF.
-To install it simply run the following:
-conda env create -f environment.yml
-For more information:
-[conda environment] - https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html
-
-* About the packages: *
-This package contains a dependency to GEOS (shapely) which needs to be present in your system as it's a C library.
-You can install this directly with conda when running on a virtual environment with the following line:
-conda install -c anaconda geos
-For more information:
-[shapely] - https://pypi.org/project/Shapely/
-[GEOS] - https://anaconda.org/anaconda/geos
+# Official Documentation.
+Check our official GitHub pages documentation at [https://deltares.github.io/fm2prof/](https://deltares.github.io/fm2prof/).
