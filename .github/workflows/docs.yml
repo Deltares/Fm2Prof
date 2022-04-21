@@ -30,7 +30,7 @@ jobs:
       - name: Build docs
         run: |
           sudo apt-get install python3-sphinx
-          python -m pip install .
+          conda develop .
           cd docs
           ls -l
           make html
