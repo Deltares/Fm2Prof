@@ -30,6 +30,7 @@ jobs:
       - name: Build docs
         run: |
           sudo apt-get install python3-sphinx
+          conda install conda-build
           conda develop .
           cd docs
           ls -l
