@@ -29,6 +29,7 @@ jobs:
 
       - name: Build docs
         run: |
+          apt-get install python3-spinx
           python -m pip install .
           cd docs
           ls -l
