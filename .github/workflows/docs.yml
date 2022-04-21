@@ -13,25 +13,31 @@ jobs:
         with:
           python-version: 3.7
 
-      - name: Setup environment
-        uses: conda-incubator/setup-miniconda@v2
+      - name: Run image
+        uses: abatilo/actions-poetry@v2.0.0
         with:
-          python-version: "3.7"
-          mamba-version: "*"
-          channels: conda-forge,defaults
-          channel-priority: true
-          environment-file: environment.yml
-          activate-environment: fm2prof
+          poetry-version: 1.1.8
+      - name: Cache Poetry virtualenv
+        uses: actions/cache@v1
+        id: cache
+        with:
+          path: ~/.virtualenvs
+          key: venv-${{ matrix.os }}-${{ matrix.python-version }}-${{ hashFiles('**/poetry.lock') }}
+          restore-keys: |
+            venv-${{ matrix.os }}-${{ matrix.python-version }}-
 
-      # - name: Install Dependencies
-      #   run: poetry install
-      #   if: steps.cache.outputs.cache-hit != 'true'
+      - name: Set Poetry config
+        run: |
+          poetry config virtualenvs.in-project false
+          poetry config virtualenvs.path ~/.virtualenvs
+
+      - name: Install Dependencies
+        run: poetry install
+        if: steps.cache.outputs.cache-hit != 'true'
 
       - name: Build docs
         run: |
           sudo apt-get install python3-sphinx
-          conda install conda-build
-          conda develop .
           cd docs
           ls -l
           make html
