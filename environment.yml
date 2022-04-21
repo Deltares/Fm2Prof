@@ -23,3 +23,5 @@ dependencies:
   - pip
   - pip:
       - geojson
+      - sphinx_materialdesign_theme
+      - sphinxcontrib-images
