@@ -1,0 +1,16 @@
+FM2PROF variable, Variable in dflow2d output
+x (at face), mesh2d_face_x
+y (at face), mesh2d_face_y
+area (at face), mesh2d_flowelem_ba
+bedlevel (at face), mesh2d_flowelem_bl
+x (at flow link), mesh2d_edge_x
+y (at flow link), mesh2d_edge_y
+edge_faces (at flow link), mesh2d_edge_faces
+edge_nodes (at flow link), mesh2d_edge_nodes
+waterdepth, mesh2d_waterdepth
+waterlevel, mesh2d_s1
+chezy_mean, mesh2d_czs
+chezy_edge, mesh2d_czu
+velocity_x, mesh2d_ucx
+velocity_y, mesh2d_ucy
+velocity_edge, mesh2d_u1
