@@ -9,6 +9,5 @@ User Manual
    installation
    quickstart
    advanced
-   known_issues
    source
    
