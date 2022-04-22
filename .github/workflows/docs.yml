@@ -38,8 +38,7 @@ jobs:
       - name: Build docs
         run: |
           sudo apt-get install python3-sphinx
-          cd docs
-          poetry run sphinx-build -b html ./source ./build
+          poetry run sphinx-build -b html ./docs/source ./docs/build
 
       - name: Deploy
         uses: JamesIves/github-pages-deploy-action@4.1.7
