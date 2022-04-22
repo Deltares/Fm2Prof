@@ -41,7 +41,7 @@ Parsing 2D data
 
 Dflow2d uses a staggered grid to solve the (hydrostatic) flow equations. Because of this staggered approach, there is not a single 2D point that has all information. Flow information (flow velocity, discharge) is stored in `flow links`, while geometry (bed level) is stored in cell faces. |project| needs both information from the faces, as from the links. 
 
-.. thumbnail:: ../figures/dflow2d_grid.png
+.. thumbnail:: ../figures/dflow2d_grid.PNG
             :align: center
             :alt: alternate text
             :width: 50%
