@@ -23,6 +23,8 @@ click = "^8.0.3"
 matplotlib = "^3.5.0"
 geos = "^0.2.3"
 Cython = "^0.29.24"
+sphinxcontrib-images = "^0.9.4"
+sphinx_materialdesign_theme = "^0.1.11"
 
 
 [tool.poetry.dev-dependencies]
