@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    
+    <title>Quickstart &#8212; FM2PROF 1.4.3 documentation</title>
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/material-icons.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/custom.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinxcontrib-images/LightBox2/lightbox2/dist/css/lightbox.css" />
+    <link rel="stylesheet" href="../../_static/notosanscjkjp.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/roboto.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/material-design-lite-1.3.0/material.indigo-blue.min.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/sphinx_materialdesign_theme.css" type="text/css" />
+    <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/jquery.js"></script>
+    <script src="../../_static/underscore.js"></script>
+    <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/sphinxcontrib-images/LightBox2/lightbox2/dist/js/lightbox-plus-jquery.min.js"></script>
+    <script src="../../_static/sphinxcontrib-images/LightBox2/lightbox2-customize/jquery-noconflict.js"></script>
+    <script src="../../_static/sphinx_materialdesign_theme.js"></script>
+    <link rel="shortcut icon" href="../../_static/favicon.ico"/>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Troubleshooting" href="advanced.html" />
+    <link rel="prev" title="Installation Instructions" href="installation.html" /> 
+  </head>
+<body>
+    <div class="mdl-layout mdl-js-layout mdl-layout--fixed-header mdl-layout--fixed-drawer"><header class="mdl-layout__header mdl-layout__header--waterfall ">
+    <div class="mdl-layout__header-row">
+        
+        <nav class="mdl-navigation breadcrumb">
+            <a class="mdl-navigation__link" href="index.html">User Manual</a><i class="material-icons">navigate_next</i>
+            <a class="mdl-navigation__link is-active">Quickstart</a>
+        </nav>
+        <div class="mdl-layout-spacer"></div>
+        <nav class="mdl-navigation">
+        
+<form class="form-inline pull-sm-right" action="../../search.html" method="get">
+      <div class="mdl-textfield mdl-js-textfield mdl-textfield--expandable mdl-textfield--floating-label mdl-textfield--align-right">
+        <label id="quick-search-icon" class="mdl-button mdl-js-button mdl-button--icon"  for="waterfall-exp">
+            <i class="material-icons">search</i>
+        </label>
+        <div class="mdl-textfield__expandable-holder">
+          <input class="mdl-textfield__input" type="text" name="q"  id="waterfall-exp" placeholder="Search" />
+          <input type="hidden" name="check_keywords" value="yes" />
+          <input type="hidden" name="area" value="default" />
+        </div>
+      </div>
+      <div class="mdl-tooltip" data-mdl-for="quick-search-icon">
+      Quick search
+      </div>
+</form>
+        
+<a id="button-show-source"
+    class="mdl-button mdl-js-button mdl-button--icon"
+    href="../../_sources/chapters/user_manual/quickstart.rst.txt" rel="nofollow">
+<i class="material-icons">code</i>
+</a>
+<div class="mdl-tooltip" data-mdl-for="button-show-source">
+Show Source
+</div>
+        </nav>
+    </div>
+    <div class="mdl-layout__header-row header-links">
+      <div class="mdl-layout-spacer"></div>
+      <nav class="mdl-navigation">
+          <a  class="mdl-navigation__link" href="../../index.html">
+                  <i class="material-icons navigation-link-icon">home</i>
+                  Home
+              </a>
+          
+              <a  class="mdl-navigation__link" href="https://deltares.nl">
+                  <i class="material-icons navigation-link-icon">launch</i>
+                  Deltares
+              </a>
+      </nav>
+    </div>
+</header><header class="mdl-layout__drawer">
+    
+          <!-- Title -->
+      <span class="mdl-layout-title">
+          <a class="title" href="../../index.html">
+              <img class="logo" src="../../_static/logo_deltares.png" alt="FM2PROF"/>
+          </a>
+      </span>
+    
+    
+      <div class="globaltoc">
+        <span class="mdl-layout-title toc">Table Of Contents</span>
+        
+        
+            
+            <nav class="mdl-navigation">
+                <p class="caption" role="heading"><span class="caption-text">Table of Contents</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../CHANGELOG.html">Changelog</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">User Manual</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="installation.html">Installation Instructions</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Quickstart</a></li>
+<li class="toctree-l2"><a class="reference internal" href="advanced.html">Troubleshooting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="source.html">API</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../technical_manual/index.html">Technical Reference Manual</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../technical_manual/conceptual_design.html">Conceptual design</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../technical_manual/numerical_methods.html">Numerical methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../technical_manual/settings.html">Settings</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../technical_manual/files.html">Files</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../technical_manual/glossary.html">Glossary of terms</a></li>
+</ul>
+</li>
+</ul>
+
+            </nav>
+        
+        </div>
+    
+</header>
+        <main class="mdl-layout__content" tabIndex="0">
+<header class="mdl-layout__drawer">
+    
+          <!-- Title -->
+      <span class="mdl-layout-title">
+          <a class="title" href="../../index.html">
+              <img class="logo" src="../../_static/logo_deltares.png" alt="FM2PROF"/>
+          </a>
+      </span>
+    
+    
+      <div class="globaltoc">
+        <span class="mdl-layout-title toc">Table Of Contents</span>
+        
+        
+            
+            <nav class="mdl-navigation">
+                <p class="caption" role="heading"><span class="caption-text">Table of Contents</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../CHANGELOG.html">Changelog</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">User Manual</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="installation.html">Installation Instructions</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Quickstart</a></li>
+<li class="toctree-l2"><a class="reference internal" href="advanced.html">Troubleshooting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="source.html">API</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../technical_manual/index.html">Technical Reference Manual</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../technical_manual/conceptual_design.html">Conceptual design</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../technical_manual/numerical_methods.html">Numerical methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../technical_manual/settings.html">Settings</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../technical_manual/files.html">Files</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../technical_manual/glossary.html">Glossary of terms</a></li>
+</ul>
+</li>
+</ul>
+
+            </nav>
+        
+        </div>
+    
+</header>
+
+    <div class="document">
+        <div class="page-content">
+        
+  <section id="quickstart">
+<h1>Quickstart<a class="headerlink" href="#quickstart" title="Permalink to this headline">¶</a></h1>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>We assume you have a conda environment <code class="docutils literal notranslate"><span class="pre">fm2prof</span></code> and fm2prof installed following the <a class="reference internal" href="installation.html#chapterinstallation"><span class="std std-ref">Installation Instructions</span></a></p>
+</div>
+<p>In this tutorial you’ll walk through the basics of setting up a project with FM2PROF.</p>
+<section id="input-files">
+<h2>Input files<a class="headerlink" href="#input-files" title="Permalink to this headline">¶</a></h2>
+<p>With FM2PROF you can generate input for a 1D model from a 2D model. The basic workflow of FM2PROF is shown below. The specific steps are detailed below.</p>
+<figure class="align-center" id="id1">
+<img alt="alternate text" src="../../_images/basic_workflow.png" />
+<figcaption>
+<p><span class="caption-text">A minimal FM2PROF workflow</span><a class="headerlink" href="#id1" title="Permalink to this image">¶</a></p>
+</figcaption>
+</figure>
+<section id="d-model">
+<h3>2D Model<a class="headerlink" href="#d-model" title="Permalink to this headline">¶</a></h3>
+<p>This is the 2D model to be emulated. FM2PROF is agnostic about the 2D model software, but requires UGRID style output.</p>
+<section id="river-models">
+<h4>River models<a class="headerlink" href="#river-models" title="Permalink to this headline">¶</a></h4>
+<p>In rivers, compartimentalisation may cause some part of the floodplains to flow at a later stage, or not flow at all. If cross-sections are only based on geometry, this may lead to overestimation of the cross-sectional area. FM2PROF can use information from a 2D model computation to improve the quality of the cross-sections, by computing which cells contribute to flow at given water levels. This is best done with a special simulation using monotically rising conditions:</p>
+<ul class="simple">
+<li><p>a slowly rising discharge at the upstream boundary</p></li>
+<li><p>a slowly rising waterlevel at the downstream boundary</p></li>
+</ul>
+<p>Ideally, the water slope remains constant along the channel for the entire computation, i.e. no significant backwater effects.</p>
+</section>
+<section id="lake-models">
+<h4>Lake models<a class="headerlink" href="#lake-models" title="Permalink to this headline">¶</a></h4>
+<p><em>Lake models are not yet tested/supported</em></p>
+</section>
+</section>
+<section id="d-network">
+<h3>1D Network<a class="headerlink" href="#d-network" title="Permalink to this headline">¶</a></h3>
+<p>A 1D network should already be available. At the least, you should know the locations at which cross-sectional and roughness information should be derived.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>If your 1D model is a SOBEK 3 model, the CrossSectionLocationFile can be derived from the Network Definition file (DIMR configuration) using <a class="reference internal" href="source.html#fm2prof.utils.networkdeffile_to_input" title="fm2prof.utils.networkdeffile_to_input"><code class="xref py py-meth docutils literal notranslate"><span class="pre">fm2prof.utils.networkdeffile_to_input()</span></code></a>.</p>
+</div>
+</section>
+</section>
+<section id="running-project">
+<h2>Running FM2PROF<a class="headerlink" href="#running-project" title="Permalink to this headline">¶</a></h2>
+<p>There are currently two ways to run FM2PROF: by using a terminal or with the Python API.</p>
+<section id="using-project-with-a-terminal">
+<h3>Using FM2PROF with a terminal<a class="headerlink" href="#using-project-with-a-terminal" title="Permalink to this headline">¶</a></h3>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The terminal interface is also referred to as the CLI (command line interface)</p>
+</div>
+<p>First, open a command window or powershell and navigate to <cite>&lt;fm2prof source code&gt;/bin</cite>, which contains <cite>fm2profConsole.py</cite>.</p>
+<p>To start a new project:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># while in ./fm2prof/bin</span>
+python ./fm2profConsole.py -n EmptyProject
+</pre></div>
+</div>
+<p>this will create a new file called ‘EmptyProject.ini’. This is a valid configuration file with all parameters set to their default values. In this file, manually add at least the following settings:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>[input]
+2DMapOutput                   =           # Output file from FM2D model (.net file)
+CrossSectionLocationFile      =           # .csv or .txt file (, as delimiter) that contains four columns: X_coordinate,Y_coordinate,BranchName,Length,Chainage.
+</pre></div>
+</div>
+<p>For this tutorial, use the following test data:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>[input]
+2DMapOutput                   = ../tests/external_test_data/case_01_rectangle/Data/2DModelOutput/FlowFM_map.nc
+CrossSectionLocationFile      = ../tests/external_test_data/case_01_rectangle/Data/cross_section_locations.xyz
+</pre></div>
+</div>
+<p>Next, load the project:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python fm2profConsole.py -f EmptyProject.ini
+</pre></div>
+</div>
+<p>Check the results whether everything is ok. You should also see a print-out of the configuration file. These are the settings that will be used and can be altered using a config file. The configuration file does not need all parameters to be specified. If a parameter is not in the configuration file, default values will be used.</p>
+<p>To generate output, use:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python fm2profConsole.py -f EmptyProject.ini -r
+</pre></div>
+</div>
+</section>
+<section id="using-the-python-api">
+<h3>Using the Python API<a class="headerlink" href="#using-the-python-api" title="Permalink to this headline">¶</a></h3>
+<p>FM2PROF provides modules that can be imported in any Python script or interactive console (e.g. a Jupyter notebook).</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Use the project class</span>
+<span class="kn">from</span> <span class="nn">fm2prof</span> <span class="kn">import</span> <span class="n">Project</span>
+
+<span class="c1"># To initialise a project without configuration</span>
+<span class="n">project</span> <span class="o">=</span> <span class="n">Project</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>If you initialise a project without an argument, a configuration is loaded from template. You an use this project object to change the input files and parameters:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Note that all paths are relative to os.getcwd!</span>
+<span class="n">project</span><span class="o">.</span><span class="n">set_inputfile</span><span class="p">(</span><span class="s1">&#39;2DMapOutput&#39;</span><span class="p">,</span> <span class="s1">&#39;tests/external_test_data/case_01_rectangle/Data/2DModelOutput/FlowFM_map.nc&#39;</span><span class="p">)</span>
+<span class="n">project</span><span class="o">.</span><span class="n">set_inputfile</span><span class="p">(</span><span class="s1">&#39;CrossSectionLocationFile&#39;</span><span class="p">,</span> <span class="s1">&#39;tests/external_test_data/case_01_rectangle/Data/cross_section_locations.xyz&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>To run the project:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">project</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>See <a class="reference internal" href="source.html#source-documentation"><span class="std std-ref">API</span></a> for a full overview of available methods.</p>
+</section>
+</section>
+</section>
+
+
+        </div>
+        <div class="side-doc-outline">
+            <div class="side-doc-outline--content"> 
+<div class="localtoc">
+    <p class="caption">
+      <span class="caption-text">Table Of Contents</span>
+    </p>
+    <ul>
+<li><a class="reference internal" href="#">Quickstart</a><ul>
+<li><a class="reference internal" href="#input-files">Input files</a><ul>
+<li><a class="reference internal" href="#d-model">2D Model</a><ul>
+<li><a class="reference internal" href="#river-models">River models</a></li>
+<li><a class="reference internal" href="#lake-models">Lake models</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#d-network">1D Network</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#running-project">Running FM2PROF</a><ul>
+<li><a class="reference internal" href="#using-project-with-a-terminal">Using FM2PROF with a terminal</a></li>
+<li><a class="reference internal" href="#using-the-python-api">Using the Python API</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+</div>
+            </div>
+        </div>
+
+      <div class="clearer"></div>
+    </div><div class="pagenation">
+     <a id="button-prev" href="installation.html" class="mdl-button mdl-js-button mdl-js-ripple-effect mdl-button--colored" role="botton" accesskey="P">
+         <i class="pagenation-arrow-L material-icons">arrow_back</i>
+         <div class="pagenation-text">
+            <span class="pagenation-direction">Previous</span>
+            <div>Installation Instructions</div>
+         </div>
+     </a>
+     <a id="button-next" href="advanced.html" class="mdl-button mdl-js-button mdl-js-ripple-effect mdl-button--colored" role="botton" accesskey="N">
+        <i class="pagenation-arrow-R material-icons">arrow_forward</i>
+        <div class="pagenation-text">
+            <span class="pagenation-direction">Next</span>
+            <div>Troubleshooting</div>
+        </div>
+     </a>
+  </div>
+        <footer class="mdl-mini-footer">
+    <div class="mdl-mini-footer__left-section">
+      <div class="mdl-logo">FM2PROF</div>
+      <div>
+        
+        <p class="caption" role="heading"><span class="caption-text">Table of Contents</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../CHANGELOG.html">Changelog</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">User Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../technical_manual/index.html">Technical Reference Manual</a></li>
+</ul>
+
+      </div>
+    </div>
+
+    <div class="mdl-mini-footer__right-section">
+        <div>&copy; Copyright 2020, Deltares.</div>
+      <div>Generated by <a href="http://sphinx.pocoo.org/">Sphinx</a> 4.5.0 using <a href="https://github.com/myyasuda/sphinx_materialdesign_theme">sphinx_materialdesign_theme</a>.</div>
+    </div>
+</footer>
+        </main>
+    </div>
+  </body>
+</html>
