@@ -1371,7 +1371,7 @@ class CrossSection(FM2ProfBase):
         error = np.array(predicted - measured) / np.maximum(
             np.array(measured), np.ones(len(measured))
         )
-        return np.sum(error ** 2)
+        return np.sum(error**2)
 
     @staticmethod
     def _check_monotonicity(arr, method=2):

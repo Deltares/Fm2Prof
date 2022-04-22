@@ -247,7 +247,7 @@ class FmModelData:
         bedlevel_full = dti["bedlevel"]
         bedlevel = dti["bedlevel"][dti["sclass"] == css_name]
 
-        velocity = (vx ** 2 + vy ** 2) ** 0.5
+        velocity = (vx**2 + vy**2) ** 0.5
         waterlevel[waterdepth == 0] = np.nan
 
         return_dict = {
