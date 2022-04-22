@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    
+    <title>Numerical methods &#8212; FM2PROF 1.4.3 documentation</title>
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/material-icons.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/custom.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinxcontrib-images/LightBox2/lightbox2/dist/css/lightbox.css" />
+    <link rel="stylesheet" href="../../_static/notosanscjkjp.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/roboto.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/material-design-lite-1.3.0/material.indigo-blue.min.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/sphinx_materialdesign_theme.css" type="text/css" />
+    <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/jquery.js"></script>
+    <script src="../../_static/underscore.js"></script>
+    <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/sphinxcontrib-images/LightBox2/lightbox2/dist/js/lightbox-plus-jquery.min.js"></script>
+    <script src="../../_static/sphinxcontrib-images/LightBox2/lightbox2-customize/jquery-noconflict.js"></script>
+    <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="../../_static/sphinx_materialdesign_theme.js"></script>
+    <link rel="shortcut icon" href="../../_static/favicon.ico"/>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Settings" href="settings.html" />
+    <link rel="prev" title="Conceptual design" href="conceptual_design.html" /> 
+  </head>
+<body>
+    <div class="mdl-layout mdl-js-layout mdl-layout--fixed-header mdl-layout--fixed-drawer"><header class="mdl-layout__header mdl-layout__header--waterfall ">
+    <div class="mdl-layout__header-row">
+        
+        <nav class="mdl-navigation breadcrumb">
+            <a class="mdl-navigation__link" href="index.html">Technical Reference Manual</a><i class="material-icons">navigate_next</i>
+            <a class="mdl-navigation__link is-active">Numerical methods</a>
+        </nav>
+        <div class="mdl-layout-spacer"></div>
+        <nav class="mdl-navigation">
+        
+<form class="form-inline pull-sm-right" action="../../search.html" method="get">
+      <div class="mdl-textfield mdl-js-textfield mdl-textfield--expandable mdl-textfield--floating-label mdl-textfield--align-right">
+        <label id="quick-search-icon" class="mdl-button mdl-js-button mdl-button--icon"  for="waterfall-exp">
+            <i class="material-icons">search</i>
+        </label>
+        <div class="mdl-textfield__expandable-holder">
+          <input class="mdl-textfield__input" type="text" name="q"  id="waterfall-exp" placeholder="Search" />
+          <input type="hidden" name="check_keywords" value="yes" />
+          <input type="hidden" name="area" value="default" />
+        </div>
+      </div>
+      <div class="mdl-tooltip" data-mdl-for="quick-search-icon">
+      Quick search
+      </div>
+</form>
+        
+<a id="button-show-source"
+    class="mdl-button mdl-js-button mdl-button--icon"
+    href="../../_sources/chapters/technical_manual/numerical_methods.rst.txt" rel="nofollow">
+<i class="material-icons">code</i>
+</a>
+<div class="mdl-tooltip" data-mdl-for="button-show-source">
+Show Source
+</div>
+        </nav>
+    </div>
+    <div class="mdl-layout__header-row header-links">
+      <div class="mdl-layout-spacer"></div>
+      <nav class="mdl-navigation">
+          <a  class="mdl-navigation__link" href="../../index.html">
+                  <i class="material-icons navigation-link-icon">home</i>
+                  Home
+              </a>
+          
+              <a  class="mdl-navigation__link" href="https://deltares.nl">
+                  <i class="material-icons navigation-link-icon">launch</i>
+                  Deltares
+              </a>
+      </nav>
+    </div>
+</header><header class="mdl-layout__drawer">
+    
+          <!-- Title -->
+      <span class="mdl-layout-title">
+          <a class="title" href="../../index.html">
+              <img class="logo" src="../../_static/logo_deltares.png" alt="FM2PROF"/>
+          </a>
+      </span>
+    
+    
+      <div class="globaltoc">
+        <span class="mdl-layout-title toc">Table Of Contents</span>
+        
+        
+            
+            <nav class="mdl-navigation">
+                <p class="caption" role="heading"><span class="caption-text">Table of Contents</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../CHANGELOG.html">Changelog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user_manual/index.html">User Manual</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../user_manual/installation.html">Installation Instructions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user_manual/quickstart.html">Quickstart</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user_manual/advanced.html">Troubleshooting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user_manual/source.html">API</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Technical Reference Manual</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="conceptual_design.html">Conceptual design</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Numerical methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="settings.html">Settings</a></li>
+<li class="toctree-l2"><a class="reference internal" href="files.html">Files</a></li>
+<li class="toctree-l2"><a class="reference internal" href="glossary.html">Glossary of terms</a></li>
+</ul>
+</li>
+</ul>
+
+            </nav>
+        
+        </div>
+    
+</header>
+        <main class="mdl-layout__content" tabIndex="0">
+<header class="mdl-layout__drawer">
+    
+          <!-- Title -->
+      <span class="mdl-layout-title">
+          <a class="title" href="../../index.html">
+              <img class="logo" src="../../_static/logo_deltares.png" alt="FM2PROF"/>
+          </a>
+      </span>
+    
+    
+      <div class="globaltoc">
+        <span class="mdl-layout-title toc">Table Of Contents</span>
+        
+        
+            
+            <nav class="mdl-navigation">
+                <p class="caption" role="heading"><span class="caption-text">Table of Contents</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../CHANGELOG.html">Changelog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user_manual/index.html">User Manual</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../user_manual/installation.html">Installation Instructions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user_manual/quickstart.html">Quickstart</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user_manual/advanced.html">Troubleshooting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user_manual/source.html">API</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Technical Reference Manual</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="conceptual_design.html">Conceptual design</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Numerical methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="settings.html">Settings</a></li>
+<li class="toctree-l2"><a class="reference internal" href="files.html">Files</a></li>
+<li class="toctree-l2"><a class="reference internal" href="glossary.html">Glossary of terms</a></li>
+</ul>
+</li>
+</ul>
+
+            </nav>
+        
+        </div>
+    
+</header>
+
+    <div class="document">
+        <div class="page-content">
+        
+  <section id="numerical-methods">
+<h1>Numerical methods<a class="headerlink" href="#numerical-methods" title="Permalink to this headline">¶</a></h1>
+<section id="cross-section-simplification-algorithm">
+<span id="simplify-css"></span><h2>Cross-section simplification algorithm<a class="headerlink" href="#cross-section-simplification-algorithm" title="Permalink to this headline">¶</a></h2>
+<dl class="py method">
+<dt class="sig sig-object py" id="fm2prof.CrossSection.CrossSection.reduce_points">
+<span class="sig-prename descclassname"><span class="pre">CrossSection.</span></span><span class="sig-name descname"><span class="pre">reduce_points</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">count_after</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">20</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'visvalingam_whyatt'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../_modules/fm2prof/CrossSection.html#CrossSection.reduce_points"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fm2prof.CrossSection.CrossSection.reduce_points" title="Permalink to this definition">¶</a></dt>
+<dd><p>The cross-section geometry generated by FM2PROF contains one point per output
+timestep in the 2D map file. This resolution is often too high given the
+complexity of the cross-sections, and results in very large input files for the
+1D model. Therefore FM2PROF includes a simplification algorithm that reduces
+the number of points while preservering the shape of the geometry. This algorithm
+reduces as many points until the number specified in
+<a class="reference internal" href="settings.html#parameter-maximumpointsinprofile"><span class="std std-ref">MaximumPointsInProfile</span></a> is reached.
+We use the Visvalingam-Whyatt method of poly-line vertex reduction <a class="reference internal" href="#vw" id="id1"><span>[VW]</span></a>.
+The <a class="reference internal" href="glossary.html#term-Total-width"><span class="xref std std-term">Total width</span></a> is leading for the simplification of the geometry meaning
+that the choice for which points to remove to simplify the geometry is based on
+the total width. Subsequently, the corresponding point are removed from the <a class="reference internal" href="glossary.html#term-Flow-width"><span class="xref std std-term">Flow width</span></a>.</p>
+<dl class="citation">
+<dt class="label" id="vw"><span class="brackets"><a class="fn-backref" href="#id1">VW</a></span></dt>
+<dd><p>Visvalingam, M and Whyatt J D (1993) “Line Generalisation by Repeated Elimination of Points”, Cartographic J., 30 (1), 46 - 51 URL: <a class="reference external" href="http://web.archive.org/web/20100428020453/http://www2.dcs.hull.ac.uk/CISRG/publications/DPs/DP10/DP10.html">http://web.archive.org/web/20100428020453/http://www2.dcs.hull.ac.uk/CISRG/publications/DPs/DP10/DP10.html</a>
+Implemented vertex reduction methods:</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>n</strong> (<em>int</em>) – asdf</p></li>
+<li><p><strong>method</strong> (<em>str</em>) – asdf</p></li>
+<li><p><strong>verbose</strong> (<em>bool</em>) – asdf</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>This method directly works on the object attributes</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="lake-identification-algorithm">
+<span id="identify-lakes"></span><h2>Lake identification algorithm<a class="headerlink" href="#lake-identification-algorithm" title="Permalink to this headline">¶</a></h2>
+<dl class="py method">
+<dt class="sig sig-object py" id="fm2prof.CrossSection.CrossSection._identify_lakes">
+<span class="sig-prename descclassname"><span class="pre">CrossSection.</span></span><span class="sig-name descname"><span class="pre">_identify_lakes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">waterdepth</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/fm2prof/CrossSection.html#CrossSection._identify_lakes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fm2prof.CrossSection.CrossSection._identify_lakes" title="Permalink to this definition">¶</a></dt>
+<dd><p>This algorithms determines whether a <a class="reference internal" href="conceptual_design.html#section-parsing-2d-data"><span class="std std-ref">2D cell</span></a> should
+be marked as a <a class="reference internal" href="glossary.html#term-Lakes"><span class="xref std std-term">Lake</span></a>.</p>
+<dl class="simple">
+<dt>Cells are marked as lake if the following conditions are both met:</dt><dd><ul class="simple">
+<li><p>the waterdepth on timestep <a class="reference internal" href="settings.html#parameter-laketimesteps"><span class="std std-ref">LakeTimeSteps</span></a> is positive</p></li>
+<li><p>the waterdepth on timestep <a class="reference internal" href="settings.html#parameter-laketimesteps"><span class="std std-ref">LakeTimeSteps</span></a> is at least 1 cm higher than the waterlevel on timestep 0.</p></li>
+</ul>
+</dd>
+</dl>
+<p>Next, the following steps are taken</p>
+<ul class="simple">
+<li><p>It is determined at what timestep the waterlevel in the lake starts rising. From that point on the lake counts as regular geometry and counts toward the total volume. A cell is considered active if its waterlevel has risen by 1 mm.</p></li>
+<li><p>A correction matrix is built that contains the ‘lake water level’ for each lake cell. This matrix is subtracted from the waterdepth to compute volumes.</p></li>
+</ul>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>waterdepth</strong> (<em>pandas dataframe</em>) – </p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>mask of all cells that are a ‘lake’
+wet_not_lake_mask (ndarray): mask of all cells that are wet, but not a lake
+lake_depth_correction (ndarray): the depth of a lake at the start of the 2D computation</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>lake_mask (ndarray)</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="flow-storage-seperation-algorithm">
+<span id="distinguish-storage"></span><h2>Flow &amp; storage seperation algorithm<a class="headerlink" href="#flow-storage-seperation-algorithm" title="Permalink to this headline">¶</a></h2>
+<dl class="py method">
+<dt class="sig sig-object py" id="fm2prof.CrossSection.CrossSection._distinguish_flow_from_storage">
+<span class="sig-prename descclassname"><span class="pre">CrossSection.</span></span><span class="sig-name descname"><span class="pre">_distinguish_flow_from_storage</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">waterdepth</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">velocity</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/fm2prof/CrossSection.html#CrossSection._distinguish_flow_from_storage"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fm2prof.CrossSection.CrossSection._distinguish_flow_from_storage" title="Permalink to this definition">¶</a></dt>
+<dd><p>This method determines which cells should be considered ‘flowing’. A cell is considered flowing if all following conditions are met:</p>
+<ul class="simple">
+<li><p>the waterdepth greater than 0</p></li>
+<li><p>the velocity is greater than <a class="reference internal" href="settings.html#parameter-absolutevelocitythreshold"><span class="std std-ref">AbsoluteVelocityThreshold</span></a></p></li>
+<li><p>the velocity is greater than the product of the mean velocity (of all cells within the control volume) and the <a class="reference internal" href="settings.html#parameter-relativevelocitythreshold"><span class="std std-ref">RelativeVelocityThreshold</span></a></p></li>
+</ul>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>waterdepth</strong> (<em>pandas Dataframe</em>) – for index and time in columns</p></li>
+<li><p><strong>velocity</strong> (<em>pandas Dataframe</em><em>(</em>) – for index and time in columns</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>flow_mask (pandas Dataframe) with cell id for index and time in columns. True for flow, False for storage</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="water-level-dependent-geometry-algorithm">
+<span id="wl-dependent-css"></span><h2>Water level dependent geometry algorithm<a class="headerlink" href="#water-level-dependent-geometry-algorithm" title="Permalink to this headline">¶</a></h2>
+<dl class="py method">
+<dt class="sig sig-object py" id="fm2prof.CrossSection.CrossSection._compute_css_above_z0">
+<span class="sig-prename descclassname"><span class="pre">CrossSection.</span></span><span class="sig-name descname"><span class="pre">_compute_css_above_z0</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">centre_level</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../_modules/fm2prof/CrossSection.html#CrossSection._compute_css_above_z0"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fm2prof.CrossSection.CrossSection._compute_css_above_z0" title="Permalink to this definition">¶</a></dt>
+<dd><p>This method computes for each level (z) above the water level at the first 2D output (z0),
+the corresponding <a class="reference internal" href="glossary.html#term-Total-width"><span class="xref std std-term">Total width</span></a> and <a class="reference internal" href="glossary.html#term-Flow-width"><span class="xref std std-term">Flow width</span></a>. This is done in the following way:</p>
+<ol class="arabic simple">
+<li><p>compute the total width by dividing the wet area by the cross-section length</p></li>
+<li><p>compute the flow width by dividing the flow area by the cross-section length</p></li>
+<li><p>Correct the flow width such that flow width is always increasing.</p></li>
+</ol>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>centre_level</strong> – the water level at the cross-section location (x, y), which is typically at the centre of the control volume</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>this method writes to the cross-section attributes _css_z, _css_total_width and _css_flow_width</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="water-level-independent-geometry-algorithm">
+<span id="wl-independent-css"></span><h2>Water level independent geometry algorithm<a class="headerlink" href="#water-level-independent-geometry-algorithm" title="Permalink to this headline">¶</a></h2>
+<dl class="py method">
+<dt class="sig sig-object py" id="fm2prof.CrossSection.CrossSection._extend_css_below_z0">
+<span class="sig-prename descclassname"><span class="pre">CrossSection.</span></span><span class="sig-name descname"><span class="pre">_extend_css_below_z0</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">centre_level</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">centre_depth</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">waterlevel</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bedlevel_matrix</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">area_matrix</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wet_not_plas_mask</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../_modules/fm2prof/CrossSection.html#CrossSection._extend_css_below_z0"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fm2prof.CrossSection.CrossSection._extend_css_below_z0" title="Permalink to this definition">¶</a></dt>
+<dd><p>This methods computeS for level (z) below the water level at the first 2D output (z0) the corresponding
+<a class="reference internal" href="glossary.html#term-Total-width"><span class="xref std std-term">Total width</span></a> and <a class="reference internal" href="glossary.html#term-Flow-width"><span class="xref std std-term">Flow width</span></a>. This is done in the following way:</p>
+<ol class="arabic">
+<li><p>Take a number of steps (see note below) from z at t0 do the bed level at the <a class="reference internal" href="glossary.html#term-Cross-section-location"><span class="xref std std-term">Cross-section location</span></a></p></li>
+<li><dl class="simple">
+<dt>for each step, determine which cells should be counted</dt><dd><ul class="simple">
+<li><p>the bed level of the cell should be higher than the water level plus the tolerance (see note below)</p></li>
+<li><p>the cell should not be part of a <a class="reference internal" href="glossary.html#term-Lakes"><span class="xref std std-term">Lakes</span></a></p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><p>Since there is no information on flow velocities, we cannot determine which cells are flowing and width are storage.
+Therefore is is decided like this</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>If <a class="reference internal" href="settings.html#parameter-extrapolatestorage"><span class="std std-ref">ExtrapolateStorage</span></a> is True, the flow area is the minimum of the flow area at t0 (from <a class="reference internal" href="#wl-dependent-css"><span class="std std-ref">Water level dependent geometry algorithm</span></a>)</p></li>
+<li><p>if <a class="reference internal" href="settings.html#parameter-extrapolatestorage"><span class="std std-ref">ExtrapolateStorage</span></a> is False, the flow area is equal to the total area</p></li>
+</ul>
+</div></blockquote>
+</li>
+</ol>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<ul class="simple">
+<li><p>the number of steps between z at t0 to bed level is hard-coded at 10.</p></li>
+<li><p>the tolerance for deciding which cell is wet is hardcoded at -1e-3</p></li>
+</ul>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><dl class="simple">
+<dt>This method extends the following attributes:</dt><dd><p>_css_z
+_css_total_width
+_css_flow_width
+_fm_wet_area
+_fm_flow_area
+_fm_flow_volume
+_fm_total_volume</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="summer-dike-optimisation-algorithm">
+<span id="sd-optimisation"></span><h2>Summer dike optimisation algorithm<a class="headerlink" href="#summer-dike-optimisation-algorithm" title="Permalink to this headline">¶</a></h2>
+<dl class="py method">
+<dt class="sig sig-object py" id="fm2prof.CrossSection.CrossSection.calculate_correction">
+<span class="sig-prename descclassname"><span class="pre">CrossSection.</span></span><span class="sig-name descname"><span class="pre">calculate_correction</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">transition_height</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../_modules/fm2prof/CrossSection.html#CrossSection.calculate_correction"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fm2prof.CrossSection.CrossSection.calculate_correction" title="Permalink to this definition">¶</a></dt>
+<dd><p>This method computes a volume correction that cannot be captured within the
+constraints of 1D cross-sectional geometry, which forces an increasing width
+at increasing elevation and cannot deal with varying water levels. In reality,
+compartimentation of floodplains can cause a sudden
+increase of volume while the water level does not increase.</p>
+<p>Technically, the derivative of the volume over elevation (dV/dz) must be
+monotonically increasing, meaning it cannot increase slower than it did
+at a lower z. However, this is exactly what happens with compartimentalisation,
+see (see <a class="reference internal" href="glossary.html#term-Summerdikes"><span class="xref std std-term">Summerdikes</span></a>).</p>
+<p>This method computes input for the ‘summerdike’ option in SOBEK, which requires three variables:</p>
+<ul class="simple">
+<li><p>The crest level of the summerdike</p></li>
+<li><p>The total volume behind the summerdike</p></li>
+<li><p>The total volume behind the summerdike</p></li>
+<li><p>The <a class="reference internal" href="settings.html#parameter-sdtransitionheight"><span class="std std-ref">transition height</span></a>
+over which the volumes are added to the geometry. This variable is set globally.</p></li>
+</ul>
+<p>We refer to the SOBEK technical manual for details on the implementation.</p>
+<p>The algorithm works as follows:</p>
+<ol class="arabic simple">
+<li><p>The initial attributes (crest and volumes) are set and outputted (in debug mode)</p></li>
+<li><p>Optimise the attributes by minimising the cost function. For the cost function we
+use the squared relative error. The parameter <a class="reference internal" href="settings.html#parameter-sdoptimisationmethod"><span class="std std-ref">SDOptimisationMethod</span></a>
+is used to determine which output variables are used to compute the error.</p></li>
+<li><p>Add the extra volume to the css volume given the water level (see note below)</p></li>
+</ol>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>In SOBEK, the extra volume is released following a polynomial function. In FM2PROF, we approximate
+this with the following logistic function:</p>
+<p><span class="math notranslate nohighlight">\(C(h_k)=\Xi(1+e^{\log(\delta)\tau^{-1}(h_k-(\gamma+\tau/2))})^{-1}\)</span></p>
+<p>where <span class="math notranslate nohighlight">\(\Xi\)</span> is the volume correction (m3/s), <span class="math notranslate nohighlight">\(\tau\)</span> is the transition height,
+<span class="math notranslate nohighlight">\(\delta\)</span> is an accuracy parameter, <span class="math notranslate nohighlight">\(\gamma\)</span> is the crest level, and <span class="math notranslate nohighlight">\(C(h_k)\)</span>
+is the added volume given water level <span class="math notranslate nohighlight">\(h_k\)</span>. The default value of <span class="math notranslate nohighlight">\(\delta\)</span> is
+0.00001, and not configurable.</p>
+</div>
+</dd></dl>
+
+</section>
+<section id="variance-based-classification">
+<span id="section-classification-variance"></span><h2>Variance based classification<a class="headerlink" href="#variance-based-classification" title="Permalink to this headline">¶</a></h2>
+<dl class="py method">
+<dt class="sig sig-object py" id="fm2prof.Fm2ProfRunner.Fm2ProfRunner._classify_roughness_sections_by_variance">
+<span class="sig-prename descclassname"><span class="pre">Fm2ProfRunner.</span></span><span class="sig-name descname"><span class="pre">_classify_roughness_sections_by_variance</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">variable</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/fm2prof/Fm2ProfRunner.html#Fm2ProfRunner._classify_roughness_sections_by_variance"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fm2prof.Fm2ProfRunner.Fm2ProfRunner._classify_roughness_sections_by_variance" title="Permalink to this definition">¶</a></dt>
+<dd><p>This method classifies the region into main channel and floodplain based on roughness. It
+is used when the user does not specify a section polygon.</p>
+<p>This method assumes that the main channel is much deeper than the floodplain. Therefore,
+the Chézy values will be higher than those in the floodplain. The objective is now to
+define a split-value that minimizes the variance of the split sets.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Variance reduction classification is method often used in decision tree learning,
+e.g. see <a class="reference external" href="https://en.wikipedia.org/wiki/Decision_tree_learning#Variance_reduction">https://en.wikipedia.org/wiki/Decision_tree_learning#Variance_reduction</a>
+for more information.</p>
+</div>
+</dd></dl>
+
+</section>
+</section>
+
+
+        </div>
+        <div class="side-doc-outline">
+            <div class="side-doc-outline--content"> 
+<div class="localtoc">
+    <p class="caption">
+      <span class="caption-text">Table Of Contents</span>
+    </p>
+    <ul>
+<li><a class="reference internal" href="#">Numerical methods</a><ul>
+<li><a class="reference internal" href="#cross-section-simplification-algorithm">Cross-section simplification algorithm</a></li>
+<li><a class="reference internal" href="#lake-identification-algorithm">Lake identification algorithm</a></li>
+<li><a class="reference internal" href="#flow-storage-seperation-algorithm">Flow &amp; storage seperation algorithm</a></li>
+<li><a class="reference internal" href="#water-level-dependent-geometry-algorithm">Water level dependent geometry algorithm</a></li>
+<li><a class="reference internal" href="#water-level-independent-geometry-algorithm">Water level independent geometry algorithm</a></li>
+<li><a class="reference internal" href="#summer-dike-optimisation-algorithm">Summer dike optimisation algorithm</a></li>
+<li><a class="reference internal" href="#variance-based-classification">Variance based classification</a></li>
+</ul>
+</li>
+</ul>
+
+</div>
+            </div>
+        </div>
+
+      <div class="clearer"></div>
+    </div><div class="pagenation">
+     <a id="button-prev" href="conceptual_design.html" class="mdl-button mdl-js-button mdl-js-ripple-effect mdl-button--colored" role="botton" accesskey="P">
+         <i class="pagenation-arrow-L material-icons">arrow_back</i>
+         <div class="pagenation-text">
+            <span class="pagenation-direction">Previous</span>
+            <div>Conceptual design</div>
+         </div>
+     </a>
+     <a id="button-next" href="settings.html" class="mdl-button mdl-js-button mdl-js-ripple-effect mdl-button--colored" role="botton" accesskey="N">
+        <i class="pagenation-arrow-R material-icons">arrow_forward</i>
+        <div class="pagenation-text">
+            <span class="pagenation-direction">Next</span>
+            <div>Settings</div>
+        </div>
+     </a>
+  </div>
+        <footer class="mdl-mini-footer">
+    <div class="mdl-mini-footer__left-section">
+      <div class="mdl-logo">FM2PROF</div>
+      <div>
+        
+        <p class="caption" role="heading"><span class="caption-text">Table of Contents</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../CHANGELOG.html">Changelog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user_manual/index.html">User Manual</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Technical Reference Manual</a></li>
+</ul>
+
+      </div>
+    </div>
+
+    <div class="mdl-mini-footer__right-section">
+        <div>&copy; Copyright 2020, Deltares.</div>
+      <div>Generated by <a href="http://sphinx.pocoo.org/">Sphinx</a> 4.5.0 using <a href="https://github.com/myyasuda/sphinx_materialdesign_theme">sphinx_materialdesign_theme</a>.</div>
+    </div>
+</footer>
+        </main>
+    </div>
+  </body>
+</html>

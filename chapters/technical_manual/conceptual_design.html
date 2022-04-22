@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    
+    <title>Conceptual design &#8212; FM2PROF 1.4.3 documentation</title>
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/material-icons.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/custom.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinxcontrib-images/LightBox2/lightbox2/dist/css/lightbox.css" />
+    <link rel="stylesheet" href="../../_static/notosanscjkjp.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/roboto.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/material-design-lite-1.3.0/material.indigo-blue.min.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/sphinx_materialdesign_theme.css" type="text/css" />
+    <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/jquery.js"></script>
+    <script src="../../_static/underscore.js"></script>
+    <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/sphinxcontrib-images/LightBox2/lightbox2/dist/js/lightbox-plus-jquery.min.js"></script>
+    <script src="../../_static/sphinxcontrib-images/LightBox2/lightbox2-customize/jquery-noconflict.js"></script>
+    <script src="../../_static/sphinx_materialdesign_theme.js"></script>
+    <link rel="shortcut icon" href="../../_static/favicon.ico"/>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Numerical methods" href="numerical_methods.html" />
+    <link rel="prev" title="Technical Reference Manual" href="index.html" /> 
+  </head>
+<body>
+    <div class="mdl-layout mdl-js-layout mdl-layout--fixed-header mdl-layout--fixed-drawer"><header class="mdl-layout__header mdl-layout__header--waterfall ">
+    <div class="mdl-layout__header-row">
+        
+        <nav class="mdl-navigation breadcrumb">
+            <a class="mdl-navigation__link" href="index.html">Technical Reference Manual</a><i class="material-icons">navigate_next</i>
+            <a class="mdl-navigation__link is-active">Conceptual design</a>
+        </nav>
+        <div class="mdl-layout-spacer"></div>
+        <nav class="mdl-navigation">
+        
+<form class="form-inline pull-sm-right" action="../../search.html" method="get">
+      <div class="mdl-textfield mdl-js-textfield mdl-textfield--expandable mdl-textfield--floating-label mdl-textfield--align-right">
+        <label id="quick-search-icon" class="mdl-button mdl-js-button mdl-button--icon"  for="waterfall-exp">
+            <i class="material-icons">search</i>
+        </label>
+        <div class="mdl-textfield__expandable-holder">
+          <input class="mdl-textfield__input" type="text" name="q"  id="waterfall-exp" placeholder="Search" />
+          <input type="hidden" name="check_keywords" value="yes" />
+          <input type="hidden" name="area" value="default" />
+        </div>
+      </div>
+      <div class="mdl-tooltip" data-mdl-for="quick-search-icon">
+      Quick search
+      </div>
+</form>
+        
+<a id="button-show-source"
+    class="mdl-button mdl-js-button mdl-button--icon"
+    href="../../_sources/chapters/technical_manual/conceptual_design.rst.txt" rel="nofollow">
+<i class="material-icons">code</i>
+</a>
+<div class="mdl-tooltip" data-mdl-for="button-show-source">
+Show Source
+</div>
+        </nav>
+    </div>
+    <div class="mdl-layout__header-row header-links">
+      <div class="mdl-layout-spacer"></div>
+      <nav class="mdl-navigation">
+          <a  class="mdl-navigation__link" href="../../index.html">
+                  <i class="material-icons navigation-link-icon">home</i>
+                  Home
+              </a>
+          
+              <a  class="mdl-navigation__link" href="https://deltares.nl">
+                  <i class="material-icons navigation-link-icon">launch</i>
+                  Deltares
+              </a>
+      </nav>
+    </div>
+</header><header class="mdl-layout__drawer">
+    
+          <!-- Title -->
+      <span class="mdl-layout-title">
+          <a class="title" href="../../index.html">
+              <img class="logo" src="../../_static/logo_deltares.png" alt="FM2PROF"/>
+          </a>
+      </span>
+    
+    
+      <div class="globaltoc">
+        <span class="mdl-layout-title toc">Table Of Contents</span>
+        
+        
+            
+            <nav class="mdl-navigation">
+                <p class="caption" role="heading"><span class="caption-text">Table of Contents</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../CHANGELOG.html">Changelog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user_manual/index.html">User Manual</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../user_manual/installation.html">Installation Instructions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user_manual/quickstart.html">Quickstart</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user_manual/advanced.html">Troubleshooting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user_manual/source.html">API</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Technical Reference Manual</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Conceptual design</a></li>
+<li class="toctree-l2"><a class="reference internal" href="numerical_methods.html">Numerical methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="settings.html">Settings</a></li>
+<li class="toctree-l2"><a class="reference internal" href="files.html">Files</a></li>
+<li class="toctree-l2"><a class="reference internal" href="glossary.html">Glossary of terms</a></li>
+</ul>
+</li>
+</ul>
+
+            </nav>
+        
+        </div>
+    
+</header>
+        <main class="mdl-layout__content" tabIndex="0">
+<header class="mdl-layout__drawer">
+    
+          <!-- Title -->
+      <span class="mdl-layout-title">
+          <a class="title" href="../../index.html">
+              <img class="logo" src="../../_static/logo_deltares.png" alt="FM2PROF"/>
+          </a>
+      </span>
+    
+    
+      <div class="globaltoc">
+        <span class="mdl-layout-title toc">Table Of Contents</span>
+        
+        
+            
+            <nav class="mdl-navigation">
+                <p class="caption" role="heading"><span class="caption-text">Table of Contents</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../CHANGELOG.html">Changelog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user_manual/index.html">User Manual</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../user_manual/installation.html">Installation Instructions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user_manual/quickstart.html">Quickstart</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user_manual/advanced.html">Troubleshooting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user_manual/source.html">API</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Technical Reference Manual</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Conceptual design</a></li>
+<li class="toctree-l2"><a class="reference internal" href="numerical_methods.html">Numerical methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="settings.html">Settings</a></li>
+<li class="toctree-l2"><a class="reference internal" href="files.html">Files</a></li>
+<li class="toctree-l2"><a class="reference internal" href="glossary.html">Glossary of terms</a></li>
+</ul>
+</li>
+</ul>
+
+            </nav>
+        
+        </div>
+    
+</header>
+
+    <div class="document">
+        <div class="page-content">
+        
+  <section id="conceptual-design">
+<h1>Conceptual design<a class="headerlink" href="#conceptual-design" title="Permalink to this headline">¶</a></h1>
+<p>This chapter describes in more detail the steps FM2PROF takes to go from a 2D representation of reality to a 1D representation of reality. Conceptually, FM2PROF works in three distinct steps: (1) initialisation, (2) building cross-sections and (3) finalisation.</p>
+<section id="initialisation">
+<h2>Initialisation<a class="headerlink" href="#initialisation" title="Permalink to this headline">¶</a></h2>
+<a class=""
+               data-lightbox="group-ed6c67eb-75e1-4db4-acf2-1614f04a9888"
+               href="../../_images/conceptual_initialisation1.png"
+               title=""
+               data-title=""
+               
+               ><img src="../../_images/conceptual_initialisation1.png"
+                     class="align-center"
+                     width="50%"
+                     height="auto"
+                     alt="alternate text"/>
+                </a><p>The initialisation step involves parsing (i.e. reading and making available for further analysis) the 2D data. In this step control volumes and sections are defined as well. This step may take some time to complete, but this preprocessing greatly reduces the computation times in the next step.</p>
+<section id="import-region-file">
+<h3>Import region file<a class="headerlink" href="#import-region-file" title="Permalink to this headline">¶</a></h3>
+<p>The <a class="reference internal" href="glossary.html#term-Region"><span class="xref std std-term">Region</span></a> file is specified in the configuration file.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>For any reasonably sized river model, it is currently not advised to supply a polygon. Instead, a NetCDF file should be supplied. See <span class="xref std std-ref">issue_region_polygon</span> for more information.</p>
+</div>
+</section>
+<section id="import-section-file">
+<h3>Import section file<a class="headerlink" href="#import-section-file" title="Permalink to this headline">¶</a></h3>
+<p>The <a class="reference internal" href="glossary.html#term-Section"><span class="xref std std-term">Section</span></a> file is specified in the configuration file.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>For any reasonably sized river model, it is currently not advised to supply a polygon. Instead, a NetCDF file should be supplied. See <span class="xref std std-ref">issue_region_polygon</span> for more information.</p>
+</div>
+</section>
+<section id="import-2d-data">
+<h3>Import 2D data<a class="headerlink" href="#import-2d-data" title="Permalink to this headline">¶</a></h3>
+<section id="parsing-2d-data">
+<span id="section-parsing-2d-data"></span><h4>Parsing 2D data<a class="headerlink" href="#parsing-2d-data" title="Permalink to this headline">¶</a></h4>
+<p>Dflow2d uses a staggered grid to solve the (hydrostatic) flow equations. Because of this staggered approach, there is not a single 2D point that has all information. Flow information (flow velocity, discharge) is stored in <cite>flow links</cite>, while geometry (bed level) is stored in cell faces. FM2PROF needs both information from the faces, as from the links.</p>
+<a class=""
+               data-lightbox="group-28c78482-066c-4be2-85a5-ed3148155352"
+               href="../../_images/dflow2d_grid1.PNG"
+               title="The dflow2d staggered grid."
+               data-title="The dflow2d staggered grid."
+               
+               ><img src="../../_images/dflow2d_grid1.PNG"
+                     class="align-center"
+                     width="50%"
+                     height="auto"
+                     alt="alternate text"/>
+                </a><p>Below is a table that lists all variables read by FM2PROF from dflowd map output.</p>
+<table class="colwidths-given docutils align-default" id="id1">
+<caption><span class="caption-text">Overview of variables from the 2D model that are used by FM2PROF</span><a class="headerlink" href="#id1" title="Permalink to this table">¶</a></caption>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>FM2PROF variable</p></th>
+<th class="head"><p>Variable in dflow2d output</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>x (at face)</p></td>
+<td><p>mesh2d_face_x</p></td>
+</tr>
+<tr class="row-odd"><td><p>y (at face)</p></td>
+<td><p>mesh2d_face_y</p></td>
+</tr>
+<tr class="row-even"><td><p>area (at face)</p></td>
+<td><p>mesh2d_flowelem_ba</p></td>
+</tr>
+<tr class="row-odd"><td><p>bedlevel (at face)</p></td>
+<td><p>mesh2d_flowelem_bl</p></td>
+</tr>
+<tr class="row-even"><td><p>x (at flow link)</p></td>
+<td><p>mesh2d_edge_x</p></td>
+</tr>
+<tr class="row-odd"><td><p>y (at flow link)</p></td>
+<td><p>mesh2d_edge_y</p></td>
+</tr>
+<tr class="row-even"><td><p>edge_faces (at flow link)</p></td>
+<td><p>mesh2d_edge_faces</p></td>
+</tr>
+<tr class="row-odd"><td><p>edge_nodes (at flow link)</p></td>
+<td><p>mesh2d_edge_nodes</p></td>
+</tr>
+<tr class="row-even"><td><p>waterdepth</p></td>
+<td><p>mesh2d_waterdepth</p></td>
+</tr>
+<tr class="row-odd"><td><p>waterlevel</p></td>
+<td><p>mesh2d_s1</p></td>
+</tr>
+<tr class="row-even"><td><p>chezy_mean</p></td>
+<td><p>mesh2d_czs</p></td>
+</tr>
+<tr class="row-odd"><td><p>chezy_edge</p></td>
+<td><p>mesh2d_czu</p></td>
+</tr>
+<tr class="row-even"><td><p>velocity_x</p></td>
+<td><p>mesh2d_ucx</p></td>
+</tr>
+<tr class="row-odd"><td><p>velocity_y</p></td>
+<td><p>mesh2d_ucy</p></td>
+</tr>
+<tr class="row-even"><td><p>velocity_edge</p></td>
+<td><p>mesh2d_u1</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="classification-of-volumes">
+<h4>Classification of volumes<a class="headerlink" href="#classification-of-volumes" title="Permalink to this headline">¶</a></h4>
+<p><a class="reference internal" href="glossary.html#term-Control-volumes"><span class="xref std std-term">Control volumes</span></a> are used to define which 2D datepoints are linked to which 1D cross-section. This is done in the following steps:</p>
+<ul class="simple">
+<li><p>Each node, link and face is assigned a <a class="reference internal" href="glossary.html#term-Region"><span class="xref std std-term">Region</span></a>. This is currently done through DeltaShell (see <span class="xref std std-ref">issue_region_polygon</span>)</p></li>
+<li><p>For each region seperately, a scikit-learn <a class="reference external" href="https://scikit-learn.org/stable/modules/generated/sklearn.neighbors.KNeighborsClassifier.html">KNearestNeighbour</a> classifier is trained.</p></li>
+<li><p>The classifier is used to uniquely identify each 2D link and each face to a 1D cross-section</p></li>
+</ul>
+</section>
+<section id="classification-of-sections">
+<h4>Classification of sections<a class="headerlink" href="#classification-of-sections" title="Permalink to this headline">¶</a></h4>
+<p><a class="reference internal" href="glossary.html#term-Section"><span class="xref std std-term">Sections</span></a> are used to output a different roughness function for the main channel and the floodplains. The purpose of the classification is to determine whether a 2D point belongs to the main channel section, or to the floodplain section (see warning below).</p>
+<p>Two methods are implemented:</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="numerical_methods.html#section-classification-variance"><span class="std std-ref">Variance based classification</span></a></p></li>
+<li><p>Polygon-based classification using DeltaShell (see <span class="xref std std-ref">issue_region_polygon</span>)</p></li>
+</ul>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>If classification is done using DeltaShell, it is possible to define more than two sections. However, this functionality is not tested and may not work properly.</p>
+</div>
+</section>
+</section>
+</section>
+<section id="build-cross-section">
+<h2>Build Cross-Section<a class="headerlink" href="#build-cross-section" title="Permalink to this headline">¶</a></h2>
+<a class=""
+               data-lightbox="group-94fe1853-950d-4efb-84a2-6c2a30b6ef55"
+               href="../../_images/conceptual_build1.png"
+               title=""
+               data-title=""
+               
+               ><img src="../../_images/conceptual_build1.png"
+                     class="align-center"
+                     width="50%"
+                     height="auto"
+                     alt="alternate text"/>
+                </a><p>Once initialisation is complete, FM2PROF will loop over each <a class="reference internal" href="glossary.html#term-Cross-section-location"><span class="xref std std-term">cross-section location</span></a>. In each iteration, the program takes two steps: (1) building the geometry and (2) building the roughness tables.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>No cross-section will be generated for locations that have no 2D data assigned or have less than 10 faces assigned. This may happen if a location lies outside the 2D grid, or if there are many cross-section closely together. If this happens, an error is raised by FM2PROF. The user should check the cross-section location input file to resolve the problem.</p>
+</div>
+<section id="build-geometry">
+<h3>Build Geometry<a class="headerlink" href="#build-geometry" title="Permalink to this headline">¶</a></h3>
+<p>In each loop, a number of steps is taken based on the 2D data that is uniquely assigned to that cross-section:</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="glossary.html#term-Lakes"><span class="xref std std-term">Lakes</span></a> are identified using the <a class="reference internal" href="numerical_methods.html#identify-lakes"><span class="std std-ref">Lake identification algorithm</span></a></p></li>
+<li><p><a class="reference internal" href="glossary.html#term-Flow-volume"><span class="xref std std-term">Flow volume</span></a> and <a class="reference internal" href="glossary.html#term-Storage-volume"><span class="xref std std-term">Storage volume</span></a> are seperated using the <a class="reference internal" href="numerical_methods.html#distinguish-storage"><span class="std std-ref">Flow &amp; storage seperation algorithm</span></a></p></li>
+<li><p>The <a class="reference internal" href="glossary.html#term-Water-level-in-dependent-geometry"><span class="xref std std-term">water level dependent geometry</span></a> is computed using <a class="reference internal" href="numerical_methods.html#wl-dependent-css"><span class="std std-ref">Water level dependent geometry algorithm</span></a></p></li>
+<li><p>The <a class="reference internal" href="glossary.html#term-Water-level-in-dependent-geometry"><span class="xref std std-term">water level independent geometry</span></a> is computed using <a class="reference internal" href="numerical_methods.html#wl-independent-css"><span class="std std-ref">Water level independent geometry algorithm</span></a></p></li>
+<li><p>The parameters for <a class="reference internal" href="glossary.html#term-Summerdikes"><span class="xref std std-term">Summerdikes</span></a> are defined using the <a class="reference internal" href="numerical_methods.html#sd-optimisation"><span class="std std-ref">Summer dike optimisation algorithm</span></a></p></li>
+<li><p>Finally, the cross-section is simplified using the Visvalingam-Whyatt method of poly-line vertex reduction <a class="reference internal" href="numerical_methods.html#simplify-css"><span class="std std-ref">Cross-section simplification algorithm</span></a></p></li>
+</ul>
+</section>
+<section id="build-roughness">
+<h3>Build roughness<a class="headerlink" href="#build-roughness" title="Permalink to this headline">¶</a></h3>
+<p>At each cross-section point, a roughness look-up table is constructed that relates water level (in m + NAP) to a Chézy roughness coefficient. This is done in three steps:</p>
+<ul class="simple">
+<li><p>For each section, a roughness table is constructed by averaging the 2D points</p></li>
+</ul>
+</section>
+</section>
+<section id="finalisation">
+<h2>Finalisation<a class="headerlink" href="#finalisation" title="Permalink to this headline">¶</a></h2>
+<a class=""
+               data-lightbox="group-28bb5e18-7eb4-4207-9c7c-f5a6a0ff70d0"
+               href="../../_images/conceptual_finalisation1.png"
+               title=""
+               data-title=""
+               
+               ><img src="../../_images/conceptual_finalisation1.png"
+                     class="align-center"
+                     width="50%"
+                     height="auto"
+                     alt="alternate text"/>
+                </a></section>
+</section>
+
+
+        </div>
+        <div class="side-doc-outline">
+            <div class="side-doc-outline--content"> 
+<div class="localtoc">
+    <p class="caption">
+      <span class="caption-text">Table Of Contents</span>
+    </p>
+    <ul>
+<li><a class="reference internal" href="#">Conceptual design</a><ul>
+<li><a class="reference internal" href="#initialisation">Initialisation</a><ul>
+<li><a class="reference internal" href="#import-region-file">Import region file</a></li>
+<li><a class="reference internal" href="#import-section-file">Import section file</a></li>
+<li><a class="reference internal" href="#import-2d-data">Import 2D data</a><ul>
+<li><a class="reference internal" href="#parsing-2d-data">Parsing 2D data</a></li>
+<li><a class="reference internal" href="#classification-of-volumes">Classification of volumes</a></li>
+<li><a class="reference internal" href="#classification-of-sections">Classification of sections</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a class="reference internal" href="#build-cross-section">Build Cross-Section</a><ul>
+<li><a class="reference internal" href="#build-geometry">Build Geometry</a></li>
+<li><a class="reference internal" href="#build-roughness">Build roughness</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#finalisation">Finalisation</a></li>
+</ul>
+</li>
+</ul>
+
+</div>
+            </div>
+        </div>
+
+      <div class="clearer"></div>
+    </div><div class="pagenation">
+     <a id="button-prev" href="index.html" class="mdl-button mdl-js-button mdl-js-ripple-effect mdl-button--colored" role="botton" accesskey="P">
+         <i class="pagenation-arrow-L material-icons">arrow_back</i>
+         <div class="pagenation-text">
+            <span class="pagenation-direction">Previous</span>
+            <div>Technical Reference Manual</div>
+         </div>
+     </a>
+     <a id="button-next" href="numerical_methods.html" class="mdl-button mdl-js-button mdl-js-ripple-effect mdl-button--colored" role="botton" accesskey="N">
+        <i class="pagenation-arrow-R material-icons">arrow_forward</i>
+        <div class="pagenation-text">
+            <span class="pagenation-direction">Next</span>
+            <div>Numerical methods</div>
+        </div>
+     </a>
+  </div>
+        <footer class="mdl-mini-footer">
+    <div class="mdl-mini-footer__left-section">
+      <div class="mdl-logo">FM2PROF</div>
+      <div>
+        
+        <p class="caption" role="heading"><span class="caption-text">Table of Contents</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../CHANGELOG.html">Changelog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user_manual/index.html">User Manual</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Technical Reference Manual</a></li>
+</ul>
+
+      </div>
+    </div>
+
+    <div class="mdl-mini-footer__right-section">
+        <div>&copy; Copyright 2020, Deltares.</div>
+      <div>Generated by <a href="http://sphinx.pocoo.org/">Sphinx</a> 4.5.0 using <a href="https://github.com/myyasuda/sphinx_materialdesign_theme">sphinx_materialdesign_theme</a>.</div>
+    </div>
+</footer>
+        </main>
+    </div>
+  </body>
+</html>

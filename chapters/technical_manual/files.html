@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    
+    <title>Files &#8212; FM2PROF 1.4.3 documentation</title>
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/material-icons.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/custom.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinxcontrib-images/LightBox2/lightbox2/dist/css/lightbox.css" />
+    <link rel="stylesheet" href="../../_static/notosanscjkjp.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/roboto.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/material-design-lite-1.3.0/material.indigo-blue.min.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/sphinx_materialdesign_theme.css" type="text/css" />
+    <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/jquery.js"></script>
+    <script src="../../_static/underscore.js"></script>
+    <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/sphinxcontrib-images/LightBox2/lightbox2/dist/js/lightbox-plus-jquery.min.js"></script>
+    <script src="../../_static/sphinxcontrib-images/LightBox2/lightbox2-customize/jquery-noconflict.js"></script>
+    <script src="../../_static/sphinx_materialdesign_theme.js"></script>
+    <link rel="shortcut icon" href="../../_static/favicon.ico"/>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Glossary of terms" href="glossary.html" />
+    <link rel="prev" title="Settings" href="settings.html" /> 
+  </head>
+<body>
+    <div class="mdl-layout mdl-js-layout mdl-layout--fixed-header mdl-layout--fixed-drawer"><header class="mdl-layout__header mdl-layout__header--waterfall ">
+    <div class="mdl-layout__header-row">
+        
+        <nav class="mdl-navigation breadcrumb">
+            <a class="mdl-navigation__link" href="index.html">Technical Reference Manual</a><i class="material-icons">navigate_next</i>
+            <a class="mdl-navigation__link is-active">Files</a>
+        </nav>
+        <div class="mdl-layout-spacer"></div>
+        <nav class="mdl-navigation">
+        
+<form class="form-inline pull-sm-right" action="../../search.html" method="get">
+      <div class="mdl-textfield mdl-js-textfield mdl-textfield--expandable mdl-textfield--floating-label mdl-textfield--align-right">
+        <label id="quick-search-icon" class="mdl-button mdl-js-button mdl-button--icon"  for="waterfall-exp">
+            <i class="material-icons">search</i>
+        </label>
+        <div class="mdl-textfield__expandable-holder">
+          <input class="mdl-textfield__input" type="text" name="q"  id="waterfall-exp" placeholder="Search" />
+          <input type="hidden" name="check_keywords" value="yes" />
+          <input type="hidden" name="area" value="default" />
+        </div>
+      </div>
+      <div class="mdl-tooltip" data-mdl-for="quick-search-icon">
+      Quick search
+      </div>
+</form>
+        
+<a id="button-show-source"
+    class="mdl-button mdl-js-button mdl-button--icon"
+    href="../../_sources/chapters/technical_manual/files.rst.txt" rel="nofollow">
+<i class="material-icons">code</i>
+</a>
+<div class="mdl-tooltip" data-mdl-for="button-show-source">
+Show Source
+</div>
+        </nav>
+    </div>
+    <div class="mdl-layout__header-row header-links">
+      <div class="mdl-layout-spacer"></div>
+      <nav class="mdl-navigation">
+          <a  class="mdl-navigation__link" href="../../index.html">
+                  <i class="material-icons navigation-link-icon">home</i>
+                  Home
+              </a>
+          
+              <a  class="mdl-navigation__link" href="https://deltares.nl">
+                  <i class="material-icons navigation-link-icon">launch</i>
+                  Deltares
+              </a>
+      </nav>
+    </div>
+</header><header class="mdl-layout__drawer">
+    
+          <!-- Title -->
+      <span class="mdl-layout-title">
+          <a class="title" href="../../index.html">
+              <img class="logo" src="../../_static/logo_deltares.png" alt="FM2PROF"/>
+          </a>
+      </span>
+    
+    
+      <div class="globaltoc">
+        <span class="mdl-layout-title toc">Table Of Contents</span>
+        
+        
+            
+            <nav class="mdl-navigation">
+                <p class="caption" role="heading"><span class="caption-text">Table of Contents</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../CHANGELOG.html">Changelog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user_manual/index.html">User Manual</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../user_manual/installation.html">Installation Instructions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user_manual/quickstart.html">Quickstart</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user_manual/advanced.html">Troubleshooting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user_manual/source.html">API</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Technical Reference Manual</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="conceptual_design.html">Conceptual design</a></li>
+<li class="toctree-l2"><a class="reference internal" href="numerical_methods.html">Numerical methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="settings.html">Settings</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Files</a></li>
+<li class="toctree-l2"><a class="reference internal" href="glossary.html">Glossary of terms</a></li>
+</ul>
+</li>
+</ul>
+
+            </nav>
+        
+        </div>
+    
+</header>
+        <main class="mdl-layout__content" tabIndex="0">
+<header class="mdl-layout__drawer">
+    
+          <!-- Title -->
+      <span class="mdl-layout-title">
+          <a class="title" href="../../index.html">
+              <img class="logo" src="../../_static/logo_deltares.png" alt="FM2PROF"/>
+          </a>
+      </span>
+    
+    
+      <div class="globaltoc">
+        <span class="mdl-layout-title toc">Table Of Contents</span>
+        
+        
+            
+            <nav class="mdl-navigation">
+                <p class="caption" role="heading"><span class="caption-text">Table of Contents</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../CHANGELOG.html">Changelog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user_manual/index.html">User Manual</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../user_manual/installation.html">Installation Instructions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user_manual/quickstart.html">Quickstart</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user_manual/advanced.html">Troubleshooting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user_manual/source.html">API</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Technical Reference Manual</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="conceptual_design.html">Conceptual design</a></li>
+<li class="toctree-l2"><a class="reference internal" href="numerical_methods.html">Numerical methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="settings.html">Settings</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Files</a></li>
+<li class="toctree-l2"><a class="reference internal" href="glossary.html">Glossary of terms</a></li>
+</ul>
+</li>
+</ul>
+
+            </nav>
+        
+        </div>
+    
+</header>
+
+    <div class="document">
+        <div class="page-content">
+        
+  <section id="files">
+<h1>Files<a class="headerlink" href="#files" title="Permalink to this headline">¶</a></h1>
+<section id="configuration-file">
+<h2>Configuration file<a class="headerlink" href="#configuration-file" title="Permalink to this headline">¶</a></h2>
+<p>Default settings</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>[input]
+2DMapOutput                   =           # Output file from FM2D model (.net file)
+CrossSectionLocationFile      =           # .csv or .txt file (, as delimiter) that contains four columns: X_coordinate,Y_coordinate,BranchName,Length,Chainage.
+RegionPolygonFile             =           # User defined polygons in json format
+SectionPolygonFile            =           # User defined polygons in json format
+
+[parameters]
+CaseName                      =           # Subdirectory name under OutputDir (no space); if not specified, &#39;CaseXX&#39; (01, 02..) are used
+MaximumPointsInProfile        = 20        # Number of points which are used to generate cross-sections
+AbsoluteVelocityThreshold     = 0.01      # Absolute velocity threshold in m/s. Used to determine storage
+RelativeVelocityThreshold     = 0.03      # Relative velocity threshold (percent of mean flow velocity; 0-1). Used to determine storage
+MinimumDepthThreshold         = 0.02      # Minimum depth (m) for storage identification
+BedlevelCriterium             = 0.05      # Ignore the lowest percentage of bed level points
+LakeTimesteps                 = 10        # Number of timesteps that are used for identifying lakes
+ExtrapolateStorage            = True      # Add storage to water level independent cross-section section
+SDCorrection                  = True      # Use summerdike volume correction
+SDFloodplainBase              = 0.5       # minimum distance between floodplain base level and crest level in meters
+SDTransitionHeight            = 0.5       # Transition height at the summer dike (m)
+SDOptimisationMethod          = 0         # [0] Optimise on Total volume, [1] optimise  on flow volume, [2] optimise on both
+FrictionWeighingMethod        = 0         # Options. [0] arithmetric mean, [1] Weighted average
+ExportMapFiles                = False     # Export detailed map output. Only use for small models or limited number of cross-sections b/c output can be huge.
+CssSelection                  =           # provide comma separated list of ints; e.g. 38, 39, 40. Leave empty to generate all cross-sections
+SkipMaps                      = 0         # number of timesteps to skip at begin of 2D output. Use to skip problems related to initial conditions.
+ClassificationMethod          = 0         # How to classify 2D output using Section and Region polygons. Options: [0] Do not classify regions or sections. [1] Use DeltaShell
+MinimumTotalWidth             = 0.5       # Minimum width in meters. Zero width may lead to numerical instability in 1D solvers
+
+[output]
+OutputDirectory               = output    # Output files are saved in OutputDir/CaseName; if not specified, subdirectory is created in the current directory
+</pre></div>
+</div>
+</section>
+</section>
+
+
+        </div>
+        <div class="side-doc-outline">
+            <div class="side-doc-outline--content"> 
+<div class="localtoc">
+    <p class="caption">
+      <span class="caption-text">Table Of Contents</span>
+    </p>
+    <ul>
+<li><a class="reference internal" href="#">Files</a><ul>
+<li><a class="reference internal" href="#configuration-file">Configuration file</a></li>
+</ul>
+</li>
+</ul>
+
+</div>
+            </div>
+        </div>
+
+      <div class="clearer"></div>
+    </div><div class="pagenation">
+     <a id="button-prev" href="settings.html" class="mdl-button mdl-js-button mdl-js-ripple-effect mdl-button--colored" role="botton" accesskey="P">
+         <i class="pagenation-arrow-L material-icons">arrow_back</i>
+         <div class="pagenation-text">
+            <span class="pagenation-direction">Previous</span>
+            <div>Settings</div>
+         </div>
+     </a>
+     <a id="button-next" href="glossary.html" class="mdl-button mdl-js-button mdl-js-ripple-effect mdl-button--colored" role="botton" accesskey="N">
+        <i class="pagenation-arrow-R material-icons">arrow_forward</i>
+        <div class="pagenation-text">
+            <span class="pagenation-direction">Next</span>
+            <div>Glossary of terms</div>
+        </div>
+     </a>
+  </div>
+        <footer class="mdl-mini-footer">
+    <div class="mdl-mini-footer__left-section">
+      <div class="mdl-logo">FM2PROF</div>
+      <div>
+        
+        <p class="caption" role="heading"><span class="caption-text">Table of Contents</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../CHANGELOG.html">Changelog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user_manual/index.html">User Manual</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Technical Reference Manual</a></li>
+</ul>
+
+      </div>
+    </div>
+
+    <div class="mdl-mini-footer__right-section">
+        <div>&copy; Copyright 2020, Deltares.</div>
+      <div>Generated by <a href="http://sphinx.pocoo.org/">Sphinx</a> 4.5.0 using <a href="https://github.com/myyasuda/sphinx_materialdesign_theme">sphinx_materialdesign_theme</a>.</div>
+    </div>
+</footer>
+        </main>
+    </div>
+  </body>
+</html>
