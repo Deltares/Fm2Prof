@@ -825,6 +825,18 @@ lint = ["flake8 (>=3.5.0)", "isort", "mypy (>=0.931)", "docutils-stubs", "types-
 test = ["pytest", "pytest-cov", "html5lib", "cython", "typed-ast"]
 
 [[package]]
+name = "sphinx-immaterial"
+version = "0.4.1"
+description = "Adaptation of mkdocs-material theme for the Sphinx documentation system"
+category = "main"
+optional = false
+python-versions = ">=3.6"
+
+[package.dependencies]
+markupsafe = "*"
+sphinx = ">=4.0"
+
+[[package]]
 name = "sphinx-materialdesign-theme"
 version = "0.1.11"
 description = "Sphinx Material Design Theme"
@@ -843,6 +855,20 @@ python-versions = ">=3.5"
 [package.extras]
 lint = ["flake8", "mypy", "docutils-stubs"]
 test = ["pytest"]
+
+[[package]]
+name = "sphinxcontrib-details-directive"
+version = "0.1.0"
+description = "\"details\" directive for Sphinx"
+category = "main"
+optional = false
+python-versions = "*"
+
+[package.dependencies]
+Sphinx = ">=2.0"
+
+[package.extras]
+test = ["tox", "flake8", "flake8-import-order", "pytest", "mypy"]
 
 [[package]]
 name = "sphinxcontrib-devhelp"
@@ -1032,7 +1058,7 @@ docs = ["sphinx_materialdesign_theme", "sphinxcontrib-images"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.7.1"
-content-hash = "b03eff7bcc9ef5e5f68b5f2d51a75cd3e8e743f4ad258ce0e66b4187f5486da5"
+content-hash = "cc898e0752e05a3485c2495f64d48638256be2a055dd5a289536abda8d765cf8"
 
 [metadata.files]
 alabaster = [
@@ -1804,12 +1830,19 @@ sphinx = [
     {file = "Sphinx-4.5.0-py3-none-any.whl", hash = "sha256:ebf612653238bcc8f4359627a9b7ce44ede6fdd75d9d30f68255c7383d3a6226"},
     {file = "Sphinx-4.5.0.tar.gz", hash = "sha256:7bf8ca9637a4ee15af412d1a1d9689fec70523a68ca9bb9127c2f3eeb344e2e6"},
 ]
+sphinx-immaterial = [
+    {file = "sphinx_immaterial-0.4.1-py3-none-any.whl", hash = "sha256:833051e5e0921b09e232ba8cc4aff701e7dfc5a9db74e88402ae585fbc14c940"},
+]
 sphinx-materialdesign-theme = [
     {file = "sphinx_materialdesign_theme-0.1.11.tar.gz", hash = "sha256:6e9dae4c6e5ba23c0657a94c1cf65f64be9c8bc1594a6fb41815f7daa3326aa9"},
 ]
 sphinxcontrib-applehelp = [
     {file = "sphinxcontrib-applehelp-1.0.2.tar.gz", hash = "sha256:a072735ec80e7675e3f432fcae8610ecf509c5f1869d17e2eecff44389cdbc58"},
     {file = "sphinxcontrib_applehelp-1.0.2-py2.py3-none-any.whl", hash = "sha256:806111e5e962be97c29ec4c1e7fe277bfd19e9652fb1a4392105b43e01af885a"},
+]
+sphinxcontrib-details-directive = [
+    {file = "sphinxcontrib-details-directive-0.1.0.tar.gz", hash = "sha256:78bd6a67f786a21868abf0e6a5973340d7e7a6fd71b1890de9c856f92877b38b"},
+    {file = "sphinxcontrib_details_directive-0.1.0-py2.py3-none-any.whl", hash = "sha256:ed4d4f47b36e3e905601d425945cbe9d50d4cbcf9964bbf9c863d5a983fb7bf6"},
 ]
 sphinxcontrib-devhelp = [
     {file = "sphinxcontrib-devhelp-1.0.2.tar.gz", hash = "sha256:ff7f1afa7b9642e7060379360a67e9c41e8f3121f2ce9164266f61b9f4b338e4"},
