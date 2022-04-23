@@ -1,5 +1,5 @@
 Conceptual design
-====================
+=================
 
 This chapter describes in more detail the steps FM2PROF takes to go from a 2D representation of reality to a 1D representation of reality. Conceptually, FM2PROF works in three distinct steps: (1) initialisation, (2) building cross-sections and (3) finalisation. 
 
