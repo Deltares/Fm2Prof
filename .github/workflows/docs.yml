@@ -39,7 +39,7 @@ jobs:
         run: |
           sudo apt-get install python3-sphinx
           poetry run sphinx-build -b html ./docs/source ./docs/build
-          touch ./docs/build/html/.nojekyll
+          touch ./docs/build/.nojekyll
 
       - name: Deploy
         uses: JamesIves/github-pages-deploy-action@4.1.7
