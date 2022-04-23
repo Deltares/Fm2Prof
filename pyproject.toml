@@ -25,6 +25,8 @@ geos = "^0.2.3"
 Cython = "^0.29.24"
 sphinxcontrib-images = "^0.9.4"
 sphinx_materialdesign_theme = "^0.1.11"
+sphinx-immaterial = "^0.4.1"
+sphinxcontrib-details-directive = "^0.1.0"
 
 
 [tool.poetry.dev-dependencies]
