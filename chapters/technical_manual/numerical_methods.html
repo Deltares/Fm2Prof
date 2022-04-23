@@ -1,183 +1,749 @@
-<!DOCTYPE html>
 
-<html>
+
+<!doctype html>
+<html lang="en" class="no-js">
   <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
-
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <meta http-equiv="x-ua-compatible" content="ie=edge">
     
-    <title>Numerical methods &#8212; FM2PROF 1.4.3 documentation</title>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+      <link rel="icon" href="../../_static/favicon.ico">
+    
+    
+      
+        <title>Numerical methods - FM2PROF Manual</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../_static/stylesheets/main.42d9060c.min.css">
+      
+        
+        <link rel="stylesheet" href="../../_static/stylesheets/palette.52561aa6.min.css">
+        
+      
+    
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+        <link rel="stylesheet" type="text/css" href="../../_static/sphinxcontrib-images/LightBox2/lightbox2/dist/css/lightbox.css" />
+        <link rel="stylesheet" type="text/css" href="../../_static/stylesheets/extra.css" />
+    <script>__md_scope=new URL("../..",location),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
 
-    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../../_static/material-icons.css" />
-    <link rel="stylesheet" type="text/css" href="../../_static/custom.css" />
-    <link rel="stylesheet" type="text/css" href="../../_static/sphinxcontrib-images/LightBox2/lightbox2/dist/css/lightbox.css" />
-    <link rel="stylesheet" href="../../_static/notosanscjkjp.css" type="text/css" />
-    <link rel="stylesheet" href="../../_static/roboto.css" type="text/css" />
-    <link rel="stylesheet" href="../../_static/material-design-lite-1.3.0/material.indigo-blue.min.css" type="text/css" />
-    <link rel="stylesheet" href="../../_static/sphinx_materialdesign_theme.css" type="text/css" />
-    <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
-    <script src="../../_static/jquery.js"></script>
-    <script src="../../_static/underscore.js"></script>
-    <script src="../../_static/doctools.js"></script>
-    <script src="../../_static/sphinxcontrib-images/LightBox2/lightbox2/dist/js/lightbox-plus-jquery.min.js"></script>
-    <script src="../../_static/sphinxcontrib-images/LightBox2/lightbox2-customize/jquery-noconflict.js"></script>
-    <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
-    <script src="../../_static/sphinx_materialdesign_theme.js"></script>
-    <link rel="shortcut icon" href="../../_static/favicon.ico"/>
-    <link rel="index" title="Index" href="../../genindex.html" />
-    <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="Settings" href="settings.html" />
-    <link rel="prev" title="Conceptual design" href="conceptual_design.html" /> 
+    
+    
   </head>
-<body>
-    <div class="mdl-layout mdl-js-layout mdl-layout--fixed-header mdl-layout--fixed-drawer"><header class="mdl-layout__header mdl-layout__header--waterfall ">
-    <div class="mdl-layout__header-row">
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="deltares" data-md-color-primary="indigo" data-md-color-accent="deep-orange">
+  
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&"object"==typeof palette.color)for(var key of Object.keys(palette.color))document.body.setAttribute("data-md-color-"+key,palette.color[key])</script>
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
         
-        <nav class="mdl-navigation breadcrumb">
-            <a class="mdl-navigation__link" href="index.html">Technical Reference Manual</a><i class="material-icons">navigate_next</i>
-            <a class="mdl-navigation__link is-active">Numerical methods</a>
-        </nav>
-        <div class="mdl-layout-spacer"></div>
-        <nav class="mdl-navigation">
-        
-<form class="form-inline pull-sm-right" action="../../search.html" method="get">
-      <div class="mdl-textfield mdl-js-textfield mdl-textfield--expandable mdl-textfield--floating-label mdl-textfield--align-right">
-        <label id="quick-search-icon" class="mdl-button mdl-js-button mdl-button--icon"  for="waterfall-exp">
-            <i class="material-icons">search</i>
-        </label>
-        <div class="mdl-textfield__expandable-holder">
-          <input class="mdl-textfield__input" type="text" name="q"  id="waterfall-exp" placeholder="Search" />
-          <input type="hidden" name="check_keywords" value="yes" />
-          <input type="hidden" name="area" value="default" />
-        </div>
-      </div>
-      <div class="mdl-tooltip" data-mdl-for="quick-search-icon">
-      Quick search
-      </div>
-</form>
-        
-<a id="button-show-source"
-    class="mdl-button mdl-js-button mdl-button--icon"
-    href="../../_sources/chapters/technical_manual/numerical_methods.rst.txt" rel="nofollow">
-<i class="material-icons">code</i>
-</a>
-<div class="mdl-tooltip" data-mdl-for="button-show-source">
-Show Source
-</div>
-        </nav>
+        <a href="#cross-section-simplification-algorithm" class="md-skip">
+          Skip to content
+        </a>
+      
     </div>
-    <div class="mdl-layout__header-row header-links">
-      <div class="mdl-layout-spacer"></div>
-      <nav class="mdl-navigation">
-          <a  class="mdl-navigation__link" href="../../index.html">
-                  <i class="material-icons navigation-link-icon">home</i>
-                  Home
-              </a>
+    <div data-md-component="announce">
+      
+    </div>
+    
+      <div data-md-component="outdated" hidden>
+        <aside class="md-banner md-banner--warning">
           
-              <a  class="mdl-navigation__link" href="https://deltares.nl">
-                  <i class="material-icons navigation-link-icon">launch</i>
-                  Deltares
-              </a>
-      </nav>
+        </aside>
+      </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../../index.html" title="FM2PROF Manual" class="md-header__button md-logo" aria-label="FM2PROF Manual" data-md-component="logo">
+      <img src="../../_static/logo_deltares.png" alt="logo">
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            FM2PROF Manual
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Numerical methods
+            
+          </span>
+        </div>
+      </div>
     </div>
-</header><header class="mdl-layout__drawer">
     
-          <!-- Title -->
-      <span class="mdl-layout-title">
-          <a class="title" href="../../index.html">
-              <img class="logo" src="../../_static/logo_deltares.png" alt="FM2PROF"/>
-          </a>
-      </span>
+      <form class="md-header__option" data-md-component="palette">
+        
+          
+          
+          <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="deltares" data-md-color-primary="indigo" data-md-color-accent="deep-orange"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_1">
+          
+            <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_2" hidden>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 2a7 7 0 0 1 7 7c0 2.38-1.19 4.47-3 5.74V17a1 1 0 0 1-1 1H9a1 1 0 0 1-1-1v-2.26C6.19 13.47 5 11.38 5 9a7 7 0 0 1 7-7M9 21v-1h6v1a1 1 0 0 1-1 1h-4a1 1 0 0 1-1-1m3-17a5 5 0 0 0-5 5c0 2.05 1.23 3.81 3 4.58V16h4v-2.42c1.77-.77 3-2.53 3-4.58a5 5 0 0 0-5-5z"/></svg>
+            </label>
+          
+        
+          
+          
+          <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="yellow"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_2">
+          
+            <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_1" hidden>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 2a7 7 0 0 0-7 7c0 2.38 1.19 4.47 3 5.74V17a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-2.26c1.81-1.27 3-3.36 3-5.74a7 7 0 0 0-7-7M9 21a1 1 0 0 0 1 1h4a1 1 0 0 0 1-1v-1H9v1z"/></svg>
+            </label>
+          
+        
+      </form>
     
     
-      <div class="globaltoc">
-        <span class="mdl-layout-title toc">Table Of Contents</span>
+    
+      <label class="md-header__button md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5z"/></svg>
+      </label>
+      <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5z"/></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
         
-        
-            
-            <nav class="mdl-navigation">
-                <p class="caption" role="heading"><span class="caption-text">Table of Contents</span></p>
-<ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="../CHANGELOG.html">Changelog</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../user_manual/index.html">User Manual</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="../user_manual/installation.html">Installation Instructions</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../user_manual/quickstart.html">Quickstart</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../user_manual/advanced.html">Troubleshooting</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../user_manual/source.html">API</a></li>
-</ul>
-</li>
-<li class="toctree-l1 current"><a class="reference internal" href="index.html">Technical Reference Manual</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="conceptual_design.html">Conceptual design</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">Numerical methods</a></li>
-<li class="toctree-l2"><a class="reference internal" href="settings.html">Settings</a></li>
-<li class="toctree-l2"><a class="reference internal" href="files.html">Files</a></li>
-<li class="toctree-l2"><a class="reference internal" href="glossary.html">Glossary of terms</a></li>
-</ul>
-</li>
-</ul>
-
-            </nav>
-        
+        <button type="reset" class="md-search__icon md-icon" aria-label="Clear" tabindex="-1">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list"></ol>
         </div>
+      </div>
+    </div>
+  </div>
+</div>
     
+    
+      <div class="md-header__source">
+        <a href="https://github.com/deltares/fm2prof/" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.0.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    Fm2Prof
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
 </header>
-        <main class="mdl-layout__content" tabIndex="0">
-<header class="mdl-layout__drawer">
     
-          <!-- Title -->
-      <span class="mdl-layout-title">
-          <a class="title" href="../../index.html">
-              <img class="logo" src="../../_static/logo_deltares.png" alt="FM2PROF"/>
-          </a>
-      </span>
-    
-    
-      <div class="globaltoc">
-        <span class="mdl-layout-title toc">Table Of Contents</span>
+    <div class="md-container" data-md-component="container">
+      
+      
+      
+      
         
+          
         
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
             
-            <nav class="mdl-navigation">
-                <p class="caption" role="heading"><span class="caption-text">Table of Contents</span></p>
-<ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="../CHANGELOG.html">Changelog</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../user_manual/index.html">User Manual</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="../user_manual/installation.html">Installation Instructions</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../user_manual/quickstart.html">Quickstart</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../user_manual/advanced.html">Troubleshooting</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../user_manual/source.html">API</a></li>
-</ul>
-</li>
-<li class="toctree-l1 current"><a class="reference internal" href="index.html">Technical Reference Manual</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="conceptual_design.html">Conceptual design</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">Numerical methods</a></li>
-<li class="toctree-l2"><a class="reference internal" href="settings.html">Settings</a></li>
-<li class="toctree-l2"><a class="reference internal" href="files.html">Files</a></li>
-<li class="toctree-l2"><a class="reference internal" href="glossary.html">Glossary of terms</a></li>
-</ul>
-</li>
-</ul>
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
 
-            </nav>
-        
-        </div>
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../index.html" title="FM2PROF Manual" class="md-nav__button md-logo" aria-label="FM2PROF Manual" data-md-component="logo">
+      <img src="../../_static/logo_deltares.png" alt="logo">
+    </a>
+    FM2PROF Manual
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/deltares/fm2prof/" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
     
-</header>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.0.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    Fm2Prof
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+      
 
-    <div class="document">
-        <div class="page-content">
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../user_manual/installation.html" class="md-nav__link">
+        <span class="md-ellipsis">Installation Instructions</span>
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../user_manual/quickstart.html" class="md-nav__link">
+        <span class="md-ellipsis">Quickstart</span>
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../user_manual/advanced.html" class="md-nav__link">
+        <span class="md-ellipsis">Troubleshooting</span>
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../user_manual/source.html" class="md-nav__link">
+        <span class="md-ellipsis">API</span>
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+    
+  
+  
+    
+      
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_5" type="checkbox" id="__nav_5" checked>
+      
+      
+      
+        <label class="md-nav__link" for="__nav_5">
+          <span class="md-ellipsis">Technical reference manual</span>
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="Technical reference manual" data-md-level="1">
+        <label class="md-nav__title" for="__nav_5">
+          <span class="md-nav__icon md-icon"></span>
+          <span class="md-ellipsis">Technical reference manual</span>
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="conceptual_design.html" class="md-nav__link">
+        <span class="md-ellipsis">Conceptual design</span>
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+    
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          <span class="md-ellipsis">Numerical methods</span>
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="" class="md-nav__link md-nav__link--active">
+        <span class="md-ellipsis">Numerical methods</span>
+      </a>
+      
         
-  <section id="numerical-methods">
-<h1>Numerical methods<a class="headerlink" href="#numerical-methods" title="Permalink to this headline">¶</a></h1>
-<section id="cross-section-simplification-algorithm">
-<span id="simplify-css"></span><h2>Cross-section simplification algorithm<a class="headerlink" href="#cross-section-simplification-algorithm" title="Permalink to this headline">¶</a></h2>
-<dl class="py method">
-<dt class="sig sig-object py" id="fm2prof.CrossSection.CrossSection.reduce_points">
-<span class="sig-prename descclassname"><span class="pre">CrossSection.</span></span><span class="sig-name descname"><span class="pre">reduce_points</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">count_after</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">20</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'visvalingam_whyatt'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../_modules/fm2prof/CrossSection.html#CrossSection.reduce_points"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fm2prof.CrossSection.CrossSection.reduce_points" title="Permalink to this definition">¶</a></dt>
+
+  
+
+<nav class="md-nav md-nav--secondary">
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      <span class="md-ellipsis">Numerical methods</span>
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#cross-section-simplification-algorithm" class="md-nav__link">
+    <span class="md-ellipsis">Cross-<wbr>section simplification algorithm</span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Cross-section simplification algorithm">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#fm2prof.CrossSection.CrossSection.reduce_points" class="md-nav__link">
+    <span aria-label="Python method" class="objinfo-icon objinfo-icon__procedure" title="Python method">M</span><span title="fm2prof.CrossSection.CrossSection.reduce_points (Python method)" class="md-ellipsis">Cross<wbr>Section.<wbr>reduce_<wbr>points</span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#lake-identification-algorithm" class="md-nav__link">
+    <span class="md-ellipsis">Lake identification algorithm</span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Lake identification algorithm">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#fm2prof.CrossSection.CrossSection._identify_lakes" class="md-nav__link">
+    <span aria-label="Python method" class="objinfo-icon objinfo-icon__procedure" title="Python method">M</span><span title="fm2prof.CrossSection.CrossSection._identify_lakes (Python method)" class="md-ellipsis">Cross<wbr>Section._<wbr>identify_<wbr>lakes</span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#flow-storage-seperation-algorithm" class="md-nav__link">
+    <span class="md-ellipsis">Flow &amp; storage seperation algorithm</span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Flow &amp; storage seperation algorithm">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#fm2prof.CrossSection.CrossSection._distinguish_flow_from_storage" class="md-nav__link">
+    <span aria-label="Python method" class="objinfo-icon objinfo-icon__procedure" title="Python method">M</span><span title="fm2prof.CrossSection.CrossSection._distinguish_flow_from_storage (Python method)" class="md-ellipsis">Cross<wbr>Section._<wbr>distinguish_<wbr>flow_<wbr>from_<wbr>storage</span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#water-level-dependent-geometry-algorithm" class="md-nav__link">
+    <span class="md-ellipsis">Water level dependent geometry algorithm</span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Water level dependent geometry algorithm">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#fm2prof.CrossSection.CrossSection._compute_css_above_z0" class="md-nav__link">
+    <span aria-label="Python method" class="objinfo-icon objinfo-icon__procedure" title="Python method">M</span><span title="fm2prof.CrossSection.CrossSection._compute_css_above_z0 (Python method)" class="md-ellipsis">Cross<wbr>Section._<wbr>compute_<wbr>css_<wbr>above_<wbr>z0</span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#water-level-independent-geometry-algorithm" class="md-nav__link">
+    <span class="md-ellipsis">Water level independent geometry algorithm</span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Water level independent geometry algorithm">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#fm2prof.CrossSection.CrossSection._extend_css_below_z0" class="md-nav__link">
+    <span aria-label="Python method" class="objinfo-icon objinfo-icon__procedure" title="Python method">M</span><span title="fm2prof.CrossSection.CrossSection._extend_css_below_z0 (Python method)" class="md-ellipsis">Cross<wbr>Section._<wbr>extend_<wbr>css_<wbr>below_<wbr>z0</span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#summer-dike-optimisation-algorithm" class="md-nav__link">
+    <span class="md-ellipsis">Summer dike optimisation algorithm</span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Summer dike optimisation algorithm">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#fm2prof.CrossSection.CrossSection.calculate_correction" class="md-nav__link">
+    <span aria-label="Python method" class="objinfo-icon objinfo-icon__procedure" title="Python method">M</span><span title="fm2prof.CrossSection.CrossSection.calculate_correction (Python method)" class="md-ellipsis">Cross<wbr>Section.<wbr>calculate_<wbr>correction</span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#variance-based-classification" class="md-nav__link">
+    <span class="md-ellipsis">Variance based classification</span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Variance based classification">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#fm2prof.Fm2ProfRunner.Fm2ProfRunner._classify_roughness_sections_by_variance" class="md-nav__link">
+    <span aria-label="Python method" class="objinfo-icon objinfo-icon__procedure" title="Python method">M</span><span title="fm2prof.Fm2ProfRunner.Fm2ProfRunner._classify_roughness_sections_by_variance (Python method)" class="md-ellipsis">Fm2Prof<wbr>Runner._<wbr>classify_<wbr>roughness_<wbr>sections_<wbr>by_<wbr>variance</span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="settings.html" class="md-nav__link">
+        <span class="md-ellipsis">Settings</span>
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="files.html" class="md-nav__link">
+        <span class="md-ellipsis">Files</span>
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="glossary.html" class="md-nav__link">
+        <span class="md-ellipsis">Glossary of terms</span>
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+  
+
+<nav class="md-nav md-nav--secondary">
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      <span class="md-ellipsis">Numerical methods</span>
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#cross-section-simplification-algorithm" class="md-nav__link">
+    <span class="md-ellipsis">Cross-<wbr>section simplification algorithm</span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Cross-section simplification algorithm">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#fm2prof.CrossSection.CrossSection.reduce_points" class="md-nav__link">
+    <span aria-label="Python method" class="objinfo-icon objinfo-icon__procedure" title="Python method">M</span><span title="fm2prof.CrossSection.CrossSection.reduce_points (Python method)" class="md-ellipsis">Cross<wbr>Section.<wbr>reduce_<wbr>points</span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#lake-identification-algorithm" class="md-nav__link">
+    <span class="md-ellipsis">Lake identification algorithm</span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Lake identification algorithm">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#fm2prof.CrossSection.CrossSection._identify_lakes" class="md-nav__link">
+    <span aria-label="Python method" class="objinfo-icon objinfo-icon__procedure" title="Python method">M</span><span title="fm2prof.CrossSection.CrossSection._identify_lakes (Python method)" class="md-ellipsis">Cross<wbr>Section._<wbr>identify_<wbr>lakes</span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#flow-storage-seperation-algorithm" class="md-nav__link">
+    <span class="md-ellipsis">Flow &amp; storage seperation algorithm</span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Flow &amp; storage seperation algorithm">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#fm2prof.CrossSection.CrossSection._distinguish_flow_from_storage" class="md-nav__link">
+    <span aria-label="Python method" class="objinfo-icon objinfo-icon__procedure" title="Python method">M</span><span title="fm2prof.CrossSection.CrossSection._distinguish_flow_from_storage (Python method)" class="md-ellipsis">Cross<wbr>Section._<wbr>distinguish_<wbr>flow_<wbr>from_<wbr>storage</span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#water-level-dependent-geometry-algorithm" class="md-nav__link">
+    <span class="md-ellipsis">Water level dependent geometry algorithm</span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Water level dependent geometry algorithm">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#fm2prof.CrossSection.CrossSection._compute_css_above_z0" class="md-nav__link">
+    <span aria-label="Python method" class="objinfo-icon objinfo-icon__procedure" title="Python method">M</span><span title="fm2prof.CrossSection.CrossSection._compute_css_above_z0 (Python method)" class="md-ellipsis">Cross<wbr>Section._<wbr>compute_<wbr>css_<wbr>above_<wbr>z0</span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#water-level-independent-geometry-algorithm" class="md-nav__link">
+    <span class="md-ellipsis">Water level independent geometry algorithm</span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Water level independent geometry algorithm">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#fm2prof.CrossSection.CrossSection._extend_css_below_z0" class="md-nav__link">
+    <span aria-label="Python method" class="objinfo-icon objinfo-icon__procedure" title="Python method">M</span><span title="fm2prof.CrossSection.CrossSection._extend_css_below_z0 (Python method)" class="md-ellipsis">Cross<wbr>Section._<wbr>extend_<wbr>css_<wbr>below_<wbr>z0</span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#summer-dike-optimisation-algorithm" class="md-nav__link">
+    <span class="md-ellipsis">Summer dike optimisation algorithm</span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Summer dike optimisation algorithm">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#fm2prof.CrossSection.CrossSection.calculate_correction" class="md-nav__link">
+    <span aria-label="Python method" class="objinfo-icon objinfo-icon__procedure" title="Python method">M</span><span title="fm2prof.CrossSection.CrossSection.calculate_correction (Python method)" class="md-ellipsis">Cross<wbr>Section.<wbr>calculate_<wbr>correction</span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#variance-based-classification" class="md-nav__link">
+    <span class="md-ellipsis">Variance based classification</span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Variance based classification">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#fm2prof.Fm2ProfRunner.Fm2ProfRunner._classify_roughness_sections_by_variance" class="md-nav__link">
+    <span aria-label="Python method" class="objinfo-icon objinfo-icon__procedure" title="Python method">M</span><span title="fm2prof.Fm2ProfRunner.Fm2ProfRunner._classify_roughness_sections_by_variance (Python method)" class="md-ellipsis">Fm2Prof<wbr>Runner._<wbr>classify_<wbr>roughness_<wbr>sections_<wbr>by_<wbr>variance</span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          <div class="md-content" data-md-component="content">
+            <article class="md-content__inner md-typeset" role="main">
+                
+<a href="https://github.com/deltares/fm2prof/blob/main/docs/chapters/technical_manual/numerical_methods.rst" title="Edit this page" class="md-content__button md-icon">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20.71 7.04c.39-.39.39-1.04 0-1.41l-2.34-2.34c-.37-.39-1.02-.39-1.41 0l-1.84 1.83 3.75 3.75M3 17.25V21h3.75L17.81 9.93l-3.75-3.75L3 17.25z"/></svg>
+</a>
+
+
+
+  <h1 id="numerical-methods">Numerical methods<a class="headerlink" href="#numerical-methods" title="Permalink to this headline">¶</a></h1>
+<h2 id="cross-section-simplification-algorithm"><span id="simplify-css"></span>Cross-section simplification algorithm<a class="headerlink" href="#cross-section-simplification-algorithm" title="Permalink to this headline">¶</a></h2>
+<dl class="py method objdesc">
+<dt class="sig sig-object py sig-wrap" id="fm2prof.CrossSection.CrossSection.reduce_points">
+<span class="sig-prename descclassname"><span class="pre">CrossSection.</span></span><span class="sig-name descname"><span class="pre">reduce_points</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">count_after</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="desctype"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><span class="pre">int</span></a></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><code class="code python default_value docutils literal highlight highlight-python"><span class="mi">20</span></code></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="desctype"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><code class="code python default_value docutils literal highlight highlight-python"><span class="s1">&#39;visvalingam_whyatt&#39;</span></code></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="desctype"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.10)"><span class="pre">bool</span></a></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><code class="code python default_value docutils literal highlight highlight-python"><span class="kc">True</span></code></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="desctype"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.10)"><span class="pre">None</span></a></span></span></span><a class="reference internal" href="../../_modules/fm2prof/CrossSection.html#CrossSection.reduce_points"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fm2prof.CrossSection.CrossSection.reduce_points" title="Permalink to this definition">¶</a></dt>
 <dd><p>The cross-section geometry generated by FM2PROF contains one point per output
 timestep in the 2D map file. This resolution is often too high given the
 complexity of the cross-sections, and results in very large input files for the
@@ -197,11 +763,14 @@ Implemented vertex reduction methods:</p>
 </dl>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>n</strong> (<em>int</em>) – asdf</p></li>
-<li><p><strong>method</strong> (<em>str</em>) – asdf</p></li>
-<li><p><strong>verbose</strong> (<em>bool</em>) – asdf</p></li>
-</ul>
+<dd class="field-odd"><dl class="api-field simple">
+<dt><span class="sig-name descname">n</span><span class="p"> : </span><span class="desctype"><span class="desctype"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)">int</a></span></span></dt><dd><p>asdf</p>
+</dd>
+<dt><span class="sig-name descname">method</span><span class="p"> : </span><span class="desctype"><span class="desctype"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)">str</a></span></span></dt><dd><p>asdf</p>
+</dd>
+<dt><span class="sig-name descname">verbose</span><span class="p"> : </span><span class="desctype"><span class="desctype"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.10)">bool</a></span></span></dt><dd><p>asdf</p>
+</dd>
+</dl>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p>This method directly works on the object attributes</p>
@@ -212,10 +781,8 @@ Implemented vertex reduction methods:</p>
 </dl>
 </dd></dl>
 
-</section>
-<section id="lake-identification-algorithm">
-<span id="identify-lakes"></span><h2>Lake identification algorithm<a class="headerlink" href="#lake-identification-algorithm" title="Permalink to this headline">¶</a></h2>
-<dl class="py method">
+<h2 id="lake-identification-algorithm"><span id="identify-lakes"></span>Lake identification algorithm<a class="headerlink" href="#lake-identification-algorithm" title="Permalink to this headline">¶</a></h2>
+<dl class="py method objdesc">
 <dt class="sig sig-object py" id="fm2prof.CrossSection.CrossSection._identify_lakes">
 <span class="sig-prename descclassname"><span class="pre">CrossSection.</span></span><span class="sig-name descname"><span class="pre">_identify_lakes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">waterdepth</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/fm2prof/CrossSection.html#CrossSection._identify_lakes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fm2prof.CrossSection.CrossSection._identify_lakes" title="Permalink to this definition">¶</a></dt>
 <dd><p>This algorithms determines whether a <a class="reference internal" href="conceptual_design.html#section-parsing-2d-data"><span class="std std-ref">2D cell</span></a> should
@@ -234,7 +801,10 @@ be marked as a <a class="reference internal" href="glossary.html#term-Lakes"><sp
 </ul>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>waterdepth</strong> (<em>pandas dataframe</em>) – </p>
+<dd class="field-odd"><dl class="api-field simple">
+<dt><span class="sig-name descname">waterdepth</span><span class="p"> : </span><span class="desctype"><span class="desctype">pandas dataframe</span></span></dt><dd><p></p>
+</dd>
+</dl>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p>mask of all cells that are a ‘lake’
@@ -247,11 +817,9 @@ lake_depth_correction (ndarray): the depth of a lake at the start of the 2D comp
 </dl>
 </dd></dl>
 
-</section>
-<section id="flow-storage-seperation-algorithm">
-<span id="distinguish-storage"></span><h2>Flow &amp; storage seperation algorithm<a class="headerlink" href="#flow-storage-seperation-algorithm" title="Permalink to this headline">¶</a></h2>
-<dl class="py method">
-<dt class="sig sig-object py" id="fm2prof.CrossSection.CrossSection._distinguish_flow_from_storage">
+<h2 id="flow-storage-seperation-algorithm"><span id="distinguish-storage"></span>Flow &amp; storage seperation algorithm<a class="headerlink" href="#flow-storage-seperation-algorithm" title="Permalink to this headline">¶</a></h2>
+<dl class="py method objdesc">
+<dt class="sig sig-object py sig-wrap" id="fm2prof.CrossSection.CrossSection._distinguish_flow_from_storage">
 <span class="sig-prename descclassname"><span class="pre">CrossSection.</span></span><span class="sig-name descname"><span class="pre">_distinguish_flow_from_storage</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">waterdepth</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">velocity</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/fm2prof/CrossSection.html#CrossSection._distinguish_flow_from_storage"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fm2prof.CrossSection.CrossSection._distinguish_flow_from_storage" title="Permalink to this definition">¶</a></dt>
 <dd><p>This method determines which cells should be considered ‘flowing’. A cell is considered flowing if all following conditions are met:</p>
 <ul class="simple">
@@ -261,10 +829,12 @@ lake_depth_correction (ndarray): the depth of a lake at the start of the 2D comp
 </ul>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>waterdepth</strong> (<em>pandas Dataframe</em>) – for index and time in columns</p></li>
-<li><p><strong>velocity</strong> (<em>pandas Dataframe</em><em>(</em>) – for index and time in columns</p></li>
-</ul>
+<dd class="field-odd"><dl class="api-field simple">
+<dt><span class="sig-name descname">waterdepth</span><span class="p"> : </span><span class="desctype"><span class="desctype">pandas Dataframe</span></span></dt><dd><p>for index and time in columns</p>
+</dd>
+<dt><span class="sig-name descname">velocity</span><span class="p"> : </span><span class="desctype"><span class="desctype">pandas Dataframe(</span></span></dt><dd><p>for index and time in columns</p>
+</dd>
+</dl>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p>flow_mask (pandas Dataframe) with cell id for index and time in columns. True for flow, False for storage</p>
@@ -272,12 +842,10 @@ lake_depth_correction (ndarray): the depth of a lake at the start of the 2D comp
 </dl>
 </dd></dl>
 
-</section>
-<section id="water-level-dependent-geometry-algorithm">
-<span id="wl-dependent-css"></span><h2>Water level dependent geometry algorithm<a class="headerlink" href="#water-level-dependent-geometry-algorithm" title="Permalink to this headline">¶</a></h2>
-<dl class="py method">
+<h2 id="water-level-dependent-geometry-algorithm"><span id="wl-dependent-css"></span>Water level dependent geometry algorithm<a class="headerlink" href="#water-level-dependent-geometry-algorithm" title="Permalink to this headline">¶</a></h2>
+<dl class="py method objdesc">
 <dt class="sig sig-object py" id="fm2prof.CrossSection.CrossSection._compute_css_above_z0">
-<span class="sig-prename descclassname"><span class="pre">CrossSection.</span></span><span class="sig-name descname"><span class="pre">_compute_css_above_z0</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">centre_level</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../_modules/fm2prof/CrossSection.html#CrossSection._compute_css_above_z0"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fm2prof.CrossSection.CrossSection._compute_css_above_z0" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">CrossSection.</span></span><span class="sig-name descname"><span class="pre">_compute_css_above_z0</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">centre_level</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="desctype"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.10)"><span class="pre">None</span></a></span></span></span><a class="reference internal" href="../../_modules/fm2prof/CrossSection.html#CrossSection._compute_css_above_z0"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fm2prof.CrossSection.CrossSection._compute_css_above_z0" title="Permalink to this definition">¶</a></dt>
 <dd><p>This method computes for each level (z) above the water level at the first 2D output (z0),
 the corresponding <a class="reference internal" href="glossary.html#term-Total-width"><span class="xref std std-term">Total width</span></a> and <a class="reference internal" href="glossary.html#term-Flow-width"><span class="xref std std-term">Flow width</span></a>. This is done in the following way:</p>
 <ol class="arabic simple">
@@ -287,7 +855,10 @@ the corresponding <a class="reference internal" href="glossary.html#term-Total-w
 </ol>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>centre_level</strong> – the water level at the cross-section location (x, y), which is typically at the centre of the control volume</p>
+<dd class="field-odd"><dl class="api-field simple">
+<dt><span class="sig-name descname">centre_level</span></dt><dd><p>the water level at the cross-section location (x, y), which is typically at the centre of the control volume</p>
+</dd>
+</dl>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p>this method writes to the cross-section attributes _css_z, _css_total_width and _css_flow_width</p>
@@ -298,12 +869,10 @@ the corresponding <a class="reference internal" href="glossary.html#term-Total-w
 </dl>
 </dd></dl>
 
-</section>
-<section id="water-level-independent-geometry-algorithm">
-<span id="wl-independent-css"></span><h2>Water level independent geometry algorithm<a class="headerlink" href="#water-level-independent-geometry-algorithm" title="Permalink to this headline">¶</a></h2>
-<dl class="py method">
-<dt class="sig sig-object py" id="fm2prof.CrossSection.CrossSection._extend_css_below_z0">
-<span class="sig-prename descclassname"><span class="pre">CrossSection.</span></span><span class="sig-name descname"><span class="pre">_extend_css_below_z0</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">centre_level</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">centre_depth</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">waterlevel</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bedlevel_matrix</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">area_matrix</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wet_not_plas_mask</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../_modules/fm2prof/CrossSection.html#CrossSection._extend_css_below_z0"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fm2prof.CrossSection.CrossSection._extend_css_below_z0" title="Permalink to this definition">¶</a></dt>
+<h2 id="water-level-independent-geometry-algorithm"><span id="wl-independent-css"></span>Water level independent geometry algorithm<a class="headerlink" href="#water-level-independent-geometry-algorithm" title="Permalink to this headline">¶</a></h2>
+<dl class="py method objdesc">
+<dt class="sig sig-object py sig-wrap" id="fm2prof.CrossSection.CrossSection._extend_css_below_z0">
+<span class="sig-prename descclassname"><span class="pre">CrossSection.</span></span><span class="sig-name descname"><span class="pre">_extend_css_below_z0</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">centre_level</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">centre_depth</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">waterlevel</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bedlevel_matrix</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">area_matrix</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wet_not_plas_mask</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="desctype"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.10)"><span class="pre">None</span></a></span></span></span><a class="reference internal" href="../../_modules/fm2prof/CrossSection.html#CrossSection._extend_css_below_z0"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fm2prof.CrossSection.CrossSection._extend_css_below_z0" title="Permalink to this definition">¶</a></dt>
 <dd><p>This methods computeS for level (z) below the water level at the first 2D output (z0) the corresponding
 <a class="reference internal" href="glossary.html#term-Total-width"><span class="xref std std-term">Total width</span></a> and <a class="reference internal" href="glossary.html#term-Flow-width"><span class="xref std std-term">Flow width</span></a>. This is done in the following way:</p>
 <ol class="arabic">
@@ -353,12 +922,10 @@ _fm_total_volume</p>
 </dl>
 </dd></dl>
 
-</section>
-<section id="summer-dike-optimisation-algorithm">
-<span id="sd-optimisation"></span><h2>Summer dike optimisation algorithm<a class="headerlink" href="#summer-dike-optimisation-algorithm" title="Permalink to this headline">¶</a></h2>
-<dl class="py method">
-<dt class="sig sig-object py" id="fm2prof.CrossSection.CrossSection.calculate_correction">
-<span class="sig-prename descclassname"><span class="pre">CrossSection.</span></span><span class="sig-name descname"><span class="pre">calculate_correction</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">transition_height</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../_modules/fm2prof/CrossSection.html#CrossSection.calculate_correction"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fm2prof.CrossSection.CrossSection.calculate_correction" title="Permalink to this definition">¶</a></dt>
+<h2 id="summer-dike-optimisation-algorithm"><span id="sd-optimisation"></span>Summer dike optimisation algorithm<a class="headerlink" href="#summer-dike-optimisation-algorithm" title="Permalink to this headline">¶</a></h2>
+<dl class="py method objdesc">
+<dt class="sig sig-object py sig-wrap" id="fm2prof.CrossSection.CrossSection.calculate_correction">
+<span class="sig-prename descclassname"><span class="pre">CrossSection.</span></span><span class="sig-name descname"><span class="pre">calculate_correction</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">transition_height</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="desctype"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.10)"><span class="pre">float</span></a></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="desctype"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.10)"><span class="pre">None</span></a></span></span></span><a class="reference internal" href="../../_modules/fm2prof/CrossSection.html#CrossSection.calculate_correction"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fm2prof.CrossSection.CrossSection.calculate_correction" title="Permalink to this definition">¶</a></dt>
 <dd><p>This method computes a volume correction that cannot be captured within the
 constraints of 1D cross-sectional geometry, which forces an increasing width
 at increasing elevation and cannot deal with varying water levels. In reality,
@@ -397,11 +964,9 @@ is the added volume given water level <span class="math notranslate nohighlight"
 </div>
 </dd></dl>
 
-</section>
-<section id="variance-based-classification">
-<span id="section-classification-variance"></span><h2>Variance based classification<a class="headerlink" href="#variance-based-classification" title="Permalink to this headline">¶</a></h2>
-<dl class="py method">
-<dt class="sig sig-object py" id="fm2prof.Fm2ProfRunner.Fm2ProfRunner._classify_roughness_sections_by_variance">
+<h2 id="variance-based-classification"><span id="section-classification-variance"></span>Variance based classification<a class="headerlink" href="#variance-based-classification" title="Permalink to this headline">¶</a></h2>
+<dl class="py method objdesc">
+<dt class="sig sig-object py sig-wrap" id="fm2prof.Fm2ProfRunner.Fm2ProfRunner._classify_roughness_sections_by_variance">
 <span class="sig-prename descclassname"><span class="pre">Fm2ProfRunner.</span></span><span class="sig-name descname"><span class="pre">_classify_roughness_sections_by_variance</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">variable</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/fm2prof/Fm2ProfRunner.html#Fm2ProfRunner._classify_roughness_sections_by_variance"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fm2prof.Fm2ProfRunner.Fm2ProfRunner._classify_roughness_sections_by_variance" title="Permalink to this definition">¶</a></dt>
 <dd><p>This method classifies the region into main channel and floodplain based on roughness. It
 is used when the user does not specify a section polygon.</p>
@@ -416,72 +981,104 @@ for more information.</p>
 </div>
 </dd></dl>
 
-</section>
-</section>
 
 
-        </div>
-        <div class="side-doc-outline">
-            <div class="side-doc-outline--content"> 
-<div class="localtoc">
-    <p class="caption">
-      <span class="caption-text">Table Of Contents</span>
-    </p>
-    <ul>
-<li><a class="reference internal" href="#">Numerical methods</a><ul>
-<li><a class="reference internal" href="#cross-section-simplification-algorithm">Cross-section simplification algorithm</a></li>
-<li><a class="reference internal" href="#lake-identification-algorithm">Lake identification algorithm</a></li>
-<li><a class="reference internal" href="#flow-storage-seperation-algorithm">Flow &amp; storage seperation algorithm</a></li>
-<li><a class="reference internal" href="#water-level-dependent-geometry-algorithm">Water level dependent geometry algorithm</a></li>
-<li><a class="reference internal" href="#water-level-independent-geometry-algorithm">Water level independent geometry algorithm</a></li>
-<li><a class="reference internal" href="#summer-dike-optimisation-algorithm">Summer dike optimisation algorithm</a></li>
-<li><a class="reference internal" href="#variance-based-classification">Variance based classification</a></li>
-</ul>
-</li>
-</ul>
 
+  <hr>
+<div class="md-source-file">
+  <small>
+    
+      Last update:
+      Apr 23, 2022
+    
+  </small>
 </div>
-            </div>
-        </div>
 
-      <div class="clearer"></div>
-    </div><div class="pagenation">
-     <a id="button-prev" href="conceptual_design.html" class="mdl-button mdl-js-button mdl-js-ripple-effect mdl-button--colored" role="botton" accesskey="P">
-         <i class="pagenation-arrow-L material-icons">arrow_back</i>
-         <div class="pagenation-text">
-            <span class="pagenation-direction">Previous</span>
-            <div>Conceptual design</div>
-         </div>
-     </a>
-     <a id="button-next" href="settings.html" class="mdl-button mdl-js-button mdl-js-ripple-effect mdl-button--colored" role="botton" accesskey="N">
-        <i class="pagenation-arrow-R material-icons">arrow_forward</i>
-        <div class="pagenation-text">
-            <span class="pagenation-direction">Next</span>
-            <div>Settings</div>
+              
+            </article>
+          </div>
         </div>
-     </a>
-  </div>
-        <footer class="mdl-mini-footer">
-    <div class="mdl-mini-footer__left-section">
-      <div class="mdl-logo">FM2PROF</div>
-      <div>
         
-        <p class="caption" role="heading"><span class="caption-text">Table of Contents</span></p>
-<ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="../CHANGELOG.html">Changelog</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../user_manual/index.html">User Manual</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="index.html">Technical Reference Manual</a></li>
-</ul>
-
-      </div>
+          <a href="#" class="md-top md-icon" data-md-component="top" data-md-state="hidden">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"/></svg>
+            Back to top
+          </a>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    <nav class="md-footer__inner md-grid" aria-label="Footer">
+      
+        
+        <a href="conceptual_design.html" class="md-footer__link md-footer__link--prev" aria-label="Previous: Conceptual design" rel="prev">
+          <div class="md-footer__button md-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
+          </div>
+          <div class="md-footer__title">
+            <div class="md-ellipsis">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              Conceptual design
+            </div>
+          </div>
+        </a>
+      
+      
+        
+        <a href="settings.html" class="md-footer__link md-footer__link--next" aria-label="Next: Settings" rel="next">
+          <div class="md-footer__title">
+            <div class="md-ellipsis">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              Settings
+            </div>
+          </div>
+          <div class="md-footer__button md-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11H4z"/></svg>
+          </div>
+        </a>
+      
+    </nav>
+  
+  
+  
+  <div class="md-footer-meta md-typeset">
+    
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-footer-copyright__highlight">
+        &#169; Copyright 2022 Deltares.
+        
     </div>
-
-    <div class="mdl-mini-footer__right-section">
-        <div>&copy; Copyright 2020, Deltares.</div>
-      <div>Generated by <a href="http://sphinx.pocoo.org/">Sphinx</a> 4.5.0 using <a href="https://github.com/myyasuda/sphinx_materialdesign_theme">sphinx_materialdesign_theme</a>.</div>
+  
+    Created using
+    <a href="https://www.sphinx-doc.org/" target="_blank" rel="noopener">Sphinx</a>
+    4.5.0.
+     and
+    <a href="https://github.com/jbms/sphinx-immaterial/" target="_blank" rel="noopener">Sphinx-Immaterial</a>
+  
+</div>
+      
     </div>
+    
+  </div>
 </footer>
-        </main>
+      
     </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.expand", "navigation.sections", "navigation.top"], "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.placeholder": "Search", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version.title": "Select version"}, "version": {"provider": "mike", "staticVersions": [{"aliases": [], "title": "ReadTheDocs", "version": "https://sphinx-immaterial.rtfd.io"}, {"aliases": [], "title": "Github Pages", "version": "https://jbms.github.io/sphinx-immaterial"}], "versionPath": null}}</script>
+    
+    
+      <script src="../../_static/javascripts/bundle.cf32e622.min.js"></script>
+        <script src="../../_static/sphinxcontrib-images/LightBox2/lightbox2/dist/js/lightbox-plus-jquery.min.js"></script>
+        <script src="../../_static/sphinxcontrib-images/LightBox2/lightbox2-customize/jquery-noconflict.js"></script>
+        <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    
   </body>
 </html>
