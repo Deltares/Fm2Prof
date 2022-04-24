@@ -95,9 +95,9 @@ keys_map = {"my-special-key": "Awesome Key", "git": ""}
 html_static_path = ["_static"]
 html_css_files = ["stylesheets/extra.css"]
 html_last_updated_fmt = ""
-html_title = "FM2PROF Manual"
+html_title = "FM2PROF documentation"
 html_favicon = "_static/favicon.ico"  # colored version of material/bookshelf.svg
-html_logo = "_static/logo_deltares.png"  # from https://gifer.com/en/Ybin
+html_logo = "_static/Deltares_logo_Wit_RGB.svg"  # from https://gifer.com/en/Ybin
 
 # -- HTML theme specific settings ------------------------------------------------
 
