@@ -111,9 +111,9 @@ html_theme_options = {
     },
     "site_url": "https://deltares.github.io/fm2prof/",
     "repo_url": "https://github.com/deltares/fm2prof/",
-    "repo_name": "Fm2Prof",
+    "repo_name": "deltares/fm2prof",
     "repo_type": "github",
-    "edit_uri": "blob/main/docs",
+    "edit_uri": "blob/master/docs",
     # "google_analytics": ["UA-XXXXX", "auto"],
     "globaltoc_collapse": True,
     "globaltoc_includehidden": True,
@@ -125,15 +125,15 @@ html_theme_options = {
         #"navigation.instant",
         #"header.autohide",
         "navigation.top",
-        #"navigation.tracking",
-        #"search.highlight",
+        "navigation.tracking",
+        "search.highlight",
         #"search.share",
     ],
     "palette": [
         {
             "media": "(prefers-color-scheme: light)",
-            "scheme": "deltares",
-            "primary": "indigo",
+            "scheme": "default",
+            "primary": "deltares-blue",
             "accent": "deep-orange",
             "toggle": {
                 "icon": "material/lightbulb-outline",
@@ -143,7 +143,7 @@ html_theme_options = {
         {
             "media": "(prefers-color-scheme: dark)",
             "scheme": "slate",
-            "primary": "indigo",
+            "primary": "deltares-blue",
             "accent": "yellow",
             "toggle": {
                 "icon": "material/lightbulb",
@@ -151,19 +151,8 @@ html_theme_options = {
             },
         },
     ],
-    "version_dropdown": True,
-    "version_info": [
-        {
-            "version": "https://sphinx-immaterial.rtfd.io",
-            "title": "ReadTheDocs",
-            "aliases": [],
-        },
-        {
-            "version": "https://jbms.github.io/sphinx-immaterial",
-            "title": "Github Pages",
-            "aliases": [],
-        },
-    ],
+    "version_dropdown": False,
+    "version_info": [],
     "toc_title_is_page_title": True,
 }  # end html_theme_options
 
