@@ -1,0 +1,68 @@
+\documentclass[signature]{deltares_report}
+\usepackage{listings}
+\usepackage[titletoc]{appendix}
+\usepackage{pdfpages}
+\usepackage[section]{placeins}
+%-----------------------------------------------
+\lstset{ %
+  basicstyle=\footnotesize,        % the size of the fonts that are used for the code listings
+}
+\definecolor{Gray}{gray}{0.9}
+\begin{document}
+\pagestyle{empty}
+\cleardoublepage
+%
+
+\newcommand{\ProgramName}{%ProgramName%\xspace}
+\newcommand{\ProgramVersion}{%ProgramVersion%\xspace}
+
+\title{\ProgramName}
+\subtitle{Acceptance test Report}
+\projectnumber{%ProjectNumber%}
+\client{Deltares}
+\reference{%ProjectNumber%-\ProgramName}
+\classification{-}
+
+\date{July 2019}
+\version{1.0}
+
+\keywords{software, python}
+
+\references{}
+
+\summary{This is an automatically generated acceptance report of \ProgramName, version \ProgramVersion}
+
+\versioni{1.0}
+\datei{\today}
+%AUTHORS%
+\revieweri{}
+\approvali{}
+
+\status{draft}
+\disclaimer{}
+
+\deltarestitle
+
+%------------------------------------------------------------------------------
+\chapter{Introduction} 
+\label{chapterIntroduction}
+
+\section{Purpose and scope of this document} \label{sec:PurposeAndScope}
+The purpose of this report is to document the results of the acceptance test cases for \ProgramName. 
+\section{Versions}
+\label{sec:Versions}
+
+
+\subsection{Version \ProgramVersion}
+\label{sec:Version}
+This is the first iteration of the acceptance test documentation. 
+%----------------------------------------
+
+%CONTENT%
+
+%----------------------------------------
+\pagestyle{empty}
+\mbox{}
+
+%------------------------------------------------------------------------------
+\end{document}
