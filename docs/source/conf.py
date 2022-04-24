@@ -9,6 +9,7 @@
 # add docs path to python sys.path to allow autodoc-ing a test_py_module
 import os
 import sys
+
 sys.path.insert(0, os.path.abspath("."))
 
 # -- Project information -----------------------------------------------------
@@ -59,7 +60,7 @@ extensions = [
     "sphinx.ext.todo",
     "sphinx.ext.mathjax",
     "sphinx.ext.viewcode",
-    "sphinx_immaterial"
+    "sphinx_immaterial",
 ]
 
 intersphinx_mapping = {
@@ -119,15 +120,15 @@ html_theme_options = {
     "globaltoc_includehidden": True,
     "features": [
         "navigation.expand",
-        #"navigation.tabs",
-        #"toc.integrate",
+        # "navigation.tabs",
+        # "toc.integrate",
         "navigation.sections",
-        #"navigation.instant",
-        #"header.autohide",
+        # "navigation.instant",
+        # "header.autohide",
         "navigation.top",
         "navigation.tracking",
         "search.highlight",
-        #"search.share",
+        # "search.share",
     ],
     "palette": [
         {
