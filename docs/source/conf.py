@@ -2,46 +2,48 @@
 #
 # This file only contains a selection of the most common options. For a full
 # list see the documentation:
-# https://www.sphinx-doc.org/en/master/usage/configuration.html
+# http://www.sphinx-doc.org/en/master/config
 
 # -- Path setup --------------------------------------------------------------
 
-# If extensions (or modules to document with autodoc) are in another directory,
-# add these directories to sys.path here. If the directory is relative to the
-# documentation root, use os.path.abspath to make it absolute, like shown here.
-#
-# import os
-# import sys
-# sys.path.insert(0, os.path.abspath('.'))
-# from jupyter_sphinx_theme import *
-# init_theme()
-import json
+# add docs path to python sys.path to allow autodoc-ing a test_py_module
+import os
+import sys
+
+sys.path.insert(0, os.path.abspath("."))
 
 # -- Project information -----------------------------------------------------
 
 project = "FM2PROF"
-copyright = "2020, Deltares"
-author = "Koen Berends"
-contact = "koen.berends@deltares.nl"
+copyright = "2022 Deltares"
+author = "Koen D. Berends"
 
 # The full version, including alpha/beta/rc tags
+release = "1.4.3"
+
+# To enable to inject project name in source
+import fm2prof
 from fm2prof import __version__
 from fm2prof.IniFile import IniFile
 
-release = __version__
-
-# To enable to inject project name in source
 rst_epilog = f"""
+
 .. |project| replace:: {project} 
 .. |release| replace:: {release}
 """
 
 for pname, ptype, phint, pvalue in IniFile().iter_parameters():
+
     if pvalue == "":
+
         pvalue = "Undefined"
+
     rst_epilog += f".. |default_{pname.lower()}| replace:: {pvalue}\n"
+
     rst_epilog += f".. |type_{pname.lower()}| replace:: {ptype}\n"
+
     rst_epilog += f".. |hint_{pname.lower()}| replace:: {phint}\n"
+
 
 # -- General configuration ---------------------------------------------------
 
@@ -50,11 +52,28 @@ for pname, ptype, phint, pvalue in IniFile().iter_parameters():
 # ones.
 extensions = [
     "sphinx.ext.autodoc",
+    "sphinx.ext.doctest",
+    "sphinx.ext.extlinks",
+    "sphinx.ext.intersphinx",
     "sphinxcontrib.images",
-    "sphinx.ext.napoleon",  # to support google style docstrings,
-    "sphinx.ext.viewcode",
+    "sphinx.ext.napoleon",
+    "sphinx.ext.todo",
     "sphinx.ext.mathjax",
+    "sphinx.ext.viewcode",
+    "sphinx_immaterial",
 ]
+
+intersphinx_mapping = {
+    "python": ("https://docs.python.org/3", None),
+    "sphinx_docs": ("https://www.sphinx-doc.org/en/master", None),
+}
+
+# The reST default role (used for this markup: `text`) to use for all
+# documents.
+default_role = "any"
+
+autosummary_generate = True
+autoclass_content = "class"
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ["_templates"]
@@ -62,152 +81,100 @@ templates_path = ["_templates"]
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
-exclude_patterns = []
+exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
 
+# -- sphinx_immaterial.keys extension options
+#
+# optional key_map for example purposes
+keys_map = {"my-special-key": "Awesome Key", "git": ""}
 
 # -- Options for HTML output -------------------------------------------------
 
-# The theme to use for HTML and HTML Help pages.  See the documentation for
-# a list of builtin themes.
-#
-
-# html_favicon = '_static/favicon.ico'
-html_logo = "_static/logo_deltares.png"
-html_favicon = "_static/favicon.ico"
-html_theme = "sphinx_materialdesign_theme"
-html_sidebars = {"**": ["globaltoc.html"]}
-html_theme_options = {
-    # Specify a list of menu in Header.
-    # Tuples forms:
-    #  ('Name', 'external url or path of pages in the document', boolean, 'icon name')
-    #
-    # Third argument:
-    # True indicates an external link.
-    # False indicates path of pages in the document.
-    #
-    # Fourth argument:
-    # Specify the icon name.
-    # For details see link.
-    # https://material.io/icons/
-    "header_links": [
-        ("Home", "index", False, "home"),
-        ("Deltares", "https://deltares.nl", True, "launch"),
-    ],
-    # Customize css colors.
-    # For details see link.
-    # https://getmdl.io/customize/index.html
-    #
-    # Values: amber, blue, brown, cyan deep_orange, deep_purple, green, grey, indigo, light_blue,
-    #         light_green, lime, orange, pink, purple, red, teal, yellow(Default: indigo)
-    "primary_color": "indigo",
-    # Values: Same as primary_color. (Default: pink)
-    "accent_color": "blue",
-    # Customize layout.
-    # For details see link.
-    # https://getmdl.io/components/index.html#layout-section
-    "fixed_drawer": True,
-    "fixed_header": True,
-    "header_waterfall": True,
-    "header_scroll": False,
-    # Render title in header.
-    # Values: True, False (Default: False)
-    "show_header_title": False,
-    # Render title in drawer.
-    # Values: True, False (Default: True)
-    "show_drawer_title": True,
-    # Render footer.
-    # Values: True, False (Default: True)
-    "show_footer": True,
-}
-
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
-# so a file named "default.css" will overwrite the builtin "default.css".
+# so a file named 'default.css' will overwrite the builtin 'default.css'.
 html_static_path = ["_static"]
+html_css_files = ["stylesheets/extra.css"]
+html_last_updated_fmt = ""
+html_title = "FM2PROF documentation"
+html_favicon = "_static/favicon.ico"  # colored version of material/bookshelf.svg
+html_logo = "_static/Deltares_logo_Wit_RGB.svg"  # from https://gifer.com/en/Ybin
 
-# -- Options for LaTeX output -------------------------------------------------
+# -- HTML theme specific settings ------------------------------------------------
 
-latex_docclass = {
-    "howto": "article",
-    "manual": "deltares_report",
-}
+extensions.append("sphinx_immaterial")
+html_theme = "sphinx_immaterial"
 
-latex_additional_files = ["latex_additional_files/sphinx.sty"]
+# material theme options (see theme.conf for more information)
+html_theme_options = {
+    "icon": {
+        "repo": "fontawesome/brands/git-alt",
+    },
+    "site_url": "https://deltares.github.io/fm2prof/",
+    "repo_url": "https://github.com/deltares/fm2prof/",
+    "repo_name": "deltares/fm2prof",
+    "repo_type": "github",
+    "edit_uri": "blob/master/docs",
+    # "google_analytics": ["UA-XXXXX", "auto"],
+    "globaltoc_collapse": True,
+    "globaltoc_includehidden": True,
+    "features": [
+        "navigation.expand",
+        # "navigation.tabs",
+        # "toc.integrate",
+        "navigation.sections",
+        # "navigation.instant",
+        # "header.autohide",
+        "navigation.top",
+        "navigation.tracking",
+        "search.highlight",
+        # "search.share",
+    ],
+    "palette": [
+        {
+            "media": "(prefers-color-scheme: light)",
+            "scheme": "default",
+            "primary": "deltares-blue",
+            "accent": "deep-orange",
+            "toggle": {
+                "icon": "material/lightbulb-outline",
+                "name": "Switch to dark mode",
+            },
+        },
+        {
+            "media": "(prefers-color-scheme: dark)",
+            "scheme": "slate",
+            "primary": "deltares-blue",
+            "accent": "yellow",
+            "toggle": {
+                "icon": "material/lightbulb",
+                "name": "Switch to light mode",
+            },
+        },
+    ],
+    "version_dropdown": False,
+    "version_info": [],
+    "toc_title_is_page_title": True,
+}  # end html_theme_options
 
+# ---- Other documentation options -------------------------
 
-latex_elements = {
-    "papersize": "a4paper",
-    "tableofcontents": "",
-    "fncychap": "",
-    "geometry": "",
-    "maketitle": "\\deltarestitle",
-    "fontpkg": "",
-    "preamble": r"""
-\fancypagestyle{normal}{\pagestyle{plain}}
-\partner{}
-\client{}
-\contact{koen.berends@deltares.nl}
-\reference{}
-\keywords{FM2D, FM1D, DHydro}
-\projectnumber{..}
-\documentid{}
-\status{Automatically generated from source}
-\disclaimer{}
-\authori{Koen Berends}
-\revieweri{}
-\approvali{}
-\publisheri{}
-\organisationi{Deltares}
-"""
-    + rf"""
-\subtitle{{Manual for version {release}}}
-\version{{{release}}}
-\versioni{{{release}}}
-""",
+todo_include_todos = True
+
+extlinks = {
+    "duref": (
+        "http://docutils.sourceforge.net/docs/ref/rst/restructuredtext.html#%s",
+        "",
+    ),
+    "durole": ("http://docutils.sourceforge.net/docs/ref/rst/roles.html#%s", ""),
+    "dudir": ("http://docutils.sourceforge.net/docs/ref/rst/directives.html#%s", ""),
 }
 
 
 def setup(app):
-    app.add_css_file("custom.css")
-
-
-def generate_files_chapters():
-    with open("../../fm2prof/configurationfile_template.json", "r") as f:
-        data = json.load(f)
-
-        with open("chapters/technical_manual/files.rst", "w") as f:
-            f.write(
-                f"""Files
-========
-
-Configuration file
--------------------
-Default settings
-
-.. code-block:: text
-
-"""
-            )
-            for line in (
-                fm2prof.Project().get_inifile()._print_configuration(data).splitlines()
-            ):
-                f.write(f"\t{line}\n")
-
-
-def generate_fm_key_table():
-    from fm2prof.Import import FMDataImporter
-
-    with open("chapters/tables/dflow2d_keys.csv", "w") as f:
-        f.write(f"{project} variable, Variable in dflow2d output\n")
-        for key, value in FMDataImporter.dflow2d_face_keys.items():
-            f.write(f"{key} (at face), {value}\n")
-
-        for key, value in FMDataImporter.dflow2d_edge_keys.items():
-            f.write(f"{key} (at flow link), {value}\n")
-
-        for key, value in FMDataImporter.dflow2d_result_keys.items():
-            f.write(f"{key}, {value}\n")
-
-
-generate_files_chapters()
-generate_fm_key_table()
+    app.add_object_type(
+        "confval",
+        "confval",
+        objname="configuration value",
+        indextemplate="pair: %s; configuration value",
+    )

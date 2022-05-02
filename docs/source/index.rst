@@ -1,25 +1,33 @@
-|project|
-===================================
-Version: |release|
+
+=========
+|project| 
+=========
+
+|project| is a library to create 1D hydrodynamic flow models from 2D hydrodynamic flow models. 
+
+Highlights
+-----------
+
+- Creates cross-sections
+- Creates roughness tables
+- Takes into account floodplain storage effect due to compartimentalisation
+- Takes into account dead zones
+
+Getting started
+----------------
+
+To get started, start with ChapterInstallation_, then start following the ChapterQuickstart_. 
 
 
-|project| is a Python program to create automatically input for 1D models from 2D models. This is the manual. 
-
-
-Tables of content
-==================
 .. toctree::
-    :maxdepth: 1
-    :caption: Table of Contents
+    :hidden:
 
-    chapters/about
-    chapters/CHANGELOG
-    chapters/user_manual/index
-    chapters/technical_manual/index
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
+    chapters/user_manual/installation
+    chapters/user_manual/quickstart
+    chapters/user_manual/advanced
+    chapters/user_manual/source
+    chapters/technical_manual/conceptual_design
+    chapters/technical_manual/numerical_methods
+    chapters/technical_manual/settings
+    chapters/technical_manual/files
+    chapters/technical_manual/glossary
