@@ -4,3 +4,4 @@
 /tests/artifacts/**
 .devcontainer
 /docs/source/output/**
+/docs/build

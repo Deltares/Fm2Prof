@@ -1,8 +1,9 @@
 name: docs
-on:
-  push:
-    branches:
-      - master
+# on:
+#   push:
+#     branches:
+#       - master
+on: [push]
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -31,8 +32,14 @@ jobs:
           poetry config virtualenvs.path ~/.virtualenvs
 
       - name: Install Dependencies
-        run: poetry install
+        run: poetry install --extras docs
         if: steps.cache.outputs.cache-hit != 'true'
+
+      - name: Build docs
+        run: |
+          sudo apt-get install python3-sphinx
+          poetry run sphinx-build -b html ./docs/source ./docs/build
+          touch ./docs/build/.nojekyll
 
       - name: Deploy
         uses: JamesIves/github-pages-deploy-action@4.1.7

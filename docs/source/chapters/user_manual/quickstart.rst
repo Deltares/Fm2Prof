@@ -1,5 +1,7 @@
-Quickstart 
-====================
+.. _ChapterQuickstart:
+
+Tutorial 
+========
 
 
 .. note::

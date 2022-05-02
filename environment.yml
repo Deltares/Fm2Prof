@@ -19,6 +19,9 @@ dependencies:
   - sphinx_rtd_theme
   - colorama
   - click
+  - poetry
   - pip
   - pip:
       - geojson
+      - sphinx_materialdesign_theme
+      - sphinxcontrib-images
