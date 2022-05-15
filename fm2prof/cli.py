@@ -5,7 +5,6 @@ import typer
 from fm2prof import Project, __version__
 from fm2prof.IniFile import IniFile
 
-
 app = typer.Typer()
 
 
@@ -55,6 +54,7 @@ def cli(
 ) -> None:
     typer.echo("Welcome to Fm2Prof")
     return
+
 
 def main():
     app()
