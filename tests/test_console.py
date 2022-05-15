@@ -1,38 +1,21 @@
-import numbers
-import os
-import sys
-import unittest
+from typer.testing import CliRunner
+from pathlib import Path
+from fm2prof.cli import app 
 
-import pytest
-from click.testing import CliRunner
+runner = CliRunner()
+new_name = 'testIni'
 
-from bin.fm2profConsole import cli
+def test_app():
+    result = runner.invoke(app, '--help')
+    assert result.exit_code == 0
+
+def test_app_create_new_file():
+    result = runner.invoke(app, f'create {new_name}')
+    assert result.exit_code == 0
+    assert Path(f"{new_name}.ini").is_file()
+
+def test_app_check_project():
+    result = runner.invoke(app, f'check {new_name}.ini')
+    assert result.exit_code == 0
 
 
-class Test_Console:
-    def test_no_flag(self):
-        # 1. Set up initial test data
-        runner = CliRunner()
-
-        # 2. Run test
-        try:
-            result = runner.invoke(cli, "")
-            assert not result.exception
-            # self.assertEqual(0, result.exit_code)
-            # self.assertIn('Find: 3 sample', result.output)
-        except:
-            pass
-            pytest.fail("No exception expected.")
-
-    def test_new_file(self):
-        # 1. Set up initial test data
-        runner = CliRunner()
-
-        # 2. Run test
-        try:
-            result = runner.invoke(cli, ["-n EmptyProject.ini"])
-
-            assert not result.exception
-        except:
-            pass
-            pytest.fail("No exception expected.")
