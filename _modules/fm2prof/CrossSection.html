@@ -1785,20 +1785,24 @@
         <span class="n">dif</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">flow_width</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">total_section_width</span>
         <span class="k">if</span> <span class="n">dif</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">section_widths</span><span class="p">[</span><span class="s2">&quot;main&quot;</span><span class="p">]</span> <span class="o">+=</span> <span class="n">dif</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">set_logger_message</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Increased main section width by </span><span class="si">{</span><span class="n">dif</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2"> m&quot;</span><span class="p">,</span> <span class="s2">&quot;warning&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">set_logger_message</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Increased main section width by </span><span class="si">{</span><span class="n">dif</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2"> m&quot;</span><span class="p">,</span> <span class="s2">&quot;warning&quot;</span>
+            <span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_check_section_widths_greater_than_minimum_width</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Main section width must be greater than minimum profile width, or</span>
 <span class="sd">        it is ignored by SOBEK 3</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        
+
         <span class="n">dif</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">section_widths</span><span class="p">[</span><span class="s2">&quot;main&quot;</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_css_flow_width</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
 
         <span class="k">if</span> <span class="n">dif</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">section_widths</span><span class="p">[</span><span class="s2">&quot;main&quot;</span><span class="p">]</span> <span class="o">-=</span> <span class="n">dif</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">section_widths</span><span class="p">[</span><span class="s2">&quot;floodplain1&quot;</span><span class="p">]</span> <span class="o">+=</span> <span class="n">dif</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">set_logger_message</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Increased main section width by </span><span class="si">{</span><span class="n">dif</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2"> m&quot;</span><span class="p">,</span> <span class="s2">&quot;warning&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">set_logger_message</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Increased main section width by </span><span class="si">{</span><span class="n">dif</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2"> m&quot;</span><span class="p">,</span> <span class="s2">&quot;warning&quot;</span>
+            <span class="p">)</span>
             <span class="k">return</span> <span class="kc">True</span>
         <span class="k">return</span> <span class="kc">False</span>
 
