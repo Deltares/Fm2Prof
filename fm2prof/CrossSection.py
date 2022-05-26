@@ -327,10 +327,6 @@ class CrossSection(FM2ProfBase):
         # Check if total width is larger than flow width
         self._check_total_width_greater_than_flow_width()
 
-        # Check section widths
-        self._check_main_section_width()
-        # self._check_section_widths_greater_than_flow_width()
-
     def calculate_correction(self) -> None:
         """
         This method computes a volume correction that cannot be captured within the
@@ -951,6 +947,7 @@ class CrossSection(FM2ProfBase):
 
         # Finally, the sum of section width should be greater or equal to the flow width
         self._check_section_widths_greater_than_flow_width()
+        self._check_section_widths_greater_than_minimum_width()
 
     def _compute_floodplain_base(self) -> None:
         """
@@ -1413,18 +1410,32 @@ class CrossSection(FM2ProfBase):
             f"Reduces flow widths at {sum(mask)} points to be same as total", "debug"
         )
 
+    def _check_section_widths_greater_than_flow_width(self):
+        total_section_width = 0
+        for key, width in self.section_widths.items():
+            total_section_width += width
+
+        dif = self.flow_width[-1] - total_section_width
+        if dif > 0:
+            self.section_widths["main"] += dif
+            self.set_logger_message(
+                f"Increased main section width by {dif:.2f} m", "warning"
+            )
+
     def _check_section_widths_greater_than_minimum_width(self) -> bool:
         """
         Main section width must be greater than minimum profile width, or
         it is ignored by SOBEK 3
         """
 
-        dif = self.section_widths["main"] - self.flow_width[-1]
+        dif = self.section_widths["main"] - self._css_flow_width[0]
 
         if dif < 0:
-            self.section_widths["main"] += dif
-            self.section_widths["floodplain1"] -= dif
-            self.set_logger_message(f"Increased main section width by {dif} during check_requirements", "warning")
+            self.section_widths["main"] -= dif
+            self.section_widths["floodplain1"] += dif
+            self.set_logger_message(
+                f"Increased main section width by {dif:.2f} m", "warning"
+            )
             return True
         return False
 
