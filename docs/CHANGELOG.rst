@@ -1,3 +1,11 @@
+## v1.5.2 (2022-05-26)
+
+### Fix
+
+- main section width check
+- fixed bug introduced by earlier fix :p
+- files now relative to config file (#24)
+
 ## v1.5.1 (2022-05-26)
 
 ### Fix

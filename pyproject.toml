@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "fm2prof"
-version = "1.5.1"
+version = "1.5.2"
 description = "Package use to reduce Delft3D FM models from 2D models to 1D models"
 authors = ["K.D. Berends <koen.berends@deltares.nl>"]
 maintainers = ["Carles S. Soriano Perez <carles.sorianoperez@deltares.nl>"]
@@ -50,7 +50,7 @@ fm2prof="fm2prof.cli:main"
 name = "cz_conventional_commits"
 changelog_file = "docs/CHANGELOG.rst"
 update_changelog_on_bump = true
-version = "1.5.1"
+version = "1.5.2"
 tag_format = "v$major.$minor.$patch"
 version_files = [
     "fm2prof/__init__.py",
