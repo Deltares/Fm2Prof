@@ -330,7 +330,7 @@ class CrossSection(FM2ProfBase):
         # Check if section widths combined are not smaller than flow width
         # self._check_section_widths_greater_than_flow_width()
 
-    def calculate_correction(self, transition_height: float) -> None:
+    def calculate_correction(self, transition_height: float = 0.5) -> None:
         """
         This method computes a volume correction that cannot be captured within the
         constraints of 1D cross-sectional geometry, which forces an increasing width

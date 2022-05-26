@@ -27,6 +27,7 @@ sphinxcontrib-images = "^0.9.4"
 sphinx_materialdesign_theme = "^0.1.11"
 sphinx-immaterial = "^0.4.1"
 sphinxcontrib-details-directive = "^0.1.0"
+typer = "^0.4.1"
 
 
 [tool.poetry.dev-dependencies]
@@ -40,6 +41,10 @@ sphinx_materialdesign_theme = {version = "^0.1.11", optional = true}
 commitizen = "^2.20.0"
 pre-commit = "^2.15.0"
 poetry2conda = "^0.3.0"
+
+[tool.poetry.scripts]
+f2p="fm2prof.cli:main"
+fm2prof="fm2prof.cli:main"
 
 [tool.commitizen]
 name = "cz_conventional_commits"
