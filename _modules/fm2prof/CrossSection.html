@@ -694,10 +694,11 @@
         <span class="c1"># Check if total width is larger than flow width</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_check_total_width_greater_than_flow_width</span><span class="p">()</span>
 
-        <span class="c1"># Check if section widths combined are not smaller than flow width</span>
+        <span class="c1"># Check section widths</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_check_main_section_width</span><span class="p">()</span>
         <span class="c1"># self._check_section_widths_greater_than_flow_width()</span>
 
-<div class="viewcode-block" id="CrossSection.calculate_correction"><a class="viewcode-back" href="../../chapters/technical_manual/numerical_methods.html#fm2prof.CrossSection.CrossSection.calculate_correction">[docs]</a>    <span class="k">def</span> <span class="nf">calculate_correction</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">transition_height</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.5</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<div class="viewcode-block" id="CrossSection.calculate_correction"><a class="viewcode-back" href="../../chapters/technical_manual/numerical_methods.html#fm2prof.CrossSection.CrossSection.calculate_correction">[docs]</a>    <span class="k">def</span> <span class="nf">calculate_correction</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        This method computes a volume correction that cannot be captured within the</span>
 <span class="sd">        constraints of 1D cross-sectional geometry, which forces an increasing width</span>
@@ -1779,15 +1780,20 @@
             <span class="sa">f</span><span class="s2">&quot;Reduces flow widths at </span><span class="si">{</span><span class="nb">sum</span><span class="p">(</span><span class="n">mask</span><span class="p">)</span><span class="si">}</span><span class="s2"> points to be same as total&quot;</span><span class="p">,</span> <span class="s2">&quot;debug&quot;</span>
         <span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_check_section_widths_greater_than_flow_width</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="n">total_section_width</span> <span class="o">=</span> <span class="mi">0</span>
-        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">width</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">section_widths</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-            <span class="n">total_section_width</span> <span class="o">+=</span> <span class="n">width</span>
+    <span class="k">def</span> <span class="nf">_check_section_widths_greater_than_minimum_width</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Main section width must be greater than minimum profile width, or</span>
+<span class="sd">        it is ignored by SOBEK 3</span>
+<span class="sd">        &quot;&quot;&quot;</span>
 
-        <span class="n">dif</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">flow_width</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">total_section_width</span>
-        <span class="k">if</span> <span class="n">dif</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">dif</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">section_widths</span><span class="p">[</span><span class="s2">&quot;main&quot;</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">flow_width</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">dif</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">section_widths</span><span class="p">[</span><span class="s2">&quot;main&quot;</span><span class="p">]</span> <span class="o">+=</span> <span class="n">dif</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">set_logger_message</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Increased main section width by </span><span class="si">{</span><span class="n">dif</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="s2">&quot;warning&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">section_widths</span><span class="p">[</span><span class="s2">&quot;floodplain1&quot;</span><span class="p">]</span> <span class="o">-=</span> <span class="n">dif</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">set_logger_message</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Increased main section width by </span><span class="si">{</span><span class="n">dif</span><span class="si">}</span><span class="s2"> during check_requirements&quot;</span><span class="p">,</span> <span class="s2">&quot;warning&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">return</span> <span class="kc">False</span>
 
     <span class="k">def</span> <span class="nf">get_parameter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_inifile</span><span class="p">()</span><span class="o">.</span><span class="n">get_parameter</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>

@@ -1300,11 +1300,8 @@
 
 <span class="sd">        &quot;&quot;&quot;</span>
 
-        <span class="c1"># Get value, it should already come as a float.</span>
-        <span class="n">sd_transition_value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_inifile</span><span class="p">()</span><span class="o">.</span><span class="n">get_parameter</span><span class="p">(</span><span class="s2">&quot;SDTransitionHeight&quot;</span><span class="p">)</span>
-
         <span class="k">try</span><span class="p">:</span>
-            <span class="n">css</span><span class="o">.</span><span class="n">calculate_correction</span><span class="p">(</span><span class="n">sd_transition_value</span><span class="p">)</span>
+            <span class="n">css</span><span class="o">.</span><span class="n">calculate_correction</span><span class="p">()</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">set_logger_message</span><span class="p">(</span><span class="s2">&quot;correction finished&quot;</span><span class="p">)</span>
         <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e_error</span><span class="p">:</span>
             <span class="n">e_message</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">e_error</span><span class="p">)</span>
