@@ -933,11 +933,8 @@ class Fm2ProfRunner(FM2ProfBase):
 
         """
 
-        # Get value, it should already come as a float.
-        sd_transition_value = self.get_inifile().get_parameter("SDTransitionHeight")
-
         try:
-            css.calculate_correction(sd_transition_value)
+            css.calculate_correction()
             self.set_logger_message("correction finished")
         except Exception as e_error:
             e_message = str(e_error)
