@@ -6,14 +6,12 @@ import configparser
 import inspect
 import io
 import json
-
-# import from standard library
 import os
 from logging import Logger
+from pathlib import Path
 from pydoc import locate
 from typing import AnyStr, Dict, List, Mapping, Type, Union
 
-# import from package
 from fm2prof.common import FM2ProfBase
 
 
@@ -53,7 +51,7 @@ class IniFile(FM2ProfBase):
 
     """
 
-    __filePath = None
+    _file: Path = None
     __input_files_key = "input"
     __input_parameters_key = "parameters"
     __output_key = "output"
@@ -96,22 +94,23 @@ class IniFile(FM2ProfBase):
             file_path {str} -- File path where the IniFile is located
         """
         super().__init__(logger=logger)
-        self.__filePath = file_path
-        self.set_logger_message(
-            f"Received ini file: {self.__filePath} on {os.getcwd()}", "debug"
-        )
+
         self._ini_template = self._get_template_ini()  # Template to fill defaults from
         self._configuration = self._get_template_ini()  # What will be used
 
-        if isinstance(file_path, str):
-            self.__filePath = file_path
-            self.__fileDir = os.path.split(file_path)[0]
+        if isinstance(file_path, (str, Path)):
+            self._file = Path(file_path)
+            self.set_logger_message(f"Received ini file: {self._file}", "debug")
         else:
             # if no filepath, or filepath is StringIO object (used in testing)
-            self.__filePath = None
-            self.__fileDir = None
+            self._file = None
+            self._file_dir = None
         if not (file_path is None or not file_path):
             self._read_inifile(file_path)
+
+    @property
+    def _file_dir(self):
+        return self._file.parent
 
     @property
     def has_output_directory(self) -> bool:
@@ -155,9 +154,9 @@ class IniFile(FM2ProfBase):
 
     def get_ini_root(self, dirtype: str = "relative") -> str:
         if dirtype == "relative":
-            return self.__fileDir
+            return self._file_dir
         elif dirtype == "absolute":
-            return os.path.join(os.getcwd(), self.__fileDir)
+            return os.path.join(os.getcwd(), self._file_dir)
 
     def get_relative_path(self, path: str) -> str:
         return os.path.join(self.get_ini_root(), path)
@@ -331,7 +330,9 @@ class IniFile(FM2ProfBase):
                 parsed_value = key_type(value)
                 self.set_parameter(key_default, parsed_value)
             except ValueError:
-                self.set_logger_message(f"{key} could not be cast as {key_type}")
+                self.set_logger_message(
+                    f"{key} could not be cast as {key_type}", "debug"
+                )
             except KeyError:
                 pass
 
@@ -350,26 +351,27 @@ class IniFile(FM2ProfBase):
         except KeyError:
             raise InvalidConfigurationFileError
 
-        for key, value in inputsection.items():
+        for key, input_file in inputsection.items():
             key_default, _ = self._get_key_from_template("input", key)
+            if key_default is None:
+                continue
 
-            if key_default is not None:
-                if os.path.isfile(value):
-                    self.set_input_file(key_default, value)
-                elif os.path.isfile(os.path.join(self.__fileDir, value)):
-                    self.set_input_file(
-                        key_default, os.path.join(self.__fileDir, value)
-                    )
-                else:
-                    self.set_logger_message(
-                        f"Could not find input file for {key_default}, skipping",
-                        "warning",
-                    )
-                    if key_default in ("2DMapOutput", "CrossSectionLocationFile"):
-                        self.set_logger_message(
-                            f"Could not find input file: {key_default}", "error"
-                        )
-                        raise FileNotFoundError
+            input_file = self._file_dir.joinpath(input_file)
+
+            if input_file.is_file():
+                self.set_input_file(key_default, input_file)
+                continue
+
+            if key_default in ("2DMapOutput", "CrossSectionLocationFile"):
+                self.set_logger_message(
+                    f"Could not find input file: {key_default}", "error"
+                )
+                raise FileNotFoundError
+            else:
+                self.set_logger_message(
+                    f"Could not find optional input file for {key_default}, skipping",
+                    "warning",
+                )
 
     def _get_key_from_template(self, section, key) -> List[Union[str, Type]]:
         """return list of lower case keys from default configuration files"""
