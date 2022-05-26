@@ -6,12 +6,11 @@ import configparser
 import inspect
 import io
 import json
-from pathlib import Path
 import os
 from logging import Logger
+from pathlib import Path
 from pydoc import locate
 from typing import AnyStr, Dict, List, Mapping, Type, Union
-
 
 from fm2prof.common import FM2ProfBase
 
@@ -101,9 +100,7 @@ class IniFile(FM2ProfBase):
 
         if isinstance(file_path, (str, Path)):
             self._file = Path(file_path)
-            self.set_logger_message(
-            f"Received ini file: {self._file}", "debug"
-            )
+            self.set_logger_message(f"Received ini file: {self._file}", "debug")
         else:
             # if no filepath, or filepath is StringIO object (used in testing)
             self._file = None
@@ -114,7 +111,7 @@ class IniFile(FM2ProfBase):
     @property
     def _file_dir(self):
         return self._file.parent
-        
+
     @property
     def has_output_directory(self) -> bool:
         """
@@ -333,7 +330,9 @@ class IniFile(FM2ProfBase):
                 parsed_value = key_type(value)
                 self.set_parameter(key_default, parsed_value)
             except ValueError:
-                self.set_logger_message(f"{key} could not be cast as {key_type}", 'debug')
+                self.set_logger_message(
+                    f"{key} could not be cast as {key_type}", "debug"
+                )
             except KeyError:
                 pass
 
@@ -354,10 +353,11 @@ class IniFile(FM2ProfBase):
 
         for key, input_file in inputsection.items():
             key_default, _ = self._get_key_from_template("input", key)
-            if key_default is None: continue
+            if key_default is None:
+                continue
 
             input_file = self._file_dir.joinpath(input_file)
-            
+
             if input_file.is_file():
                 self.set_input_file(key_default, input_file)
                 continue
@@ -369,9 +369,9 @@ class IniFile(FM2ProfBase):
                 raise FileNotFoundError
             else:
                 self.set_logger_message(
-                f"Could not find optional input file for {key_default}, skipping",
-                "warning",
-            )
+                    f"Could not find optional input file for {key_default}, skipping",
+                    "warning",
+                )
 
     def _get_key_from_template(self, section, key) -> List[Union[str, Type]]:
         """return list of lower case keys from default configuration files"""
