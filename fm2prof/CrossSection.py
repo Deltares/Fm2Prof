@@ -1412,6 +1412,16 @@ class CrossSection(FM2ProfBase):
             f"Reduces flow widths at {sum(mask)} points to be same as total", "debug"
         )
 
+    def _check_section_widths_greater_than_flow_width(self):
+        total_section_width = 0
+        for key, width in self.section_widths.items():
+            total_section_width += width
+
+        dif = self.flow_width[-1] - total_section_width
+        if dif > 0:
+            self.section_widths["main"] += dif
+            self.set_logger_message(f"Increased main section width by {dif}", "warning")
+
     def _check_section_widths_greater_than_minimum_width(self) -> bool:
         """
         Main section width must be greater than minimum profile width, or
