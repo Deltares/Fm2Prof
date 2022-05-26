@@ -328,8 +328,7 @@ class CrossSection(FM2ProfBase):
         self._check_total_width_greater_than_flow_width()
 
         # Check section widths
-        self._check_main_section_width()
-        # self._check_section_widths_greater_than_flow_width()
+        self._check_section_widths_greater_than_minimum_width()
 
     def calculate_correction(self) -> None:
         """
@@ -1419,7 +1418,7 @@ class CrossSection(FM2ProfBase):
         it is ignored by SOBEK 3
         """
 
-        dif = self.section_widths["main"] - self.flow_width[-1]
+        dif = self.section_widths["main"] - self._css_flow_width[-1]
 
         if dif < 0:
             self.section_widths["main"] += dif

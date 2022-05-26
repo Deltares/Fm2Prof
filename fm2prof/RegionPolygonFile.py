@@ -25,6 +25,7 @@ import json
 import logging
 import multiprocessing
 import os
+from pathlib import Path
 from collections import namedtuple
 from itertools import groupby
 from typing import Any, Callable, Iterable
@@ -165,11 +166,9 @@ class PolygonFile(FM2ProfBase):
         #    self.polygons[polygon_name] = polygon
 
     @staticmethod
-    def _validate_extension(file_path: str):
-        if not file_path:
-            # Should not be evaluated
-            return
-        if not file_path.endswith(".json") and not file_path.endswith(".geojson"):
+    def _validate_extension(file_path: Path) -> None:
+        if not isinstance(file_path, Path): return
+        if not file_path.suffix in (".json", ".geojson"):
             raise IOError(
                 "Invalid file path extension, " + "should be .json or .geojson."
             )
