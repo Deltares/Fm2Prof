@@ -4,23 +4,18 @@ Contains CrossSection class
 import logging
 import os
 
-# Imports from standard library
 from datetime import datetime, timedelta
 from functools import reduce
 from logging import Logger
 from time import time
 from typing import Mapping, Sequence
-
+import math 
 import numpy as np
 import pandas as pd
 import scipy.optimize as so
-
-# Imports from dependencies
 from scipy.integrate import cumtrapz
 
 from fm2prof import Functions as FE
-
-# Imports from package
 from fm2prof.common import FM2ProfBase, FrictionTable
 from fm2prof.Import import FmModelData
 from fm2prof.IniFile import IniFile
@@ -1429,7 +1424,10 @@ class CrossSection(FM2ProfBase):
         """
 
         dif = self.section_widths["main"] - self._css_flow_width[0]
-
+        
+        # cm accuracy 
+        dif = math.ceil(dif*100)/100
+        
         if dif < 0:
             self.section_widths["main"] -= dif
             self.section_widths["floodplain1"] += dif
