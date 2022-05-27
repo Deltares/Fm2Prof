@@ -3,177 +3,203 @@ Utilities for FM2PROF
 """
 
 import os
+import locale
 import shutil
-from typing import Tuple
 
+from typing import Tuple, Union, Optional, Dict, List, Generator
+from pathlib import Path
 import matplotlib.pyplot as plt
+import matplotlib as mpl
+import matplotlib.dates as mdates
 import numpy as np
-
 from fm2prof.common import FM2ProfBase
+from matplotlib.ticker import (MultipleLocator, FormatStrFormatter,
+                               AutoMinorLocator)
+from pandas.plotting import register_matplotlib_converters
+register_matplotlib_converters()
+
+locale.setlocale(locale.LC_TIME, 'nl_NL.UTF-8')
 
 
-def networkdeffile_to_input(
-    networkdefinitionfile: str, crossectionlocationfile: str, branchrulefile: str() = ""
-):
-    """
-    Builds a cross-section input file for FM2PROF from a DIMR network definition file.
+font = {'family' : 'Bahnschrift',
+            'weight' : 'normal',
+            'size'   : 18}
+mpl.rc('font', **font)
 
-    The distance between cross-section is computed from the differences between the offsets/chainages.
-    The beginning and end point of each branch are treated as half-distance control volumes.
+mpl.rcParams["axes.unicode_minus"] = False
 
-    Arguments
-        networkdefinitionfile: path to the input file
-
-        crossectionlocationfile: path to the output file
-
-        branchrulefile: path to the branchrulefile
-    """
-    if branchrulefile:
-        branchrules = _parseBranchRuleFile(branchrulefile)
-    else:
-        branchrules = dict()
-
-    x, y, cid, cdis, bid, coff = _parseNetworkDefinitionFile(
-        networkdefinitionfile, branchrules
-    )
-
-    _writeCrossSectionLocationFile(crossectionlocationfile, x, y, cid, cdis, bid, coff)
+mpl.rcParams['axes.prop_cycle'] = mpl.cycler(color=["k", "00cc96","#0d38e0"]*3,
+                                            linestyle=["-"]*3+["--"]*3+['-.']*3,
+                                            linewidth=np.linspace(0.5, 3, 9)) 
 
 
-def _parseNetworkDefinitionFile(networkdefinitionfile, branchrules):
-    """
+class GenerateCrossSectionLocationFile:
+    def __init__(self, networkdefinitionfile:Union[str, Path], crossectionlocationfile:Union[str, Path], branchrulefile:Optional[Union[str, Path]]=None):
+        """
+        Builds a cross-section input file for FM2PROF from a DIMR network definition file.
 
-    Output:
+        The distance between cross-section is computed from the differences between the offsets/chainages.
+        The beginning and end point of each branch are treated as half-distance control volumes.
+
+        Arguments
+            networkdefinitionfile: path to the input file
+
+            crossectionlocationfile: path to the output file
+
+            branchrulefile: path to the branchrulefile
+        """
+        networkdefinitionfile, crossectionlocationfile, branchrulefile = map(Path, [networkdefinitionfile, crossectionlocationfile, branchrulefile])
+        
+        required_files = (networkdefinitionfile.is_file(), crossectionlocationfile.is_file())
+        if not all(required_files): raise FileNotFoundError
+
+        self._networkdeffile_to_input(networkdefinitionfile, crossectionlocationfile, branchrulefile)
+
+    @staticmethod
+    def parse_NetworkDefinitionFile(networkdefinitionfile:Path, branchrules:Optional[Dict]=None)->Dict:
+        """
+        Output:
+
+            x,y : coordinates of cross-section
+            cid : name of the cross-section
+            cdis: half-way distance between cross-section points on either side
+            bid : name of the branch
+            coff:  chainage of cross-section on branch
+
+        """
+        if not branchrules: branchrules={}
+
+        # Open network definition file, for each branch extract necessary info
+        x = []  # x-coordinate of cross-section centre
+        y = []  # y-coordinate of cross-section centre
+        cid = []  # id of cross-section
+        bid = []  # id of 1D branch
+        coff = []  # offset of cross-section on 1D branch ('chainage')
+        cdis = []  # distance of 1D branch influenced by crosss-section ('vaklengte')
+
+        with open(networkdefinitionfile, "r") as f:
+            for line in f:
+                if line.strip().lower() == "[branch]":
+                    branchid = f.readline().split("=")[1].strip()
+                    xlength = 0
+                    for i in range(10):
+                        bline = f.readline().strip().lower().split("=")
+                        if bline[0].strip() == "gridpointx":
+                            xtmp = list(map(float, bline[1].split()))
+                        elif bline[0].strip() == "gridpointy":
+                            ytmp = list(map(float, bline[1].split()))
+                        elif bline[0].strip() == "gridpointids":
+                            cidtmp = bline[1].split(";")
+                        elif bline[0].strip() == "gridpointoffsets":
+                            cofftmp = list(map(float, bline[1].split()))
+
+                            # compute distance between control volumes
+                            cdistmp = np.append(np.diff(cofftmp) / 2, [0]) + np.append(
+                                [0], np.diff(cofftmp) / 2
+                            )
+
+                    # Append branchids
+                    bidtmp = [branchid] * len(xtmp)
+
+                    # strip cross-section ids
+                    cidtmp = [c.strip() for c in cidtmp]
+
+                    # Correct end points (: at end of branch, gridpoints of this branch and previous branch
+                    # occupy the same position, which does not go over well with fm2profs classification algo)
+                    offset = 1
+                    xtmp[0] = np.interp(offset, cofftmp, xtmp)
+                    ytmp[0] = np.interp(offset, cofftmp, ytmp)
+                    offset = cofftmp[-1] - 1
+                    xtmp[-1] = np.interp(offset, cofftmp, xtmp)
+                    ytmp[-1] = np.interp(offset, cofftmp, ytmp)
+
+                    # Apply Branchrules
+                    if branchid in branchrules:
+                        rule = branchrules[branchid]
+                        xtmp, ytmp, cidtmp, cdistmp, bidtmp, cofftmp = self._applyBranchRules(
+                            rule, xtmp, ytmp, cidtmp, cdistmp, bidtmp, cofftmp
+                        )
+
+                        c = len(xtmp)
+                        for ic in xtmp, ytmp, cidtmp, cdistmp, bidtmp, cofftmp:
+                            if len(ic) != c:
+                                print("koen")
+
+                    # Append all points
+                    x.extend(xtmp)
+                    y.extend(ytmp)
+                    cid.extend(cidtmp)
+                    cdis.extend(cdistmp)
+                    bid.extend(bidtmp)
+                    coff.extend(cofftmp)
+
+        return dict(x=x, y=y, css_id=cid, css_len=cdis, branch_id=bid, css_offset=coff)
+    
+    def _networkdeffile_to_input(self,
+        networkdefinitionfile:Path, crossectionlocationfile:Path, branchrulefile:Optional[Path]=None):
+        branchrules:dict = {}
+        
+        if branchrulefile: branchrules = self._parseBranchRuleFile(branchrulefile)
+        
+        network_dict = self.parse_NetworkDefinitionFile(
+            networkdefinitionfile, branchrules
+        )
+
+        self._writeCrossSectionLocationFile(crossectionlocationfile, network_dict)
+
+
+    def _applyBranchRules(rule, x, y, cid, cdis, bid, coff):
+        bfunc = {
+            "onlyedges": lambda x: [x[0], x[-1]],
+            "ignoreedges": lambda x: x[1:-1],
+            "ignorelast": lambda x: x[:-1],
+            "ignorefirst": lambda x: x[1:],
+        }
+
+        disfunc = {
+            "onlyedges": lambda x: [sum(x) / 2] * 2,
+            "ignoreedges": lambda x: [sum(x[:2]), *x[2:-2], sum(x[-2:])],
+            "ignorelast": lambda x: [*x[:-2], sum(x[-2:])],
+            "ignorefirst": lambda x: [sum(x[:2]), *x[2:]],
+        }
+
+        try:
+            bf = bfunc[rule.lower().strip()]
+            df = disfunc[rule.lower().strip()]
+            return bf(x), bf(y), bf(cid), df(cdis), bf(bid), bf(coff)
+        except KeyError:
+            raise NotImplementedError(rule)
+
+    def _parseBranchRuleFile(branchrulefile:Path)->Dict:
+        branchrules:dict = {}
+        with open(branchrulefile, "r") as f:
+            for line in f:
+                key = line.split(",")[0].strip()
+                value = line.split(",")[1].strip()
+
+                branchrules[key] = value
+
+        return branchrules
+
+    def _writeCrossSectionLocationFile(crossectionlocationfile:Path, network_dict:Dict):
+        """
+        List inputs:
 
         x,y : coordinates of cross-section
         cid : name of the cross-section
         cdis: half-way distance between cross-section points on either side
         bid : name of the branch
         coff:  chainage of cross-section on branch
-
-    """
-    # Open network definition file, for each branch extract necessary info
-    x = []  # x-coordinate of cross-section centre
-    y = []  # y-coordinate of cross-section centre
-    cid = []  # id of cross-section
-    bid = []  # id of 1D branch
-    coff = []  # offset of cross-section on 1D branch ('chainage')
-    cdis = []  # distance of 1D branch influenced by crosss-section ('vaklengte')
-
-    with open(networkdefinitionfile, "r") as f:
-        for line in f:
-            if line.strip().lower() == "[branch]":
-                branchid = f.readline().split("=")[1].strip()
-                xlength = 0
-                for i in range(10):
-                    bline = f.readline().strip().lower().split("=")
-                    if bline[0].strip() == "gridpointx":
-                        xtmp = list(map(float, bline[1].split()))
-                    elif bline[0].strip() == "gridpointy":
-                        ytmp = list(map(float, bline[1].split()))
-                    elif bline[0].strip() == "gridpointids":
-                        cidtmp = bline[1].split(";")
-                    elif bline[0].strip() == "gridpointoffsets":
-                        cofftmp = list(map(float, bline[1].split()))
-
-                        # compute distance between control volumes
-                        cdistmp = np.append(np.diff(cofftmp) / 2, [0]) + np.append(
-                            [0], np.diff(cofftmp) / 2
-                        )
-
-                # Append branchids
-                bidtmp = [branchid] * len(xtmp)
-
-                # strip cross-section ids
-                cidtmp = [c.strip() for c in cidtmp]
-
-                # Correct end points (: at end of branch, gridpoints of this branch and previous branch
-                # occupy the same position, which does not go over well with fm2profs classification algo)
-                offset = 1
-                xtmp[0] = np.interp(offset, cofftmp, xtmp)
-                ytmp[0] = np.interp(offset, cofftmp, ytmp)
-                offset = cofftmp[-1] - 1
-                xtmp[-1] = np.interp(offset, cofftmp, xtmp)
-                ytmp[-1] = np.interp(offset, cofftmp, ytmp)
-
-                # Apply Branchrules
-                if branchid in branchrules:
-                    rule = branchrules[branchid]
-                    xtmp, ytmp, cidtmp, cdistmp, bidtmp, cofftmp = _applyBranchRules(
-                        rule, xtmp, ytmp, cidtmp, cdistmp, bidtmp, cofftmp
-                    )
-
-                    c = len(xtmp)
-                    for ic in xtmp, ytmp, cidtmp, cdistmp, bidtmp, cofftmp:
-                        if len(ic) != c:
-                            print("koen")
-
-                # Append all points
-                x.extend(xtmp)
-                y.extend(ytmp)
-                cid.extend(cidtmp)
-                cdis.extend(cdistmp)
-                bid.extend(bidtmp)
-                coff.extend(cofftmp)
-
-    return x, y, cid, cdis, bid, coff
+        """
+        with open(crossectionlocationfile, "w") as f:
+            f.write("name,x,y,length,branch,offset\n")
+            for i in range(len(x)):
+                f.write(
+                    f"{cid[i]}, {x[i]:.4f}, {y[i]:.4f}, {cdis[i]:.2f}, {bid[i]}, {coff[i]:.2f}\n"
+                )
 
 
-def _applyBranchRules(rule, x, y, cid, cdis, bid, coff):
-    bfunc = {
-        "onlyedges": lambda x: [x[0], x[-1]],
-        "ignoreedges": lambda x: x[1:-1],
-        "ignorelast": lambda x: x[:-1],
-        "ignorefirst": lambda x: x[1:],
-    }
-
-    disfunc = {
-        "onlyedges": lambda x: [sum(x) / 2] * 2,
-        "ignoreedges": lambda x: [sum(x[:2]), *x[2:-2], sum(x[-2:])],
-        "ignorelast": lambda x: [*x[:-2], sum(x[-2:])],
-        "ignorefirst": lambda x: [sum(x[:2]), *x[2:]],
-    }
-
-    try:
-        bf = bfunc[rule.lower().strip()]
-        df = disfunc[rule.lower().strip()]
-        return bf(x), bf(y), bf(cid), df(cdis), bf(bid), bf(coff)
-    except KeyError:
-        raise NotImplementedError(rule)
-
-
-def _parseBranchRuleFile(branchrulefile):
-    branchrules = {}
-    with open(branchrulefile, "r") as f:
-        for line in f:
-            key = line.split(",")[0].strip()
-            value = line.split(",")[1].strip()
-
-            branchrules[key] = value
-
-    return branchrules
-
-
-def _writeCrossSectionLocationFile(crossectionlocationfile, x, y, cid, cdis, bid, coff):
-    """
-    List inputs:
-
-    x,y : coordinates of cross-section
-    cid : name of the cross-section
-    cdis: half-way distance between cross-section points on either side
-    bid : name of the branch
-    coff:  chainage of cross-section on branch
-    """
-    with open(crossectionlocationfile, "w") as f:
-        f.write("name,x,y,length,branch,offset\n")
-        for i in range(len(x)):
-            f.write(
-                f"{cid[i]}, {x[i]:.4f}, {y[i]:.4f}, {cdis[i]:.2f}, {bid[i]}, {coff[i]:.2f}\n"
-            )
-            # f.write('{}, {:.4f}, {:.4f}, {:.2f}, {}, {:.2f}\n'.format(cid[i], x[i], y[i], cdis[i], bid[i], coff[i]))
-
-
-class VisualiseOutput:
+class VisualiseOutput(FM2ProfBase):
     __cssdeffile = "CrossSectionDefinitions.ini"
     __volumefile = "volumes.csv"
     __rmainfile = "roughness-Main.ini"
@@ -182,15 +208,90 @@ class VisualiseOutput:
     def __init__(
         self, output_directory: str, figure_type: str = "png", overwrite: bool = True
     ):
-        self.output_dir = output_directory
-        self.fig_dir = self.generate_output_dir(output_directory)
+        self._create_logger()
+        self.output_dir = Path(output_directory)
+        self.fig_dir = self._generate_output_dir()
         self._set_files()
         self._ref_geom_y = []
         self._ref_geom_tw = []
         self._ref_geom_fw = []
 
-    def generate_output_dir(
-        self, output_directory, figure_type: str = "png", overwrite: bool = True
+    def figure_roughness_longitudinal(self, branch:str):
+        """
+        Assumes the following naming convention:
+        [branch]_[optional:branch_order]_[chainage]
+        """
+        
+        fig, ax = plt.subplots(1, figsize=(12, 5))
+
+        css = self.get_cross_sections_for_branch(branch)
+        
+        chainage = []
+        minmax = []
+        for cross_section in css:
+            chainage.append(cross_section[1])
+            roughness = self.getRoughnessInfoForCss(cross_section[0])[1]
+            minmax.append([min(roughness), max(roughness)])
+        
+        chainage = np.array(chainage) * 1e-3
+        minmax = np.array(minmax)
+        ax.plot(chainage, minmax[:,0], label='minimum')
+        ax.plot(chainage, minmax[:,1], label='maximum')
+        ax.set_ylabel('Ruwheid (Chezy)')
+        ax.set_xlabel('Afstand [km]')
+        ax.set_title(branch)
+        fig, lgd = self._SetPlotStyle(fig, use_legend=True)
+        plt.savefig(self.fig_dir.joinpath(f'roughness_longitudinal_{branch}.png'), bbox_extra_artists=[lgd], bbox_inches='tight')
+    
+    
+    def get_cross_sections_for_branch(self, branch:str):
+        def split_css(name)->Tuple[str,float,str]:
+            chainage = float(name.split("_")[-1])
+            branch = "_".join(name.split("_")[:-1])
+            return  (name, 
+                        chainage,
+                        branch)
+
+        def get_css_for_branch(css_list, branchname:str):
+            return [c for c in css_list if c[2].startswith(branchname)]
+
+        css_list = [split_css(css.get('id')) for css in self.cross_sections]
+        branches, contiguous_branches = self.branches
+        branch_list = []
+        sub_branches = np.unique([b for b in branches if b.startswith(branch)])
+        running_chainage = 0
+        for i, sub_branch in enumerate(sub_branches):
+            sublist = get_css_for_branch(css_list, sub_branch)
+            if i > 0: 
+                running_chainage += get_css_for_branch(css_list, sub_branches[i-1])[-1][1]
+            branch_list.extend([(s[0], s[1]+running_chainage, s[2]) for s in sublist])
+
+        return branch_list 
+
+    @property
+    def branches(self)->Generator[List[str], None, None]:
+        def split_css(name)->Tuple[str,float,str]:
+            chainage = float(name.split("_")[-1])
+            branch = "_".join(name.split("_")[:-1])
+            return  (name, 
+                        chainage,
+                        branch)
+        
+        def find_branches(css_list)->List[str]:
+            branches = np.unique([i[2] for i in css_names])
+            contiguous_branches = np.unique([b.split("_")[0] for b in branches])
+            return branches, contiguous_branches
+
+        css_names = [split_css(css.get('id')) for css in self.cross_sections]
+        branches, contiguous_branches  = find_branches(css_names)
+        return branches, contiguous_branches
+        
+
+        
+
+
+    def _generate_output_dir(
+        self, figure_type: str = "png", overwrite: bool = True
     ):
         """
         Creates a new directory in the output map to store figures for each cross-section
@@ -202,12 +303,8 @@ class VisualiseOutput:
             png images saved to file
         """
 
-        figdir = os.path.join(output_directory, "figures")
-        if os.path.isdir(figdir) & overwrite:
-            shutil.rmtree(figdir)
-            os.mkdir(figdir)
-        elif not os.path.isdir(figdir):
-            os.mkdir(figdir)
+        figdir = self.output_dir.joinpath('figures')
+        if not figdir.is_dir(): figdir.mkdir(parents=True)
         return figdir
 
     def _set_files(self):
@@ -221,7 +318,7 @@ class VisualiseOutput:
     def _getValueFromLine(self, f):
         return f.readline().strip().split("=")[1].strip()
 
-    def _readCSSDefFile(self):
+    def _readCSSDefFile(self)->List[Dict]:
         csslist = list()
 
         with open(self.files.get("css_def"), "r") as f:
@@ -302,7 +399,8 @@ class VisualiseOutput:
 
         return cssdata
 
-    def cross_sections(self) -> dict:
+    @property
+    def cross_sections(self) -> Generator[Dict,None,None]:
         """
         Generator to loop through all cross-sections in definition file.
 
@@ -326,7 +424,7 @@ class VisualiseOutput:
             if css.get("id") == id:
                 return css
 
-    def make_figure(
+    def figure_cross_section(
         self,
         css,
         reference_geometry: tuple = (),
@@ -362,12 +460,11 @@ class VisualiseOutput:
             self._plot_volume(css, axs[1])
             self._plot_roughness(css, axs[2], reference_roughness)
 
-            self._SetPlotStyle(fig)
-            plt.tight_layout()
+            fig, lgd = self._SetPlotStyle(fig)
 
             if save_to_file:
                 print(f"saved to {self.fig_dir}/{css['id']}.png")
-                plt.savefig(f"{self.fig_dir}/{css['id']}.png")
+                plt.savefig(f"{self.fig_dir}/{css['id']}.png", bbox_extra_artists=[lgd], bbox_inches='tight')
             else:
                 return fig
 
@@ -377,6 +474,12 @@ class VisualiseOutput:
 
         finally:
             plt.close()
+
+    def _SetPlotStyle(self, *args, **kwargs):
+        """ todo: add preference to switch styles or
+        inject own style
+        """ 
+        return PlotStyles.van_veen(*args, **kwargs)
 
     def _plot_geometry(self, css, ax, reference_geometry=None):
 
@@ -514,6 +617,8 @@ class VisualiseOutput:
             label=sd_info.get("label"),
         )
 
+        ax.set_ylim([0, ax.get_ylim()[1]])
+        ax.set_xlim([min(vd["z"]), max(vd["z"])])
         ax.set_title("Volume graph")
         ax.set_xlabel("Water level [m]")
         ax.set_ylabel("Volume [m$^3$]")
@@ -544,6 +649,7 @@ class VisualiseOutput:
 
         # Limit x axis to min and maximum level in cross-section
         ax.set_xlim(min(css["levels"]), max(css["levels"]))
+        ax.set_title("Roughness")
         ax.set_xlabel("Water level [m]")
         ax.set_ylabel("Chezy coefficient [m$^{1/2}$/s]")
 
@@ -583,7 +689,22 @@ class VisualiseOutput:
 
         return branch, chainage
 
-    def _SetPlotStyle(self, fig, legendbelow=False):
+
+class PlotStyles:
+    myFmt = mdates.DateFormatter('%d-%b')
+    monthlocator = mdates.MonthLocator() 
+    daylocator = mdates.DayLocator(15)
+
+    @staticmethod
+    def _is_timeaxis(axis)->bool:
+        try:
+            float(axis.get_ticklabels()[0].get_text().replace('−', '-'))
+        except ValueError:
+            return True
+        return False
+
+    @classmethod
+    def pilot_2021(cls, fig, legendbelow=False):
         for ax in fig.axes:
             ax.grid(False)
             ax.spines["top"].set_visible(False)
@@ -607,3 +728,70 @@ class VisualiseOutput:
                 legend = ax.legend(fancybox=True, framealpha=0.5, edgecolor="None")
             legend.get_frame().set_facecolor("#e5eef2")  # #e5eef2 #92b6c7
             legend.get_frame().set_boxstyle("square", pad=0)
+
+    @classmethod
+    def van_veen(cls, fig, use_legend:bool=True):
+        """ Stijl van Van Veen """
+        fig.canvas.draw()  # this forces labels to be generated
+        font = {'family' : 'Bahnschrift',
+                'weight' : 'normal',
+                'size'   : 18}
+        mpl.rc('font', **font)
+        mpl.rcParams["axes.unicode_minus"] = False
+        legend_title= r'toelichting'
+
+        handles = list()
+        labels = list()
+
+        for ax in fig.axes:
+            
+            ax.grid(b=True, which="major", linestyle="-", linewidth=1, color='k')
+            ax.grid(b=True, which="minor", linestyle="-", linewidth=0.5, color='k')
+            
+            for _, spine in ax.spines.items():
+                spine.set_linewidth(2)
+            
+            
+            if cls._is_timeaxis(ax.xaxis):  
+                ax.xaxis.set_major_formatter(cls.myFmt)
+                ax.xaxis.set_major_locator(cls.monthlocator)
+                ax.xaxis.set_minor_locator(cls.daylocator)
+            if cls._is_timeaxis(ax.yaxis):
+                ax.yaxis.set_major_formatter(cls.myFmt)
+                ax.yaxis.set_major_locator(cls.monthlocator)
+                ax.yaxis.set_minor_locator(cls.daylocator)
+
+            """
+            if legend:
+                ax.legend(loc='best',
+                          edgecolor="k", 
+                          facecolor='white',
+                          framealpha=1,
+                          borderaxespad=0,
+                          title=legend_title.upper())
+            
+            """
+            ax.set_title(ax.get_title().upper())
+            ax.set_xlabel(ax.get_xlabel().upper())
+            ax.set_ylabel(ax.get_ylabel().upper())
+
+        
+            h, l = ax.get_legend_handles_labels()
+            handles.extend(h)
+            labels.extend(l)
+
+        fig.tight_layout()
+        if use_legend:
+            lgd = fig.legend(handles, labels, 
+                            loc= 'upper left',
+                            bbox_to_anchor=(1.0, 0.9),
+                            bbox_transform=fig.transFigure,
+                            edgecolor="k", 
+                            facecolor='white',
+                            framealpha=1,
+                            borderaxespad=0,
+                            title=legend_title.upper())
+
+            return fig, lgd
+        else:
+            return fig, handles, labels
