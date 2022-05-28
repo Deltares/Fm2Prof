@@ -270,12 +270,14 @@ class IniFile(FM2ProfBase):
             file_path {str} -- File path where the IniFile is located
         """
         if file_path is None or not file_path:
-            raise IOError("No ini file was specified and no data could be read.")
+            msg = "No ini file was specified and no data could be read."
+            self.set_logger_message(msg, 'error')
+            raise IOError(msg)
         try:
             if not os.path.exists(file_path):
-                raise IOError(
-                    "The given file path {} could not be found.".format(file_path)
-                )
+                msg = f"The given file path {file_path} could not be found."
+                self.set_logger_message(msg, 'error')
+                raise IOError(msg)
         except TypeError:
             if not isinstance(file_path, io.StringIO):
                 raise IOError("Unknown file format entered")
