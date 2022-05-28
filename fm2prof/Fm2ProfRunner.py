@@ -1,29 +1,17 @@
-"""
-Runner class.
-"""
-
 import datetime
 import os
 import sys
 import time
-
-# import from standard library
 import traceback
 from pathlib import Path
 from typing import Dict, List, Mapping, NoReturn, Union
-
 import geojson
-
-# import from dependencies
 import numpy as np
 from geojson import Feature, FeatureCollection, Polygon
 from netCDF4 import Dataset
 from scipy.spatial import ConvexHull
-
 from fm2prof import Functions as FE
 from fm2prof import __version__
-
-# import from package
 from fm2prof.common import FM2ProfBase
 from fm2prof.CrossSection import CrossSection
 from fm2prof.Export import Export1DModelData
@@ -52,10 +40,13 @@ class Fm2ProfRunner(FM2ProfBase):
 
         self._create_logger()
         self._print_header()
+
+        iniFilePath = Path(iniFilePath)
+
         try:
             self.load_inifile(iniFilePath)
-        except FileNotFoundError:
-            self.set_logger_message(f"Exiting", "error")
+        except (FileNotFoundError, IOError) as e:
+            self.set_logger_message(f"Exiting {e}", "error")
             return
 
         if not self.get_inifile().has_output_directory:
@@ -955,7 +946,12 @@ class Fm2ProfRunner(FM2ProfBase):
 
 class Project(Fm2ProfRunner):
     """
-    Provides the main API for running FM2PROF.
+    Provides the python API for running FM2PROF.
+
+    Instantiate by providing the path to a configuration file
+
+    >> Project('/path/to/config.ini')
+
     """
 
     def set_parameter(self, name: str, value: Union[str, float, int]):
