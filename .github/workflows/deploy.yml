@@ -1,4 +1,4 @@
-name: docs
+name: deploy
 on:
  push:
    branches:
@@ -11,9 +11,16 @@ jobs:
       fail-fast: false
       matrix:
         python-version: [3.7]
-        exe: [FM2PROF.exe, FM2PROF.app]
         os: [windows-latest, macos-latest]
-        spec: [FM2PROF_WINDOWS.spec, FM2PROF_MACOS.spec]
+        include:
+          - spec: FM2PROF_WINDOWS.spec
+            os: windows-latest
+          - spec: FM2PROF_MACOS.spec
+            os: macos-latest
+          - exe: FM2PROF.exe
+            os: windows-latest
+          - exe: FM2PROF.app
+            os: macos-latest
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v2
