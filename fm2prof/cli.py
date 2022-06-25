@@ -29,7 +29,8 @@ def cli_create_new_project(projectname: str):
 @app.command("check")
 def cli_check_project(configuration_file: str) -> None:
     """Load project, check filepaths, print errors then exit"""
-    project = Project(configuration_file)
+    cf = Path(configuration_file).with_suffix('.ini')
+    project = Project(cf)
     raise typer.Exit()
 
 
