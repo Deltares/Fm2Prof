@@ -147,10 +147,11 @@ class IniFile(FM2ProfBase):
             output directory (str)
 
         """
-
-        return self._configuration["sections"]["output"][self.__output_directory_key][
+        op = self._configuration["sections"]["output"][self.__output_directory_key][
             "value"
         ]
+
+        return self.get_relative_path(op)
 
     def get_ini_root(self, dirtype: str = "relative") -> str:
         if dirtype == "relative":
