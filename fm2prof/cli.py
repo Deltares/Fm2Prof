@@ -1,5 +1,6 @@
-from typing import Optional
 from pathlib import Path
+from typing import Optional
+
 import typer
 
 from fm2prof import Project, __version__
@@ -29,7 +30,7 @@ def cli_create_new_project(projectname: str):
 @app.command("check")
 def cli_check_project(configuration_file: str) -> None:
     """Load project, check filepaths, print errors then exit"""
-    cf = Path(configuration_file).with_suffix('.ini')
+    cf = Path(configuration_file).with_suffix(".ini")
     project = Project(cf)
     raise typer.Exit()
 
