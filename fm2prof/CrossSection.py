@@ -2,14 +2,14 @@
 Contains CrossSection class
 """
 import logging
+import math
 import os
-
 from datetime import datetime, timedelta
 from functools import reduce
 from logging import Logger
 from time import time
 from typing import Mapping, Sequence
-import math 
+
 import numpy as np
 import pandas as pd
 import scipy.optimize as so
@@ -1424,10 +1424,10 @@ class CrossSection(FM2ProfBase):
         """
 
         dif = self.section_widths["main"] - self._css_flow_width[0]
-        
-        # cm accuracy 
-        dif = math.ceil(dif*100)/100
-        
+
+        # cm accuracy
+        dif = math.ceil(dif * 100) / 100
+
         if dif < 0:
             self.section_widths["main"] -= dif
             self.section_widths["floodplain1"] += dif

@@ -61,7 +61,7 @@ extensions = [
     "sphinx.ext.mathjax",
     "sphinx.ext.viewcode",
     "sphinx_immaterial",
-    "sphinxcontrib.programoutput"
+    "sphinxcontrib.programoutput",
 ]
 
 intersphinx_mapping = {
@@ -102,8 +102,8 @@ html_favicon = "_static/favicon.ico"  # colored version of material/bookshelf.sv
 html_logo = "_static/Deltares_logo_Wit_RGB.svg"  # from https://gifer.com/en/Ybin
 
 # for landing page
-root_doc = 'contents'
-html_additional_pages = {'index': 'index.html'}
+root_doc = "contents"
+html_additional_pages = {"index": "index.html"}
 
 # -- HTML theme specific settings ------------------------------------------------
 
