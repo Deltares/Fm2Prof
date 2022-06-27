@@ -28,7 +28,7 @@ class Test_IniFile:
         ini_file_path = "nonexistent_ini_file.ini"
 
         # 2. Set expectations
-        expected_error = "" + "The given file path {} could not be found.".format(
+        expected_error = "" + "The given file path {} could not be found".format(
             ini_file_path
         )
 
