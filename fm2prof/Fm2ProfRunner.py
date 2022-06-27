@@ -5,11 +5,13 @@ import time
 import traceback
 from pathlib import Path
 from typing import Dict, List, Mapping, NoReturn, Union
+
 import geojson
 import numpy as np
 from geojson import Feature, FeatureCollection, Polygon
 from netCDF4 import Dataset
 from scipy.spatial import ConvexHull
+
 from fm2prof import Functions as FE
 from fm2prof import __version__
 from fm2prof.common import FM2ProfBase
