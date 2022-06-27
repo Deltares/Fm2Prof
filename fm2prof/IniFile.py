@@ -97,7 +97,7 @@ class IniFile(FM2ProfBase):
 
         self._ini_template = self._get_template_ini()  # Template to fill defaults from
         self._configuration = self._get_template_ini()  # What will be used
-        
+
         file_path = Path(file_path)
 
         if isinstance(file_path, Path):
@@ -106,15 +106,17 @@ class IniFile(FM2ProfBase):
             self.set_logger_message(f"Received ini file: {self._file}", "debug")
             self._read_inifile(file_path)
         elif file_path.is_dir():
-            self.set_logger_message(f"No ini file given, using default options", "warning")
+            self.set_logger_message(
+                f"No ini file given, using default options", "warning"
+            )
             pass
         else:
-            # User has supplied a file, but the file does not exist. Raise error. 
+            # User has supplied a file, but the file does not exist. Raise error.
             raise IOError(f"The given file path {file_path} could not be found")
-        #else:
+        # else:
         #    # if no filepath, or filepath is StringIO object (used in testing)
         #    self._file = None
-        #if not (file_path is None or not file_path):
+        # if not (file_path is None or not file_path):
         #    self._read_inifile(file_path)
 
     @property
@@ -281,12 +283,12 @@ class IniFile(FM2ProfBase):
         """
         if file_path is None or not file_path:
             msg = "No ini file was specified and no data could be read."
-            self.set_logger_message(msg, 'error')
+            self.set_logger_message(msg, "error")
             raise IOError(msg)
         try:
             if not os.path.exists(file_path):
                 msg = f"The given file path {file_path} could not be found."
-                self.set_logger_message(msg, 'error')
+                self.set_logger_message(msg, "error")
                 raise IOError(msg)
         except TypeError:
             if not isinstance(file_path, io.StringIO):
