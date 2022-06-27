@@ -1,5 +1,5 @@
 from typing import Optional
-
+from pathlib import Path
 import typer
 
 from fm2prof import Project, __version__
