@@ -75,7 +75,7 @@ class IniFile(FM2ProfBase):
     _input_file_paths = None
     _input_parameters = None
 
-    def __init__(self, file_path: str = "", logger: Logger = None):
+    def __init__(self, file_path: Union[Path, str] = ".", logger: Logger = None):
         """
         Initializes the object Ini File which contains the path locations of all
         parameters needed by the Fm2ProfRunner.
@@ -98,15 +98,26 @@ class IniFile(FM2ProfBase):
         self._ini_template = self._get_template_ini()  # Template to fill defaults from
         self._configuration = self._get_template_ini()  # What will be used
 
-        if isinstance(file_path, (str, Path)):
-            self._file = Path(file_path)
+        file_path = Path(file_path)
+
+        if isinstance(file_path, Path):
+            self._file = file_path
+        if file_path.is_file():
             self.set_logger_message(f"Received ini file: {self._file}", "debug")
-        else:
-            # if no filepath, or filepath is StringIO object (used in testing)
-            self._file = None
-            self._file_dir = None
-        if not (file_path is None or not file_path):
             self._read_inifile(file_path)
+        elif file_path.is_dir():
+            self.set_logger_message(
+                f"No ini file given, using default options", "warning"
+            )
+            pass
+        else:
+            # User has supplied a file, but the file does not exist. Raise error.
+            raise IOError(f"The given file path {file_path} could not be found")
+        # else:
+        #    # if no filepath, or filepath is StringIO object (used in testing)
+        #    self._file = None
+        # if not (file_path is None or not file_path):
+        #    self._read_inifile(file_path)
 
     @property
     def _file_dir(self):
@@ -147,10 +158,11 @@ class IniFile(FM2ProfBase):
             output directory (str)
 
         """
-
-        return self._configuration["sections"]["output"][self.__output_directory_key][
+        op = self._configuration["sections"]["output"][self.__output_directory_key][
             "value"
         ]
+
+        return self.get_relative_path(op)
 
     def get_ini_root(self, dirtype: str = "relative") -> str:
         if dirtype == "relative":
@@ -270,12 +282,14 @@ class IniFile(FM2ProfBase):
             file_path {str} -- File path where the IniFile is located
         """
         if file_path is None or not file_path:
-            raise IOError("No ini file was specified and no data could be read.")
+            msg = "No ini file was specified and no data could be read."
+            self.set_logger_message(msg, "error")
+            raise IOError(msg)
         try:
             if not os.path.exists(file_path):
-                raise IOError(
-                    "The given file path {} could not be found.".format(file_path)
-                )
+                msg = f"The given file path {file_path} could not be found."
+                self.set_logger_message(msg, "error")
+                raise IOError(msg)
         except TypeError:
             if not isinstance(file_path, io.StringIO):
                 raise IOError("Unknown file format entered")
