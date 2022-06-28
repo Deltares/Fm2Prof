@@ -2,9 +2,8 @@
 Contains CrossSection class
 """
 import logging
+import math
 import os
-
-# Imports from standard library
 from datetime import datetime, timedelta
 from functools import reduce
 from logging import Logger
@@ -14,13 +13,9 @@ from typing import Mapping, Sequence
 import numpy as np
 import pandas as pd
 import scipy.optimize as so
-
-# Imports from dependencies
 from scipy.integrate import cumtrapz
 
 from fm2prof import Functions as FE
-
-# Imports from package
 from fm2prof.common import FM2ProfBase, FrictionTable
 from fm2prof.Import import FmModelData
 from fm2prof.IniFile import IniFile
@@ -1418,22 +1413,27 @@ class CrossSection(FM2ProfBase):
         dif = self.flow_width[-1] - total_section_width
         if dif > 0:
             self.section_widths["main"] += dif
-            self.set_logger_message(f"Increased main section width by {dif:.2f} m", "warning")
+            self.set_logger_message(
+                f"Increased main section width by {dif:.2f} m", "warning"
+            )
 
     def _check_section_widths_greater_than_minimum_width(self) -> bool:
         """
         Main section width must be greater than minimum profile width, or
         it is ignored by SOBEK 3
         """
-        
+
         dif = self.section_widths["main"] - self._css_flow_width[0]
+
+        # cm accuracy
+        dif = math.ceil(dif * 100) / 100
 
         if dif < 0:
             self.section_widths["main"] -= dif
             self.section_widths["floodplain1"] += dif
             self.set_logger_message(
-                f"Increased main section width by {dif:.2f} during check_requirements",
-                "warning",
+                f"Increased main section width by {dif:.2f}",
+                "warning"
             )
             return True
         return False

@@ -1,4 +1,3 @@
-__version__ = "1.5.1"
+__version__ = "2.0.0"
 
-from fm2prof import utils
 from fm2prof.Fm2ProfRunner import Project

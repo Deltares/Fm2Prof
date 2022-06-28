@@ -1,0 +1,13 @@
+{% extends "layout.html" %}
+{% set title = _('Welcome!') %}
+{% block body %}
+
+  <h1>{{ _('Welcome') }}</h1>
+
+  <h2 style="margin-bottom: 10 px">{%trans%}Start Here{%endtrans%}</h2>
+  <p><a href="{{ pathto("contents") }}">{%trans%}Open manual{%endtrans%}</a>.</p>
+
+{% endblock %}
+{% block site_nav %}
+
+{% endblock %}

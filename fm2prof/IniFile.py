@@ -6,12 +6,11 @@ import configparser
 import inspect
 import io
 import json
-from pathlib import Path
 import os
 from logging import Logger
+from pathlib import Path
 from pydoc import locate
 from typing import AnyStr, Dict, List, Mapping, Type, Union
-
 
 from fm2prof.common import FM2ProfBase
 
@@ -76,7 +75,7 @@ class IniFile(FM2ProfBase):
     _input_file_paths = None
     _input_parameters = None
 
-    def __init__(self, file_path: str = "", logger: Logger = None):
+    def __init__(self, file_path: Union[Path, str] = ".", logger: Logger = None):
         """
         Initializes the object Ini File which contains the path locations of all
         parameters needed by the Fm2ProfRunner.
@@ -99,22 +98,31 @@ class IniFile(FM2ProfBase):
         self._ini_template = self._get_template_ini()  # Template to fill defaults from
         self._configuration = self._get_template_ini()  # What will be used
 
-        if isinstance(file_path, (str, Path)):
-            self._file = Path(file_path)
-            self.set_logger_message(
-            f"Received ini file: {self._file}", "debug"
-            )
-        else:
-            # if no filepath, or filepath is StringIO object (used in testing)
-            self._file = None
-            self._file_dir = None
-        if not (file_path is None or not file_path):
+        file_path = Path(file_path)
+
+        if isinstance(file_path, Path):
+            self._file = file_path
+        if file_path.is_file():
+            self.set_logger_message(f"Received ini file: {self._file}", "debug")
             self._read_inifile(file_path)
+        elif file_path.is_dir():
+            self.set_logger_message(
+                f"No ini file given, using default options", "warning"
+            )
+            pass
+        else:
+            # User has supplied a file, but the file does not exist. Raise error.
+            raise IOError(f"The given file path {file_path} could not be found")
+        # else:
+        #    # if no filepath, or filepath is StringIO object (used in testing)
+        #    self._file = None
+        # if not (file_path is None or not file_path):
+        #    self._read_inifile(file_path)
 
     @property
     def _file_dir(self):
         return self._file.parent
-        
+
     @property
     def has_output_directory(self) -> bool:
         """
@@ -150,10 +158,11 @@ class IniFile(FM2ProfBase):
             output directory (str)
 
         """
-
-        return self._configuration["sections"]["output"][self.__output_directory_key][
+        op = self._configuration["sections"]["output"][self.__output_directory_key][
             "value"
         ]
+
+        return self.get_relative_path(op)
 
     def get_ini_root(self, dirtype: str = "relative") -> str:
         if dirtype == "relative":
@@ -273,12 +282,14 @@ class IniFile(FM2ProfBase):
             file_path {str} -- File path where the IniFile is located
         """
         if file_path is None or not file_path:
-            raise IOError("No ini file was specified and no data could be read.")
+            msg = "No ini file was specified and no data could be read."
+            self.set_logger_message(msg, "error")
+            raise IOError(msg)
         try:
             if not os.path.exists(file_path):
-                raise IOError(
-                    "The given file path {} could not be found.".format(file_path)
-                )
+                msg = f"The given file path {file_path} could not be found."
+                self.set_logger_message(msg, "error")
+                raise IOError(msg)
         except TypeError:
             if not isinstance(file_path, io.StringIO):
                 raise IOError("Unknown file format entered")
@@ -333,7 +344,9 @@ class IniFile(FM2ProfBase):
                 parsed_value = key_type(value)
                 self.set_parameter(key_default, parsed_value)
             except ValueError:
-                self.set_logger_message(f"{key} could not be cast as {key_type}", 'debug')
+                self.set_logger_message(
+                    f"{key} could not be cast as {key_type}", "debug"
+                )
             except KeyError:
                 pass
 
@@ -354,10 +367,11 @@ class IniFile(FM2ProfBase):
 
         for key, input_file in inputsection.items():
             key_default, _ = self._get_key_from_template("input", key)
-            if key_default is None: continue
+            if key_default is None:
+                continue
 
             input_file = self._file_dir.joinpath(input_file)
-            
+
             if input_file.is_file():
                 self.set_input_file(key_default, input_file)
                 continue
@@ -369,9 +383,9 @@ class IniFile(FM2ProfBase):
                 raise FileNotFoundError
             else:
                 self.set_logger_message(
-                f"Could not find optional input file for {key_default}, skipping",
-                "warning",
-            )
+                    f"Could not find optional input file for {key_default}, skipping",
+                    "warning",
+                )
 
     def _get_key_from_template(self, section, key) -> List[Union[str, Type]]:
         """return list of lower case keys from default configuration files"""
