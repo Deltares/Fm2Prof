@@ -61,6 +61,7 @@ extensions = [
     "sphinx.ext.mathjax",
     "sphinx.ext.viewcode",
     "sphinx_immaterial",
+    "sphinxcontrib.programoutput",
 ]
 
 intersphinx_mapping = {
@@ -100,6 +101,10 @@ html_title = "FM2PROF documentation"
 html_favicon = "_static/favicon.ico"  # colored version of material/bookshelf.svg
 html_logo = "_static/Deltares_logo_Wit_RGB.svg"  # from https://gifer.com/en/Ybin
 
+# for landing page
+root_doc = "contents"
+html_additional_pages = {"index": "index.html"}
+
 # -- HTML theme specific settings ------------------------------------------------
 
 extensions.append("sphinx_immaterial")
@@ -120,11 +125,11 @@ html_theme_options = {
     "globaltoc_includehidden": True,
     "features": [
         "navigation.expand",
-        # "navigation.tabs",
+        "navigation.tabs",
         # "toc.integrate",
         "navigation.sections",
         # "navigation.instant",
-        # "header.autohide",
+        "header.autohide",
         "navigation.top",
         "navigation.tracking",
         "search.highlight",

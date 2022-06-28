@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "fm2prof"
-version = "1.5.1"
+version = "2.0.0"
 description = "Package use to reduce Delft3D FM models from 2D models to 1D models"
 authors = ["K.D. Berends <koen.berends@deltares.nl>"]
 maintainers = ["Carles S. Soriano Perez <carles.sorianoperez@deltares.nl>"]
@@ -10,7 +10,7 @@ packages = [
 ]
 
 [tool.poetry.dependencies]
-python = "^3.7.1"
+python = "^3.7.1, <3.10"
 seaborn = "^0.7"
 pandas = "^1.3.4"
 numpy = "^1.14"
@@ -25,9 +25,10 @@ geos = "^0.2.3"
 Cython = "^0.29.24"
 sphinxcontrib-images = "^0.9.4"
 sphinx_materialdesign_theme = "^0.1.11"
-sphinx-immaterial = "^0.4.1"
+sphinx-immaterial = "^0.7.3"
 sphinxcontrib-details-directive = "^0.1.0"
 typer = "^0.4.1"
+sphinxcontrib-programoutput = "^0.17"
 
 
 [tool.poetry.dev-dependencies]
@@ -41,6 +42,8 @@ sphinx_materialdesign_theme = {version = "^0.1.11", optional = true}
 commitizen = "^2.20.0"
 pre-commit = "^2.15.0"
 poetry2conda = "^0.3.0"
+pyinstaller = "^5.1"
+tuna = "^0.5.11"
 
 [tool.poetry.scripts]
 f2p="fm2prof.cli:main"
@@ -50,7 +53,7 @@ fm2prof="fm2prof.cli:main"
 name = "cz_conventional_commits"
 changelog_file = "docs/CHANGELOG.rst"
 update_changelog_on_bump = true
-version = "1.5.1"
+version = "2.0.0"
 tag_format = "v$major.$minor.$patch"
 version_files = [
     "fm2prof/__init__.py",
