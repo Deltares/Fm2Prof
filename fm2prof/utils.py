@@ -1313,6 +1313,19 @@ class Compare1D2D(ModelOutputReader):
         return sorted_stations, sorted_rkms, lmw_stations
 
     def figure_at_station(self, station: str) -> None:
+        """ 
+        Create a figure with the results at an observation station. 
+        
+        Figures are saved to `[Compare1D2D.output_path]/figures/stations` 
+
+        Example output:
+
+        .. figure:: figures_utils/stations/example.png
+
+            example output figure
+
+        """
+
         fig, axs = plt.subplots(1, 2, figsize=(12, 5))
 
         # q/h view
@@ -1354,6 +1367,23 @@ class Compare1D2D(ModelOutputReader):
     def figure_compare_discharge_at_stations(
         self, title: str = "notitle", stations: Tuple[str, str] = None
     ) -> None:
+        """ 
+        Like :meth:`Compare1D2D.figure_at_station`, but compares discharge
+        distribution over two stations. 
+
+        Example usage:
+
+            >>> Compare1D2().figure_compare_discharge_at_stations(stations=["WL_869.00", "PK_869.00"])
+        
+        Figures are saved to `[Compare1D2D.output_path]/figures/discharge` 
+
+        Example output:
+
+        .. figure:: figures_utils/discharge/example.png
+
+            Example output figure
+
+        """
         fig, axs = plt.subplots(1, 2, figsize=(12, 5))
         if len(stations) != 2:
             print("error: must define 2 stations")
@@ -1430,7 +1460,15 @@ class Compare1D2D(ModelOutputReader):
 
     def figure_longitudinal_time(self, route: List[str]) -> None:
         """
-        Longitudinal plot at certain times
+        Create a figure along a route with lines at various points in time. 
+        Figures are saved to `[Compare1D2D.output_path]/figures/longitudinal` 
+
+        Example output:
+
+        .. figure:: figures_utils/longitudinal/example_time_series.png
+
+            example output figure
+
         """
         routename = "-".join(route)
         _, _, lmw_stations = self.get_route(route)
@@ -1509,7 +1547,18 @@ class Compare1D2D(ModelOutputReader):
 
     def figure_longitudinal_rating_curve(self, route: List[str]) -> None:
         """
-        Longitudinal plot at certain discharges
+        Create a figure along a route with lines at various dicharges. 
+        To to this, rating curves are generated at each point by digitizing
+        the model output. 
+        
+        Figures are saved to `[Compare1D2D.output_path]/figures/longitudinal` 
+
+        Example output:
+
+        .. figure:: figures_utils/longitudinal/example_rating_curve.png
+
+            example output figure
+
         """
         routename = "-".join(route)
         _, _, lmw_stations = self.get_route(route)
@@ -1590,7 +1639,20 @@ class Compare1D2D(ModelOutputReader):
             yield (station < t).idxmin()
 
     def heatmap_time(self, route: List[str]) -> None:
-        """ """
+        """ 
+        Create a 2D heatmap along a route. The horizontal axis uses
+        timemarks to match the 1D and 2D models
+        
+        Figures are saved to `[Compare1D2D.output_path]/figures/heatmap` 
+
+        Example output:
+
+        .. figure:: figures_utils/heatmaps/example_time_series.png
+
+            example output figure
+
+        """
+        
         routename = "-".join(route)
         _, _, lmw_stations = self.get_route(route)
         data = self.data_1D_H - self.data_2D_H
@@ -1626,7 +1688,20 @@ class Compare1D2D(ModelOutputReader):
         plt.close()
 
     def heatmap_rating_curve(self, route: List[str]) -> None:
-        """ """
+        """ 
+        Create a 2D heatmap along a route. The horizontal axis uses
+        the digitized rating curves to match the two models
+        
+        Figures are saved to `[Compare1D2D.output_path]/figures/heatmap` 
+
+        Example output:
+
+        .. figure:: figures_utils/heatmaps/example_rating_curve.png
+
+            example output figure
+
+        """
+        
         routename = "-".join(route)
         _, _, lmw_stations = self.get_route(route)
         data = self.data_1D_H_digitized - self.data_2D_H_digitized
