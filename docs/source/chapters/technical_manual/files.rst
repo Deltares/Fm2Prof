@@ -81,6 +81,15 @@ Files to distinguish regions and sections. See :term:`Region` and :term:`Section
 
 .. _outputFiles:
 
+
+.. _branchRuleFile:	
+
+Branch rule file
+-------------------------
+
+Optional input for :class:`fm2prof.utils.GenerateCrossSectionLocationFile`
+
+
 Output files
 +++++++++++++
 
