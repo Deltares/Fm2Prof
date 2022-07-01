@@ -38,7 +38,7 @@ def cli_check_project(configuration_file: str) -> None:
 @app.command("run")
 def cli_load_project(configuration_file: str) -> None:
     """Loads and runs a project"""
-    project = Project(configuration_file)
+    project = Project(configuration_file).with_suffix(".ini")
     project.run()
     raise typer.Exit()
 
