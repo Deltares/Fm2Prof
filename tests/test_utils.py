@@ -30,7 +30,7 @@ class Test_DeltaresConfig:
 class Test_ModelOutputReader:
     def DUMMY_test_given_1dinput_csv_generated(self):
         # 1. Set up initial test data
-        path_1d = TestUtils.get_local_test_file('cases/case_02_compound/Model_SOBEK/dimr/dflow1d/NetworkDefinition.ini ')
+        path_1d = TestUtils.get_local_test_file('cases/case_02_compound/Model_SOBEK/dimr/dflow1d/NetworkDefinition.ini')
 
         # 2. Set expectations
         

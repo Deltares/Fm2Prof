@@ -102,8 +102,8 @@ html_favicon = "_static/favicon.ico"  # colored version of material/bookshelf.sv
 html_logo = "_static/Deltares_logo_Wit_RGB.svg"  # from https://gifer.com/en/Ybin
 
 # for landing page
-root_doc = "contents"
-html_additional_pages = {"index": "index.html"}
+root_doc = "index"
+
 
 # -- HTML theme specific settings ------------------------------------------------
 
@@ -115,7 +115,7 @@ html_theme_options = {
     "icon": {
         "repo": "fontawesome/brands/git-alt",
     },
-    "site_url": "https://deltares.github.io/fm2prof/",
+    "site_url": "https://deltares.github.io/fm2prof/index.html",
     "repo_url": "https://github.com/deltares/fm2prof/",
     "repo_name": "deltares/fm2prof",
     "repo_type": "github",
