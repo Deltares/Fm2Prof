@@ -1,3 +1,20 @@
+## v2.1.0 (2022-07-04)
+
+### Fix
+
+- macos/linux posixpath fail fix
+- isolated set_locale and wrapped in try/except
+- possibly fix posix path error with trailing whitespace
+- run with ini suffix fix (#29)
+- docs now only build on master
+
+### Feat
+
+- expanded cli
+- groundwork for expansion of cli (#31, #30)
+- overwrite option for output, single output folder (#31)
+- added new tools to utils
+
 ## v2.0.0 (2022-06-28)
 
 ### Fix
