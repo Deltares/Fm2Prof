@@ -78,7 +78,7 @@
 
 <header class="md-header" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href="../../contents.html" title="FM2PROF documentation" class="md-header__button md-logo" aria-label="FM2PROF documentation" data-md-component="logo">
+    <a href="../../index.html" title="FM2PROF documentation" class="md-header__button md-logo" aria-label="FM2PROF documentation" data-md-component="logo">
       <img src="../../_static/Deltares_logo_Wit_RGB.svg" alt="logo">
     </a>
     <label class="md-header__button md-icon" for="__drawer">
@@ -246,7 +246,7 @@
 
 <nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href="../../contents.html" title="FM2PROF documentation" class="md-nav__button md-logo" aria-label="FM2PROF documentation" data-md-component="logo">
+    <a href="../../index.html" title="FM2PROF documentation" class="md-nav__button md-logo" aria-label="FM2PROF documentation" data-md-component="logo">
       <img src="../../_static/Deltares_logo_Wit_RGB.svg" alt="logo">
     </a>
     FM2PROF documentation
@@ -462,11 +462,18 @@
         
           <li class="md-nav__item">
   <a href="#fm2prof.Project" class="md-nav__link">
-    <span aria-label="Python class" class="objinfo-icon objinfo-icon__data" title="Python class">C</span><span title="fm2prof.Project (Python class) — Provides the python API for running FM2PROF." class="md-ellipsis">fm2prof.<wbr>Project</span>
+    <span aria-label="Python class" class="objinfo-icon objinfo-icon__data" title="Python class">C</span><span title="fm2prof.Project (Python class) — Bases: fm2prof.Fm2ProfRunner.Fm2ProfRunner" class="md-ellipsis">fm2prof.<wbr>Project</span>
   </a>
   
     <nav class="md-nav" aria-label="fm2prof.Project">
       <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#fm2prof.Project.get_inifile" class="md-nav__link">
+    <span aria-label="Python method" class="objinfo-icon objinfo-icon__procedure" title="Python method">M</span><span title="fm2prof.Project.get_inifile (Python method) — &#34;Use this method to get the inifile object" class="md-ellipsis">get_<wbr>inifile</span>
+  </a>
+  
+</li>
         
           <li class="md-nav__item">
   <a href="#fm2prof.Project.get_input_file" class="md-nav__link">
@@ -498,6 +505,20 @@
         
       </ul>
     </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fm2prof.Project.get_logformatter" class="md-nav__link">
+    <span aria-label="Python method" class="objinfo-icon objinfo-icon__procedure" title="Python method">M</span><span title="fm2prof.Project.get_logformatter (Python method) — Returns formatter" class="md-ellipsis">get_<wbr>logformatter</span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fm2prof.Project.get_logger" class="md-nav__link">
+    <span aria-label="Python method" class="objinfo-icon objinfo-icon__procedure" title="Python method">M</span><span title="fm2prof.Project.get_logger (Python method) — Use this method to return logger object" class="md-ellipsis">get_<wbr>logger</span>
+  </a>
   
 </li>
         
@@ -549,6 +570,39 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#fm2prof.Project.load_inifile" class="md-nav__link">
+    <span aria-label="Python method" class="objinfo-icon objinfo-icon__procedure" title="Python method">M</span><span title="fm2prof.Project.load_inifile (Python method) — use this method to load a configuration file from path." class="md-ellipsis">load_<wbr>inifile</span>
+  </a>
+  
+    <nav class="md-nav" aria-label="load_inifile">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#fm2prof.Project.load_inifile-parameters" class="md-nav__link">
+    <span class="md-ellipsis">Parameters</span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Parameters">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#fm2prof.Project.load_inifile.iniFilePath" class="md-nav__link">
+    <span aria-label="Python parameter" class="objinfo-icon objinfo-icon__sub-data" title="Python parameter">p</span><span title="fm2prof.Project.load_inifile.iniFilePath (Python parameter) — path to configuration file" class="md-ellipsis">ini<wbr>File<wbr>Path</span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#fm2prof.Project.print_configuration" class="md-nav__link">
     <span aria-label="Python method" class="objinfo-icon objinfo-icon__procedure" title="Python method">M</span><span title="fm2prof.Project.print_configuration (Python method) — Use this method to obtain string representation of the configuration. Use this string to write to file, e.g.:" class="md-ellipsis">print_<wbr>configuration</span>
   </a>
@@ -560,6 +614,72 @@
   <a href="#fm2prof.Project.print_configuration-returns" class="md-nav__link">
     <span class="md-ellipsis">Returns</span>
   </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fm2prof.Project.run" class="md-nav__link">
+    <span aria-label="Python method" class="objinfo-icon objinfo-icon__procedure" title="Python method">M</span><span title="fm2prof.Project.run (Python method) — Executes FM2PROF routines." class="md-ellipsis">run</span>
+  </a>
+  
+    <nav class="md-nav" aria-label="run">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#fm2prof.Project.run-parameters" class="md-nav__link">
+    <span class="md-ellipsis">Parameters</span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Parameters">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#fm2prof.Project.run.overwrite" class="md-nav__link">
+    <span aria-label="Python parameter" class="objinfo-icon objinfo-icon__sub-data" title="Python parameter">p</span><span title="fm2prof.Project.run.overwrite (Python parameter) — if True, overwrites existing output. If False, exits if output detected" class="md-ellipsis">overwrite</span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fm2prof.Project.set_inifile" class="md-nav__link">
+    <span aria-label="Python method" class="objinfo-icon objinfo-icon__procedure" title="Python method">M</span><span title="fm2prof.Project.set_inifile (Python method) — Use this method to set configuration file object." class="md-ellipsis">set_<wbr>inifile</span>
+  </a>
+  
+    <nav class="md-nav" aria-label="set_inifile">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#fm2prof.Project.set_inifile-parameters" class="md-nav__link">
+    <span class="md-ellipsis">Parameters</span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Parameters">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#fm2prof.Project.set_inifile.inifile" class="md-nav__link">
+    <span aria-label="Python parameter" class="objinfo-icon objinfo-icon__sub-data" title="Python parameter">p</span><span title="fm2prof.Project.set_inifile.inifile (Python parameter) — inifile object. Obtain using e.g. get_inifile." class="md-ellipsis">inifile</span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
         
@@ -600,6 +720,59 @@
         
       </ul>
     </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fm2prof.Project.set_logger" class="md-nav__link">
+    <span aria-label="Python method" class="objinfo-icon objinfo-icon__procedure" title="Python method">M</span><span title="fm2prof.Project.set_logger (Python method) — Use to set logger" class="md-ellipsis">set_<wbr>logger</span>
+  </a>
+  
+    <nav class="md-nav" aria-label="set_logger">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#fm2prof.Project.set_logger-parameters" class="md-nav__link">
+    <span class="md-ellipsis">Parameters</span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Parameters">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#fm2prof.Project.set_logger.logger" class="md-nav__link">
+    <span aria-label="Python parameter" class="objinfo-icon objinfo-icon__sub-data" title="Python parameter">p</span><span title="fm2prof.Project.set_logger.logger (Python parameter) — Logger instance" class="md-ellipsis">logger</span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fm2prof.Project.set_logger_message" class="md-nav__link">
+    <span aria-label="Python method" class="objinfo-icon objinfo-icon__procedure" title="Python method">M</span><span title="fm2prof.Project.set_logger_message (Python method) — Sets message to logger if this is set." class="md-ellipsis">set_<wbr>logger_<wbr>message</span>
+  </a>
+  
+    <nav class="md-nav" aria-label="set_logger_message">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#fm2prof.Project.set_logger_message-parameters" class="md-nav__link">
+    <span class="md-ellipsis">Parameters</span>
+  </a>
   
 </li>
         
@@ -681,6 +854,39 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#fm2prof.Project.start_new_log_task" class="md-nav__link">
+    <span aria-label="Python method" class="objinfo-icon objinfo-icon__procedure" title="Python method">M</span><span title="fm2prof.Project.start_new_log_task (Python method) — Use this method to start a new task. Will reset the internal clock." class="md-ellipsis">start_<wbr>new_<wbr>log_<wbr>task</span>
+  </a>
+  
+    <nav class="md-nav" aria-label="start_new_log_task">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#fm2prof.Project.start_new_log_task-parameters" class="md-nav__link">
+    <span class="md-ellipsis">Parameters</span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Parameters">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#fm2prof.Project.start_new_log_task.task_name" class="md-nav__link">
+    <span aria-label="Python parameter" class="objinfo-icon objinfo-icon__sub-data" title="Python parameter">p</span><span title="fm2prof.Project.start_new_log_task.task_name (Python parameter) — task name, will be displayed in log message" class="md-ellipsis">task_<wbr>name</span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -695,9 +901,193 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#fm2prof.utils.networkdeffile_to_input" class="md-nav__link">
-    <span aria-label="Python function" class="objinfo-icon objinfo-icon__procedure" title="Python function">F</span><span title="fm2prof.utils.networkdeffile_to_input (Python function) — Builds a cross-section input file for FM2PROF from a DIMR network definition file." class="md-ellipsis">fm2prof.<wbr>utils.<wbr>networkdeffile_<wbr>to_<wbr>input</span>
+  <a href="#fm2prof.utils.Compare1D2D" class="md-nav__link">
+    <span aria-label="Python class" class="objinfo-icon objinfo-icon__data" title="Python class">C</span><span title="fm2prof.utils.Compare1D2D (Python class) — Class to compare the results of a 1D and 2D model." class="md-ellipsis">fm2prof.<wbr>utils.<wbr>Compare1D2D</span>
   </a>
+  
+    <nav class="md-nav" aria-label="fm2prof.utils.Compare1D2D">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#fm2prof.utils.Compare1D2D.figure_at_station" class="md-nav__link">
+    <span aria-label="Python method" class="objinfo-icon objinfo-icon__procedure" title="Python method">M</span><span title="fm2prof.utils.Compare1D2D.figure_at_station (Python method) — Create a figure with the results at an observation station." class="md-ellipsis">figure_<wbr>at_<wbr>station</span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fm2prof.utils.Compare1D2D.figure_compare_discharge_at_stations" class="md-nav__link">
+    <span aria-label="Python method" class="objinfo-icon objinfo-icon__procedure" title="Python method">M</span><span title="fm2prof.utils.Compare1D2D.figure_compare_discharge_at_stations (Python method) — Like Compare1D2D.figure_at_station(), but compares discharge distribution over two stations." class="md-ellipsis">figure_<wbr>compare_<wbr>discharge_<wbr>at_<wbr>stations</span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fm2prof.utils.Compare1D2D.figure_longitudinal_rating_curve" class="md-nav__link">
+    <span aria-label="Python method" class="objinfo-icon objinfo-icon__procedure" title="Python method">M</span><span title="fm2prof.utils.Compare1D2D.figure_longitudinal_rating_curve (Python method) — Create a figure along a route with lines at various dicharges. To to this, rating curves are generated at each point by digitizing the model output." class="md-ellipsis">figure_<wbr>longitudinal_<wbr>rating_<wbr>curve</span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fm2prof.utils.Compare1D2D.figure_longitudinal_time" class="md-nav__link">
+    <span aria-label="Python method" class="objinfo-icon objinfo-icon__procedure" title="Python method">M</span><span title="fm2prof.utils.Compare1D2D.figure_longitudinal_time (Python method) — Create a figure along a route with lines at various points in time. Figures are saved to [Compare1D2D.output_path]/figures/longitudinal" class="md-ellipsis">figure_<wbr>longitudinal_<wbr>time</span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fm2prof.utils.Compare1D2D.get_route" class="md-nav__link">
+    <span aria-label="Python method" class="objinfo-icon objinfo-icon__procedure" title="Python method">M</span><span title="fm2prof.utils.Compare1D2D.get_route (Python method) — returns a sorted list of stations along a route, with rkms" class="md-ellipsis">get_<wbr>route</span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fm2prof.utils.Compare1D2D.heatmap_rating_curve" class="md-nav__link">
+    <span aria-label="Python method" class="objinfo-icon objinfo-icon__procedure" title="Python method">M</span><span title="fm2prof.utils.Compare1D2D.heatmap_rating_curve (Python method) — Create a 2D heatmap along a route. The horizontal axis uses the digitized rating curves to match the two models" class="md-ellipsis">heatmap_<wbr>rating_<wbr>curve</span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fm2prof.utils.Compare1D2D.heatmap_time" class="md-nav__link">
+    <span aria-label="Python method" class="objinfo-icon objinfo-icon__procedure" title="Python method">M</span><span title="fm2prof.utils.Compare1D2D.heatmap_time (Python method) — Create a 2D heatmap along a route. The horizontal axis uses timemarks to match the 1D and 2D models" class="md-ellipsis">heatmap_<wbr>time</span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fm2prof.utils.DeltaresConfig" class="md-nav__link">
+    <span aria-label="Python class" class="objinfo-icon objinfo-icon__data" title="Python class">C</span><span title="fm2prof.utils.DeltaresConfig (Python class) — Helper class to parse the &#34;Deltares ini&#34; style." class="md-ellipsis">fm2prof.<wbr>utils.<wbr>Deltares<wbr>Config</span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fm2prof.utils.DeltaresSectionItem" class="md-nav__link">
+    <span aria-label="Python class" class="objinfo-icon objinfo-icon__data" title="Python class">C</span><span title="fm2prof.utils.DeltaresSectionItem (Python class)" class="md-ellipsis">fm2prof.<wbr>utils.<wbr>Deltares<wbr>Section<wbr>Item</span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fm2prof.utils.GenerateCrossSectionLocationFile" class="md-nav__link">
+    <span aria-label="Python class" class="objinfo-icon objinfo-icon__data" title="Python class">C</span><span title="fm2prof.utils.GenerateCrossSectionLocationFile (Python class) — Builds a cross-section input file for FM2PROF from a SOBEK 3 DIMR network definition file." class="md-ellipsis">fm2prof.<wbr>utils.<wbr>Generate<wbr>Cross<wbr>Section<wbr>Location<wbr>File</span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fm2prof.utils.ModelOutputReader" class="md-nav__link">
+    <span aria-label="Python class" class="objinfo-icon objinfo-icon__data" title="Python class">C</span><span title="fm2prof.utils.ModelOutputReader (Python class) — This class provides methods to post-process 1D and 2D data, by writing csv files of output locations (observation stations) that are both in 1D and 2D. It produces two csv files that are input for fm2prof.utils.ModelOutputPlotter()" class="md-ellipsis">fm2prof.<wbr>utils.<wbr>Model<wbr>Output<wbr>Reader</span>
+  </a>
+  
+    <nav class="md-nav" aria-label="fm2prof.utils.ModelOutputReader">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#fm2prof.utils.ModelOutputReader.get_1d2d_map" class="md-nav__link">
+    <span aria-label="Python method" class="objinfo-icon objinfo-icon__procedure" title="Python method">M</span><span title="fm2prof.utils.ModelOutputReader.get_1d2d_map (Python method) — Writes a map between stations in 1D and stations in 2D. Matches based on identical characters in first nine slots" class="md-ellipsis">get_<wbr>1d2d_<wbr>map</span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fm2prof.utils.ModelOutputReader.load_flow1d_data" class="md-nav__link">
+    <span aria-label="Python method" class="objinfo-icon objinfo-icon__procedure" title="Python method">M</span><span title="fm2prof.utils.ModelOutputReader.load_flow1d_data (Python method) — Loads &#39;observations.nc&#39; and outputs to csv file" class="md-ellipsis">load_<wbr>flow1d_<wbr>data</span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fm2prof.utils.ModelOutputReader.load_flow2d_data" class="md-nav__link">
+    <span aria-label="Python method" class="objinfo-icon objinfo-icon__procedure" title="Python method">M</span><span title="fm2prof.utils.ModelOutputReader.load_flow2d_data (Python method) — Loads 2D output file (netCDF, must contain observation point results), matches to 1D result, output to csv" class="md-ellipsis">load_<wbr>flow2d_<wbr>data</span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fm2prof.utils.VisualiseOutput" class="md-nav__link">
+    <span aria-label="Python class" class="objinfo-icon objinfo-icon__data" title="Python class">C</span><span title="fm2prof.utils.VisualiseOutput (Python class) — Generator to loop through all cross-sections in definition file." class="md-ellipsis">fm2prof.<wbr>utils.<wbr>Visualise<wbr>Output</span>
+  </a>
+  
+    <nav class="md-nav" aria-label="fm2prof.utils.VisualiseOutput">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#fm2prof.utils.VisualiseOutput.cross_sections" class="md-nav__link">
+    <span aria-label="Python property" class="objinfo-icon objinfo-icon__alias" title="Python property">P</span><span title="fm2prof.utils.VisualiseOutput.cross_sections (Python property) — Generator to loop through all cross-sections in definition file." class="md-ellipsis">cross_<wbr>sections</span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fm2prof.utils.VisualiseOutput.figure_cross_section" class="md-nav__link">
+    <span aria-label="Python method" class="objinfo-icon objinfo-icon__procedure" title="Python method">M</span><span title="fm2prof.utils.VisualiseOutput.figure_cross_section (Python method) — Creates a figure" class="md-ellipsis">figure_<wbr>cross_<wbr>section</span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fm2prof.utils.VisualiseOutput.figure_roughness_longitudinal" class="md-nav__link">
+    <span aria-label="Python method" class="objinfo-icon objinfo-icon__procedure" title="Python method">M</span><span title="fm2prof.utils.VisualiseOutput.figure_roughness_longitudinal (Python method) — Assumes the following naming convention: [branch]_[optional:branch_order]_[chainage]" class="md-ellipsis">figure_<wbr>roughness_<wbr>longitudinal</span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fm2prof.utils.VisualiseOutput.getRoughnessInfoForCss" class="md-nav__link">
+    <span aria-label="Python method" class="objinfo-icon objinfo-icon__procedure" title="Python method">M</span><span title="fm2prof.utils.VisualiseOutput.getRoughnessInfoForCss (Python method) — Opens roughness file and reads information for a given cross-section name" class="md-ellipsis">get<wbr>Roughness<wbr>Info<wbr>For<wbr>Css</span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fm2prof.utils.VisualiseOutput.get_cross_section_by_id" class="md-nav__link">
+    <span aria-label="Python method" class="objinfo-icon objinfo-icon__procedure" title="Python method">M</span><span title="fm2prof.utils.VisualiseOutput.get_cross_section_by_id (Python method) — Get cross-section information given an id." class="md-ellipsis">get_<wbr>cross_<wbr>section_<wbr>by_<wbr>id</span>
+  </a>
+  
+    <nav class="md-nav" aria-label="get_cross_section_by_id">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#fm2prof.utils.VisualiseOutput.get_cross_section_by_id-parameters" class="md-nav__link">
+    <span class="md-ellipsis">Parameters</span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Parameters">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#fm2prof.utils.VisualiseOutput.get_cross_section_by_id.id" class="md-nav__link">
+    <span aria-label="Python parameter" class="objinfo-icon objinfo-icon__sub-data" title="Python parameter">p</span><span title="fm2prof.utils.VisualiseOutput.get_cross_section_by_id.id (Python parameter) — cross-section name" class="md-ellipsis">id</span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
         
@@ -842,11 +1232,18 @@
         
           <li class="md-nav__item">
   <a href="#fm2prof.Project" class="md-nav__link">
-    <span aria-label="Python class" class="objinfo-icon objinfo-icon__data" title="Python class">C</span><span title="fm2prof.Project (Python class) — Provides the python API for running FM2PROF." class="md-ellipsis">fm2prof.<wbr>Project</span>
+    <span aria-label="Python class" class="objinfo-icon objinfo-icon__data" title="Python class">C</span><span title="fm2prof.Project (Python class) — Bases: fm2prof.Fm2ProfRunner.Fm2ProfRunner" class="md-ellipsis">fm2prof.<wbr>Project</span>
   </a>
   
     <nav class="md-nav" aria-label="fm2prof.Project">
       <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#fm2prof.Project.get_inifile" class="md-nav__link">
+    <span aria-label="Python method" class="objinfo-icon objinfo-icon__procedure" title="Python method">M</span><span title="fm2prof.Project.get_inifile (Python method) — &#34;Use this method to get the inifile object" class="md-ellipsis">get_<wbr>inifile</span>
+  </a>
+  
+</li>
         
           <li class="md-nav__item">
   <a href="#fm2prof.Project.get_input_file" class="md-nav__link">
@@ -878,6 +1275,20 @@
         
       </ul>
     </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fm2prof.Project.get_logformatter" class="md-nav__link">
+    <span aria-label="Python method" class="objinfo-icon objinfo-icon__procedure" title="Python method">M</span><span title="fm2prof.Project.get_logformatter (Python method) — Returns formatter" class="md-ellipsis">get_<wbr>logformatter</span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fm2prof.Project.get_logger" class="md-nav__link">
+    <span aria-label="Python method" class="objinfo-icon objinfo-icon__procedure" title="Python method">M</span><span title="fm2prof.Project.get_logger (Python method) — Use this method to return logger object" class="md-ellipsis">get_<wbr>logger</span>
+  </a>
   
 </li>
         
@@ -929,6 +1340,39 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#fm2prof.Project.load_inifile" class="md-nav__link">
+    <span aria-label="Python method" class="objinfo-icon objinfo-icon__procedure" title="Python method">M</span><span title="fm2prof.Project.load_inifile (Python method) — use this method to load a configuration file from path." class="md-ellipsis">load_<wbr>inifile</span>
+  </a>
+  
+    <nav class="md-nav" aria-label="load_inifile">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#fm2prof.Project.load_inifile-parameters" class="md-nav__link">
+    <span class="md-ellipsis">Parameters</span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Parameters">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#fm2prof.Project.load_inifile.iniFilePath" class="md-nav__link">
+    <span aria-label="Python parameter" class="objinfo-icon objinfo-icon__sub-data" title="Python parameter">p</span><span title="fm2prof.Project.load_inifile.iniFilePath (Python parameter) — path to configuration file" class="md-ellipsis">ini<wbr>File<wbr>Path</span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#fm2prof.Project.print_configuration" class="md-nav__link">
     <span aria-label="Python method" class="objinfo-icon objinfo-icon__procedure" title="Python method">M</span><span title="fm2prof.Project.print_configuration (Python method) — Use this method to obtain string representation of the configuration. Use this string to write to file, e.g.:" class="md-ellipsis">print_<wbr>configuration</span>
   </a>
@@ -940,6 +1384,72 @@
   <a href="#fm2prof.Project.print_configuration-returns" class="md-nav__link">
     <span class="md-ellipsis">Returns</span>
   </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fm2prof.Project.run" class="md-nav__link">
+    <span aria-label="Python method" class="objinfo-icon objinfo-icon__procedure" title="Python method">M</span><span title="fm2prof.Project.run (Python method) — Executes FM2PROF routines." class="md-ellipsis">run</span>
+  </a>
+  
+    <nav class="md-nav" aria-label="run">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#fm2prof.Project.run-parameters" class="md-nav__link">
+    <span class="md-ellipsis">Parameters</span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Parameters">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#fm2prof.Project.run.overwrite" class="md-nav__link">
+    <span aria-label="Python parameter" class="objinfo-icon objinfo-icon__sub-data" title="Python parameter">p</span><span title="fm2prof.Project.run.overwrite (Python parameter) — if True, overwrites existing output. If False, exits if output detected" class="md-ellipsis">overwrite</span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fm2prof.Project.set_inifile" class="md-nav__link">
+    <span aria-label="Python method" class="objinfo-icon objinfo-icon__procedure" title="Python method">M</span><span title="fm2prof.Project.set_inifile (Python method) — Use this method to set configuration file object." class="md-ellipsis">set_<wbr>inifile</span>
+  </a>
+  
+    <nav class="md-nav" aria-label="set_inifile">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#fm2prof.Project.set_inifile-parameters" class="md-nav__link">
+    <span class="md-ellipsis">Parameters</span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Parameters">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#fm2prof.Project.set_inifile.inifile" class="md-nav__link">
+    <span aria-label="Python parameter" class="objinfo-icon objinfo-icon__sub-data" title="Python parameter">p</span><span title="fm2prof.Project.set_inifile.inifile (Python parameter) — inifile object. Obtain using e.g. get_inifile." class="md-ellipsis">inifile</span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
         
@@ -980,6 +1490,59 @@
         
       </ul>
     </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fm2prof.Project.set_logger" class="md-nav__link">
+    <span aria-label="Python method" class="objinfo-icon objinfo-icon__procedure" title="Python method">M</span><span title="fm2prof.Project.set_logger (Python method) — Use to set logger" class="md-ellipsis">set_<wbr>logger</span>
+  </a>
+  
+    <nav class="md-nav" aria-label="set_logger">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#fm2prof.Project.set_logger-parameters" class="md-nav__link">
+    <span class="md-ellipsis">Parameters</span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Parameters">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#fm2prof.Project.set_logger.logger" class="md-nav__link">
+    <span aria-label="Python parameter" class="objinfo-icon objinfo-icon__sub-data" title="Python parameter">p</span><span title="fm2prof.Project.set_logger.logger (Python parameter) — Logger instance" class="md-ellipsis">logger</span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fm2prof.Project.set_logger_message" class="md-nav__link">
+    <span aria-label="Python method" class="objinfo-icon objinfo-icon__procedure" title="Python method">M</span><span title="fm2prof.Project.set_logger_message (Python method) — Sets message to logger if this is set." class="md-ellipsis">set_<wbr>logger_<wbr>message</span>
+  </a>
+  
+    <nav class="md-nav" aria-label="set_logger_message">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#fm2prof.Project.set_logger_message-parameters" class="md-nav__link">
+    <span class="md-ellipsis">Parameters</span>
+  </a>
   
 </li>
         
@@ -1061,6 +1624,39 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#fm2prof.Project.start_new_log_task" class="md-nav__link">
+    <span aria-label="Python method" class="objinfo-icon objinfo-icon__procedure" title="Python method">M</span><span title="fm2prof.Project.start_new_log_task (Python method) — Use this method to start a new task. Will reset the internal clock." class="md-ellipsis">start_<wbr>new_<wbr>log_<wbr>task</span>
+  </a>
+  
+    <nav class="md-nav" aria-label="start_new_log_task">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#fm2prof.Project.start_new_log_task-parameters" class="md-nav__link">
+    <span class="md-ellipsis">Parameters</span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Parameters">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#fm2prof.Project.start_new_log_task.task_name" class="md-nav__link">
+    <span aria-label="Python parameter" class="objinfo-icon objinfo-icon__sub-data" title="Python parameter">p</span><span title="fm2prof.Project.start_new_log_task.task_name (Python parameter) — task name, will be displayed in log message" class="md-ellipsis">task_<wbr>name</span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -1075,9 +1671,193 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#fm2prof.utils.networkdeffile_to_input" class="md-nav__link">
-    <span aria-label="Python function" class="objinfo-icon objinfo-icon__procedure" title="Python function">F</span><span title="fm2prof.utils.networkdeffile_to_input (Python function) — Builds a cross-section input file for FM2PROF from a DIMR network definition file." class="md-ellipsis">fm2prof.<wbr>utils.<wbr>networkdeffile_<wbr>to_<wbr>input</span>
+  <a href="#fm2prof.utils.Compare1D2D" class="md-nav__link">
+    <span aria-label="Python class" class="objinfo-icon objinfo-icon__data" title="Python class">C</span><span title="fm2prof.utils.Compare1D2D (Python class) — Class to compare the results of a 1D and 2D model." class="md-ellipsis">fm2prof.<wbr>utils.<wbr>Compare1D2D</span>
   </a>
+  
+    <nav class="md-nav" aria-label="fm2prof.utils.Compare1D2D">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#fm2prof.utils.Compare1D2D.figure_at_station" class="md-nav__link">
+    <span aria-label="Python method" class="objinfo-icon objinfo-icon__procedure" title="Python method">M</span><span title="fm2prof.utils.Compare1D2D.figure_at_station (Python method) — Create a figure with the results at an observation station." class="md-ellipsis">figure_<wbr>at_<wbr>station</span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fm2prof.utils.Compare1D2D.figure_compare_discharge_at_stations" class="md-nav__link">
+    <span aria-label="Python method" class="objinfo-icon objinfo-icon__procedure" title="Python method">M</span><span title="fm2prof.utils.Compare1D2D.figure_compare_discharge_at_stations (Python method) — Like Compare1D2D.figure_at_station(), but compares discharge distribution over two stations." class="md-ellipsis">figure_<wbr>compare_<wbr>discharge_<wbr>at_<wbr>stations</span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fm2prof.utils.Compare1D2D.figure_longitudinal_rating_curve" class="md-nav__link">
+    <span aria-label="Python method" class="objinfo-icon objinfo-icon__procedure" title="Python method">M</span><span title="fm2prof.utils.Compare1D2D.figure_longitudinal_rating_curve (Python method) — Create a figure along a route with lines at various dicharges. To to this, rating curves are generated at each point by digitizing the model output." class="md-ellipsis">figure_<wbr>longitudinal_<wbr>rating_<wbr>curve</span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fm2prof.utils.Compare1D2D.figure_longitudinal_time" class="md-nav__link">
+    <span aria-label="Python method" class="objinfo-icon objinfo-icon__procedure" title="Python method">M</span><span title="fm2prof.utils.Compare1D2D.figure_longitudinal_time (Python method) — Create a figure along a route with lines at various points in time. Figures are saved to [Compare1D2D.output_path]/figures/longitudinal" class="md-ellipsis">figure_<wbr>longitudinal_<wbr>time</span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fm2prof.utils.Compare1D2D.get_route" class="md-nav__link">
+    <span aria-label="Python method" class="objinfo-icon objinfo-icon__procedure" title="Python method">M</span><span title="fm2prof.utils.Compare1D2D.get_route (Python method) — returns a sorted list of stations along a route, with rkms" class="md-ellipsis">get_<wbr>route</span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fm2prof.utils.Compare1D2D.heatmap_rating_curve" class="md-nav__link">
+    <span aria-label="Python method" class="objinfo-icon objinfo-icon__procedure" title="Python method">M</span><span title="fm2prof.utils.Compare1D2D.heatmap_rating_curve (Python method) — Create a 2D heatmap along a route. The horizontal axis uses the digitized rating curves to match the two models" class="md-ellipsis">heatmap_<wbr>rating_<wbr>curve</span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fm2prof.utils.Compare1D2D.heatmap_time" class="md-nav__link">
+    <span aria-label="Python method" class="objinfo-icon objinfo-icon__procedure" title="Python method">M</span><span title="fm2prof.utils.Compare1D2D.heatmap_time (Python method) — Create a 2D heatmap along a route. The horizontal axis uses timemarks to match the 1D and 2D models" class="md-ellipsis">heatmap_<wbr>time</span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fm2prof.utils.DeltaresConfig" class="md-nav__link">
+    <span aria-label="Python class" class="objinfo-icon objinfo-icon__data" title="Python class">C</span><span title="fm2prof.utils.DeltaresConfig (Python class) — Helper class to parse the &#34;Deltares ini&#34; style." class="md-ellipsis">fm2prof.<wbr>utils.<wbr>Deltares<wbr>Config</span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fm2prof.utils.DeltaresSectionItem" class="md-nav__link">
+    <span aria-label="Python class" class="objinfo-icon objinfo-icon__data" title="Python class">C</span><span title="fm2prof.utils.DeltaresSectionItem (Python class)" class="md-ellipsis">fm2prof.<wbr>utils.<wbr>Deltares<wbr>Section<wbr>Item</span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fm2prof.utils.GenerateCrossSectionLocationFile" class="md-nav__link">
+    <span aria-label="Python class" class="objinfo-icon objinfo-icon__data" title="Python class">C</span><span title="fm2prof.utils.GenerateCrossSectionLocationFile (Python class) — Builds a cross-section input file for FM2PROF from a SOBEK 3 DIMR network definition file." class="md-ellipsis">fm2prof.<wbr>utils.<wbr>Generate<wbr>Cross<wbr>Section<wbr>Location<wbr>File</span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fm2prof.utils.ModelOutputReader" class="md-nav__link">
+    <span aria-label="Python class" class="objinfo-icon objinfo-icon__data" title="Python class">C</span><span title="fm2prof.utils.ModelOutputReader (Python class) — This class provides methods to post-process 1D and 2D data, by writing csv files of output locations (observation stations) that are both in 1D and 2D. It produces two csv files that are input for fm2prof.utils.ModelOutputPlotter()" class="md-ellipsis">fm2prof.<wbr>utils.<wbr>Model<wbr>Output<wbr>Reader</span>
+  </a>
+  
+    <nav class="md-nav" aria-label="fm2prof.utils.ModelOutputReader">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#fm2prof.utils.ModelOutputReader.get_1d2d_map" class="md-nav__link">
+    <span aria-label="Python method" class="objinfo-icon objinfo-icon__procedure" title="Python method">M</span><span title="fm2prof.utils.ModelOutputReader.get_1d2d_map (Python method) — Writes a map between stations in 1D and stations in 2D. Matches based on identical characters in first nine slots" class="md-ellipsis">get_<wbr>1d2d_<wbr>map</span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fm2prof.utils.ModelOutputReader.load_flow1d_data" class="md-nav__link">
+    <span aria-label="Python method" class="objinfo-icon objinfo-icon__procedure" title="Python method">M</span><span title="fm2prof.utils.ModelOutputReader.load_flow1d_data (Python method) — Loads &#39;observations.nc&#39; and outputs to csv file" class="md-ellipsis">load_<wbr>flow1d_<wbr>data</span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fm2prof.utils.ModelOutputReader.load_flow2d_data" class="md-nav__link">
+    <span aria-label="Python method" class="objinfo-icon objinfo-icon__procedure" title="Python method">M</span><span title="fm2prof.utils.ModelOutputReader.load_flow2d_data (Python method) — Loads 2D output file (netCDF, must contain observation point results), matches to 1D result, output to csv" class="md-ellipsis">load_<wbr>flow2d_<wbr>data</span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fm2prof.utils.VisualiseOutput" class="md-nav__link">
+    <span aria-label="Python class" class="objinfo-icon objinfo-icon__data" title="Python class">C</span><span title="fm2prof.utils.VisualiseOutput (Python class) — Generator to loop through all cross-sections in definition file." class="md-ellipsis">fm2prof.<wbr>utils.<wbr>Visualise<wbr>Output</span>
+  </a>
+  
+    <nav class="md-nav" aria-label="fm2prof.utils.VisualiseOutput">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#fm2prof.utils.VisualiseOutput.cross_sections" class="md-nav__link">
+    <span aria-label="Python property" class="objinfo-icon objinfo-icon__alias" title="Python property">P</span><span title="fm2prof.utils.VisualiseOutput.cross_sections (Python property) — Generator to loop through all cross-sections in definition file." class="md-ellipsis">cross_<wbr>sections</span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fm2prof.utils.VisualiseOutput.figure_cross_section" class="md-nav__link">
+    <span aria-label="Python method" class="objinfo-icon objinfo-icon__procedure" title="Python method">M</span><span title="fm2prof.utils.VisualiseOutput.figure_cross_section (Python method) — Creates a figure" class="md-ellipsis">figure_<wbr>cross_<wbr>section</span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fm2prof.utils.VisualiseOutput.figure_roughness_longitudinal" class="md-nav__link">
+    <span aria-label="Python method" class="objinfo-icon objinfo-icon__procedure" title="Python method">M</span><span title="fm2prof.utils.VisualiseOutput.figure_roughness_longitudinal (Python method) — Assumes the following naming convention: [branch]_[optional:branch_order]_[chainage]" class="md-ellipsis">figure_<wbr>roughness_<wbr>longitudinal</span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fm2prof.utils.VisualiseOutput.getRoughnessInfoForCss" class="md-nav__link">
+    <span aria-label="Python method" class="objinfo-icon objinfo-icon__procedure" title="Python method">M</span><span title="fm2prof.utils.VisualiseOutput.getRoughnessInfoForCss (Python method) — Opens roughness file and reads information for a given cross-section name" class="md-ellipsis">get<wbr>Roughness<wbr>Info<wbr>For<wbr>Css</span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fm2prof.utils.VisualiseOutput.get_cross_section_by_id" class="md-nav__link">
+    <span aria-label="Python method" class="objinfo-icon objinfo-icon__procedure" title="Python method">M</span><span title="fm2prof.utils.VisualiseOutput.get_cross_section_by_id (Python method) — Get cross-section information given an id." class="md-ellipsis">get_<wbr>cross_<wbr>section_<wbr>by_<wbr>id</span>
+  </a>
+  
+    <nav class="md-nav" aria-label="get_cross_section_by_id">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#fm2prof.utils.VisualiseOutput.get_cross_section_by_id-parameters" class="md-nav__link">
+    <span class="md-ellipsis">Parameters</span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Parameters">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#fm2prof.utils.VisualiseOutput.get_cross_section_by_id.id" class="md-nav__link">
+    <span aria-label="Python parameter" class="objinfo-icon objinfo-icon__sub-data" title="Python parameter">p</span><span title="fm2prof.utils.VisualiseOutput.get_cross_section_by_id.id (Python parameter) — cross-section name" class="md-ellipsis">id</span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
         
@@ -1133,9 +1913,16 @@
 <dl class="py class objdesc">
 <dt class="sig sig-object highlight py" id="fm2prof.Project">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">fm2prof.</span></span><span class="sig-name descname"><span class="pre">Project</span></span><span class="sig-paren">(</span><span class="sig-param-decl"><em class="sig-param"><span class="n"><span class="pre">iniFilePath</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="desctype"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><code class="code python default_value docutils literal highlight highlight-python"><span class="s1">&#39;&#39;</span></code></em></span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/fm2prof/Fm2ProfRunner.html#Project"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fm2prof.Project" title="Permalink to this definition">¶</a></dt>
-<dd><p>Provides the python API for running FM2PROF.</p>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">fm2prof.Fm2ProfRunner.Fm2ProfRunner</span></code></p>
+<p>Provides the python API for running FM2PROF.</p>
 <p>Instantiate by providing the path to a configuration file</p>
 <p>&gt;&gt; Project(‘/path/to/config.ini’)</p>
+<dl class="py method objdesc">
+<dt class="sig sig-object highlight py" id="fm2prof.Project.get_inifile">
+<span class="sig-name descname"><span class="pre">get_inifile</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="desctype"><span class="pre">fm2prof.IniFile.IniFile</span></span></span></span><a class="headerlink" href="#fm2prof.Project.get_inifile" title="Permalink to this definition">¶</a></dt>
+<dd><p>“Use this method to get the inifile object</p>
+</dd></dl>
+
 <dl class="py method objdesc">
 <dt class="sig sig-object highlight py" id="fm2prof.Project.get_input_file">
 <span class="sig-name descname"><span class="pre">get_input_file</span></span><span class="sig-paren">(</span><span class="sig-param-decl"><em class="sig-param"><a class="n reference internal" href="#fm2prof.Project.get_input_file.name" title="fm2prof.Project.get_input_file.name (Python parameter) — case-insensitive key of the input file (e.g.'2dmapoutput')"><span class="n"><span class="pre">name</span></span></a><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="desctype"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a></span></span></em></span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="desctype"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a></span></span></span><a class="reference internal" href="../../_modules/fm2prof/Fm2ProfRunner.html#Project.get_input_file"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fm2prof.Project.get_input_file" title="Permalink to this definition">¶</a></dt>
@@ -1148,6 +1935,18 @@
 </dl>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="py method objdesc">
+<dt class="sig sig-object highlight py" id="fm2prof.Project.get_logformatter">
+<span class="sig-name descname"><span class="pre">get_logformatter</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="desctype"><span class="pre">fm2prof.common.ElapsedFormatter</span></span></span></span><a class="headerlink" href="#fm2prof.Project.get_logformatter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns formatter</p>
+</dd></dl>
+
+<dl class="py method objdesc">
+<dt class="sig sig-object highlight py" id="fm2prof.Project.get_logger">
+<span class="sig-name descname"><span class="pre">get_logger</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="desctype"><a class="reference external" href="https://docs.python.org/3/library/logging.html#logging.Logger" title="(in Python v3.10)"><span class="pre">logging.Logger</span></a></span></span></span><a class="headerlink" href="#fm2prof.Project.get_logger" title="Permalink to this definition">¶</a></dt>
+<dd><p>Use this method to return logger object</p>
 </dd></dl>
 
 <dl class="py method objdesc">
@@ -1174,6 +1973,20 @@
 </dd></dl>
 
 <dl class="py method objdesc">
+<dt class="sig sig-object highlight py" id="fm2prof.Project.load_inifile">
+<span class="sig-name descname"><span class="pre">load_inifile</span></span><span class="sig-paren">(</span><span class="sig-param-decl"><em class="sig-param"><a class="n reference internal" href="#fm2prof.Project.load_inifile.iniFilePath" title="fm2prof.Project.load_inifile.iniFilePath (Python parameter) — path to configuration file"><span class="n"><span class="pre">iniFilePath</span></span></a><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="desctype"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a></span></span></em></span><span class="sig-paren">)</span><a class="headerlink" href="#fm2prof.Project.load_inifile" title="Permalink to this definition">¶</a></dt>
+<dd><p>use this method to load a configuration file from path.</p>
+<dl class="field-list simple">
+<dt class="field-odd" id="fm2prof.Project.load_inifile-parameters">Parameters<a class="headerlink" href="#fm2prof.Project.load_inifile-parameters" title="Permalink to this headline">¶</a></dt>
+<dd class="field-odd"><dl class="api-field highlight simple">
+<dt id="fm2prof.Project.load_inifile.iniFilePath"><span class="sig-name descname">iniFilePath</span><span class="p"> : </span><span class="desctype"><span class="desctype"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)">str</a></span></span><a class="headerlink" href="#fm2prof.Project.load_inifile.iniFilePath" title="Permalink to this definition">¶</a></dt><dd><p>path to configuration file</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method objdesc">
 <dt class="sig sig-object highlight py" id="fm2prof.Project.print_configuration">
 <span class="sig-name descname"><span class="pre">print_configuration</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="desctype"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a></span></span></span><a class="reference internal" href="../../_modules/fm2prof/Fm2ProfRunner.html#Project.print_configuration"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fm2prof.Project.print_configuration" title="Permalink to this definition">¶</a></dt>
 <dd><p>Use this method to obtain string representation of the
@@ -1190,6 +2003,35 @@ configuration. Use this string to write to file, e.g.:</p>
 </dd></dl>
 
 <dl class="py method objdesc">
+<dt class="sig sig-object highlight py" id="fm2prof.Project.run">
+<span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><span class="sig-param-decl"><em class="sig-param"><a class="n reference internal" href="#fm2prof.Project.run.overwrite" title="fm2prof.Project.run.overwrite (Python parameter) — if True, overwrites existing output. If False, exits if output detected"><span class="n"><span class="pre">overwrite</span></span></a><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="desctype"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.10)"><span class="pre">bool</span></a></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><code class="code python default_value docutils literal highlight highlight-python"><span class="kc">False</span></code></em></span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="desctype"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.10)"><span class="pre">None</span></a></span></span></span><a class="headerlink" href="#fm2prof.Project.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>Executes FM2PROF routines.</p>
+<dl class="field-list simple">
+<dt class="field-odd" id="fm2prof.Project.run-parameters">Parameters<a class="headerlink" href="#fm2prof.Project.run-parameters" title="Permalink to this headline">¶</a></dt>
+<dd class="field-odd"><dl class="api-field highlight simple">
+<dt id="fm2prof.Project.run.overwrite"><span class="n sig-name">overwrite</span><span class="p">:</span><span class="w">   </span><span class="n"><span class="desctype"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.10)">bool</a></span></span><span class="w">   </span><span class="o">=</span><span class="w">   </span><code class="code python default_value docutils literal highlight highlight-python"><span class="kc">False</span></code><a class="headerlink" href="#fm2prof.Project.run.overwrite" title="Permalink to this definition">¶</a></dt><dd><p>if True, overwrites existing output. If False, exits if output detected</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method objdesc">
+<dt class="sig sig-object highlight py" id="fm2prof.Project.set_inifile">
+<span class="sig-name descname"><span class="pre">set_inifile</span></span><span class="sig-paren">(</span><span class="sig-param-decl"><em class="sig-param"><a class="n reference internal" href="#fm2prof.Project.set_inifile.inifile" title="fm2prof.Project.set_inifile.inifile (Python parameter) — inifile object. Obtain using e.g. get_inifile."><span class="n"><span class="pre">inifile</span></span></a><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="desctype"><span class="pre">fm2prof.IniFile.IniFile</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><code class="code python default_value docutils literal highlight highlight-python"><span class="kc">None</span></code></em></span><span class="sig-paren">)</span><a class="headerlink" href="#fm2prof.Project.set_inifile" title="Permalink to this definition">¶</a></dt>
+<dd><p>Use this method to set configuration file object.</p>
+<p>For loading from file, use <code class="docutils literal notranslate"><span class="pre">load_inifile</span></code> instead</p>
+<dl class="field-list simple">
+<dt class="field-odd" id="fm2prof.Project.set_inifile-parameters">Parameters<a class="headerlink" href="#fm2prof.Project.set_inifile-parameters" title="Permalink to this headline">¶</a></dt>
+<dd class="field-odd"><dl class="api-field highlight simple">
+<dt id="fm2prof.Project.set_inifile.inifile"><span class="sig-name descname">inifile</span><span class="p"> : </span><span class="desctype"><span class="desctype">IniFile</span></span><a class="headerlink" href="#fm2prof.Project.set_inifile.inifile" title="Permalink to this definition">¶</a></dt><dd><p>inifile object. Obtain using e.g. <code class="docutils literal notranslate"><span class="pre">get_inifile</span></code>.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method objdesc">
 <dt class="sig sig-object highlight py" id="fm2prof.Project.set_input_file">
 <span class="sig-name descname"><span class="pre">set_input_file</span></span><span class="sig-paren">(</span><span class="sig-param-decl"><em class="sig-param"><a class="n reference internal" href="#fm2prof.Project.set_input_file.name" title="fm2prof.Project.set_input_file.name (Python parameter) — name of the input file in the configuration (case insensitive)."><span class="n"><span class="pre">name</span></span></a><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="desctype"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a></span></span></em>, </span><span class="sig-param-decl"><em class="sig-param"><a class="n reference internal" href="#fm2prof.Project.set_input_file.value" title="fm2prof.Project.set_input_file.value (Python parameter) — path to the inputfile"><span class="n"><span class="pre">value</span></span></a><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="desctype"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.10)"><span class="pre">float</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><span class="pre">int</span></a></span></span></em></span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="desctype"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.10)"><span class="pre">None</span></a></span></span></span><a class="reference internal" href="../../_modules/fm2prof/Fm2ProfRunner.html#Project.set_input_file"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fm2prof.Project.set_input_file" title="Permalink to this definition">¶</a></dt>
 <dd><p>Use this method to set the path to an input file</p>
@@ -1199,6 +2041,34 @@ configuration. Use this string to write to file, e.g.:</p>
 <dt id="fm2prof.Project.set_input_file.name"><span class="n sig-name">name</span><span class="p">:</span><span class="w">   </span><span class="n"><span class="desctype"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)">str</a></span></span><a class="headerlink" href="#fm2prof.Project.set_input_file.name" title="Permalink to this definition">¶</a></dt><dd><p>name of the input file in the configuration (case insensitive).</p>
 </dd>
 <dt id="fm2prof.Project.set_input_file.value"><span class="n sig-name">value</span><span class="p">:</span><span class="w">   </span><span class="n"><span class="desctype"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)">str</a><span class="p">,</span><span class="w">   </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.10)">float</a><span class="p">,</span><span class="w">   </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)">int</a></span></span><a class="headerlink" href="#fm2prof.Project.set_input_file.value" title="Permalink to this definition">¶</a></dt><dd><p>path to the inputfile</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method objdesc">
+<dt class="sig sig-object highlight py" id="fm2prof.Project.set_logger">
+<span class="sig-name descname"><span class="pre">set_logger</span></span><span class="sig-paren">(</span><span class="sig-param-decl"><em class="sig-param"><a class="n reference internal" href="#fm2prof.Project.set_logger.logger" title="fm2prof.Project.set_logger.logger (Python parameter) — Logger instance"><span class="n"><span class="pre">logger</span></span></a><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="desctype"><a class="reference external" href="https://docs.python.org/3/library/logging.html#logging.Logger" title="(in Python v3.10)"><span class="pre">logging.Logger</span></a></span></span></em></span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="desctype"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.10)"><span class="pre">None</span></a></span></span></span><a class="headerlink" href="#fm2prof.Project.set_logger" title="Permalink to this definition">¶</a></dt>
+<dd><p>Use to set logger</p>
+<dl class="field-list simple">
+<dt class="field-odd" id="fm2prof.Project.set_logger-parameters">Parameters<a class="headerlink" href="#fm2prof.Project.set_logger-parameters" title="Permalink to this headline">¶</a></dt>
+<dd class="field-odd"><dl class="api-field highlight simple">
+<dt id="fm2prof.Project.set_logger.logger"><span class="sig-name descname">logger</span><span class="p"> : </span><span class="desctype"><span class="desctype">Logger</span></span><a class="headerlink" href="#fm2prof.Project.set_logger.logger" title="Permalink to this definition">¶</a></dt><dd><p>Logger instance</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method objdesc">
+<dt class="sig sig-object highlight sig-wrap py" id="fm2prof.Project.set_logger_message">
+<span class="sig-name descname"><span class="pre">set_logger_message</span></span><span class="sig-paren">(</span><span class="sig-param-decl"><em class="sig-param"><span class="n"><span class="pre">err_mssg</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="desctype"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a></span></span></em>, </span><span class="sig-param-decl"><em class="sig-param"><span class="n"><span class="pre">level</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="desctype"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><code class="code python default_value docutils literal highlight highlight-python"><span class="s1">&#39;info&#39;</span></code></em>, </span><span class="sig-param-decl"><em class="sig-param"><span class="n"><span class="pre">header</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="desctype"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.10)"><span class="pre">bool</span></a></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><code class="code python default_value docutils literal highlight highlight-python"><span class="kc">False</span></code></em></span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="desctype"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.10)"><span class="pre">None</span></a></span></span></span><a class="headerlink" href="#fm2prof.Project.set_logger_message" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets message to logger if this is set.</p>
+<dl class="field-list simple">
+<dt class="field-odd" id="fm2prof.Project.set_logger_message-parameters">Parameters<a class="headerlink" href="#fm2prof.Project.set_logger_message-parameters" title="Permalink to this headline">¶</a></dt>
+<dd class="field-odd"><dl class="api-field highlight simple">
+<dt><span class="sig-name descname">logger.</span><span class="p"> : </span><span class="desctype"><span class="desctype">err_mssg {str} -- Error message to send to</span></span></dt><dd><p></p>
 </dd>
 </dl>
 </dd>
@@ -1240,22 +2110,282 @@ if it does not already exists!</p>
 </dl>
 </dd></dl>
 
+<dl class="py method objdesc">
+<dt class="sig sig-object highlight py" id="fm2prof.Project.start_new_log_task">
+<span class="sig-name descname"><span class="pre">start_new_log_task</span></span><span class="sig-paren">(</span><span class="sig-param-decl"><em class="sig-param"><a class="n reference internal" href="#fm2prof.Project.start_new_log_task.task_name" title="fm2prof.Project.start_new_log_task.task_name (Python parameter) — task name, will be displayed in log message"><span class="n"><span class="pre">task_name</span></span></a><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="desctype"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><code class="code python default_value docutils literal highlight highlight-python"><span class="s1">&#39;NOT DEFINED&#39;</span></code></em></span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="desctype"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.10)"><span class="pre">None</span></a></span></span></span><a class="headerlink" href="#fm2prof.Project.start_new_log_task" title="Permalink to this definition">¶</a></dt>
+<dd><p>Use this method to start a new task. Will reset the internal clock.</p>
+<dl class="field-list simple">
+<dt class="field-odd" id="fm2prof.Project.start_new_log_task-parameters">Parameters<a class="headerlink" href="#fm2prof.Project.start_new_log_task-parameters" title="Permalink to this headline">¶</a></dt>
+<dd class="field-odd"><dl class="api-field highlight simple">
+<dt id="fm2prof.Project.start_new_log_task.task_name"><span class="n sig-name">task_name</span><span class="p">:</span><span class="w">   </span><span class="n"><span class="desctype"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)">str</a></span></span><span class="w">   </span><span class="o">=</span><span class="w">   </span><code class="code python default_value docutils literal highlight highlight-python"><span class="s1">&#39;NOT DEFINED&#39;</span></code><a class="headerlink" href="#fm2prof.Project.start_new_log_task.task_name" title="Permalink to this definition">¶</a></dt><dd><p>task name, will be displayed in log message</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
 </dd></dl>
 
 <h3 id="module-fm2prof.utils"><span id="utilities"></span><span id="sourceutils"></span>Utilities<a class="headerlink" href="#module-fm2prof.utils" title="Permalink to this headline">¶</a></h3>
-<p>Utilities for FM2PROF</p>
-<dl class="py function objdesc">
-<dt class="sig sig-object highlight sig-wrap py" id="fm2prof.utils.networkdeffile_to_input">
-<span class="sig-prename descclassname"><span class="pre">fm2prof.utils.</span></span><span class="sig-name descname"><span class="pre">networkdeffile_to_input</span></span><span class="sig-paren">(</span><span class="sig-param-decl"><em class="sig-param"><span class="n"><span class="pre">networkdefinitionfile:</span> <span class="pre">str</span></span></em>, </span><span class="sig-param-decl"><em class="sig-param"><span class="n"><span class="pre">crossectionlocationfile:</span> <span class="pre">str</span></span></em>, </span><span class="sig-param-decl"><em class="sig-param"><span class="n"><span class="pre">branchrulefile:</span>&#160; <span class="pre">=</span> <span class="pre">''</span></span></em></span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/fm2prof/utils.html#networkdeffile_to_input"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fm2prof.utils.networkdeffile_to_input" title="Permalink to this definition">¶</a></dt>
-<dd><p>Builds a cross-section input file for FM2PROF from a DIMR network definition file.</p>
+<dl class="py class objdesc">
+<dt class="sig sig-object highlight sig-wrap py" id="fm2prof.utils.Compare1D2D">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">fm2prof.utils.</span></span><span class="sig-name descname"><span class="pre">Compare1D2D</span></span><span class="sig-paren">(</span><span class="sig-param-decl"><em class="sig-param"><span class="n"><span class="pre">project</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="desctype"><a class="reference internal" href="#fm2prof.Project" title="fm2prof.Fm2ProfRunner.Project (Python class)"><span class="pre">fm2prof.Fm2ProfRunner.Project</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.10)"><span class="pre">None</span></a></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><code class="code python default_value docutils literal highlight highlight-python"><span class="kc">None</span></code></em>, </span><span class="sig-param-decl"><em class="sig-param"><span class="n"><span class="pre">path_1d</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="desctype"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.10)"><span class="pre">pathlib.Path</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.10)"><span class="pre">None</span></a></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><code class="code python default_value docutils literal highlight highlight-python"><span class="kc">None</span></code></em>, </span><span class="sig-param-decl"><em class="sig-param"><span class="n"><span class="pre">path_2d</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="desctype"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.10)"><span class="pre">pathlib.Path</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.10)"><span class="pre">None</span></a></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><code class="code python default_value docutils literal highlight highlight-python"><span class="kc">None</span></code></em>, </span><span class="sig-param-decl"><em class="sig-param"><span class="n"><span class="pre">routes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="desctype"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.10)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.10)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.10)"><span class="pre">None</span></a></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><code class="code python default_value docutils literal highlight highlight-python"><span class="kc">None</span></code></em></span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/fm2prof/utils.html#Compare1D2D"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fm2prof.utils.Compare1D2D" title="Permalink to this definition">¶</a></dt>
+<dd><p>Class to compare the results of a 1D and 2D model.</p>
+<p>Example usage:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">plotter</span> <span class="o">=</span> <span class="n">Compare1D2D</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Set path to data</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">plotter</span><span class="o">.</span><span class="n">path_flow1d</span> <span class="o">=</span> <span class="n">path_to_dimr_dir</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">plotter</span><span class="o">.</span><span class="n">path_flow2d</span> <span class="o">=</span> <span class="n">path_to_nc_file</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Example, plot along route</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">route</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;BR&#39;</span><span class="p">,</span> <span class="s2">&quot;PK&quot;</span><span class="p">,</span> <span class="s2">&quot;NR&quot;</span><span class="p">,</span> <span class="s2">&quot;LE&quot;</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">plotter</span><span class="o">.</span><span class="n">figure_longitudinal_time</span><span class="p">(</span><span class="n">route</span><span class="o">=</span><span class="n">route</span><span class="p">)</span>
+</code></pre></div>
+</div>
+<dl class="py method objdesc">
+<dt class="sig sig-object highlight py" id="fm2prof.utils.Compare1D2D.figure_at_station">
+<span class="sig-name descname"><span class="pre">figure_at_station</span></span><span class="sig-paren">(</span><span class="sig-param-decl"><em class="sig-param"><span class="n"><span class="pre">station</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="desctype"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a></span></span></em></span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="desctype"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.10)"><span class="pre">None</span></a></span></span></span><a class="reference internal" href="../../_modules/fm2prof/utils.html#Compare1D2D.figure_at_station"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fm2prof.utils.Compare1D2D.figure_at_station" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a figure with the results at an observation station.</p>
+<p>Figures are saved to <code class="xref any docutils literal notranslate"><span class="pre">[Compare1D2D.output_path]/figures/stations</span></code></p>
+<p>Example output:</p>
+<figure class="align-default" id="id3">
+<img alt="../../_images/example.png" src="../../_images/example.png" />
+<figcaption>
+<p><span class="caption-text"><span class="caption-text">
+example output figure</span><a class="headerlink" href="#id3" title="Permalink to this image">¶</a></span><a class="headerlink" href="#id3" title="Permalink to this image">¶</a></p>
+</figcaption>
+</figure>
+</dd></dl>
+
+<dl class="py method objdesc">
+<dt class="sig sig-object highlight sig-wrap py" id="fm2prof.utils.Compare1D2D.figure_compare_discharge_at_stations">
+<span class="sig-name descname"><span class="pre">figure_compare_discharge_at_stations</span></span><span class="sig-paren">(</span><span class="sig-param-decl"><em class="sig-param"><span class="n"><span class="pre">title</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="desctype"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><code class="code python default_value docutils literal highlight highlight-python"><span class="s1">&#39;notitle&#39;</span></code></em>, </span><span class="sig-param-decl"><em class="sig-param"><span class="n"><span class="pre">stations</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="desctype"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.10)"><span class="pre">tuple</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.10)"><span class="pre">None</span></a></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><code class="code python default_value docutils literal highlight highlight-python"><span class="kc">None</span></code></em></span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="desctype"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.10)"><span class="pre">None</span></a></span></span></span><a class="reference internal" href="../../_modules/fm2prof/utils.html#Compare1D2D.figure_compare_discharge_at_stations"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fm2prof.utils.Compare1D2D.figure_compare_discharge_at_stations" title="Permalink to this definition">¶</a></dt>
+<dd><p>Like <a class="reference internal" href="#fm2prof.utils.Compare1D2D.figure_at_station" title="fm2prof.utils.Compare1D2D.figure_at_station (Python method) — Create a figure with the results at an observation station."><code class="xref py py-meth docutils literal notranslate"><span class="pre">Compare1D2D.figure_at_station()</span></code></a>, but compares discharge
+distribution over two stations.</p>
+<p>Example usage:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">Compare1D2</span><span class="p">()</span><span class="o">.</span><span class="n">figure_compare_discharge_at_stations</span><span class="p">(</span><span class="n">stations</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;WL_869.00&quot;</span><span class="p">,</span> <span class="s2">&quot;PK_869.00&quot;</span><span class="p">])</span>
+</code></pre></div>
+</div>
+<p>Figures are saved to <code class="xref any docutils literal notranslate"><span class="pre">[Compare1D2D.output_path]/figures/discharge</span></code></p>
+<p>Example output:</p>
+<figure class="align-default" id="id4">
+<img alt="../../_images/example1.png" src="../../_images/example1.png" />
+<figcaption>
+<p><span class="caption-text"><span class="caption-text">
+Example output figure</span><a class="headerlink" href="#id4" title="Permalink to this image">¶</a></span><a class="headerlink" href="#id4" title="Permalink to this image">¶</a></p>
+</figcaption>
+</figure>
+</dd></dl>
+
+<dl class="py method objdesc">
+<dt class="sig sig-object highlight py" id="fm2prof.utils.Compare1D2D.figure_longitudinal_rating_curve">
+<span class="sig-name descname"><span class="pre">figure_longitudinal_rating_curve</span></span><span class="sig-paren">(</span><span class="sig-param-decl"><em class="sig-param"><span class="n"><span class="pre">route</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="desctype"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.10)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></span></span></em></span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="desctype"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.10)"><span class="pre">None</span></a></span></span></span><a class="reference internal" href="../../_modules/fm2prof/utils.html#Compare1D2D.figure_longitudinal_rating_curve"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fm2prof.utils.Compare1D2D.figure_longitudinal_rating_curve" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a figure along a route with lines at various dicharges.
+To to this, rating curves are generated at each point by digitizing
+the model output.</p>
+<p>Figures are saved to <code class="xref any docutils literal notranslate"><span class="pre">[Compare1D2D.output_path]/figures/longitudinal</span></code></p>
+<p>Example output:</p>
+<figure class="align-default" id="id5">
+<img alt="../../_images/example_rating_curve.png" src="../../_images/example_rating_curve.png" />
+<figcaption>
+<p><span class="caption-text"><span class="caption-text">
+example output figure</span><a class="headerlink" href="#id5" title="Permalink to this image">¶</a></span><a class="headerlink" href="#id5" title="Permalink to this image">¶</a></p>
+</figcaption>
+</figure>
+</dd></dl>
+
+<dl class="py method objdesc">
+<dt class="sig sig-object highlight py" id="fm2prof.utils.Compare1D2D.figure_longitudinal_time">
+<span class="sig-name descname"><span class="pre">figure_longitudinal_time</span></span><span class="sig-paren">(</span><span class="sig-param-decl"><em class="sig-param"><span class="n"><span class="pre">route</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="desctype"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.10)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></span></span></em></span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="desctype"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.10)"><span class="pre">None</span></a></span></span></span><a class="reference internal" href="../../_modules/fm2prof/utils.html#Compare1D2D.figure_longitudinal_time"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fm2prof.utils.Compare1D2D.figure_longitudinal_time" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a figure along a route with lines at various points in time.
+Figures are saved to <code class="xref any docutils literal notranslate"><span class="pre">[Compare1D2D.output_path]/figures/longitudinal</span></code></p>
+<p>Example output:</p>
+<figure class="align-default" id="id6">
+<img alt="../../_images/example_time_series.png" src="../../_images/example_time_series.png" />
+<figcaption>
+<p><span class="caption-text"><span class="caption-text">
+example output figure</span><a class="headerlink" href="#id6" title="Permalink to this image">¶</a></span><a class="headerlink" href="#id6" title="Permalink to this image">¶</a></p>
+</figcaption>
+</figure>
+</dd></dl>
+
+<dl class="py method objdesc">
+<dt class="sig sig-object highlight sig-wrap py" id="fm2prof.utils.Compare1D2D.get_route">
+<span class="sig-name descname"><span class="pre">get_route</span></span><span class="sig-paren">(</span><span class="sig-param-decl"><em class="sig-param"><span class="n"><span class="pre">route</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="desctype"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.10)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></span></span></em></span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="desctype"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.10)"><span class="pre">tuple</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.10)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.10)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.10)"><span class="pre">float</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.10)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.10)"><span class="pre">tuple</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.10)"><span class="pre">float</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span></span><a class="reference internal" href="../../_modules/fm2prof/utils.html#Compare1D2D.get_route"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fm2prof.utils.Compare1D2D.get_route" title="Permalink to this definition">¶</a></dt>
+<dd><p>returns a sorted list of stations along a route, with rkms</p>
+</dd></dl>
+
+<dl class="py method objdesc">
+<dt class="sig sig-object highlight py" id="fm2prof.utils.Compare1D2D.heatmap_rating_curve">
+<span class="sig-name descname"><span class="pre">heatmap_rating_curve</span></span><span class="sig-paren">(</span><span class="sig-param-decl"><em class="sig-param"><span class="n"><span class="pre">route</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="desctype"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.10)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></span></span></em></span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="desctype"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.10)"><span class="pre">None</span></a></span></span></span><a class="reference internal" href="../../_modules/fm2prof/utils.html#Compare1D2D.heatmap_rating_curve"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fm2prof.utils.Compare1D2D.heatmap_rating_curve" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a 2D heatmap along a route. The horizontal axis uses
+the digitized rating curves to match the two models</p>
+<p>Figures are saved to <code class="xref any docutils literal notranslate"><span class="pre">[Compare1D2D.output_path]/figures/heatmap</span></code></p>
+<p>Example output:</p>
+<figure class="align-default" id="id7">
+<img alt="../../_images/example_rating_curve1.png" src="../../_images/example_rating_curve1.png" />
+<figcaption>
+<p><span class="caption-text"><span class="caption-text">
+example output figure</span><a class="headerlink" href="#id7" title="Permalink to this image">¶</a></span><a class="headerlink" href="#id7" title="Permalink to this image">¶</a></p>
+</figcaption>
+</figure>
+</dd></dl>
+
+<dl class="py method objdesc">
+<dt class="sig sig-object highlight py" id="fm2prof.utils.Compare1D2D.heatmap_time">
+<span class="sig-name descname"><span class="pre">heatmap_time</span></span><span class="sig-paren">(</span><span class="sig-param-decl"><em class="sig-param"><span class="n"><span class="pre">route</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="desctype"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.10)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></span></span></em></span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="desctype"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.10)"><span class="pre">None</span></a></span></span></span><a class="reference internal" href="../../_modules/fm2prof/utils.html#Compare1D2D.heatmap_time"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fm2prof.utils.Compare1D2D.heatmap_time" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a 2D heatmap along a route. The horizontal axis uses
+timemarks to match the 1D and 2D models</p>
+<p>Figures are saved to <code class="xref any docutils literal notranslate"><span class="pre">[Compare1D2D.output_path]/figures/heatmap</span></code></p>
+<p>Example output:</p>
+<figure class="align-default" id="id8">
+<img alt="../../_images/example_time_series1.png" src="../../_images/example_time_series1.png" />
+<figcaption>
+<p><span class="caption-text"><span class="caption-text">
+example output figure</span><a class="headerlink" href="#id8" title="Permalink to this image">¶</a></span><a class="headerlink" href="#id8" title="Permalink to this image">¶</a></p>
+</figcaption>
+</figure>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class objdesc">
+<dt class="sig sig-object highlight py" id="fm2prof.utils.DeltaresConfig">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">fm2prof.utils.</span></span><span class="sig-name descname"><span class="pre">DeltaresConfig</span></span><span class="sig-paren">(</span><span class="sig-param-decl"><em class="sig-param"><span class="n"><span class="pre">configfile</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="desctype"><a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.10)"><span class="pre">pathlib.Path</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a></span></span></em></span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/fm2prof/utils.html#DeltaresConfig"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fm2prof.utils.DeltaresConfig" title="Permalink to this definition">¶</a></dt>
+<dd><p>Helper class to parse the “Deltares ini” style.</p>
+</dd></dl>
+
+<dl class="py class objdesc">
+<dt class="sig sig-object highlight sig-wrap py" id="fm2prof.utils.DeltaresSectionItem">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">fm2prof.utils.</span></span><span class="sig-name descname"><span class="pre">DeltaresSectionItem</span></span><span class="sig-paren">(</span><span class="sig-param-decl"><em class="sig-param"><span class="n"><span class="pre">value</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="desctype"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.10)"><span class="pre">Any</span></a></span></span></em>, </span><span class="sig-param-decl"><em class="sig-param"><span class="n"><span class="pre">comment</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="desctype"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><code class="code python default_value docutils literal highlight highlight-python"><span class="s1">&#39;&#39;</span></code></em></span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/fm2prof/utils.html#DeltaresSectionItem"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fm2prof.utils.DeltaresSectionItem" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py class objdesc">
+<dt class="sig sig-object highlight sig-wrap py" id="fm2prof.utils.GenerateCrossSectionLocationFile">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">fm2prof.utils.</span></span><span class="sig-name descname"><span class="pre">GenerateCrossSectionLocationFile</span></span><span class="sig-paren">(</span><span class="sig-param-decl"><em class="sig-param"><span class="n"><span class="pre">networkdefinitionfile</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="desctype"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.10)"><span class="pre">pathlib.Path</span></a></span></span></em>, </span><span class="sig-param-decl"><em class="sig-param"><span class="n"><span class="pre">crossectionlocationfile</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="desctype"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.10)"><span class="pre">pathlib.Path</span></a></span></span></em>, </span><span class="sig-param-decl"><em class="sig-param"><span class="n"><span class="pre">branchrulefile</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="desctype"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.10)"><span class="pre">pathlib.Path</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.10)"><span class="pre">None</span></a></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><code class="code python default_value docutils literal highlight highlight-python"><span class="s1">&#39;&#39;</span></code></em></span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/fm2prof/utils.html#GenerateCrossSectionLocationFile"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fm2prof.utils.GenerateCrossSectionLocationFile" title="Permalink to this definition">¶</a></dt>
+<dd><p>Builds a cross-section input file for FM2PROF from a SOBEK 3 DIMR network definition file.</p>
 <p>The distance between cross-section is computed from the differences between the offsets/chainages.
 The beginning and end point of each branch are treated as half-distance control volumes.</p>
-<dl>
-<dt>Arguments</dt><dd><p>networkdefinitionfile: path to the input file</p>
-<p>crossectionlocationfile: path to the output file</p>
-<p>branchrulefile: path to the branchrulefile</p>
+<p>It supports an optional :ref:<a href="#id1"><span class="problematic" id="id2">`</span></a>branchRuleFile.</p>
+<p>Parameters</p>
+<blockquote>
+<div><p>networkdefinitionfile: path to NetworkDefinitionFile.ini</p>
+<p>crossectionlocationfile: path to the desired output file</p>
+<p>branchrulefile: OPTIONAL path to a branchrulefile</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py class objdesc">
+<dt class="sig sig-object highlight py" id="fm2prof.utils.ModelOutputReader">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">fm2prof.utils.</span></span><span class="sig-name descname"><span class="pre">ModelOutputReader</span></span><span class="sig-paren">(</span><span class="sig-param-decl"><em class="sig-param"><span class="n"><span class="pre">logger</span></span><span class="o"><span class="pre">=</span></span><code class="code python default_value docutils literal highlight highlight-python"><span class="kc">None</span></code></em></span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/fm2prof/utils.html#ModelOutputReader"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fm2prof.utils.ModelOutputReader" title="Permalink to this definition">¶</a></dt>
+<dd><p>This class provides methods to post-process 1D and 2D data,
+by writing csv files of output locations (observation stations)
+that are both in 1D and 2D. It produces two csv files that
+are input for <code class="xref py py-meth docutils literal notranslate"><span class="pre">fm2prof.utils.ModelOutputPlotter()</span></code></p>
+<p>Example use:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="c1"># initialise &amp; give path to 1D, 2D model resusts</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">fm2prof.utils</span> <span class="kn">import</span> <span class="n">ModelOutputReader</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">output</span> <span class="o">=</span> <span class="n">ModelOutputReader</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">output</span><span class="o">.</span><span class="n">path_flow1d</span> <span class="o">=</span> <span class="n">path_to_dimr_directory</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">output</span><span class="o">.</span><span class="n">path_flow2d</span> <span class="o">=</span> <span class="n">path_to_nc_file</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Read and write 1d output to csv</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">output</span><span class="o">.</span><span class="n">load_flow1d_data</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1">#</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">output</span><span class="o">.</span><span class="n">get_1d2d_map</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">output</span><span class="o">.</span><span class="n">load_flow2d_data</span><span class="p">()</span>
+</code></pre></div>
+</div>
+<dl class="py method objdesc">
+<dt class="sig sig-object highlight py" id="fm2prof.utils.ModelOutputReader.get_1d2d_map">
+<span class="sig-name descname"><span class="pre">get_1d2d_map</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/fm2prof/utils.html#ModelOutputReader.get_1d2d_map"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fm2prof.utils.ModelOutputReader.get_1d2d_map" title="Permalink to this definition">¶</a></dt>
+<dd><p>Writes a map between stations in 1D and stations in 2D. Matches based on identical characters in first nine slots</p>
+</dd></dl>
+
+<dl class="py method objdesc">
+<dt class="sig sig-object highlight py" id="fm2prof.utils.ModelOutputReader.load_flow1d_data">
+<span class="sig-name descname"><span class="pre">load_flow1d_data</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/fm2prof/utils.html#ModelOutputReader.load_flow1d_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fm2prof.utils.ModelOutputReader.load_flow1d_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Loads ‘observations.nc’ and outputs to csv file</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Path to the 1D model must first be set by using
+&gt;&gt;&gt; ModelOutputReader.path_flow1d = path_to_dir_that_contains_dimr_xml</p>
+</div>
+</dd></dl>
+
+<dl class="py method objdesc">
+<dt class="sig sig-object highlight py" id="fm2prof.utils.ModelOutputReader.load_flow2d_data">
+<span class="sig-name descname"><span class="pre">load_flow2d_data</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/fm2prof/utils.html#ModelOutputReader.load_flow2d_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fm2prof.utils.ModelOutputReader.load_flow2d_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Loads 2D output file (netCDF, must contain observation point results),
+matches to 1D result, output to csv</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Path to the 2D model output
+&gt;&gt;&gt; ModelOutputReader.path_flow2d = path_to_netcdf_file</p>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class objdesc">
+<dt class="sig sig-object highlight sig-wrap py" id="fm2prof.utils.VisualiseOutput">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">fm2prof.utils.</span></span><span class="sig-name descname"><span class="pre">VisualiseOutput</span></span><span class="sig-paren">(</span><span class="sig-param-decl"><em class="sig-param"><span class="n"><span class="pre">output_directory</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="desctype"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a></span></span></em>, </span><span class="sig-param-decl"><em class="sig-param"><span class="n"><span class="pre">figure_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="desctype"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><code class="code python default_value docutils literal highlight highlight-python"><span class="s1">&#39;png&#39;</span></code></em>, </span><span class="sig-param-decl"><em class="sig-param"><span class="n"><span class="pre">overwrite</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="desctype"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.10)"><span class="pre">bool</span></a></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><code class="code python default_value docutils literal highlight highlight-python"><span class="kc">True</span></code></em>, </span><span class="sig-param-decl"><em class="sig-param"><span class="n"><span class="pre">logger</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="desctype"><a class="reference external" href="https://docs.python.org/3/library/logging.html#logging.Logger" title="(in Python v3.10)"><span class="pre">logging.Logger</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.10)"><span class="pre">None</span></a></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><code class="code python default_value docutils literal highlight highlight-python"><span class="kc">None</span></code></em></span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/fm2prof/utils.html#VisualiseOutput"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fm2prof.utils.VisualiseOutput" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="py property objdesc">
+<dt class="sig sig-object highlight py" id="fm2prof.utils.VisualiseOutput.cross_sections">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">cross_sections</span></span><span class="p"> <span class="pre">:</span> </span><span class="desctype"><span class="pre">Generator</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.10)"><span class="pre">dict</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.10)"><span class="pre">None</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.10)"><span class="pre">None</span></a><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#fm2prof.utils.VisualiseOutput.cross_sections" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generator to loop through all cross-sections in definition file.</p>
+<p>Example use:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">css</span> <span class="ow">in</span> <span class="n">visualiser</span><span class="o">.</span><span class="n">cross_sections</span><span class="p">:</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">visualiser</span><span class="o">.</span><span class="n">make_figure</span><span class="p">(</span><span class="n">css</span><span class="p">)</span>
+</code></pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method objdesc">
+<dt class="sig sig-object highlight sig-wrap py" id="fm2prof.utils.VisualiseOutput.figure_cross_section">
+<span class="sig-name descname"><span class="pre">figure_cross_section</span></span><span class="sig-paren">(</span><span class="sig-param-decl"><em class="sig-param"><span class="n"><span class="pre">css</span></span></em>, </span><span class="sig-param-decl"><em class="sig-param"><span class="n"><span class="pre">reference_geometry</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="desctype"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.10)"><span class="pre">tuple</span></a></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><code class="code python default_value docutils literal highlight highlight-python"><span class="p">()</span></code></em>, </span><span class="sig-param-decl"><em class="sig-param"><span class="n"><span class="pre">reference_roughness</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="desctype"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.10)"><span class="pre">tuple</span></a></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><code class="code python default_value docutils literal highlight highlight-python"><span class="p">()</span></code></em>, </span><span class="sig-param-decl"><em class="sig-param"><span class="n"><span class="pre">save_to_file</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="desctype"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.10)"><span class="pre">bool</span></a></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><code class="code python default_value docutils literal highlight highlight-python"><span class="kc">True</span></code></em></span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/fm2prof/utils.html#VisualiseOutput.figure_cross_section"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fm2prof.utils.VisualiseOutput.figure_cross_section" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a figure</p>
+<p>Arguments</p>
+<blockquote>
+<div><dl class="simple">
+<dt>css: dictionary containing cross-section information. Obtain with <a class="reference internal" href="#fm2prof.utils.VisualiseOutput.cross_sections" title="fm2prof.utils.VisualiseOutput.cross_sections (Python property) — Generator to loop through all cross-sections in definition file."><code class="xref any py py-attr docutils literal notranslate"><span class="pre">VisualiseOutput.cross_sections</span></code></a></dt><dd><p>generator or <a class="reference internal" href="#fm2prof.utils.VisualiseOutput.get_cross_section_by_id" title="fm2prof.utils.VisualiseOutput.get_cross_section_by_id (Python method) — Get cross-section information given an id."><code class="xref any py py-meth docutils literal notranslate"><span class="pre">VisualiseOutput.get_cross_section_by_id</span></code></a> method.</p>
 </dd>
 </dl>
+<p>reference_geometry (tuple): tuple(list(y), list(z))</p>
+<p>reference_roughness (tuple): tuple(list(z), list(n))</p>
+<dl class="simple">
+<dt>save_to_file (bool): if true, save figure to VisualiseOutput.fig_dir</dt><dd><p>if false, returns pyplot figure object</p>
+</dd>
+</dl>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py method objdesc">
+<dt class="sig sig-object highlight py" id="fm2prof.utils.VisualiseOutput.figure_roughness_longitudinal">
+<span class="sig-name descname"><span class="pre">figure_roughness_longitudinal</span></span><span class="sig-paren">(</span><span class="sig-param-decl"><em class="sig-param"><span class="n"><span class="pre">branch</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="desctype"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a></span></span></em></span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/fm2prof/utils.html#VisualiseOutput.figure_roughness_longitudinal"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fm2prof.utils.VisualiseOutput.figure_roughness_longitudinal" title="Permalink to this definition">¶</a></dt>
+<dd><p>Assumes the following naming convention:
+[branch]_[optional:branch_order]_[chainage]</p>
+</dd></dl>
+
+<dl class="py method objdesc">
+<dt class="sig sig-object highlight py" id="fm2prof.utils.VisualiseOutput.getRoughnessInfoForCss">
+<span class="sig-name descname"><span class="pre">getRoughnessInfoForCss</span></span><span class="sig-paren">(</span><span class="sig-param-decl"><em class="sig-param"><span class="n"><span class="pre">cssname</span></span></em>, </span><span class="sig-param-decl"><em class="sig-param"><span class="n"><span class="pre">rtype</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="desctype"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><code class="code python default_value docutils literal highlight highlight-python"><span class="s1">&#39;roughnessMain&#39;</span></code></em></span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/fm2prof/utils.html#VisualiseOutput.getRoughnessInfoForCss"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fm2prof.utils.VisualiseOutput.getRoughnessInfoForCss" title="Permalink to this definition">¶</a></dt>
+<dd><p>Opens roughness file and reads information for a given cross-section
+name</p>
+</dd></dl>
+
+<dl class="py method objdesc">
+<dt class="sig sig-object highlight py" id="fm2prof.utils.VisualiseOutput.get_cross_section_by_id">
+<span class="sig-name descname"><span class="pre">get_cross_section_by_id</span></span><span class="sig-paren">(</span><span class="sig-param-decl"><em class="sig-param"><a class="n reference internal" href="#fm2prof.utils.VisualiseOutput.get_cross_section_by_id.id" title="fm2prof.utils.VisualiseOutput.get_cross_section_by_id.id (Python parameter) — cross-section name"><span class="n"><span class="pre">id</span></span></a><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="desctype"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a></span></span></em></span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="desctype"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.10)"><span class="pre">dict</span></a></span></span></span><a class="reference internal" href="../../_modules/fm2prof/utils.html#VisualiseOutput.get_cross_section_by_id"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fm2prof.utils.VisualiseOutput.get_cross_section_by_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get cross-section information given an id.</p>
+<dl class="field-list simple">
+<dt class="field-odd" id="fm2prof.utils.VisualiseOutput.get_cross_section_by_id-parameters">Parameters<a class="headerlink" href="#fm2prof.utils.VisualiseOutput.get_cross_section_by_id-parameters" title="Permalink to this headline">¶</a></dt>
+<dd class="field-odd"><dl class="api-field highlight simple">
+<dt id="fm2prof.utils.VisualiseOutput.get_cross_section_by_id.id"><span class="sig-name descname">id</span><span class="p"> : </span><span class="desctype"><span class="desctype"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)">str</a></span></span><a class="headerlink" href="#fm2prof.utils.VisualiseOutput.get_cross_section_by_id.id" title="Permalink to this definition">¶</a></dt><dd><p>cross-section name</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
 </dd></dl>
 
 
@@ -1266,7 +2396,7 @@ The beginning and end point of each branch are treated as half-distance control 
   <small>
     
       Last update:
-      Jun 28, 2022
+      Jul 04, 2022
     
   </small>
 </div>
