@@ -98,8 +98,14 @@ class IniFile(FM2ProfBase):
         self._ini_template = self._get_template_ini()  # Template to fill defaults from
         self._configuration = self._get_template_ini()  # What will be used
 
-        file_path = Path(file_path)
-
+        
+        if file_path is None:
+            self.set_logger_message(
+                f"No ini file given, using default options", "warning"
+            )
+            return
+        else:
+            file_path = Path(file_path)
         if isinstance(file_path, Path):
             self._file = file_path
         if file_path.is_file():
@@ -113,15 +119,11 @@ class IniFile(FM2ProfBase):
         else:
             # User has supplied a file, but the file does not exist. Raise error.
             raise IOError(f"The given file path {file_path} could not be found")
-        # else:
-        #    # if no filepath, or filepath is StringIO object (used in testing)
-        #    self._file = None
-        # if not (file_path is None or not file_path):
-        #    self._read_inifile(file_path)
 
     @property
-    def _file_dir(self):
-        return self._file.parent
+    def _file_dir(self)->Path:
+        if not self._file is None: return self._file.parent
+        return Path().cwd()
 
     @property
     def has_output_directory(self) -> bool:
@@ -150,12 +152,12 @@ class IniFile(FM2ProfBase):
 
         return True
 
-    def get_output_directory(self) -> AnyStr:
+    def get_output_directory(self) -> Path:
         """
         Use this method to return the output directory
 
         Returns:
-            output directory (str)
+            output directory (Path)
 
         """
         op = self._configuration["sections"]["output"][self.__output_directory_key][
@@ -164,14 +166,28 @@ class IniFile(FM2ProfBase):
 
         return self.get_relative_path(op)
 
-    def get_ini_root(self, dirtype: str = "relative") -> str:
+    def set_output_directory(self, name: Union[Path, str]) -> None:
+        """
+        Use this method to set the output directory
+
+        Parameters
+            name: name of the output-directory
+       """
+
+        self._configuration["sections"]["output"][self.__output_directory_key][
+            "value"
+        ] = self._get_valid_output_dir(name)
+
+        return self.get_output_directory()
+
+    def get_ini_root(self, dirtype: str = "relative") -> Path:
         if dirtype == "relative":
             return self._file_dir
         elif dirtype == "absolute":
-            return os.path.join(os.getcwd(), self._file_dir)
+            return Path.cwd().joinpath(self._file_dir)
 
-    def get_relative_path(self, path: str) -> str:
-        return os.path.join(self.get_ini_root(), path)
+    def get_relative_path(self, path: str) -> Path:
+        return self.get_ini_root().joinpath(path)
 
     def get_input_file(self, key: str) -> AnyStr:
         """
@@ -206,17 +222,6 @@ class IniFile(FM2ProfBase):
             keys = self._configuration["sections"][section].keys()
             self.set_logger_message(f"Unknown {section}. Available keys: {list(keys)}")
             return False
-
-    def set_output_directory(self, value: str) -> None:
-        """
-        Use this method to set the output directory
-
-        """
-        case_name = self._get_valid_case_name(self.get_parameter("casename"), value)
-
-        self._configuration["sections"]["output"][self.__output_directory_key][
-            "value"
-        ] = self._get_valid_output_dir(os.path.join(value, case_name))
 
     def _set_output_directory_no_validation(self, value: str) -> None:
         """
@@ -422,7 +427,7 @@ class IniFile(FM2ProfBase):
 
     def _get_valid_output_dir(self, output_dir: str):
         """
-        Gets a normalized output directory path.
+        Gets a normalized output directory path. Creates it if not yet exists
 
         Arguments:
             output_dir {str} -- Relative path to the configuration file.
@@ -435,38 +440,6 @@ class IniFile(FM2ProfBase):
         except FileExistsError:
             pass
         return output_dir
-
-    def _get_valid_case_name(self, case_name: str, output_dir: str):
-        """Gets a valid case name to avoid duplication of directories
-
-        Arguments:
-            case_name {str} -- Given current case name
-            output_dir {str} -- Target output directory path
-
-        Returns:
-            {str} -- Unique case name
-        """
-        case_num = 1
-        default_name = "CaseName"
-        # If no case name was given, assign default.
-        if not case_name:
-            case_name = default_name
-
-        # Set an index to the case
-        case_name_tmp = case_name + "{:02d}".format(case_num)
-        relative_path = case_name_tmp  # by default use the current directory
-        output_dir = self._get_valid_output_dir(output_dir)
-        if output_dir:
-            relative_path = os.path.join(output_dir, case_name_tmp)
-
-        # Ensure the case name is unique.
-        while os.path.isdir(relative_path):
-            case_num += 1
-            case_name_tmp = case_name + "{:02d}".format(case_num)
-            # update relative_path and check is not present
-            relative_path = os.path.join(output_dir, case_name_tmp)
-
-        return case_name_tmp
 
     @property
     def _output_dir(self):

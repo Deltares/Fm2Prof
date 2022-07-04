@@ -4,7 +4,7 @@ import sys
 import time
 import traceback
 from pathlib import Path
-from typing import Dict, List, Mapping, NoReturn, Union
+from typing import Dict, List, Mapping, NoReturn, Union, Generator
 
 import geojson
 import numpy as np
@@ -16,7 +16,7 @@ from fm2prof import Functions as FE
 from fm2prof import __version__
 from fm2prof.common import FM2ProfBase
 from fm2prof.CrossSection import CrossSection
-from fm2prof.Export import Export1DModelData
+from fm2prof.Export import Export1DModelData, OutputFiles
 from fm2prof.Import import FMDataImporter, FmModelData, ImportInputFiles
 from fm2prof.IniFile import IniFile
 from fm2prof.MaskOutputFile import MaskOutputFile
@@ -39,6 +39,7 @@ class Fm2ProfRunner(FM2ProfBase):
                                default values will be used.
         """
         self.fm_model_data: FmModelData = None
+        self._output_files: OutputFiles = OutputFiles()
 
         self._create_logger()
         self._print_header()
@@ -64,17 +65,25 @@ class Fm2ProfRunner(FM2ProfBase):
         # Print configuration to log
         self.set_logger_message(self.get_inifile().print_configuration(), header=True)
 
-    def run(self) -> None:
+    def run(self, overwrite:bool=False) -> None:
         """
-        Use this method to run FM2PROF.
+        Executes FM2PROF routines. 
 
+        Parameters:
+            overwrite: if True, overwrites existing output. If False, exits if output detected
         """
         if self.get_inifile() is None:
             self.set_logger_message(
-                "No ini file was specified and the run cannot go further.", "Warning"
+                "No ini file was specified: the run cannot go further.", "Warning"
             )
             return
 
+        # Check for already existing output
+        if self._output_exists() & ~overwrite:
+            self.set_logger_message("Output already exists. Use overwrite option if you want to re-run the program", "warning")
+            return 
+
+        # Run
         succes = self._run_inifile()
 
         if not succes:
@@ -770,7 +779,7 @@ class Fm2ProfRunner(FM2ProfBase):
 
         return css
 
-    def _write_output(self, cross_sections: list, output_dir: str):
+    def _write_output(self, cross_sections: list, output_dir: Path):
         """Exports all cross sections to the necessary file formats
 
         Arguments:
@@ -788,18 +797,16 @@ class Fm2ProfRunner(FM2ProfBase):
         OutputExporter = Export1DModelData(logger=self.get_logger())
 
         # File paths
-        css_location_ini_file = os.path.join(output_dir, "CrossSectionLocations.ini")
-        css_definitions_ini_file = os.path.join(
-            output_dir, "CrossSectionDefinitions.ini"
-        )
+        css_location_ini_file = output_dir.joinpath(self._output_files.dimr_css_locations)
+        css_definitions_ini_file = output_dir.joinpath(self._output_files.dimr_css_definitions)
 
-        csv_geometry_file = output_dir + "\\geometry.csv"
-        csv_roughness_file = output_dir + "\\roughness.csv"
+        csv_geometry_file = output_dir.joinpath(self._output_files.sobek3_geometry)
+        csv_roughness_file = output_dir.joinpath(self._output_files.sobek3_roughness)
 
-        csv_geometry_test_file = output_dir + "\\geometry_test.csv"
-        csv_roughness_test_file = output_dir + "\\roughness_test.csv"
+        csv_geometry_test_file = output_dir.joinpath(self._output_files.test_geometry)
+        csv_roughness_test_file = output_dir.joinpath(self._output_files.test_roughness)
 
-        csv_volumes_file = output_dir + "\\volumes.csv"
+        csv_volumes_file = output_dir.joinpath(self._output_files.fm2prof_volume)
 
         # export fm1D format
         try:
@@ -818,18 +825,19 @@ class Fm2ProfRunner(FM2ProfBase):
                 [s for css in cross_sections for s in css.friction_tables.keys()]
             )
             sectionFileKeyDict = {
-                "main": ["\\roughness-Main.ini", "Main"],
-                "floodplain1": ["\\roughness-FloodPlain1.ini", "FloodPlain1"],
-                "floodplain2": ["\\roughness-FloodPlain2.ini", "FloodPlain2"],
+                "main": [self._output_files.dimr_roughness_main, "Main"],
+                "floodplain1": [self._output_files.dimr_roughness_floodplain1, "FloodPlain1"],
+                "floodplain2": [self._output_files.dimr_roughness_floodplain2, "FloodPlain2"],
             }
             for section in sections:
-                csv_roughness_ini_file = output_dir + sectionFileKeyDict[section][0]
+                csv_roughness_ini_file = output_dir.joinpath(sectionFileKeyDict[section][0])
                 OutputExporter.export_roughness(
                     cross_sections,
                     file_path=csv_roughness_ini_file,
                     fmt="dflow1d",
                     roughness_section=sectionFileKeyDict[section][1],
                 )
+
         except Exception as e_info:
             self.set_logger_message(
                 "An error was produced while exporting files to DIMR format,"
@@ -945,6 +953,16 @@ class Fm2ProfRunner(FM2ProfBase):
         self.set_logger_message(f"Warnings: {ll.get('WARNING')}")
         self.set_logger_message(f"Errors: {ll.get('ERROR')}")
 
+    def _output_exists(self) -> bool:
+        """
+        Checks whether output exists
+        """
+        for output_file in self._output_files:
+            if self.get_inifile().get_output_directory().joinpath(output_file).is_file():
+                return True
+        else:
+            return False
+
 
 class Project(Fm2ProfRunner):
     """
@@ -1033,3 +1051,9 @@ class Project(Fm2ProfRunner):
 
         """
         return self.get_inifile().print_configuration()
+
+    @property
+    def output_files(self) -> Generator[Path, None, None]:
+        for of in self._output_files:
+            yield self.get_output_directory().joinpath(of)
+        

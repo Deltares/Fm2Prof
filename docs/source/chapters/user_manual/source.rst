@@ -36,7 +36,9 @@ API
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. autoclass:: fm2prof.Project
-   :members: 
+   :members:
+   :show-inheritance:
+   :inherited-members: 
 
 .. _SourceUtils:
 

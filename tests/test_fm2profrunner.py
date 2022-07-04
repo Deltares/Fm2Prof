@@ -230,6 +230,46 @@ class Test_Fm2ProfRunner:
         # 4. Verify final expectations
         assert runner is not None
 
+    def test_run_with_inifile(self):
+        # 1. Set up test data
+        inifile = TestUtils.get_local_test_file('cases/case_02_compound/fm2prof_config.ini')
+        
+        # 3. run test
+        project = Project(inifile)
+        project.run()
+
+        # 4. verify output
+        assert project._output_exists()
+
+    def test_run_with_overwrite_false_output_unchanged(self):
+        # 1. Set up test data
+        inifile = TestUtils.get_local_test_file('cases/case_02_compound/fm2prof_config.ini')
+        
+        # 2. set expections
+        project = Project(inifile)
+        time_before = os.path.getmtime(next(project.output_files))
+        
+        # 3. run test
+        project.run()
+        time_after = os.path.getmtime(next(project.output_files))
+
+        # 4. verify output
+        assert time_before==time_after
+
+    def test_run_with_overwrite_true_output_has_changed(self):
+        # 1. Set up test data
+        inifile = TestUtils.get_local_test_file('cases/case_02_compound/fm2prof_config.ini')
+        
+        # 2. set expections
+        project = Project(inifile)
+        time_before = os.path.getmtime(next(project.output_files))
+        
+        # 3. run test
+        project.run(overwrite=True)
+        time_after = os.path.getmtime(next(project.output_files))
+
+        # 4. verify output
+        assert time_before!=time_after
 
 class ARCHIVED_Test_generate_cross_section_list:
     def test_when_not_given_FmModelData_then_returns_empty_list(self):
