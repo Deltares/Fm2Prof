@@ -4,6 +4,7 @@
 import collections
 import locale
 import sys
+from dataclasses import astuple, dataclass
 from logging import Logger
 
 import numpy as np
@@ -11,6 +12,26 @@ import numpy as np
 # import from package
 from fm2prof import Functions as FE
 from fm2prof.common import FM2ProfBase
+
+
+@dataclass
+class OutputFiles:
+    dimr_css_locations: str = "CrossSectionLocations.ini"
+    dimr_css_definitions: str = "CrossSectionDefinitions.ini"
+    dimr_roughness_main: str = "roughness-Main.ini"
+    dimr_roughness_floodplain1: str = "roughness-FloodPlain1.ini"
+    dimr_roughness_floodplain2: str = "roughness-FloodPlain2.ini"
+    sobek3_geometry: str = "geometry.csv"
+    sobek3_roughness: str = "roughness.csv"
+    test_geometry: str = "geometry_test.csv"
+    test_roughness: str = "roughness_test.csv"
+    fm2prof_volume: str = "volumes.csv"
+
+    def __getitem__(self, index):
+        return astuple(self)[index]
+
+    def __iter__(self):
+        return iter(astuple(self))
 
 
 class Export1DModelData(FM2ProfBase):

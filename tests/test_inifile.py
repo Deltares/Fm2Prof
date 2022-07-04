@@ -3,6 +3,7 @@ import os
 import shutil
 import sys
 import unittest
+from pathlib import Path
 
 import pytest
 
@@ -13,6 +14,12 @@ _root_output_dir = None
 
 
 class Test_IniFile:
+    _test_scenarios_output_dirs = [
+        ("dummydir", "dummydir"),
+        ("dummydir/dummysubdir", "dummydir/dummysubdir"),
+        ("../dummysubdir", "../dummysubdir"),
+    ]
+
     def test_when_no_file_path_then_no_exception_is_risen(self):
         # 1. Set up initial test data
         iniFilePath = ""
@@ -43,6 +50,23 @@ class Test_IniFile:
             + "Expected exception message {},".format(expected_error)
             + "retrieved {}".format(error_message)
         )
+
+    @pytest.mark.parametrize("output_dir, expected_value", _test_scenarios_output_dirs)
+    def test_set_output_dir_with_valid_input(self, output_dir, expected_value):
+        # 1. Set initial test data
+        ini_file_path = None
+        iniFile = IniFile(ini_file_path)
+        new_output_dir = None
+
+        # 2. Run test
+        try:
+            new_output_dir = iniFile.set_output_directory(output_dir)
+        except:
+            err_mssg = "Test failed while trying to get new valid output dir."
+            pytest.fail(err_mssg)
+
+        # 3. Verify final expectations
+        assert Path(expected_value) == new_output_dir.relative_to(Path().cwd())
 
 
 class ARCHIVED_Test_extract_parameters:
@@ -307,50 +331,6 @@ class ARCHIVED_Test_gets_valid_case_name:
         assert len(case_names) == repeated_iterations
         set_case_names = set(case_names)
         assert len(set_case_names) == repeated_iterations
-
-
-class ARCHIVED_Test_get_valid_output_dir:
-    _test_scenarios_output_dirs = [
-        ("dummydir", "dummydir"),
-        ("dummydir/dummysubdir", "dummydir\\dummysubdir"),
-        ("../dummysubdir", "\\dummysubdir"),
-    ]
-
-    @pytest.mark.parametrize("output_dir, expected_value", _test_scenarios_output_dirs)
-    def test_when_given_valid_parameters_then_returns_expected_values(
-        self, output_dir, expected_value
-    ):
-        # 1. Set initial test data
-        ini_file_path = None
-        iniFile = IniFile(ini_file_path)
-        new_output_dir = None
-
-        # 2. Run test
-        try:
-            new_output_dir = iniFile._get_valid_output_dir(output_dir)
-        except:
-            err_mssg = "Test failed while trying to get new valid output dir."
-            pytest.fail(err_mssg)
-
-        # 3. Verify final expectations
-        assert expected_value in new_output_dir
-
-    def test_when_no_output_dir_then_returns_current_path(self):
-        # 1. Set initial test data
-        ini_file_path = None
-        iniFile = IniFile(ini_file_path)
-        new_output_dir = None
-        expected_value = os.getcwd()
-
-        # 2. Run test
-        try:
-            new_output_dir = iniFile._get_valid_output_dir(None)
-        except:
-            err_mssg = "Test failed while trying to get new valid output dir."
-            pytest.fail(err_mssg)
-
-        # 3. Verify final expectations
-        assert expected_value == new_output_dir
 
 
 class ARCHIVED_Test_readini_file:

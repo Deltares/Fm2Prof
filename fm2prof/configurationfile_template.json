@@ -22,7 +22,7 @@
 	    "type": "str",
 	    "hint": "User defined polygons in json format",
 	    "value": "" 
-  	}
+	 }
   },
   "parameters": {
   	"CaseName": {
