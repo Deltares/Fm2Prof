@@ -38,6 +38,7 @@ To get started, start with ChapterInstallation_, then start following the Chapte
     chapters/user_manual/cli
 
 .. toctree::
+    :hidden:
     :caption: Technical reference
 
     chapters/technical_manual/conceptual_design

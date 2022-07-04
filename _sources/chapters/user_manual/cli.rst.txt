@@ -6,17 +6,24 @@ CLI API
 CLI options
 ------------
 
-To view the options and commands, run:
+To view the commands, run:
 
 .. code-block:: shell
 
    FM2PROF --help
 
+All commands
+..............
 
 .. program-output:: python -m fm2prof --help
 
 
-Source documentation 
----------------------
-.. automodule:: fm2prof.cli
-   :members: 
+Run command
+..............
+
+.. code-block:: shell
+
+   FM2PROF run --help
+
+.. program-output:: python -m fm2prof run --help
+

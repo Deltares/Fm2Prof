@@ -78,7 +78,7 @@
 
 <header class="md-header" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href="../../contents.html" title="FM2PROF documentation" class="md-header__button md-logo" aria-label="FM2PROF documentation" data-md-component="logo">
+    <a href="../../index.html" title="FM2PROF documentation" class="md-header__button md-logo" aria-label="FM2PROF documentation" data-md-component="logo">
       <img src="../../_static/Deltares_logo_Wit_RGB.svg" alt="logo">
     </a>
     <label class="md-header__button md-icon" for="__drawer">
@@ -246,7 +246,7 @@
 
 <nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href="../../contents.html" title="FM2PROF documentation" class="md-nav__button md-logo" aria-label="FM2PROF documentation" data-md-component="logo">
+    <a href="../../index.html" title="FM2PROF documentation" class="md-nav__button md-logo" aria-label="FM2PROF documentation" data-md-component="logo">
       <img src="../../_static/Deltares_logo_Wit_RGB.svg" alt="logo">
     </a>
     FM2PROF documentation
@@ -435,6 +435,13 @@
           <li class="md-nav__item">
   <a href="#polygonfiles" class="md-nav__link">
     <span class="md-ellipsis">Polygon<wbr>Files</span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#branch-rule-file" class="md-nav__link">
+    <span class="md-ellipsis">Branch rule file</span>
   </a>
   
 </li>
@@ -670,6 +677,13 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#branch-rule-file" class="md-nav__link">
+    <span class="md-ellipsis">Branch rule file</span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -774,7 +788,7 @@ OutputDirectory               = output    # Output files are saved in OutputDir/
 <p>Comma-seperated file.
 Syntax: <code class="xref any docutils literal notranslate"><span class="pre">x,</span> <span class="pre">y,</span> <span class="pre">branch</span> <span class="pre">name,</span> <span class="pre">cross-section</span> <span class="pre">length,</span> <span class="pre">chainage</span></code></p>
 <p>This file specifies at which locations a 1D cross-section and roughness information must be generated.</p>
-<p>The CrossSectionLocationFile can be generated from a SOBEK 3 Network Definition file (DIMR configuration) using <a class="reference internal" href="../user_manual/source.html#fm2prof.utils.networkdeffile_to_input" title="fm2prof.utils.networkdeffile_to_input (Python function) — Builds a cross-section input file for FM2PROF from a DIMR network definition file."><code class="xref py py-meth docutils literal notranslate"><span class="pre">fm2prof.utils.networkdeffile_to_input()</span></code></a>.</p>
+<p>The CrossSectionLocationFile can be generated from a SOBEK 3 Network Definition file (DIMR configuration) using <code class="xref py py-meth docutils literal notranslate"><span class="pre">fm2prof.utils.networkdeffile_to_input()</span></code>.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>The methods in utils are currently not supported in the CLI API. You will need to install FM2PROF as a python package.</p>
@@ -807,7 +821,9 @@ Syntax: <code class="xref any docutils literal notranslate"><span class="pre">x,
 <p class="admonition-title">Warning</p>
 <p>In the current version, FM2PROF reads and validates the polygon files, but does not use them to allocate regions and sections. This is a very computationally extensive task. Therefore, you will need to pre-process this step. Currently, this preprocessing step is only supported through a DeltaShell script that is distributed with this repository.</p>
 </div>
-<h2 id="output-files"><span id="outputfiles"></span>Output files<a class="headerlink" href="#output-files" title="Permalink to this headline">¶</a></h2>
+<h3 id="branch-rule-file"><span id="branchrulefile"></span><span id="outputfiles"></span>Branch rule file<a class="headerlink" href="#branch-rule-file" title="Permalink to this headline">¶</a></h3>
+<p>Optional input for <a class="reference internal" href="../user_manual/source.html#fm2prof.utils.GenerateCrossSectionLocationFile" title="fm2prof.utils.GenerateCrossSectionLocationFile (Python class) — Builds a cross-section input file for FM2PROF from a SOBEK 3 DIMR network definition file."><code class="xref py py-class docutils literal notranslate"><span class="pre">fm2prof.utils.GenerateCrossSectionLocationFile</span></code></a></p>
+<h2 id="output-files">Output files<a class="headerlink" href="#output-files" title="Permalink to this headline">¶</a></h2>
 <h3 id="sobek-3-dimr">SOBEK 3 (DIMR)<a class="headerlink" href="#sobek-3-dimr" title="Permalink to this headline">¶</a></h3>
 <p>The following files can be copied directly to the <code class="xref any docutils literal notranslate"><span class="pre">dflow1d</span></code> directory of the SOBEK 3 model.</p>
 <blockquote>
@@ -844,7 +860,7 @@ Syntax: <code class="xref any docutils literal notranslate"><span class="pre">x,
   <small>
     
       Last update:
-      Jun 28, 2022
+      Jul 04, 2022
     
   </small>
 </div>
