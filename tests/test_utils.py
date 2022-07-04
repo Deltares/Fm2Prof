@@ -54,7 +54,6 @@ class Test_ModelOutputReader:
 
         # 4. Verify final expectations
         for key in dict_has_keys:
-<<<<<<< HEAD
             assert(key in parsed_dict.sections)
 
 
@@ -71,6 +70,3 @@ class Test_GenerateCrossSectionLocationFile:
 
         # 4. verify
         assert output_file.is_file()
-=======
-            assert key in parsed_dict.sections
->>>>>>> cdd603917c785d94091c0b5ab55281c6378c54d9
