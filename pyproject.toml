@@ -29,6 +29,7 @@ sphinx-immaterial = "^0.7.3"
 sphinxcontrib-details-directive = "^0.1.0"
 typer = "^0.4.1"
 sphinxcontrib-programoutput = "^0.17"
+tqdm = "^4.64.0"
 
 
 [tool.poetry.dev-dependencies]

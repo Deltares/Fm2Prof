@@ -2,12 +2,46 @@
 {% set title = _('Welcome!') %}
 {% block body %}
 
-  <h1>{{ _('Welcome') }}</h1>
-
+<div class="bkg"></div>
+  <h1 id="koen">{{ _('Welcome') }}</h1>
+  hii
   <h2 style="margin-bottom: 10 px">{%trans%}Start Here{%endtrans%}</h2>
   <p><a href="{{ pathto("contents") }}">{%trans%}Open manual{%endtrans%}</a>.</p>
+
+<style>
+
+.md-header{
+  background-color: rgba(1, 1, 1, 0);
+}
+.md-tabs{
+  background-color: rgba(1, 1, 1, 0);
+}
+
+body{
+  background-image: url("_static/bkg.png");
+  /* Background image is centered vertically and horizontally at all times */
+  background-position: center top;
+
+  /* Background image doesn't tile */
+  background-repeat: no-repeat;
+
+  /* Background image is fixed in the viewport so that it doesn't move when
+  the content's height is greater than the image's height */
+  background-attachment: fixed;
+
+  /* This is what makes the background image rescale based
+  on the container's size */
+  background-size: cover;
+
+  /* Set a background color that will be displayed
+  while the background image is loading */
+  background-color: #464646;
+}
+
+</style>
 
 {% endblock %}
 {% block site_nav %}
 
 {% endblock %}
+
