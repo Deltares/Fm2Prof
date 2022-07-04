@@ -16,7 +16,7 @@ _root_output_dir = None
 class Test_IniFile:
     _test_scenarios_output_dirs = [
         ("dummydir", "dummydir"),
-        ("dummydir/dummysubdir", "dummydir\\dummysubdir"),
+        ("dummydir/dummysubdir", "dummydir/dummysubdir"),
         ("../dummysubdir", "../dummysubdir"),
     ]
 
