@@ -7,7 +7,7 @@ from logging import Logger
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Any, Dict, Generator, List, Optional, Tuple, Union, Callable
+from typing import Any, Callable, Dict, Generator, List, Optional, Tuple, Union
 
 import matplotlib as mpl
 import matplotlib.dates as mdates
@@ -730,13 +730,13 @@ class PlotStyles:
     daylocator = mdates.DayLocator(15)
 
     @staticmethod
-    def set_locale(localeString:str):
+    def set_locale(localeString: str):
         try:
             locale.setlocale(locale.LC_TIME, localeString)
         except locale.Error:
             # known error on linux fix:
             # export LC_ALL="en_US.UTF-8" & export LC_CTYPE="en_US.UTF-8" & sudo dpkg-reconfigure locales
-            print(f'could not set locale to {localeString}')
+            print(f"could not set locale to {localeString}")
             pass
 
     @staticmethod
@@ -1055,9 +1055,7 @@ class ModelOutputReader(FM2ProfBase):
             self._get_1d2d_map()
 
     def read_all_data(self) -> None:
-        """
-
-        """
+        """ """
         self.load_flow1d_data()
         self.get_1d2d_map()
         self.load_flow2d_data()
@@ -1219,7 +1217,7 @@ class ModelOutputReader(FM2ProfBase):
 
 class Compare1D2D(ModelOutputReader):
     """
-    Class to compare the results of a 1D and 2D model. 
+    Class to compare the results of a 1D and 2D model.
 
     Example usage:
 
@@ -1232,6 +1230,7 @@ class Compare1D2D(ModelOutputReader):
         >>> plotter.figure_longitudinal_time(route=route)
 
     """
+<<<<<<< HEAD
     _routes:List[List[str]] = None
 
     def __init__(self, project:Project=None, path_1d:Union[Path, str]=None, path_2d:Union[Path, str]=None, routes:List[List[str]]=None):
@@ -1241,6 +1240,14 @@ class Compare1D2D(ModelOutputReader):
         else:
             super().__init__()
         
+=======
+
+    def __init__(
+        self, path_1d: Union[Path, str] = None, path_2d: Union[Path, str] = None
+    ):
+        super().__init__()
+
+>>>>>>> cdd603917c785d94091c0b5ab55281c6378c54d9
         if path_1d:
             self.path_flow1d = path_1d
         if path_2d:
@@ -1255,7 +1262,12 @@ class Compare1D2D(ModelOutputReader):
         self.digitize_data()
 
         # create output folder
-        output_dirs = ['figures/longitudinal', 'figures/discharge', 'figures/heatmaps', 'figures/stations']
+        output_dirs = [
+            "figures/longitudinal",
+            "figures/discharge",
+            "figures/heatmaps",
+            "figures/stations",
+        ]
         for od in output_dirs:
             try:
                 os.makedirs(self.output_path.joinpath(od))
@@ -1380,10 +1392,10 @@ class Compare1D2D(ModelOutputReader):
         return sorted_stations, sorted_rkms, lmw_stations
 
     def figure_at_station(self, station: str) -> None:
-        """ 
-        Create a figure with the results at an observation station. 
-        
-        Figures are saved to `[Compare1D2D.output_path]/figures/stations` 
+        """
+        Create a figure with the results at an observation station.
+
+        Figures are saved to `[Compare1D2D.output_path]/figures/stations`
 
         Example output:
 
@@ -1435,15 +1447,15 @@ class Compare1D2D(ModelOutputReader):
     def figure_compare_discharge_at_stations(
         self, title: str = "notitle", stations: Tuple[str, str] = None
     ) -> None:
-        """ 
+        """
         Like :meth:`Compare1D2D.figure_at_station`, but compares discharge
-        distribution over two stations. 
+        distribution over two stations.
 
         Example usage:
 
             >>> Compare1D2().figure_compare_discharge_at_stations(stations=["WL_869.00", "PK_869.00"])
-        
-        Figures are saved to `[Compare1D2D.output_path]/figures/discharge` 
+
+        Figures are saved to `[Compare1D2D.output_path]/figures/discharge`
 
         Example output:
 
@@ -1528,8 +1540,8 @@ class Compare1D2D(ModelOutputReader):
 
     def figure_longitudinal_time(self, route: List[str]) -> None:
         """
-        Create a figure along a route with lines at various points in time. 
-        Figures are saved to `[Compare1D2D.output_path]/figures/longitudinal` 
+        Create a figure along a route with lines at various points in time.
+        Figures are saved to `[Compare1D2D.output_path]/figures/longitudinal`
 
         Example output:
 
@@ -1615,11 +1627,11 @@ class Compare1D2D(ModelOutputReader):
 
     def figure_longitudinal_rating_curve(self, route: List[str]) -> None:
         """
-        Create a figure along a route with lines at various dicharges. 
+        Create a figure along a route with lines at various dicharges.
         To to this, rating curves are generated at each point by digitizing
-        the model output. 
-        
-        Figures are saved to `[Compare1D2D.output_path]/figures/longitudinal` 
+        the model output.
+
+        Figures are saved to `[Compare1D2D.output_path]/figures/longitudinal`
 
         Example output:
 
@@ -1707,11 +1719,11 @@ class Compare1D2D(ModelOutputReader):
             yield (station < t).idxmin()
 
     def heatmap_time(self, route: List[str]) -> None:
-        """ 
+        """
         Create a 2D heatmap along a route. The horizontal axis uses
         timemarks to match the 1D and 2D models
-        
-        Figures are saved to `[Compare1D2D.output_path]/figures/heatmap` 
+
+        Figures are saved to `[Compare1D2D.output_path]/figures/heatmap`
 
         Example output:
 
@@ -1720,7 +1732,7 @@ class Compare1D2D(ModelOutputReader):
             example output figure
 
         """
-        
+
         routename = "-".join(route)
         _, _, lmw_stations = self.get_route(route)
         data = self.data_1D_H - self.data_2D_H
@@ -1756,11 +1768,11 @@ class Compare1D2D(ModelOutputReader):
         plt.close()
 
     def heatmap_rating_curve(self, route: List[str]) -> None:
-        """ 
+        """
         Create a 2D heatmap along a route. The horizontal axis uses
         the digitized rating curves to match the two models
-        
-        Figures are saved to `[Compare1D2D.output_path]/figures/heatmap` 
+
+        Figures are saved to `[Compare1D2D.output_path]/figures/heatmap`
 
         Example output:
 
@@ -1769,7 +1781,7 @@ class Compare1D2D(ModelOutputReader):
             example output figure
 
         """
-        
+
         routename = "-".join(route)
         _, _, lmw_stations = self.get_route(route)
         data = self.data_1D_H_digitized - self.data_2D_H_digitized
@@ -1814,5 +1826,3 @@ class Compare1D2D(ModelOutputReader):
             return func(*args, **kwargs)
         except exception as e:
             return None
-
-

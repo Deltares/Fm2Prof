@@ -1432,8 +1432,7 @@ class CrossSection(FM2ProfBase):
             self.section_widths["main"] -= dif
             self.section_widths["floodplain1"] += dif
             self.set_logger_message(
-                f"Increased main section width by {dif:.2f}",
-                "warning"
+                f"Increased main section width by {dif:.2f}", "warning"
             )
             return True
         return False
