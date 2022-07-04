@@ -1,9 +1,9 @@
 import numbers
 import os
 import shutil
-from pathlib import Path 
 import sys
 import unittest
+from pathlib import Path
 
 import pytest
 
@@ -52,9 +52,7 @@ class Test_IniFile:
         )
 
     @pytest.mark.parametrize("output_dir, expected_value", _test_scenarios_output_dirs)
-    def test_set_output_dir_with_valid_input(
-        self, output_dir, expected_value
-    ):
+    def test_set_output_dir_with_valid_input(self, output_dir, expected_value):
         # 1. Set initial test data
         ini_file_path = None
         iniFile = IniFile(ini_file_path)
@@ -69,6 +67,7 @@ class Test_IniFile:
 
         # 3. Verify final expectations
         assert Path(expected_value) == new_output_dir.relative_to(Path().cwd())
+
 
 class ARCHIVED_Test_extract_parameters:
 
@@ -332,6 +331,7 @@ class ARCHIVED_Test_gets_valid_case_name:
         assert len(case_names) == repeated_iterations
         set_case_names = set(case_names)
         assert len(set_case_names) == repeated_iterations
+
 
 class ARCHIVED_Test_readini_file:
     def test_when_no_file_path_then_io_exception_is_risen(self):

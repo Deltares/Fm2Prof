@@ -4,7 +4,7 @@ import sys
 import time
 import traceback
 from pathlib import Path
-from typing import Dict, List, Mapping, NoReturn, Union, Generator
+from typing import Dict, Generator, List, Mapping, NoReturn, Union
 
 import geojson
 import numpy as np
@@ -65,9 +65,9 @@ class Fm2ProfRunner(FM2ProfBase):
         # Print configuration to log
         self.set_logger_message(self.get_inifile().print_configuration(), header=True)
 
-    def run(self, overwrite:bool=False) -> None:
+    def run(self, overwrite: bool = False) -> None:
         """
-        Executes FM2PROF routines. 
+        Executes FM2PROF routines.
 
         Parameters:
             overwrite: if True, overwrites existing output. If False, exits if output detected
@@ -80,8 +80,11 @@ class Fm2ProfRunner(FM2ProfBase):
 
         # Check for already existing output
         if self._output_exists() & ~overwrite:
-            self.set_logger_message("Output already exists. Use overwrite option if you want to re-run the program", "warning")
-            return 
+            self.set_logger_message(
+                "Output already exists. Use overwrite option if you want to re-run the program",
+                "warning",
+            )
+            return
 
         # Run
         succes = self._run_inifile()
@@ -797,8 +800,12 @@ class Fm2ProfRunner(FM2ProfBase):
         OutputExporter = Export1DModelData(logger=self.get_logger())
 
         # File paths
-        css_location_ini_file = output_dir.joinpath(self._output_files.dimr_css_locations)
-        css_definitions_ini_file = output_dir.joinpath(self._output_files.dimr_css_definitions)
+        css_location_ini_file = output_dir.joinpath(
+            self._output_files.dimr_css_locations
+        )
+        css_definitions_ini_file = output_dir.joinpath(
+            self._output_files.dimr_css_definitions
+        )
 
         csv_geometry_file = output_dir.joinpath(self._output_files.sobek3_geometry)
         csv_roughness_file = output_dir.joinpath(self._output_files.sobek3_roughness)
@@ -826,11 +833,19 @@ class Fm2ProfRunner(FM2ProfBase):
             )
             sectionFileKeyDict = {
                 "main": [self._output_files.dimr_roughness_main, "Main"],
-                "floodplain1": [self._output_files.dimr_roughness_floodplain1, "FloodPlain1"],
-                "floodplain2": [self._output_files.dimr_roughness_floodplain2, "FloodPlain2"],
+                "floodplain1": [
+                    self._output_files.dimr_roughness_floodplain1,
+                    "FloodPlain1",
+                ],
+                "floodplain2": [
+                    self._output_files.dimr_roughness_floodplain2,
+                    "FloodPlain2",
+                ],
             }
             for section in sections:
-                csv_roughness_ini_file = output_dir.joinpath(sectionFileKeyDict[section][0])
+                csv_roughness_ini_file = output_dir.joinpath(
+                    sectionFileKeyDict[section][0]
+                )
                 OutputExporter.export_roughness(
                     cross_sections,
                     file_path=csv_roughness_ini_file,
@@ -958,7 +973,12 @@ class Fm2ProfRunner(FM2ProfBase):
         Checks whether output exists
         """
         for output_file in self._output_files:
-            if self.get_inifile().get_output_directory().joinpath(output_file).is_file():
+            if (
+                self.get_inifile()
+                .get_output_directory()
+                .joinpath(output_file)
+                .is_file()
+            ):
                 return True
         else:
             return False
@@ -1056,4 +1076,3 @@ class Project(Fm2ProfRunner):
     def output_files(self) -> Generator[Path, None, None]:
         for of in self._output_files:
             yield self.get_output_directory().joinpath(of)
-        
