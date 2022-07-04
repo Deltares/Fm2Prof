@@ -16,10 +16,10 @@ from fm2prof.common import FM2ProfBase
 @dataclass
 class OutputFiles:
     dimr_css_locations:str = "CrossSectionLocations.ini"
-    dimr_css_definitions:str = "CrossSection.ini"
-    dimr_roughness_main:str = "roughnessMain.ini"
-    dimr_roughness_floodplain1:str = "roughnessFloodPlain1.ini"
-    dimr_roughness_floodplain2:str = "roughnessFloodPlain2.ini"
+    dimr_css_definitions:str = "CrossSectionDefinitions.ini"
+    dimr_roughness_main:str = "roughness-Main.ini"
+    dimr_roughness_floodplain1:str = "roughness-FloodPlain1.ini"
+    dimr_roughness_floodplain2:str = "roughness-FloodPlain2.ini"
     sobek3_geometry:str = "geometry.csv"
     sobek3_roughness:str = "roughness.csv"
     test_geometry:str = "geometry_test.csv"

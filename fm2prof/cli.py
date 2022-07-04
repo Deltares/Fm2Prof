@@ -28,18 +28,19 @@ def cli_create_new_project(projectname: str):
 
 
 @app.command("check")
-def cli_check_project(configuration_file: str) -> None:
+def cli_check_project(projectname: str) -> None:
     """Load project, check filepaths, print errors then exit"""
-    cf = Path(configuration_file).with_suffix(".ini")
+    cf = Path(projectname).with_suffix(".ini")
     project = Project(cf)
     raise typer.Exit()
 
-
 @app.command("run")
-def cli_load_project(configuration_file: str) -> None:
+def cli_load_project(projectname: str) -> None:
     """Loads and runs a project"""
-    project = Project(configuration_file).with_suffix(".ini")
-    project.run()
+    cf = Path(projectname).with_suffix(".ini")
+    project = Project(cf)
+    project.run(overwrite=overwrite)
+
     raise typer.Exit()
 
 

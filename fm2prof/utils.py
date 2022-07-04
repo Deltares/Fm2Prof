@@ -1,7 +1,9 @@
 import locale
+import ast
 import os
 import re
 import shutil
+from logging import Logger
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -16,7 +18,7 @@ from matplotlib.ticker import AutoMinorLocator, FormatStrFormatter, MultipleLoca
 from netCDF4 import Dataset
 from pandas.plotting import register_matplotlib_converters
 from tqdm import tqdm
-
+from fm2prof import Project
 from fm2prof.common import FM2ProfBase
 
 register_matplotlib_converters()
@@ -44,7 +46,7 @@ class GenerateCrossSectionLocationFile(FM2ProfBase):
         self,
         networkdefinitionfile: Union[str, Path],
         crossectionlocationfile: Union[str, Path],
-        branchrulefile: Optional[Union[str, Path]] = None,
+        branchrulefile: Optional[Union[str, Path]] = "",
     ):
 
         networkdefinitionfile, crossectionlocationfile, branchrulefile = map(
@@ -53,7 +55,6 @@ class GenerateCrossSectionLocationFile(FM2ProfBase):
 
         required_files = (
             networkdefinitionfile.is_file(),
-            crossectionlocationfile.is_file(),
         )
         if not all(required_files):
             raise FileNotFoundError
@@ -139,7 +140,7 @@ class GenerateCrossSectionLocationFile(FM2ProfBase):
                         c = len(xtmp)
                         for ic in xtmp, ytmp, cidtmp, cdistmp, bidtmp, cofftmp:
                             if len(ic) != c:
-                                print("koen")
+                                raise ValueError
 
                     # Append all points
                     x.extend(xtmp)
@@ -155,11 +156,11 @@ class GenerateCrossSectionLocationFile(FM2ProfBase):
         self,
         networkdefinitionfile: Path,
         crossectionlocationfile: Path,
-        branchrulefile: Optional[Path] = None,
+        branchrulefile: Path,
     ):
         branchrules: dict = {}
 
-        if branchrulefile:
+        if branchrulefile.is_file():
             branchrules = self._parseBranchRuleFile(branchrulefile)
 
         network_dict = self._parse_NetworkDefinitionFile(
@@ -168,7 +169,7 @@ class GenerateCrossSectionLocationFile(FM2ProfBase):
 
         self._writeCrossSectionLocationFile(crossectionlocationfile, network_dict)
 
-    def _applyBranchRules(rule, x, y, cid, cdis, bid, coff):
+    def _applyBranchRules(self,rule, x, y, cid, cdis, bid, coff):
         bfunc = {
             "onlyedges": lambda x: [x[0], x[-1]],
             "ignoreedges": lambda x: x[1:-1],
@@ -190,7 +191,7 @@ class GenerateCrossSectionLocationFile(FM2ProfBase):
         except KeyError:
             raise NotImplementedError(rule)
 
-    def _parseBranchRuleFile(branchrulefile: Path) -> Dict:
+    def _parseBranchRuleFile(self,branchrulefile: Path) -> Dict:
         branchrules: dict = {}
         with open(branchrulefile, "r") as f:
             for line in f:
@@ -201,7 +202,7 @@ class GenerateCrossSectionLocationFile(FM2ProfBase):
 
         return branchrules
 
-    def _writeCrossSectionLocationFile(
+    def _writeCrossSectionLocationFile(self,
         crossectionlocationfile: Path, network_dict: Dict
     ):
         """
@@ -213,6 +214,13 @@ class GenerateCrossSectionLocationFile(FM2ProfBase):
         bid : name of the branch
         coff:  chainage of cross-section on branch
         """
+        x = network_dict.get('x')
+        y = network_dict.get('y')
+        cid = network_dict.get('css_id')
+        cdis = network_dict.get('css_len')
+        bid = network_dict.get('branch_id')
+        coff = network_dict.get('css_offset')
+
         with open(crossectionlocationfile, "w") as f:
             f.write("name,x,y,length,branch,offset\n")
             for i in range(len(x)):
@@ -228,8 +236,9 @@ class VisualiseOutput(FM2ProfBase):
     __rfp1file = "roughness-FloodPlain1.ini"
 
     def __init__(
-        self, output_directory: str, figure_type: str = "png", overwrite: bool = True
+        self, output_directory: str, figure_type: str = "png", overwrite: bool = True, logger:Logger=None
     ):
+        super().__init__(logger=logger)
         self._create_logger()
         self.output_dir = Path(output_directory)
         self.fig_dir = self._generate_output_dir()
@@ -237,6 +246,8 @@ class VisualiseOutput(FM2ProfBase):
         self._ref_geom_y = []
         self._ref_geom_tw = []
         self._ref_geom_fw = []
+
+        self.set_logger_message(f"Using {self.fig_dir} as output directory for figures")
 
     def figure_roughness_longitudinal(self, branch: str):
         """
@@ -320,7 +331,7 @@ class VisualiseOutput(FM2ProfBase):
             png images saved to file
         """
 
-        figdir = self.output_dir.joinpath("figures")
+        figdir = self.output_dir.joinpath("figures/cross_sections")
         if not figdir.is_dir():
             figdir.mkdir(parents=True)
         return figdir
@@ -482,7 +493,7 @@ class VisualiseOutput(FM2ProfBase):
             fig, lgd = self._SetPlotStyle(fig)
 
             if save_to_file:
-                print(f"saved to {self.fig_dir}/{css['id']}.png")
+                self.set_logger_message(f"New figure {css['id']}.png written to output")
                 plt.savefig(
                     f"{self.fig_dir}/{css['id']}.png",
                     bbox_extra_artists=[lgd],
@@ -492,7 +503,7 @@ class VisualiseOutput(FM2ProfBase):
                 return fig
 
         except Exception as e:
-            print(f"error processing: {css['id']} {str(e)}")
+            self.set_logger_message(f"error processing: {css['id']} {str(e)}", 'error')
             return None
 
         finally:
@@ -734,6 +745,8 @@ class PlotStyles:
             float(axis.get_ticklabels()[0].get_text().replace("−", "-"))
         except ValueError:
             return True
+        except IndexError:
+            return False
         return False
 
     @classmethod
@@ -907,7 +920,7 @@ class DeltaresConfig:
         return value
 
 
-class ModelOutputReader:
+class ModelOutputReader(FM2ProfBase):
     """
     This class provides methods to post-process 1D and 2D data,
     by writing csv files of output locations (observation stations)
@@ -948,7 +961,9 @@ class ModelOutputReader:
 
     _time_fmt = "%Y-%m-%d %H:%M:%S"
 
-    def __init__(self):
+    def __init__(self, logger=None):
+        super().__init__(logger=logger)
+
         self._path_out: Path = Path(".")
         self._path_flow1d: Path = Path(".")
         self._path_flow2d: Path = Path(".")
@@ -963,7 +978,7 @@ class ModelOutputReader:
     @path_flow1d.setter
     def path_flow1d(self, path: Union[Path, str]):
         # Verify path is dir
-        assert Path(path).is_dir()
+        assert Path(path).is_file()
         # set attribute
         self._path_flow1d = Path(path)
 
@@ -999,11 +1014,11 @@ class ModelOutputReader:
                 parse_dates=True,
                 date_parser=self._dateparser,
             )
-            print("using existing flow1d csv files")
+            self.set_logger_message("Using existing flow1d csv files")
         else:
             self.data_1D_H, self.data_1D_Q = self._import_1Dobservations()
-            self.data_1D_H.to_csv(self.output_path.joinpath(self.file_1D_H))
-            self.data_1D_Q.to_csv(self.output_path.joinpath(self.file_1D_Q))
+            self.data_1D_H.to_csv(self.file_1D_H)
+            self.data_1D_Q.to_csv(self.file_1D_Q)
 
     def load_flow2d_data(self):
         """
@@ -1027,14 +1042,14 @@ class ModelOutputReader:
                 parse_dates=True,
                 date_parser=self._dateparser,
             )
-            print("using existing flow2d csv files")
+            self.set_logger_message("Using existing flow2d csv files")
         else:
             self._import_2Dobservations()
 
     def get_1d2d_map(self):
         """Writes a map between stations in 1D and stations in 2D. Matches based on identical characters in first nine slots"""
         if self.file_1D2D_map.is_file():
-            print("using existing 1d-2d map")
+            self.set_logger_message("using existing 1d-2d map")
             return
         else:
             self._get_1d2d_map()
@@ -1053,6 +1068,14 @@ class ModelOutputReader:
     @property
     def output_path(self) -> Path:
         return self._path_out
+
+    @output_path.setter 
+    def output_path(self, new_path:Union[Path, str]):
+        newpath = Path(new_path)
+        if newpath.is_dir():
+            self._path_out = newpath 
+        else:
+            raise ValueError(f"{new_path} is not a directory")
 
     @property
     def file_1D_Q(self):
@@ -1120,13 +1143,13 @@ class ModelOutputReader:
 
                     df[station.name] = qdata[:, si]
 
-                df.to_csv(self.output_path.joinpath(f"{fname}"))
+                df.to_csv(f"{fname}")
 
     def _import_1Dobservations(self) -> pd.DataFrame:
         """
         time_offset: offset in seconds
         """
-        _file_his = self.path_flow1d.joinpath(r"dflow1d\output\observations.nc")
+        _file_his = self.path_flow1d
 
         with Dataset(_file_his) as f:
 
@@ -1162,13 +1185,15 @@ class ModelOutputReader:
 
     def _parse_1D_stations(self) -> Generator[str, None, None]:
         """Reads the names of observations stations from 1D model"""
-
+        return list(self.data_1D_H.columns)
+        """
         _file_1d_obs_ini = self.path_flow1d.joinpath(r"dflow1d\ObservationPoints.ini")
 
         with open(_file_1d_obs_ini, "r") as f:
             for line in f:
                 if line.strip() == "[ObservationPoint]":
                     yield f.readline().split("=")[1].strip()
+        """
 
     def _get_1d2d_map(self):
         _file_his = self.path_flow2d
@@ -1207,14 +1232,21 @@ class Compare1D2D(ModelOutputReader):
         >>> plotter.figure_longitudinal_time(route=route)
 
     """
-    def __init__(self, path_1d:Union[Path, str]=None, path_2d:Union[Path, str]=None):
-        super().__init__()
+    _routes:List[List[str]] = None
+
+    def __init__(self, project:Project=None, path_1d:Union[Path, str]=None, path_2d:Union[Path, str]=None, routes:List[List[str]]=None):
+        if project:
+            super().__init__(logger=project.get_logger())
+            self.output_path = project.get_output_directory()
+        else:
+            super().__init__()
         
         if path_1d:
             self.path_flow1d = path_1d
         if path_2d:
             self.path_flow2d = path_2d
 
+        self.routes = routes
         self.data_1D_H_digitized: pd.DataFrame = None
         self.data_2D_H_digitized: pd.DataFrame = None
         self._qsteps = np.arange(0, 100 * np.ceil(18000 / 100), 200)
@@ -1229,6 +1261,31 @@ class Compare1D2D(ModelOutputReader):
                 os.makedirs(self.output_path.joinpath(od))
             except FileExistsError:
                 pass
+    
+    def eval(self):
+        
+        for route in tqdm(self.routes):
+            self.set_logger_message(f"Making figures for route {route}")
+            self.figure_longitudinal_rating_curve(route)
+            self.figure_longitudinal_time(route)
+            self.heatmap_rating_curve(route)
+            self.heatmap_time(route)
+        
+        self.set_logger_message(f"Making figures for stations")
+        for station in tqdm(self.stations(), total=self.data_1D_H.shape[1]):
+            self.figure_at_station(station)
+
+
+    @property
+    def routes(self):
+        return self._routes
+
+    @routes.setter
+    def routes(self, routes):
+        if isinstance(routes, list):
+            self._routes = routes 
+        if isinstance(routes, str):
+            self._routes = ast.literal_eval(routes)
 
     @property
     def file_1D_H_digitized(self):
@@ -1240,7 +1297,7 @@ class Compare1D2D(ModelOutputReader):
 
     def digitize_data(self):
         if self.file_1D_H_digitized.is_file():
-            print("using existing digitized file for 1d")
+            self.set_logger_message("Using existing digitized file for 1d")
             self.data_1D_H_digitized = pd.read_csv(
                 self.file_1D_H_digitized, index_col=0
             )
@@ -1250,7 +1307,7 @@ class Compare1D2D(ModelOutputReader):
             )
             self.data_1D_H_digitized.to_csv(self.file_1D_H_digitized)
         if self.file_2D_H_digitized.is_file():
-            print("using existing digitized file for 2d")
+            self.set_logger_message("Using existing digitized file for 2d")
             self.data_2D_H_digitized = pd.read_csv(
                 self.file_2D_H_digitized, index_col=0
             )
@@ -1373,6 +1430,7 @@ class Compare1D2D(ModelOutputReader):
         fig.savefig(
             self.output_path.joinpath("figures/stations").joinpath(f"{station}.png")
         )
+        plt.close()
 
     def figure_compare_discharge_at_stations(
         self, title: str = "notitle", stations: Tuple[str, str] = None
@@ -1435,7 +1493,7 @@ class Compare1D2D(ModelOutputReader):
         fig.tight_layout()
         PlotStyles.van_veen(fig, use_legend=[True, False])
         fig.savefig(
-            self.output_path.joinpath("figures/discharge").joinpath(f"{title}.png")
+            self.output_path.joinpath("discharge").joinpath(f"{title}.png")
         )
 
     def get_data_along_route_for_time(
