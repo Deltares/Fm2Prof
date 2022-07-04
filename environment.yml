@@ -12,13 +12,12 @@ dependencies:
   - pylint
   - scikit-learn
   - pytest
-  - jupyter
   - rtree
   - conda-build
   - sphinx
   - sphinx_rtd_theme
   - colorama
-  - click
+  - typer
   - poetry
   - pip
   - pip:
