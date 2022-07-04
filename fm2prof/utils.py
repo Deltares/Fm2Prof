@@ -1230,7 +1230,6 @@ class Compare1D2D(ModelOutputReader):
         >>> plotter.figure_longitudinal_time(route=route)
 
     """
-<<<<<<< HEAD
     _routes:List[List[str]] = None
 
     def __init__(self, project:Project=None, path_1d:Union[Path, str]=None, path_2d:Union[Path, str]=None, routes:List[List[str]]=None):
@@ -1240,14 +1239,6 @@ class Compare1D2D(ModelOutputReader):
         else:
             super().__init__()
         
-=======
-
-    def __init__(
-        self, path_1d: Union[Path, str] = None, path_2d: Union[Path, str] = None
-    ):
-        super().__init__()
-
->>>>>>> cdd603917c785d94091c0b5ab55281c6378c54d9
         if path_1d:
             self.path_flow1d = path_1d
         if path_2d:
