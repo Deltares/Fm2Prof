@@ -21,20 +21,6 @@ from fm2prof.common import FM2ProfBase
 
 register_matplotlib_converters()
 
-locale.setlocale(locale.LC_TIME, "nl_NL.UTF-8")
-
-
-font = {"family": "Bahnschrift", "weight": "normal", "size": 18}
-mpl.rc("font", **font)
-
-mpl.rcParams["axes.unicode_minus"] = False
-
-mpl.rcParams["axes.prop_cycle"] = mpl.cycler(
-    color=["k", "00cc96", "#0d38e0"] * 3,
-    linestyle=["-"] * 3 + ["--"] * 3 + ["-."] * 3,
-    linewidth=np.linspace(0.5, 3, 9),
-)
-
 
 class GenerateCrossSectionLocationFile(FM2ProfBase):
     """
@@ -733,6 +719,16 @@ class PlotStyles:
     daylocator = mdates.DayLocator(15)
 
     @staticmethod
+    def set_locale(localeString:str):
+        try:
+            locale.setlocale(locale.LC_TIME, localeString)
+        except locale.Error:
+            # known error on linux fix:
+            # export LC_ALL="en_US.UTF-8" & export LC_CTYPE="en_US.UTF-8" & sudo dpkg-reconfigure locales
+            print(f'could not set locale to {localeString}')
+            pass
+
+    @staticmethod
     def _is_timeaxis(axis) -> bool:
         try:
             float(axis.get_ticklabels()[0].get_text().replace("−", "-"))
@@ -769,6 +765,20 @@ class PlotStyles:
     @classmethod
     def van_veen(cls, fig, use_legend: bool = True):
         """Stijl van Van Veen"""
+        # Set default locale to NL
+        PlotStyles.set_locale("nl_NL.UTF-8")
+
+        font = {"family": "Bahnschrift", "weight": "normal", "size": 18}
+        mpl.rc("font", **font)
+
+        mpl.rcParams["axes.unicode_minus"] = False
+
+        mpl.rcParams["axes.prop_cycle"] = mpl.cycler(
+            color=["k", "00cc96", "#0d38e0"] * 3,
+            linestyle=["-"] * 3 + ["--"] * 3 + ["-."] * 3,
+            linewidth=np.linspace(0.5, 3, 9),
+        )
+
         fig.canvas.draw()  # this forces labels to be generated
         font = {"family": "Bahnschrift", "weight": "normal", "size": 18}
         mpl.rc("font", **font)
@@ -1746,3 +1756,5 @@ class Compare1D2D(ModelOutputReader):
             return func(*args, **kwargs)
         except exception as e:
             return None
+
+
