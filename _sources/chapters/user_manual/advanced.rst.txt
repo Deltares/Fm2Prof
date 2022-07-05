@@ -1,7 +1,7 @@
 .. _diagnosis:
 
-Verifying |project| output
-============================
+Troubleshooting
+====================
 
 After running |project|, it is important to check its output. In this section we provide some steps to diagnose and interprete your model results. In short, the steps are the following:
 
@@ -92,73 +92,37 @@ Finally the program will finish:
     
     The Meuse pilot model take about 13 minutes to produce 1D input. 
 
-.. _diagnosevisualiseOutput:
+
 
 2. Visualising output 
 ......................
 
 There are various ways to visualise |project| output. 
 
-GIS output files
+With utils.VisualiseOutput
 ---------------------------
 
-By default two files can be readily loaded in GIS software: the cross-section input file (which is a text delimited format) and the `cross_section_volumes.geojson` file. The latter is a convex-hull approximation of the control volumes (see :ref:`terminology`). Below you see some examples of what you can visualise. 
 
-.. note::
-    The most important check to do here is to verify the `cross_section_volumes.geojson` output file (see example below). It is particularily important to check that minor side channels do not 'take volume from the main channel'. If that is the case, you will need to use 'RegionPolygons' and/or check that you are not generating a cross-section for the minor channel in the main channel. 
+First, the `fm2prof.utils` module provides a class to directly load and visualise the output:
 
-.. figure:: ../figures/gis_visualisation_maas_01.png
-    :align: center
-    :alt: alternate text
-    :figclass: align-left
-    :width: 100%
+.. code-block:: python
 
-    Visualisation of the cross-section location (input) file and the convex-hull approximation of the control volumes (cross_section_volumes.geojson). The overlap of the polygons follows from the convex hull approximation - overlap is not actually possible.  
+    from fm2prof import utils
 
-If you see strange results, you may want to look further. Closer inspection is possible by setting `ExportMapFiles` to `True` in the configuration file. Note that this an create really large files. 
+    output_dir = 'tests\Output\RunWithFiles_Output\case_05_dyke\CaseName01'
 
-.. tip::
+    viz = utils.VisualiseOutput(output_dir)
 
-    For inspecting one or just a few cross-sections, use the `CssSelection` parameter to limit the output. 
+    for css in viz.cross_sections():
+        # This creates a directory 'figures' in output_dir
+        viz.make_figure(css)
 
-
-.. figure:: ../figures/gis_visualisation_maas_02.png
-    :align: center
-    :alt: alternate text
-    :figclass: align-left
-    :width: 100%
-
-    Visualisation of the actual assignment of 2D points to cross-sections using nearest-neighbour approximation. (note: region polygons were used here)
-
-
-.. figure:: ../figures/gis_visualisation_maas_03.png
-    :align: center
-    :alt: alternate text
-    :figclass: align-left
-    :width: 100%
-
-    Visualisation of the (automatically classified) :term:`lakes`. Be aware of the specific definition of 'lake'. Water bodies that are hydraulically connected to the main channel at low water depths are not flagged as 'lake'. 
-
-.. figure:: ../figures/gis_visualisation_maas_04.png
-    :align: center
-    :alt: alternate text
-    :figclass: align-left
-    :width: 100%
-
-    Visualisation of the roughness section. The red dots are 2D points that were not within any polygon in the `SectionPolygonFile`. These are automatically added to the main section. This will yield a warning in the log file. In general it is a good idea to expand the polygons to cover all files. 
-
-
-
-Crossection and roughness output files
-----------------------------------------
-
-You can visualise the cross-section and roughness by either using the `run` command in combination with the `p` flag (see :ref:`cli documentation`) or by using the `fm2prof.utils` python module (see :ref:`pythonAPI`). This produces figures in the output directory. 
-
+This produces figures in the output directory. 
 
 .. figure:: ../figures/interprete_figure.png
     :align: center
     :alt: alternate text
-    :figclass: align-left
+    :figclass: align-center
     :width: 100%
 
     Example interpretation of a ` fm2prof.utils.VisualiseOutput`  figure for testcase :ref:`validation_summerdike`. 
@@ -169,59 +133,58 @@ The shape of the volume graph depends on the shape of the geometry:
 .. figure:: ../figures/volume_graphs_types.png
     :align: center
     :alt: alternate text
-    :figclass: align-left
+    :figclass: align-center
     :width: 50%
 
     The shape of the volume graph for given geometries
 
 For most real-world rivers, the volume graphs will follow a compound 'trapezoidal' model, with one or several 'compartimentalisation' effects. 
 
-3. Compare 1D and 2D
-......................
 
-A final test is to apply the cross-sections and roughness to your 1D model, and to run the same simulation with 1D and 2D. A good candidate for this run is the 2D model run you used to derive cross-sections. In this way, you are making an uncalibrated comparison between 1D and 2D. |project| provides you with some tools to carry out this analysis:
+With GIS software
+---------------------------
 
-- Use `FM2PROF compare` command in the :ref:`cli documentation`
-- Or use `fm2prof.utils` in the :ref:`pythonAPI`
+A second way to visualise is with GIS software (such as QGIS). By default two files can be readily loaded in GIS software: the cross-section input file (which is a text delimited format) and the `cross_section_volumes.geojson` file. The latter is a convex-hull approximation of the control volumes (see :ref:`terminology`).
 
-Longitudinal plot and heatmaps
-----------------------------------
 
-Longitudinal plots and heatmaps give you an overview of the difference between 1D and 2D along the river. 
-
-.. hint::
-    The difference between 1D and 2D can be large, but this may be mitigated by later calibrating the 1D model. In this step, however, you are looking for sudden deviations between 1D and 2D that may indicate an error in the model setup or generated cross-sections. Such errors can generaly not be fixed in calibration, so need to be addressed in this step. 
-
-For example, take the figure below:
-
-.. figure:: figures_utils/longitudinal/example_rating_curve.png
+.. figure:: ../figures/gis_visualisation_maas_01.png
     :align: center
     :alt: alternate text
-    :figclass: align-left
-    :width: 70%
-
-
-Here we see that the differences (lower panel) are generally between 0 and 1 m and vary smoothly along the channel. However, at a few points the difference is larger. At 930 km, for example. This may or may not require follow-up, to see if you understand *why* the difference is shown the way it is. 
-
-Heatmaps provide you with the same information as the Longitudinal plots, but in finer detail
-
-.. figure:: figures_utils/heatmaps/example_time_series.png
-    :align: center
-    :alt: alternate text
-    :figclass: align-left
-    :width: 70%
-
-Timeseries and rating curve at a single station
-------------------------------------------------
-
-Output at a single station can help you understand differences observed in the longitudinal plot. 
-
-.. hint::
-    Here, you are looking for similarity: do 1D and 2D follow roughly the same shape? Are the results plausible?
-
-
-.. figure:: figures_utils/stations/example.png
-    :align: center
-    :alt: alternate text
-    :figclass: align-left
+    :figclass: align-center
     :width: 100%
+
+    Visualisation of the cross-section location (input) file and the convex-hull approximation of the control volumes (cross_section_volumes.geojson). The overlap of the polygons follows from the convex hull approximation - overlap is not actually possible.  
+
+
+Closer inspection is possible by setting `ExportMapFiles` to `True` in the configuration file. Note that this an create really large files. 
+
+.. tip::
+
+    For inspecting one or just a few cross-sections, use the `CssSelection` parameter to limit the output. 
+
+
+.. figure:: ../figures/gis_visualisation_maas_02.png
+    :align: center
+    :alt: alternate text
+    :figclass: align-center
+    :width: 100%
+
+    Visualisation of the actual assignment of 2D points to cross-sections using nearest-neighbour approximation. (note: region polygons were used here)
+
+
+.. figure:: ../figures/gis_visualisation_maas_03.png
+    :align: center
+    :alt: alternate text
+    :figclass: align-center
+    :width: 100%
+
+    Visualisation of the (automatically classified) :term:`lakes`. Be aware of the specific definition of 'lake'. Water bodies that are hydraulically connected to the main channel at low water depths are not flagged as 'lake'. 
+
+.. figure:: ../figures/gis_visualisation_maas_04.png
+    :align: center
+    :alt: alternate text
+    :figclass: align-center
+    :width: 100%
+
+    Visualisation of the roughness section. The red dots are 2D points that were not within any polygon in the `SectionPolygonFile`. These are automatically added to the main section. This will yield a warning in the log file. In general it is a good idea to expand the polygons to cover all files. 
+
