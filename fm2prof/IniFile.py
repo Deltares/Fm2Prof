@@ -98,7 +98,6 @@ class IniFile(FM2ProfBase):
         self._ini_template = self._get_template_ini()  # Template to fill defaults from
         self._configuration = self._get_template_ini()  # What will be used
 
-        
         if file_path is None:
             self.set_logger_message(
                 f"No ini file given, using default options", "warning"
@@ -121,8 +120,9 @@ class IniFile(FM2ProfBase):
             raise IOError(f"The given file path {file_path} could not be found")
 
     @property
-    def _file_dir(self)->Path:
-        if not self._file is None: return self._file.parent
+    def _file_dir(self) -> Path:
+        if not self._file is None:
+            return self._file.parent
         return Path().cwd()
 
     @property
@@ -172,7 +172,7 @@ class IniFile(FM2ProfBase):
 
         Parameters
             name: name of the output-directory
-       """
+        """
 
         self._configuration["sections"]["output"][self.__output_directory_key][
             "value"
