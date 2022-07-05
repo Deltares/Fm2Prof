@@ -1187,14 +1187,6 @@ class ModelOutputReader(FM2ProfBase):
     def _parse_1D_stations(self) -> Generator[str, None, None]:
         """Reads the names of observations stations from 1D model"""
         return list(self.data_1D_H.columns)
-        """
-        _file_1d_obs_ini = self.path_flow1d.joinpath(r"dflow1d\ObservationPoints.ini")
-
-        with open(_file_1d_obs_ini, "r") as f:
-            for line in f:
-                if line.strip() == "[ObservationPoint]":
-                    yield f.readline().split("=")[1].strip()
-        """
 
     def _get_1d2d_map(self):
         _file_his = self.path_flow2d

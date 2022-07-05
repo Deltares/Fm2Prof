@@ -5,3 +5,5 @@
 .devcontainer
 /docs/source/output/**
 /docs/build
+/dist
+/build
