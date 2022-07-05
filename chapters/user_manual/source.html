@@ -13,14 +13,14 @@
     
     
       
-        <title>API - FM2PROF documentation</title>
+        <title>Python API - FM2PROF documentation</title>
       
     
     
-      <link rel="stylesheet" href="../../_static/stylesheets/main.42d9060c.min.css">
+      <link rel="stylesheet" href="../../_static/stylesheets/main.8674dc46.min.css">
       
         
-        <link rel="stylesheet" href="../../_static/stylesheets/palette.52561aa6.min.css">
+        <link rel="stylesheet" href="../../_static/stylesheets/palette.92c9fe4a.min.css">
         
       
     
@@ -64,7 +64,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#fm2prof.Project" class="md-skip">
+        <a href="#using-the-python-api" class="md-skip">
           Skip to content
         </a>
       
@@ -78,11 +78,11 @@
 
 <header class="md-header" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href="../../index.html" title="FM2PROF documentation" class="md-header__button md-logo" aria-label="FM2PROF documentation" data-md-component="logo">
+    <a href="../../contents.html" title="FM2PROF documentation" class="md-header__button md-logo" aria-label="FM2PROF documentation" data-md-component="logo">
       <img src="../../_static/Deltares_logo_Wit_RGB.svg" alt="logo">
     </a>
     <label class="md-header__button md-icon" for="__drawer">
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2z"/></svg>
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2Z"/></svg>
     </label>
     <div class="md-header__title" data-md-component="header-title">
       <div class="md-header__ellipsis">
@@ -94,7 +94,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              API
+              Python API
             
           </span>
         </div>
@@ -108,7 +108,7 @@
           <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="deltares-blue" data-md-color-accent="deep-orange"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_1">
           
             <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_2" hidden>
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 2a7 7 0 0 1 7 7c0 2.38-1.19 4.47-3 5.74V17a1 1 0 0 1-1 1H9a1 1 0 0 1-1-1v-2.26C6.19 13.47 5 11.38 5 9a7 7 0 0 1 7-7M9 21v-1h6v1a1 1 0 0 1-1 1h-4a1 1 0 0 1-1-1m3-17a5 5 0 0 0-5 5c0 2.05 1.23 3.81 3 4.58V16h4v-2.42c1.77-.77 3-2.53 3-4.58a5 5 0 0 0-5-5z"/></svg>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 2a7 7 0 0 1 7 7c0 2.38-1.19 4.47-3 5.74V17a1 1 0 0 1-1 1H9a1 1 0 0 1-1-1v-2.26C6.19 13.47 5 11.38 5 9a7 7 0 0 1 7-7M9 21v-1h6v1a1 1 0 0 1-1 1h-4a1 1 0 0 1-1-1m3-17a5 5 0 0 0-5 5c0 2.05 1.23 3.81 3 4.58V16h4v-2.42c1.77-.77 3-2.53 3-4.58a5 5 0 0 0-5-5Z"/></svg>
             </label>
           
         
@@ -117,7 +117,7 @@
           <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="deltares-blue" data-md-color-accent="yellow"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_2">
           
             <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_1" hidden>
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 2a7 7 0 0 0-7 7c0 2.38 1.19 4.47 3 5.74V17a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-2.26c1.81-1.27 3-3.36 3-5.74a7 7 0 0 0-7-7M9 21a1 1 0 0 0 1 1h4a1 1 0 0 0 1-1v-1H9v1z"/></svg>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 2a7 7 0 0 0-7 7c0 2.38 1.19 4.47 3 5.74V17a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-2.26c1.81-1.27 3-3.36 3-5.74a7 7 0 0 0-7-7M9 21a1 1 0 0 0 1 1h4a1 1 0 0 0 1-1v-1H9v1Z"/></svg>
             </label>
           
         
@@ -126,7 +126,7 @@
     
     
       <label class="md-header__button md-icon" for="__search">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5z"/></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
       </label>
       <div class="md-search" data-md-component="search" role="dialog">
   <label class="md-search__overlay" for="__search"></label>
@@ -134,13 +134,13 @@
     <form class="md-search__form" name="search">
       <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
       <label class="md-search__icon md-icon" for="__search">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5z"/></svg>
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
       </label>
       <nav class="md-search__options" aria-label="Search">
         
         <button type="reset" class="md-search__icon md-icon" aria-label="Clear" tabindex="-1">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"/></svg>
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41Z"/></svg>
         </button>
       </nav>
       
@@ -163,7 +163,7 @@
         <a href="https://github.com/deltares/fm2prof/" title="Go to repository" class="md-source" data-md-component="source">
   <div class="md-source__icon md-icon">
     
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.0.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.1.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
   </div>
   <div class="md-source__repository">
     deltares/fm2prof
@@ -182,6 +182,53 @@
       
         
           
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-tabs__inner md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+
+
+  <li class="md-tabs__item">
+    <a href="installation.html" class="md-tabs__link">
+      <span class="md-ellipsis">Getting started</span>
+    </a>
+  </li>
+
+      
+        
+  
+  
+    
+  
+
+
+  <li class="md-tabs__item">
+    <a href="advanced.html" class="md-tabs__link md-tabs__link--active">
+      <span class="md-ellipsis">User manual</span>
+    </a>
+  </li>
+
+      
+        
+  
+  
+
+
+  <li class="md-tabs__item">
+    <a href="../technical_manual/conceptual_design.html" class="md-tabs__link">
+      <span class="md-ellipsis">Technical reference</span>
+    </a>
+  </li>
+
+      
+    </ul>
+  </div>
+</nav>
+          
         
       
       <main class="md-main" data-md-component="main">
@@ -194,10 +241,12 @@
                   <div class="md-sidebar__inner">
                     
 
+  
 
-<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href="../../index.html" title="FM2PROF documentation" class="md-nav__button md-logo" aria-label="FM2PROF documentation" data-md-component="logo">
+    <a href="../../contents.html" title="FM2PROF documentation" class="md-nav__button md-logo" aria-label="FM2PROF documentation" data-md-component="logo">
       <img src="../../_static/Deltares_logo_Wit_RGB.svg" alt="logo">
     </a>
     FM2PROF documentation
@@ -207,7 +256,7 @@
       <a href="https://github.com/deltares/fm2prof/" title="Go to repository" class="md-source" data-md-component="source">
   <div class="md-source__icon md-icon">
     
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.0.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.1.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
   </div>
   <div class="md-source__repository">
     deltares/fm2prof
@@ -224,25 +273,56 @@
   
   
   
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_1" data-md-state="indeterminate" type="checkbox" id="__nav_1" checked>
+      
+      
+      
+        <label class="md-nav__link" for="__nav_1">
+          <span class="md-ellipsis">Getting started</span>
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="Getting started" data-md-level="1">
+        <label class="md-nav__title" for="__nav_1">
+          <span class="md-nav__icon md-icon"></span>
+          <span class="md-ellipsis">Getting started</span>
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
     <li class="md-nav__item">
       <a href="installation.html" class="md-nav__link">
-        <span class="md-ellipsis">Installation Instructions</span>
+        <span title="chapters/user_manual/installation (document)" class="md-ellipsis">Getting FM2PROF</span>
       </a>
     </li>
   
 
-    
-      
-      
-      
-
+            
+          
+            
+              
   
   
   
     <li class="md-nav__item">
       <a href="quickstart.html" class="md-nav__link">
-        <span class="md-ellipsis">Tutorial</span>
+        <span title="chapters/user_manual/quickstart (document)" class="md-ellipsis">Tutorial</span>
       </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
     </li>
   
 
@@ -251,21 +331,89 @@
       
       
 
+  
+  
+    
+  
+  
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_2" type="checkbox" id="__nav_2" checked>
+      
+      
+      
+        <label class="md-nav__link" for="__nav_2">
+          <span class="md-ellipsis">User manual</span>
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="User manual" data-md-level="1">
+        <label class="md-nav__title" for="__nav_2">
+          <span class="md-nav__icon md-icon"></span>
+          <span class="md-ellipsis">User manual</span>
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
   
   
   
     <li class="md-nav__item">
       <a href="advanced.html" class="md-nav__link">
-        <span class="md-ellipsis">Troubleshooting</span>
+        <span title="chapters/user_manual/advanced (document)" class="md-ellipsis">Verifying FM2PROF output</span>
       </a>
     </li>
   
 
-    
-      
-      
-      
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../technical_manual/files.html" class="md-nav__link">
+        <span title="chapters/technical_manual/files (document)" class="md-ellipsis">Files</span>
+      </a>
+    </li>
+  
 
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../technical_manual/settings.html" class="md-nav__link">
+        <span title="chapters/technical_manual/settings (document)" class="md-ellipsis">Settings</span>
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../technical_manual/glossary.html" class="md-nav__link">
+        <span title="chapters/technical_manual/glossary (document)" class="md-ellipsis">Glossary of terms</span>
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
   
   
     
@@ -276,12 +424,12 @@
       <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
       
         <label class="md-nav__link md-nav__link--active" for="__toc">
-          <span class="md-ellipsis">API</span>
+          <span title="chapters/user_manual/source (document)" class="md-ellipsis">Python API</span>
           <span class="md-nav__icon md-icon"></span>
         </label>
       
       <a href="" class="md-nav__link md-nav__link--active">
-        <span class="md-ellipsis">API</span>
+        <span title="chapters/user_manual/source (document)" class="md-ellipsis">Python API</span>
       </a>
       
         
@@ -293,13 +441,28 @@
   
     <label class="md-nav__title" for="__toc">
       <span class="md-nav__icon md-icon"></span>
-      <span class="md-ellipsis">API</span>
+      <span title="chapters/user_manual/source (document)" class="md-ellipsis">Python API</span>
     </label>
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#using-the-python-api" class="md-nav__link">
+    <span class="md-ellipsis">Using the Python API</span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#api" class="md-nav__link">
+    <span class="md-ellipsis">API</span>
+  </a>
+  
+    <nav class="md-nav" aria-label="API">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
   <a href="#fm2prof.Project" class="md-nav__link">
-    <span aria-label="Python class" class="objinfo-icon objinfo-icon__data" title="Python class">C</span><span title="fm2prof.Fm2ProfRunner.Project (Python class)" class="md-ellipsis">fm2prof.<wbr>Project</span>
+    <span aria-label="Python class" class="objinfo-icon objinfo-icon__data" title="Python class">C</span><span title="fm2prof.Project (Python class) — Provides the python API for running FM2PROF." class="md-ellipsis">fm2prof.<wbr>Project</span>
   </a>
   
     <nav class="md-nav" aria-label="fm2prof.Project">
@@ -307,49 +470,23 @@
         
           <li class="md-nav__item">
   <a href="#fm2prof.Project.get_input_file" class="md-nav__link">
-    <span aria-label="Python method" class="objinfo-icon objinfo-icon__procedure" title="Python method">M</span><span title="fm2prof.Project.get_input_file (Python method)" class="md-ellipsis">get_<wbr>input_<wbr>file</span>
+    <span aria-label="Python method" class="objinfo-icon objinfo-icon__procedure" title="Python method">M</span><span title="fm2prof.Project.get_input_file (Python method) — Use this method to retrieve the path to an input file" class="md-ellipsis">get_<wbr>input_<wbr>file</span>
   </a>
   
-</li>
+    <nav class="md-nav" aria-label="get_input_file">
+      <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#fm2prof.Project.get_output_directory" class="md-nav__link">
-    <span aria-label="Python method" class="objinfo-icon objinfo-icon__procedure" title="Python method">M</span><span title="fm2prof.Project.get_output_directory (Python method)" class="md-ellipsis">get_<wbr>output_<wbr>directory</span>
+  <a href="#fm2prof.Project.get_input_file-parameters" class="md-nav__link">
+    <span class="md-ellipsis">Parameters</span>
   </a>
   
-</li>
+    <nav class="md-nav" aria-label="Parameters">
+      <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#fm2prof.Project.get_parameter" class="md-nav__link">
-    <span aria-label="Python method" class="objinfo-icon objinfo-icon__procedure" title="Python method">M</span><span title="fm2prof.Project.get_parameter (Python method)" class="md-ellipsis">get_<wbr>parameter</span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#fm2prof.Project.print_configuration" class="md-nav__link">
-    <span aria-label="Python method" class="objinfo-icon objinfo-icon__procedure" title="Python method">M</span><span title="fm2prof.Project.print_configuration (Python method)" class="md-ellipsis">print_<wbr>configuration</span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#fm2prof.Project.set_input_file" class="md-nav__link">
-    <span aria-label="Python method" class="objinfo-icon objinfo-icon__procedure" title="Python method">M</span><span title="fm2prof.Project.set_input_file (Python method)" class="md-ellipsis">set_<wbr>input_<wbr>file</span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#fm2prof.Project.set_output_directory" class="md-nav__link">
-    <span aria-label="Python method" class="objinfo-icon objinfo-icon__procedure" title="Python method">M</span><span title="fm2prof.Project.set_output_directory (Python method)" class="md-ellipsis">set_<wbr>output_<wbr>directory</span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#fm2prof.Project.set_parameter" class="md-nav__link">
-    <span aria-label="Python method" class="objinfo-icon objinfo-icon__procedure" title="Python method">M</span><span title="fm2prof.Project.set_parameter (Python method)" class="md-ellipsis">set_<wbr>parameter</span>
+  <a href="#fm2prof.Project.get_input_file.name" class="md-nav__link">
+    <span aria-label="Python parameter" class="objinfo-icon objinfo-icon__sub-data" title="Python parameter">p</span><span title="fm2prof.Project.get_input_file.name (Python parameter) — case-insensitive key of the input file (e.g.&#39;2dmapoutput&#39;)" class="md-ellipsis">name</span>
   </a>
   
 </li>
@@ -358,10 +495,200 @@
     </nav>
   
 </li>
-      
-        <li class="md-nav__item">
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fm2prof.Project.get_output_directory" class="md-nav__link">
+    <span aria-label="Python method" class="objinfo-icon objinfo-icon__procedure" title="Python method">M</span><span title="fm2prof.Project.get_output_directory (Python method) — Returns the current output directory" class="md-ellipsis">get_<wbr>output_<wbr>directory</span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fm2prof.Project.get_parameter" class="md-nav__link">
+    <span aria-label="Python method" class="objinfo-icon objinfo-icon__procedure" title="Python method">M</span><span title="fm2prof.Project.get_parameter (Python method) — Use this method to get the value of a parameter" class="md-ellipsis">get_<wbr>parameter</span>
+  </a>
+  
+    <nav class="md-nav" aria-label="get_parameter">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#fm2prof.Project.get_parameter-parameters" class="md-nav__link">
+    <span class="md-ellipsis">Parameters</span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Parameters">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#fm2prof.Project.get_parameter.name" class="md-nav__link">
+    <span aria-label="Python parameter" class="objinfo-icon objinfo-icon__sub-data" title="Python parameter">p</span><span title="fm2prof.Project.get_parameter.name (Python parameter) — name of the parameter (case insensitive)" class="md-ellipsis">name</span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fm2prof.Project.get_parameter-returns" class="md-nav__link">
+    <span class="md-ellipsis">Returns</span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fm2prof.Project.print_configuration" class="md-nav__link">
+    <span aria-label="Python method" class="objinfo-icon objinfo-icon__procedure" title="Python method">M</span><span title="fm2prof.Project.print_configuration (Python method) — Use this method to obtain string representation of the configuration. Use this string to write to file, e.g.:" class="md-ellipsis">print_<wbr>configuration</span>
+  </a>
+  
+    <nav class="md-nav" aria-label="print_configuration">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#fm2prof.Project.print_configuration-returns" class="md-nav__link">
+    <span class="md-ellipsis">Returns</span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fm2prof.Project.set_input_file" class="md-nav__link">
+    <span aria-label="Python method" class="objinfo-icon objinfo-icon__procedure" title="Python method">M</span><span title="fm2prof.Project.set_input_file (Python method) — Use this method to set the path to an input file" class="md-ellipsis">set_<wbr>input_<wbr>file</span>
+  </a>
+  
+    <nav class="md-nav" aria-label="set_input_file">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#fm2prof.Project.set_input_file-parameters" class="md-nav__link">
+    <span class="md-ellipsis">Parameters</span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Parameters">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#fm2prof.Project.set_input_file.name" class="md-nav__link">
+    <span aria-label="Python parameter" class="objinfo-icon objinfo-icon__sub-data" title="Python parameter">p</span><span title="fm2prof.Project.set_input_file.name (Python parameter) — name of the input file in the configuration (case insensitive)." class="md-ellipsis">name</span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fm2prof.Project.set_input_file.value" class="md-nav__link">
+    <span aria-label="Python parameter" class="objinfo-icon objinfo-icon__sub-data" title="Python parameter">p</span><span title="fm2prof.Project.set_input_file.value (Python parameter) — path to the inputfile" class="md-ellipsis">value</span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fm2prof.Project.set_output_directory" class="md-nav__link">
+    <span aria-label="Python method" class="objinfo-icon objinfo-icon__procedure" title="Python method">M</span><span title="fm2prof.Project.set_output_directory (Python method) — Use this method to set the output directory." class="md-ellipsis">set_<wbr>output_<wbr>directory</span>
+  </a>
+  
+    <nav class="md-nav" aria-label="set_output_directory">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#fm2prof.Project.set_output_directory-parameters" class="md-nav__link">
+    <span class="md-ellipsis">Parameters</span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Parameters">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#fm2prof.Project.set_output_directory.path" class="md-nav__link">
+    <span aria-label="Python parameter" class="objinfo-icon objinfo-icon__sub-data" title="Python parameter">p</span><span title="fm2prof.Project.set_output_directory.path (Python parameter) — path to the output path" class="md-ellipsis">path</span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fm2prof.Project.set_parameter" class="md-nav__link">
+    <span aria-label="Python method" class="objinfo-icon objinfo-icon__procedure" title="Python method">M</span><span title="fm2prof.Project.set_parameter (Python method) — Use this method to set the value of a parameter" class="md-ellipsis">set_<wbr>parameter</span>
+  </a>
+  
+    <nav class="md-nav" aria-label="set_parameter">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#fm2prof.Project.set_parameter-parameters" class="md-nav__link">
+    <span class="md-ellipsis">Parameters</span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Parameters">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#fm2prof.Project.set_parameter.name" class="md-nav__link">
+    <span aria-label="Python parameter" class="objinfo-icon objinfo-icon__sub-data" title="Python parameter">p</span><span title="fm2prof.Project.set_parameter.name (Python parameter) — name of the parameter (case insensitive)." class="md-ellipsis">name</span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fm2prof.Project.set_parameter.value" class="md-nav__link">
+    <span aria-label="Python parameter" class="objinfo-icon objinfo-icon__sub-data" title="Python parameter">p</span><span title="fm2prof.Project.set_parameter.value (Python parameter) — value of the parameter. An error will be given if the value has the wrong type (e.g. string if int was expected)." class="md-ellipsis">value</span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#module-fm2prof.utils" class="md-nav__link">
-    <span class="md-ellipsis">Utilities</span>
+    <span title="fm2prof.utils (Python module)" class="md-ellipsis">Utilities</span>
   </a>
   
     <nav class="md-nav" aria-label="Utilities">
@@ -369,8 +696,13 @@
         
           <li class="md-nav__item">
   <a href="#fm2prof.utils.networkdeffile_to_input" class="md-nav__link">
-    <span aria-label="Python function" class="objinfo-icon objinfo-icon__procedure" title="Python function">F</span><span title="fm2prof.utils.networkdeffile_to_input (Python function)" class="md-ellipsis">fm2prof.<wbr>utils.<wbr>networkdeffile_<wbr>to_<wbr>input</span>
+    <span aria-label="Python function" class="objinfo-icon objinfo-icon__procedure" title="Python function">F</span><span title="fm2prof.utils.networkdeffile_to_input (Python function) — Builds a cross-section input file for FM2PROF from a DIMR network definition file." class="md-ellipsis">fm2prof.<wbr>utils.<wbr>networkdeffile_<wbr>to_<wbr>input</span>
   </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
         
@@ -386,78 +718,85 @@
     </li>
   
 
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="cli.html" class="md-nav__link">
+        <span title="chapters/user_manual/cli (document)" class="md-ellipsis">CLI API</span>
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
     
       
       
       
 
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_3" data-md-state="indeterminate" type="checkbox" id="__nav_3" checked>
+      
+      
+      
+        <label class="md-nav__link" for="__nav_3">
+          <span class="md-ellipsis">Technical reference</span>
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="Technical reference" data-md-level="1">
+        <label class="md-nav__title" for="__nav_3">
+          <span class="md-nav__icon md-icon"></span>
+          <span class="md-ellipsis">Technical reference</span>
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
   
   
   
     <li class="md-nav__item">
       <a href="../technical_manual/conceptual_design.html" class="md-nav__link">
-        <span class="md-ellipsis">Conceptual design</span>
+        <span title="chapters/technical_manual/conceptual_design (document)" class="md-ellipsis">Conceptual design</span>
       </a>
     </li>
   
 
-    
-      
-      
-      
-
+            
+          
+            
+              
   
   
   
     <li class="md-nav__item">
       <a href="../technical_manual/numerical_methods.html" class="md-nav__link">
-        <span class="md-ellipsis">Numerical methods</span>
+        <span title="chapters/technical_manual/numerical_methods (document)" class="md-ellipsis">Numerical methods</span>
       </a>
     </li>
   
 
-    
-      
-      
-      
-
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../technical_manual/settings.html" class="md-nav__link">
-        <span class="md-ellipsis">Settings</span>
-      </a>
-    </li>
-  
-
-    
-      
-      
-      
-
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../technical_manual/files.html" class="md-nav__link">
-        <span class="md-ellipsis">Files</span>
-      </a>
-    </li>
-  
-
-    
-      
-      
-      
-
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../technical_manual/glossary.html" class="md-nav__link">
-        <span class="md-ellipsis">Glossary of terms</span>
-      </a>
+            
+          
+        </ul>
+      </nav>
     </li>
   
 
@@ -482,13 +821,28 @@
   
     <label class="md-nav__title" for="__toc">
       <span class="md-nav__icon md-icon"></span>
-      <span class="md-ellipsis">API</span>
+      <span title="chapters/user_manual/source (document)" class="md-ellipsis">Python API</span>
     </label>
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#using-the-python-api" class="md-nav__link">
+    <span class="md-ellipsis">Using the Python API</span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#api" class="md-nav__link">
+    <span class="md-ellipsis">API</span>
+  </a>
+  
+    <nav class="md-nav" aria-label="API">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
   <a href="#fm2prof.Project" class="md-nav__link">
-    <span aria-label="Python class" class="objinfo-icon objinfo-icon__data" title="Python class">C</span><span title="fm2prof.Fm2ProfRunner.Project (Python class)" class="md-ellipsis">fm2prof.<wbr>Project</span>
+    <span aria-label="Python class" class="objinfo-icon objinfo-icon__data" title="Python class">C</span><span title="fm2prof.Project (Python class) — Provides the python API for running FM2PROF." class="md-ellipsis">fm2prof.<wbr>Project</span>
   </a>
   
     <nav class="md-nav" aria-label="fm2prof.Project">
@@ -496,49 +850,23 @@
         
           <li class="md-nav__item">
   <a href="#fm2prof.Project.get_input_file" class="md-nav__link">
-    <span aria-label="Python method" class="objinfo-icon objinfo-icon__procedure" title="Python method">M</span><span title="fm2prof.Project.get_input_file (Python method)" class="md-ellipsis">get_<wbr>input_<wbr>file</span>
+    <span aria-label="Python method" class="objinfo-icon objinfo-icon__procedure" title="Python method">M</span><span title="fm2prof.Project.get_input_file (Python method) — Use this method to retrieve the path to an input file" class="md-ellipsis">get_<wbr>input_<wbr>file</span>
   </a>
   
-</li>
+    <nav class="md-nav" aria-label="get_input_file">
+      <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#fm2prof.Project.get_output_directory" class="md-nav__link">
-    <span aria-label="Python method" class="objinfo-icon objinfo-icon__procedure" title="Python method">M</span><span title="fm2prof.Project.get_output_directory (Python method)" class="md-ellipsis">get_<wbr>output_<wbr>directory</span>
+  <a href="#fm2prof.Project.get_input_file-parameters" class="md-nav__link">
+    <span class="md-ellipsis">Parameters</span>
   </a>
   
-</li>
+    <nav class="md-nav" aria-label="Parameters">
+      <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#fm2prof.Project.get_parameter" class="md-nav__link">
-    <span aria-label="Python method" class="objinfo-icon objinfo-icon__procedure" title="Python method">M</span><span title="fm2prof.Project.get_parameter (Python method)" class="md-ellipsis">get_<wbr>parameter</span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#fm2prof.Project.print_configuration" class="md-nav__link">
-    <span aria-label="Python method" class="objinfo-icon objinfo-icon__procedure" title="Python method">M</span><span title="fm2prof.Project.print_configuration (Python method)" class="md-ellipsis">print_<wbr>configuration</span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#fm2prof.Project.set_input_file" class="md-nav__link">
-    <span aria-label="Python method" class="objinfo-icon objinfo-icon__procedure" title="Python method">M</span><span title="fm2prof.Project.set_input_file (Python method)" class="md-ellipsis">set_<wbr>input_<wbr>file</span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#fm2prof.Project.set_output_directory" class="md-nav__link">
-    <span aria-label="Python method" class="objinfo-icon objinfo-icon__procedure" title="Python method">M</span><span title="fm2prof.Project.set_output_directory (Python method)" class="md-ellipsis">set_<wbr>output_<wbr>directory</span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#fm2prof.Project.set_parameter" class="md-nav__link">
-    <span aria-label="Python method" class="objinfo-icon objinfo-icon__procedure" title="Python method">M</span><span title="fm2prof.Project.set_parameter (Python method)" class="md-ellipsis">set_<wbr>parameter</span>
+  <a href="#fm2prof.Project.get_input_file.name" class="md-nav__link">
+    <span aria-label="Python parameter" class="objinfo-icon objinfo-icon__sub-data" title="Python parameter">p</span><span title="fm2prof.Project.get_input_file.name (Python parameter) — case-insensitive key of the input file (e.g.&#39;2dmapoutput&#39;)" class="md-ellipsis">name</span>
   </a>
   
 </li>
@@ -547,10 +875,200 @@
     </nav>
   
 </li>
-      
-        <li class="md-nav__item">
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fm2prof.Project.get_output_directory" class="md-nav__link">
+    <span aria-label="Python method" class="objinfo-icon objinfo-icon__procedure" title="Python method">M</span><span title="fm2prof.Project.get_output_directory (Python method) — Returns the current output directory" class="md-ellipsis">get_<wbr>output_<wbr>directory</span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fm2prof.Project.get_parameter" class="md-nav__link">
+    <span aria-label="Python method" class="objinfo-icon objinfo-icon__procedure" title="Python method">M</span><span title="fm2prof.Project.get_parameter (Python method) — Use this method to get the value of a parameter" class="md-ellipsis">get_<wbr>parameter</span>
+  </a>
+  
+    <nav class="md-nav" aria-label="get_parameter">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#fm2prof.Project.get_parameter-parameters" class="md-nav__link">
+    <span class="md-ellipsis">Parameters</span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Parameters">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#fm2prof.Project.get_parameter.name" class="md-nav__link">
+    <span aria-label="Python parameter" class="objinfo-icon objinfo-icon__sub-data" title="Python parameter">p</span><span title="fm2prof.Project.get_parameter.name (Python parameter) — name of the parameter (case insensitive)" class="md-ellipsis">name</span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fm2prof.Project.get_parameter-returns" class="md-nav__link">
+    <span class="md-ellipsis">Returns</span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fm2prof.Project.print_configuration" class="md-nav__link">
+    <span aria-label="Python method" class="objinfo-icon objinfo-icon__procedure" title="Python method">M</span><span title="fm2prof.Project.print_configuration (Python method) — Use this method to obtain string representation of the configuration. Use this string to write to file, e.g.:" class="md-ellipsis">print_<wbr>configuration</span>
+  </a>
+  
+    <nav class="md-nav" aria-label="print_configuration">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#fm2prof.Project.print_configuration-returns" class="md-nav__link">
+    <span class="md-ellipsis">Returns</span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fm2prof.Project.set_input_file" class="md-nav__link">
+    <span aria-label="Python method" class="objinfo-icon objinfo-icon__procedure" title="Python method">M</span><span title="fm2prof.Project.set_input_file (Python method) — Use this method to set the path to an input file" class="md-ellipsis">set_<wbr>input_<wbr>file</span>
+  </a>
+  
+    <nav class="md-nav" aria-label="set_input_file">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#fm2prof.Project.set_input_file-parameters" class="md-nav__link">
+    <span class="md-ellipsis">Parameters</span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Parameters">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#fm2prof.Project.set_input_file.name" class="md-nav__link">
+    <span aria-label="Python parameter" class="objinfo-icon objinfo-icon__sub-data" title="Python parameter">p</span><span title="fm2prof.Project.set_input_file.name (Python parameter) — name of the input file in the configuration (case insensitive)." class="md-ellipsis">name</span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fm2prof.Project.set_input_file.value" class="md-nav__link">
+    <span aria-label="Python parameter" class="objinfo-icon objinfo-icon__sub-data" title="Python parameter">p</span><span title="fm2prof.Project.set_input_file.value (Python parameter) — path to the inputfile" class="md-ellipsis">value</span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fm2prof.Project.set_output_directory" class="md-nav__link">
+    <span aria-label="Python method" class="objinfo-icon objinfo-icon__procedure" title="Python method">M</span><span title="fm2prof.Project.set_output_directory (Python method) — Use this method to set the output directory." class="md-ellipsis">set_<wbr>output_<wbr>directory</span>
+  </a>
+  
+    <nav class="md-nav" aria-label="set_output_directory">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#fm2prof.Project.set_output_directory-parameters" class="md-nav__link">
+    <span class="md-ellipsis">Parameters</span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Parameters">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#fm2prof.Project.set_output_directory.path" class="md-nav__link">
+    <span aria-label="Python parameter" class="objinfo-icon objinfo-icon__sub-data" title="Python parameter">p</span><span title="fm2prof.Project.set_output_directory.path (Python parameter) — path to the output path" class="md-ellipsis">path</span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fm2prof.Project.set_parameter" class="md-nav__link">
+    <span aria-label="Python method" class="objinfo-icon objinfo-icon__procedure" title="Python method">M</span><span title="fm2prof.Project.set_parameter (Python method) — Use this method to set the value of a parameter" class="md-ellipsis">set_<wbr>parameter</span>
+  </a>
+  
+    <nav class="md-nav" aria-label="set_parameter">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#fm2prof.Project.set_parameter-parameters" class="md-nav__link">
+    <span class="md-ellipsis">Parameters</span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Parameters">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#fm2prof.Project.set_parameter.name" class="md-nav__link">
+    <span aria-label="Python parameter" class="objinfo-icon objinfo-icon__sub-data" title="Python parameter">p</span><span title="fm2prof.Project.set_parameter.name (Python parameter) — name of the parameter (case insensitive)." class="md-ellipsis">name</span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fm2prof.Project.set_parameter.value" class="md-nav__link">
+    <span aria-label="Python parameter" class="objinfo-icon objinfo-icon__sub-data" title="Python parameter">p</span><span title="fm2prof.Project.set_parameter.value (Python parameter) — value of the parameter. An error will be given if the value has the wrong type (e.g. string if int was expected)." class="md-ellipsis">value</span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#module-fm2prof.utils" class="md-nav__link">
-    <span class="md-ellipsis">Utilities</span>
+    <span title="fm2prof.utils (Python module)" class="md-ellipsis">Utilities</span>
   </a>
   
     <nav class="md-nav" aria-label="Utilities">
@@ -558,8 +1076,13 @@
         
           <li class="md-nav__item">
   <a href="#fm2prof.utils.networkdeffile_to_input" class="md-nav__link">
-    <span aria-label="Python function" class="objinfo-icon objinfo-icon__procedure" title="Python function">F</span><span title="fm2prof.utils.networkdeffile_to_input (Python function)" class="md-ellipsis">fm2prof.<wbr>utils.<wbr>networkdeffile_<wbr>to_<wbr>input</span>
+    <span aria-label="Python function" class="objinfo-icon objinfo-icon__procedure" title="Python function">F</span><span title="fm2prof.utils.networkdeffile_to_input (Python function) — Builds a cross-section input file for FM2PROF from a DIMR network definition file." class="md-ellipsis">fm2prof.<wbr>utils.<wbr>networkdeffile_<wbr>to_<wbr>input</span>
   </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
         
@@ -579,25 +1102,48 @@
           <div class="md-content" data-md-component="content">
             <article class="md-content__inner md-typeset" role="main">
                 
-<a href="https://github.com/deltares/fm2prof/blob/master/docs/chapters/user_manual/source.rst" title="Edit this page" class="md-content__button md-icon">
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20.71 7.04c.39-.39.39-1.04 0-1.41l-2.34-2.34c-.37-.39-1.02-.39-1.41 0l-1.84 1.83 3.75 3.75M3 17.25V21h3.75L17.81 9.93l-3.75-3.75L3 17.25z"/></svg>
-</a>
+  <a href="https://github.com/deltares/fm2prof/blob/master/docs/chapters/user_manual/source.rst" title="Edit this page" class="md-content__button md-icon">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20.71 7.04c.39-.39.39-1.04 0-1.41l-2.34-2.34c-.37-.39-1.02-.39-1.41 0l-1.84 1.83 3.75 3.75M3 17.25V21h3.75L17.81 9.93l-3.75-3.75L3 17.25Z"/></svg>
+  </a>
 
 
 
-  <h1 id="api"><span id="source-documentation"></span>API<a class="headerlink" href="#api" title="Permalink to this headline">¶</a></h1>
+  <h1 id="python-api"><span id="pythonapi"></span>Python API<a class="headerlink" href="#python-api" title="Permalink to this headline">¶</a></h1>
+<h2 id="using-the-python-api">Using the Python API<a class="headerlink" href="#using-the-python-api" title="Permalink to this headline">¶</a></h2>
+<p>FM2PROF provides modules that can be imported in any Python script or interactive console (e.g. a Jupyter notebook).</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span class="c1"># Use the project class</span>
+<span class="kn">from</span> <span class="nn">fm2prof</span> <span class="kn">import</span> <span class="n">Project</span>
+
+<span class="c1"># To initialise a project without configuration</span>
+<span class="n">project</span> <span class="o">=</span> <span class="n">Project</span><span class="p">()</span>
+</code></pre></div>
+</div>
+<p>If you initialise a project without an argument, a configuration is loaded from template. You an use this project object to change the input files and parameters:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span class="c1"># Note that all paths are relative to os.getcwd!</span>
+<span class="n">project</span><span class="o">.</span><span class="n">set_inputfile</span><span class="p">(</span><span class="s1">&#39;2DMapOutput&#39;</span><span class="p">,</span> <span class="s1">&#39;tests/external_test_data/case_01_rectangle/Data/2DModelOutput/FlowFM_map.nc&#39;</span><span class="p">)</span>
+<span class="n">project</span><span class="o">.</span><span class="n">set_inputfile</span><span class="p">(</span><span class="s1">&#39;CrossSectionLocationFile&#39;</span><span class="p">,</span> <span class="s1">&#39;tests/external_test_data/case_01_rectangle/Data/cross_section_locations.xyz&#39;</span><span class="p">)</span>
+</code></pre></div>
+</div>
+<p>To run the project:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span class="n">project</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+</code></pre></div>
+</div>
+<p>See <span class="xref std std-ref">source documentation</span> for a full overview of available methods.</p>
+<h2 id="api">API<a class="headerlink" href="#api" title="Permalink to this headline">¶</a></h2>
 <dl class="py class objdesc">
-<dt class="sig sig-object py" id="fm2prof.Project">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">fm2prof.</span></span><span class="sig-name descname"><span class="pre">Project</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">iniFilePath</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="desctype"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><code class="code python default_value docutils literal highlight highlight-python"><span class="s1">&#39;&#39;</span></code></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/fm2prof/Fm2ProfRunner.html#Project"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fm2prof.Project" title="Permalink to this definition">¶</a></dt>
-<dd><p>Provides the main API for running FM2PROF.</p>
+<dt class="sig sig-object highlight py" id="fm2prof.Project">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">fm2prof.</span></span><span class="sig-name descname"><span class="pre">Project</span></span><span class="sig-paren">(</span><span class="sig-param-decl"><em class="sig-param"><span class="n"><span class="pre">iniFilePath</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="desctype"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><code class="code python default_value docutils literal highlight highlight-python"><span class="s1">&#39;&#39;</span></code></em></span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/fm2prof/Fm2ProfRunner.html#Project"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fm2prof.Project" title="Permalink to this definition">¶</a></dt>
+<dd><p>Provides the python API for running FM2PROF.</p>
+<p>Instantiate by providing the path to a configuration file</p>
+<p>&gt;&gt; Project(‘/path/to/config.ini’)</p>
 <dl class="py method objdesc">
-<dt class="sig sig-object py" id="fm2prof.Project.get_input_file">
-<span class="sig-name descname"><span class="pre">get_input_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="desctype"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="desctype"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a></span></span></span><a class="reference internal" href="../../_modules/fm2prof/Fm2ProfRunner.html#Project.get_input_file"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fm2prof.Project.get_input_file" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object highlight py" id="fm2prof.Project.get_input_file">
+<span class="sig-name descname"><span class="pre">get_input_file</span></span><span class="sig-paren">(</span><span class="sig-param-decl"><em class="sig-param"><a class="n reference internal" href="#fm2prof.Project.get_input_file.name" title="fm2prof.Project.get_input_file.name (Python parameter) — case-insensitive key of the input file (e.g.'2dmapoutput')"><span class="n"><span class="pre">name</span></span></a><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="desctype"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a></span></span></em></span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="desctype"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a></span></span></span><a class="reference internal" href="../../_modules/fm2prof/Fm2ProfRunner.html#Project.get_input_file"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fm2prof.Project.get_input_file" title="Permalink to this definition">¶</a></dt>
 <dd><p>Use this method to retrieve the path to an input file</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><dl class="api-field simple">
-<dt><span class="sig-name descname">name</span><span class="p"> : </span><span class="desctype"><span class="desctype"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)">str</a></span></span></dt><dd><p>case-insensitive key of the input file (e.g.’2dmapoutput’)</p>
+<dt class="field-odd" id="fm2prof.Project.get_input_file-parameters">Parameters<a class="headerlink" href="#fm2prof.Project.get_input_file-parameters" title="Permalink to this headline">¶</a></dt>
+<dd class="field-odd"><dl class="api-field highlight simple">
+<dt id="fm2prof.Project.get_input_file.name"><span class="sig-name descname">name</span><span class="p"> : </span><span class="desctype"><span class="desctype"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)">str</a></span></span><a class="headerlink" href="#fm2prof.Project.get_input_file.name" title="Permalink to this definition">¶</a></dt><dd><p>case-insensitive key of the input file (e.g.’2dmapoutput’)</p>
 </dd>
 </dl>
 </dd>
@@ -605,30 +1151,30 @@
 </dd></dl>
 
 <dl class="py method objdesc">
-<dt class="sig sig-object py" id="fm2prof.Project.get_output_directory">
+<dt class="sig sig-object highlight py" id="fm2prof.Project.get_output_directory">
 <span class="sig-name descname"><span class="pre">get_output_directory</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="desctype"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.10)"><span class="pre">None</span></a></span></span></span><a class="reference internal" href="../../_modules/fm2prof/Fm2ProfRunner.html#Project.get_output_directory"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fm2prof.Project.get_output_directory" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns the current output directory</p>
 </dd></dl>
 
 <dl class="py method objdesc">
-<dt class="sig sig-object py" id="fm2prof.Project.get_parameter">
-<span class="sig-name descname"><span class="pre">get_parameter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="desctype"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="desctype"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Union" title="(in Python v3.10)"><span class="pre">Union</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.10)"><span class="pre">float</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><span class="pre">int</span></a><span class="p"><span class="pre">]</span></span></span></span></span><a class="reference internal" href="../../_modules/fm2prof/Fm2ProfRunner.html#Project.get_parameter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fm2prof.Project.get_parameter" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object highlight py" id="fm2prof.Project.get_parameter">
+<span class="sig-name descname"><span class="pre">get_parameter</span></span><span class="sig-paren">(</span><span class="sig-param-decl"><em class="sig-param"><a class="n reference internal" href="#fm2prof.Project.get_parameter.name" title="fm2prof.Project.get_parameter.name (Python parameter) — name of the parameter (case insensitive)"><span class="n"><span class="pre">name</span></span></a><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="desctype"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a></span></span></em></span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="desctype"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.10)"><span class="pre">float</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><span class="pre">int</span></a></span></span></span><a class="reference internal" href="../../_modules/fm2prof/Fm2ProfRunner.html#Project.get_parameter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fm2prof.Project.get_parameter" title="Permalink to this definition">¶</a></dt>
 <dd><p>Use this method to get the value of a parameter</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><dl class="api-field simple">
-<dt><span class="sig-name descname">name</span></dt><dd><p>name of the parameter (case insensitive)</p>
+<dt class="field-odd" id="fm2prof.Project.get_parameter-parameters">Parameters<a class="headerlink" href="#fm2prof.Project.get_parameter-parameters" title="Permalink to this headline">¶</a></dt>
+<dd class="field-odd"><dl class="api-field highlight simple">
+<dt id="fm2prof.Project.get_parameter.name"><span class="n sig-name">name</span><span class="p">:</span><span class="w">   </span><span class="n"><span class="desctype"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)">str</a></span></span><a class="headerlink" href="#fm2prof.Project.get_parameter.name" title="Permalink to this definition">¶</a></dt><dd><p>name of the parameter (case insensitive)</p>
 </dd>
 </dl>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even" id="fm2prof.Project.get_parameter-returns">Returns<a class="headerlink" href="#fm2prof.Project.get_parameter-returns" title="Permalink to this headline">¶</a></dt>
 <dd class="field-even"><p>The current value of the parameter</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py method objdesc">
-<dt class="sig sig-object py" id="fm2prof.Project.print_configuration">
+<dt class="sig sig-object highlight py" id="fm2prof.Project.print_configuration">
 <span class="sig-name descname"><span class="pre">print_configuration</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="desctype"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a></span></span></span><a class="reference internal" href="../../_modules/fm2prof/Fm2ProfRunner.html#Project.print_configuration"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fm2prof.Project.print_configuration" title="Permalink to this definition">¶</a></dt>
 <dd><p>Use this method to obtain string representation of the
 configuration. Use this string to write to file, e.g.:</p>
@@ -637,22 +1183,22 @@ configuration. Use this string to write to file, e.g.:</p>
 &gt;&gt;     f.write(project.print_configuration())</p>
 </div></blockquote>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
+<dt class="field-odd" id="fm2prof.Project.print_configuration-returns">Returns<a class="headerlink" href="#fm2prof.Project.print_configuration-returns" title="Permalink to this headline">¶</a></dt>
 <dd class="field-odd"><p>string</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py method objdesc">
-<dt class="sig sig-object py sig-wrap" id="fm2prof.Project.set_input_file">
-<span class="sig-name descname"><span class="pre">set_input_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="desctype"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="desctype"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Union" title="(in Python v3.10)"><span class="pre">Union</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.10)"><span class="pre">float</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><span class="pre">int</span></a><span class="p"><span class="pre">]</span></span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="desctype"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.10)"><span class="pre">None</span></a></span></span></span><a class="reference internal" href="../../_modules/fm2prof/Fm2ProfRunner.html#Project.set_input_file"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fm2prof.Project.set_input_file" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object highlight py" id="fm2prof.Project.set_input_file">
+<span class="sig-name descname"><span class="pre">set_input_file</span></span><span class="sig-paren">(</span><span class="sig-param-decl"><em class="sig-param"><a class="n reference internal" href="#fm2prof.Project.set_input_file.name" title="fm2prof.Project.set_input_file.name (Python parameter) — name of the input file in the configuration (case insensitive)."><span class="n"><span class="pre">name</span></span></a><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="desctype"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a></span></span></em>, </span><span class="sig-param-decl"><em class="sig-param"><a class="n reference internal" href="#fm2prof.Project.set_input_file.value" title="fm2prof.Project.set_input_file.value (Python parameter) — path to the inputfile"><span class="n"><span class="pre">value</span></span></a><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="desctype"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.10)"><span class="pre">float</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><span class="pre">int</span></a></span></span></em></span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="desctype"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.10)"><span class="pre">None</span></a></span></span></span><a class="reference internal" href="../../_modules/fm2prof/Fm2ProfRunner.html#Project.set_input_file"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fm2prof.Project.set_input_file" title="Permalink to this definition">¶</a></dt>
 <dd><p>Use this method to set the path to an input file</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><dl class="api-field simple">
-<dt><span class="sig-name descname">name</span></dt><dd><p>name of the input file in the configuration (case insensitive).</p>
+<dt class="field-odd" id="fm2prof.Project.set_input_file-parameters">Parameters<a class="headerlink" href="#fm2prof.Project.set_input_file-parameters" title="Permalink to this headline">¶</a></dt>
+<dd class="field-odd"><dl class="api-field highlight simple">
+<dt id="fm2prof.Project.set_input_file.name"><span class="n sig-name">name</span><span class="p">:</span><span class="w">   </span><span class="n"><span class="desctype"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)">str</a></span></span><a class="headerlink" href="#fm2prof.Project.set_input_file.name" title="Permalink to this definition">¶</a></dt><dd><p>name of the input file in the configuration (case insensitive).</p>
 </dd>
-<dt><span class="sig-name descname">value</span></dt><dd><p>path to the inputfile</p>
+<dt id="fm2prof.Project.set_input_file.value"><span class="n sig-name">value</span><span class="p">:</span><span class="w">   </span><span class="n"><span class="desctype"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)">str</a><span class="p">,</span><span class="w">   </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.10)">float</a><span class="p">,</span><span class="w">   </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)">int</a></span></span><a class="headerlink" href="#fm2prof.Project.set_input_file.value" title="Permalink to this definition">¶</a></dt><dd><p>path to the inputfile</p>
 </dd>
 </dl>
 </dd>
@@ -660,8 +1206,8 @@ configuration. Use this string to write to file, e.g.:</p>
 </dd></dl>
 
 <dl class="py method objdesc">
-<dt class="sig sig-object py" id="fm2prof.Project.set_output_directory">
-<span class="sig-name descname"><span class="pre">set_output_directory</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="desctype"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.10)"><span class="pre">None</span></a></span></span></span><a class="reference internal" href="../../_modules/fm2prof/Fm2ProfRunner.html#Project.set_output_directory"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fm2prof.Project.set_output_directory" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object highlight py" id="fm2prof.Project.set_output_directory">
+<span class="sig-name descname"><span class="pre">set_output_directory</span></span><span class="sig-paren">(</span><span class="sig-param-decl"><em class="sig-param"><a class="n reference internal" href="#fm2prof.Project.set_output_directory.path" title="fm2prof.Project.set_output_directory.path (Python parameter) — path to the output path"><span class="n"><span class="pre">path</span></span></a></em></span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="desctype"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.10)"><span class="pre">None</span></a></span></span></span><a class="reference internal" href="../../_modules/fm2prof/Fm2ProfRunner.html#Project.set_output_directory"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fm2prof.Project.set_output_directory" title="Permalink to this definition">¶</a></dt>
 <dd><p>Use this method to set the output directory.</p>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
@@ -669,9 +1215,9 @@ configuration. Use this string to write to file, e.g.:</p>
 if it does not already exists!</p>
 </div>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><dl class="api-field simple">
-<dt><span class="sig-name descname">path</span></dt><dd><p>path to the output path</p>
+<dt class="field-odd" id="fm2prof.Project.set_output_directory-parameters">Parameters<a class="headerlink" href="#fm2prof.Project.set_output_directory-parameters" title="Permalink to this headline">¶</a></dt>
+<dd class="field-odd"><dl class="api-field highlight simple">
+<dt id="fm2prof.Project.set_output_directory.path"><span class="n sig-name">path</span><a class="headerlink" href="#fm2prof.Project.set_output_directory.path" title="Permalink to this definition">¶</a></dt><dd><p>path to the output path</p>
 </dd>
 </dl>
 </dd>
@@ -679,15 +1225,15 @@ if it does not already exists!</p>
 </dd></dl>
 
 <dl class="py method objdesc">
-<dt class="sig sig-object py" id="fm2prof.Project.set_parameter">
-<span class="sig-name descname"><span class="pre">set_parameter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="desctype"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="desctype"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Union" title="(in Python v3.10)"><span class="pre">Union</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.10)"><span class="pre">float</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><span class="pre">int</span></a><span class="p"><span class="pre">]</span></span></span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/fm2prof/Fm2ProfRunner.html#Project.set_parameter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fm2prof.Project.set_parameter" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object highlight py" id="fm2prof.Project.set_parameter">
+<span class="sig-name descname"><span class="pre">set_parameter</span></span><span class="sig-paren">(</span><span class="sig-param-decl"><em class="sig-param"><a class="n reference internal" href="#fm2prof.Project.set_parameter.name" title="fm2prof.Project.set_parameter.name (Python parameter) — name of the parameter (case insensitive)."><span class="n"><span class="pre">name</span></span></a><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="desctype"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a></span></span></em>, </span><span class="sig-param-decl"><em class="sig-param"><a class="n reference internal" href="#fm2prof.Project.set_parameter.value" title="fm2prof.Project.set_parameter.value (Python parameter) — value of the parameter. An error will be given if the value has the wrong type (e.g. string if int was expected)."><span class="n"><span class="pre">value</span></span></a><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="desctype"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.10)"><span class="pre">float</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><span class="pre">int</span></a></span></span></em></span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/fm2prof/Fm2ProfRunner.html#Project.set_parameter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fm2prof.Project.set_parameter" title="Permalink to this definition">¶</a></dt>
 <dd><p>Use this method to set the value of a parameter</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><dl class="api-field simple">
-<dt><span class="sig-name descname">name</span></dt><dd><p>name of the parameter (case insensitive).</p>
+<dt class="field-odd" id="fm2prof.Project.set_parameter-parameters">Parameters<a class="headerlink" href="#fm2prof.Project.set_parameter-parameters" title="Permalink to this headline">¶</a></dt>
+<dd class="field-odd"><dl class="api-field highlight simple">
+<dt id="fm2prof.Project.set_parameter.name"><span class="n sig-name">name</span><span class="p">:</span><span class="w">   </span><span class="n"><span class="desctype"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)">str</a></span></span><a class="headerlink" href="#fm2prof.Project.set_parameter.name" title="Permalink to this definition">¶</a></dt><dd><p>name of the parameter (case insensitive).</p>
 </dd>
-<dt><span class="sig-name descname">value</span></dt><dd><p>value of the parameter. An error will be given if the value has the wrong type (e.g. string if int was expected).</p>
+<dt id="fm2prof.Project.set_parameter.value"><span class="n sig-name">value</span><span class="p">:</span><span class="w">   </span><span class="n"><span class="desctype"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)">str</a><span class="p">,</span><span class="w">   </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.10)">float</a><span class="p">,</span><span class="w">   </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)">int</a></span></span><a class="headerlink" href="#fm2prof.Project.set_parameter.value" title="Permalink to this definition">¶</a></dt><dd><p>value of the parameter. An error will be given if the value has the wrong type (e.g. string if int was expected).</p>
 </dd>
 </dl>
 </dd>
@@ -696,11 +1242,11 @@ if it does not already exists!</p>
 
 </dd></dl>
 
-<h2 id="module-fm2prof.utils"><span id="utilities"></span><span id="sourceutils"></span>Utilities<a class="headerlink" href="#module-fm2prof.utils" title="Permalink to this headline">¶</a></h2>
+<h3 id="module-fm2prof.utils"><span id="utilities"></span><span id="sourceutils"></span>Utilities<a class="headerlink" href="#module-fm2prof.utils" title="Permalink to this headline">¶</a></h3>
 <p>Utilities for FM2PROF</p>
 <dl class="py function objdesc">
-<dt class="sig sig-object py sig-wrap" id="fm2prof.utils.networkdeffile_to_input">
-<span class="sig-prename descclassname"><span class="pre">fm2prof.utils.</span></span><span class="sig-name descname"><span class="pre">networkdeffile_to_input</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">networkdefinitionfile:</span> <span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">crossectionlocationfile:</span> <span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">branchrulefile:</span>&#160; <span class="pre">=</span> <span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/fm2prof/utils.html#networkdeffile_to_input"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fm2prof.utils.networkdeffile_to_input" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object highlight sig-wrap py" id="fm2prof.utils.networkdeffile_to_input">
+<span class="sig-prename descclassname"><span class="pre">fm2prof.utils.</span></span><span class="sig-name descname"><span class="pre">networkdeffile_to_input</span></span><span class="sig-paren">(</span><span class="sig-param-decl"><em class="sig-param"><span class="n"><span class="pre">networkdefinitionfile:</span> <span class="pre">str</span></span></em>, </span><span class="sig-param-decl"><em class="sig-param"><span class="n"><span class="pre">crossectionlocationfile:</span> <span class="pre">str</span></span></em>, </span><span class="sig-param-decl"><em class="sig-param"><span class="n"><span class="pre">branchrulefile:</span>&#160; <span class="pre">=</span> <span class="pre">''</span></span></em></span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/fm2prof/utils.html#networkdeffile_to_input"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fm2prof.utils.networkdeffile_to_input" title="Permalink to this definition">¶</a></dt>
 <dd><p>Builds a cross-section input file for FM2PROF from a DIMR network definition file.</p>
 <p>The distance between cross-section is computed from the differences between the offsets/chainages.
 The beginning and end point of each branch are treated as half-distance control volumes.</p>
@@ -731,7 +1277,7 @@ The beginning and end point of each branch are treated as half-distance control 
         </div>
         
           <a href="#" class="md-top md-icon" data-md-component="top" data-md-state="hidden">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"/></svg>
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12Z"/></svg>
             Back to top
           </a>
         
@@ -742,33 +1288,33 @@ The beginning and end point of each branch are treated as half-distance control 
     <nav class="md-footer__inner md-grid" aria-label="Footer">
       
         
-        <a href="advanced.html" class="md-footer__link md-footer__link--prev" aria-label="Previous: Troubleshooting" rel="prev">
+        <a href="../technical_manual/glossary.html" class="md-footer__link md-footer__link--prev" aria-label="Previous: Glossary of terms" rel="prev">
           <div class="md-footer__button md-icon">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
           </div>
           <div class="md-footer__title">
             <div class="md-ellipsis">
               <span class="md-footer__direction">
                 Previous
               </span>
-              Troubleshooting
+              Glossary of terms
             </div>
           </div>
         </a>
       
       
         
-        <a href="../technical_manual/conceptual_design.html" class="md-footer__link md-footer__link--next" aria-label="Next: Conceptual design" rel="next">
+        <a href="cli.html" class="md-footer__link md-footer__link--next" aria-label="Next: CLI API" rel="next">
           <div class="md-footer__title">
             <div class="md-ellipsis">
               <span class="md-footer__direction">
                 Next
               </span>
-              Conceptual design
+              CLI API
             </div>
           </div>
           <div class="md-footer__button md-icon">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11H4z"/></svg>
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11H4Z"/></svg>
           </div>
         </a>
       
@@ -803,10 +1349,10 @@ The beginning and end point of each branch are treated as half-distance control 
     <div class="md-dialog" data-md-component="dialog">
       <div class="md-dialog__inner md-typeset"></div>
     </div>
-    <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.expand", "navigation.sections", "navigation.top", "navigation.tracking", "search.highlight"], "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.placeholder": "Search", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version.title": "Select version"}}</script>
+    <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.expand", "navigation.tabs", "navigation.sections", "header.autohide", "navigation.top", "navigation.tracking", "search.highlight"], "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.placeholder": "Search", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version.title": "Select version"}}</script>
     
     
-      <script src="../../_static/javascripts/bundle.cf32e622.min.js"></script>
+      <script src="../../_static/javascripts/bundle.37d1338f.min.js"></script>
         <script src="../../_static/sphinxcontrib-images/LightBox2/lightbox2/dist/js/lightbox-plus-jquery.min.js"></script>
         <script src="../../_static/sphinxcontrib-images/LightBox2/lightbox2-customize/jquery-noconflict.js"></script>
     
