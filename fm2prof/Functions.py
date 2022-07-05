@@ -217,7 +217,7 @@ def empirical_ppf(qs, p, val=None, single_value=False):
     return output
 
 
-def get_empirical_cdf(sample, n=100, method=1, ignore_nan=True):
+def get_empirical_cdf(sample, method=1, ignore_nan=True):
     """
     Returns an experimental/empirical cdf from data.
 

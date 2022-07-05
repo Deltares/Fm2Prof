@@ -777,7 +777,6 @@ class Fm2ProfRunner(FM2ProfBase):
                 + "{}, message: {}".format(css_data_id, str(e_info)),
                 "error",
             )
-            self.set_logger_message(traceback.print_exc(file=sys.stdout), "error")
             return None
 
         return css
@@ -920,7 +919,6 @@ class Fm2ProfRunner(FM2ProfBase):
                 + "{}".format(e_message),
                 "error",
             )
-            self.set_logger_message(traceback.print_exc(file=sys.stdout), "error")
 
         return cross_section
 
@@ -960,7 +958,6 @@ class Fm2ProfRunner(FM2ProfBase):
                 + "{}".format(e_message),
                 "error",
             )
-            self.set_logger_message(traceback.print_exc(file=sys.stdout), "error")
         return css
 
     def _print_log_report(self) -> None:
