@@ -1,7 +1,7 @@
 .. _diagnosis:
 
-Verifying |project| output
-============================
+Troubleshooting
+====================
 
 After running |project|, it is important to check its output. In this section we provide some steps to diagnose and interprete your model results. In short, the steps are the following:
 
@@ -92,7 +92,7 @@ Finally the program will finish:
     
     The Meuse pilot model take about 13 minutes to produce 1D input. 
 
-.. _diagnosevisualiseOutput:
+
 
 2. Visualising output 
 ......................
