@@ -21,27 +21,13 @@ To get started, start with ChapterInstallation_, then start following the Chapte
 
 .. toctree::
     :hidden:
-    :caption: Getting started
 
     chapters/user_manual/installation
     chapters/user_manual/quickstart
-    
-.. toctree::
-    :hidden:
-    :caption: User manual
-
     chapters/user_manual/advanced
-    chapters/technical_manual/files
-    chapters/technical_manual/settings
-    chapters/technical_manual/glossary
     chapters/user_manual/source
-    chapters/user_manual/cli
-
-.. toctree::
-    :hidden:
-    :caption: Technical reference
-
     chapters/technical_manual/conceptual_design
     chapters/technical_manual/numerical_methods
-
-    
+    chapters/technical_manual/settings
+    chapters/technical_manual/files
+    chapters/technical_manual/glossary

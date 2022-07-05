@@ -25,7 +25,7 @@ Glossary of terms
     Summerdikes
         Summerdikes are a Dutch term for levees that are designed to be flooded with higher discharges, but not with relatively low floods (i.e.: they withstand summer floods). They contrast with 'winterdikes', which are designed to not flood at all. Summerdikes effectively comparimentalise the floodplain. They can have a profound effect on stage-discharge relationships: as these levees overflow the compartments start flowing which leads to a retention effect. Such an effect cannot be modelled using regulare cross-sections. SOBEK therefore has a 'summerdike' functionality. See :ref:validation_summerdike for the effect of summerdikes on the volume graph. 
 
-    Control volume
+    Control volumes
         A control volume of a cross-section is the geographical part of the 2D model that is associated with that cross-section. Contol volumes are assigned by k-Nearest Neighbour classification. 
 
         .. note::
@@ -49,20 +49,16 @@ Glossary of terms
             :width: 50%
 
     Cross-section location
-        The cross-section location is defined in the :ref:`CrossSectionLocationFile`. 
+        asdf
 
     Total volume
-        The Total volume refers to the volume of water [in m^3] within a :term:`Control volume` for a given water level at the :term:`Cross-section location`. The total volume is the sum of the :term:`Flow volume` and the :term:`Storage volume`. 
+        asdf
 
     Flow volume
-        The Flow volume is defined as the volume of water [in m^3] for which the conditions for flowing water are met. This volume is considered to be available for the conveyance of water through the :term:`Control volume`. 
-
-        See :ref:`distinguish_storage`
+        asdf
 
     Storage volume
-        The Storage volume is defined as the volume of water [in m^3] for which the conditions for flowing water are not met. Storage volume does not contribute to conveyance, but serves only for water retention. Examples include groyne fields and 
-
-        See :ref:`distinguish_storage`
+        asdf
 
     Total width
         See :term:`Total volume`
