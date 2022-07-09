@@ -751,7 +751,7 @@ class VisualiseOutput(FM2ProfBase):
             levels, values = self.getRoughnessInfoForCss(
                 css["id"], rtype="roughnessFP1"
             )
-            if levels is not None:
+            if levels is not None and values is not None:
                 ax.plot(levels, values, label="Floodplain1")
         except FileNotFoundError:
             pass
