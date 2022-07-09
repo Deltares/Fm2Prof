@@ -1310,10 +1310,10 @@ class Compare1D2D(ModelOutputReader):
 
     def __init__(
         self,
-        project: Project = None,
-        path_1d: Union[Path, str] = None,
-        path_2d: Union[Path, str] = None,
-        routes: List[List[str]] = None,
+        project: Project,
+        path_1d: Union[Path, str],
+        path_2d: Union[Path, str],
+        routes: List[List[str]],
     ):
         if project:
             super().__init__(logger=project.get_logger())
@@ -1576,7 +1576,7 @@ class Compare1D2D(ModelOutputReader):
         plt.suptitle(title.upper())
         fig.tight_layout()
         PlotStyles.van_veen(fig, use_legend=[True, False])
-        fig.savefig(self.output_path.joinpath("discharge").joinpath(f"{title}.png"))
+        fig.savefig(self.output_path.joinpath("figures/discharge").joinpath(f"{title}.png"))
 
     def get_data_along_route_for_time(
         self, data: pd.DataFrame, route: List[str], time_index: int
