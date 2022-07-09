@@ -49,6 +49,7 @@ class GenerateCrossSectionLocationFile(FM2ProfBase):
         crossectionlocationfile: Union[str, Path],
         branchrulefile: Optional[Union[str, Path]] = "",
     ):
+        super().__init__()
 
         networkdefinitionfile, crossectionlocationfile, branchrulefile = map(
             Path, [networkdefinitionfile, crossectionlocationfile, branchrulefile]
@@ -107,6 +108,7 @@ class GenerateCrossSectionLocationFile(FM2ProfBase):
                                 [0], np.diff(cofftmp) / 2
                             )
 
+                    cdistmp = list(cdistmp)
                     # Append branchids
                     bidtmp = [branchid] * len(xtmp)
 
@@ -124,18 +126,30 @@ class GenerateCrossSectionLocationFile(FM2ProfBase):
 
                     # Apply Branchrules
                     if branchid in branchrules:
-                        rule = branchrules[branchid]
-                        (
+                        rule = branchrules[branchid].get('rule')
+                        exceptions = branchrules[branchid].get('exceptions')
+                        if rule:
+                            (
+                                xtmp,
+                                ytmp,
+                                cidtmp,
+                                cdistmp,
+                                bidtmp,
+                                cofftmp
+                            ) = self._applyBranchRules(
+                                rule, xtmp, ytmp, cidtmp, cdistmp, bidtmp, cofftmp
+                            )
+                        if exceptions:
+                            (
                             xtmp,
                             ytmp,
                             cidtmp,
                             cdistmp,
                             bidtmp,
                             cofftmp,
-                        ) = self._applyBranchRules(
-                            rule, xtmp, ytmp, cidtmp, cdistmp, bidtmp, cofftmp
-                        )
-
+                            ) = self._applyBranchExceptions(
+                                exceptions, xtmp, ytmp, cidtmp, cdistmp, bidtmp, cofftmp
+                            )
                         c = len(xtmp)
                         for ic in xtmp, ytmp, cidtmp, cdistmp, bidtmp, cofftmp:
                             if len(ic) != c:
@@ -157,7 +171,7 @@ class GenerateCrossSectionLocationFile(FM2ProfBase):
         crossectionlocationfile: Path,
         branchrulefile: Path,
     ):
-        branchrules: dict = {}
+        branchrules: Dict = {}
 
         if branchrulefile.is_file():
             branchrules = self._parseBranchRuleFile(branchrulefile)
@@ -168,14 +182,69 @@ class GenerateCrossSectionLocationFile(FM2ProfBase):
 
         self._writeCrossSectionLocationFile(crossectionlocationfile, network_dict)
 
-    def _applyBranchRules(self, rule, x, y, cid, cdis, bid, coff):
-        bfunc = {
-            "onlyedges": lambda x: [x[0], x[-1]],
-            "ignoreedges": lambda x: x[1:-1],
-            "ignorelast": lambda x: x[:-1],
-            "ignorefirst": lambda x: x[1:],
-        }
+    def _applyBranchExceptions(self, exceptions, x, y, cid, cdis, bid, coff):
+        for exc in exceptions:
+            if exc not in cid: 
+                self.set_logger_message(f"{exc} not found in branch", 'error')
+                continue
+        
+        pop_indices = [cid.index(exc) for exc in exceptions]
 
+        for pop_index in sorted(pop_indices, reverse=True):
+            if pop_index == 0:
+                (
+                    x,
+                    y,
+                    cid,
+                    cdis,
+                    bid,
+                    coff,
+                ) = self._applyBranchRules(
+                    'ignorefirst', x, y, cid, cdis, bid, coff
+                )
+            elif pop_index == len(x) - 1:
+                (
+                    x,
+                    y,
+                    cid,
+                    cdis,
+                    bid,
+                    coff,
+                ) = self._applyBranchRules(
+                    'ignorelast', x, y, cid, cdis, bid, coff
+                )
+            else:
+                # pop the index
+                for l in [x, y, cid, bid, coff]:
+                    l.pop(pop_index)
+
+                # divide the length
+                next_pop = pop_index+1
+                prev_pop = pop_index-1
+                while next_pop in pop_indices:
+                    next_pop += 1
+                while prev_pop in pop_indices:
+                    prev_pop -= 1
+
+                cdis[pop_index-1] += cdis[pop_index]/2
+                cdis[pop_index+1] += cdis[pop_index]/2
+
+        if len(x) != len(cdis):
+            for pop_index in sorted(pop_indices, reverse=True):
+                del cdis[pop_index]
+
+
+        return x, y, cid, cdis, bid, coff
+            
+    def _applyBranchRules(self, rule, x, y, cid, cdis, bid, coff):
+        # bfunc: what points to pop
+        bfunc = {
+            "onlyedges": lambda x: [x[0], x[-1]],  # only keep the 2 cross-section on either end of the branch
+            "ignoreedges": lambda x: x[1:-1],  # keep everything except 2 css on either end of the branch
+            "ignorelast": lambda x: x[:-1],  # keep everything except last css on branch
+            "ignorefirst": lambda x: x[1:],  # keep everything except first css on branch
+        }
+        # disfunc: how to modify lengths
         disfunc = {
             "onlyedges": lambda x: [sum(x) / 2] * 2,
             "ignoreedges": lambda x: [sum(x[:2]), *x[2:-2], sum(x[-2:])],
@@ -188,16 +257,19 @@ class GenerateCrossSectionLocationFile(FM2ProfBase):
             df = disfunc[rule.lower().strip()]
             return bf(x), bf(y), bf(cid), df(cdis), bf(bid), bf(coff)
         except KeyError:
-            raise NotImplementedError(rule)
+            self.set_logger_message(f"'{rule}' is not a known branchrules. Known rules are: {list(bfunc.keys())}", 'error')
 
-    def _parseBranchRuleFile(self, branchrulefile: Path) -> Dict:
+    def _parseBranchRuleFile(self, branchrulefile: Path, delimiter:str=',') -> Dict:
         branchrules: dict = {}
         with open(branchrulefile, "r") as f:
             for line in f:
-                key = line.split(",")[0].strip()
-                value = line.split(",")[1].strip()
-
-                branchrules[key] = value
+                values:List = line.strip().split(delimiter)
+                branch:str = values[0].strip()
+                rule:str = values[1].strip()
+                exceptions:List = []
+                if len(values)>2: exceptions = [e.strip() for e in values[2:]]
+                
+                branchrules[branch] = dict(rule=rule, exceptions= exceptions)
 
         return branchrules
 
@@ -432,6 +504,10 @@ class VisualiseOutput(FM2ProfBase):
         return cssdata
 
     @property
+    def number_of_cross_sections(self) -> int:
+        return len(list(self.cross_sections))
+
+    @property
     def cross_sections(self) -> Generator[Dict, None, None]:
         """
         Generator to loop through all cross-sections in definition file.
@@ -463,7 +539,8 @@ class VisualiseOutput(FM2ProfBase):
         reference_geometry: tuple = (),
         reference_roughness: tuple = (),
         save_to_file: bool = True,
-    ):
+        overwrite: bool = False
+    ) -> None:
         """
         Creates a figure
 
@@ -480,6 +557,10 @@ class VisualiseOutput(FM2ProfBase):
                                  if false, returns pyplot figure object
 
         """
+        output_file = self.fig_dir.joinpath(f"{css['id']}.png")
+        if output_file.is_file() & ~overwrite:
+            self.set_logger_message('file already exists', 'debug')
+            return
         try:
             fig = plt.figure(figsize=(8, 12))
             gs = fig.add_gridspec(2, 2)
@@ -496,9 +577,8 @@ class VisualiseOutput(FM2ProfBase):
             fig, lgd = self._SetPlotStyle(fig)
 
             if save_to_file:
-                self.set_logger_message(f"New figure {css['id']}.png written to output")
                 plt.savefig(
-                    f"{self.fig_dir}/{css['id']}.png",
+                    output_file,
                     bbox_extra_artists=[lgd],
                     bbox_inches="tight",
                 )
