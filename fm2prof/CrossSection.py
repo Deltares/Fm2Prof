@@ -1426,13 +1426,13 @@ class CrossSection(FM2ProfBase):
         dif = self.section_widths["main"] - self._css_flow_width[0]
 
         # cm accuracy
-        dif = math.ceil(dif * 100) / 100
+        dif = math.floor(dif * 100) / 100
 
         if dif < 0:
             self.section_widths["main"] -= dif
             self.section_widths["floodplain1"] += dif
             self.set_logger_message(
-                f"Increased main section width by {dif:.2f}", "warning"
+                f"Increased main section width by {-1*dif:.2f}", "warning"
             )
             return True
         return False
