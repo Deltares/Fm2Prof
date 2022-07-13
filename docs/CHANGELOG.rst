@@ -1,3 +1,17 @@
+## v2.2.0 (2022-07-13)
+
+### Fix
+
+- log style now the same as stream, added support for tqdm
+- added cross-section progress to log
+- (#34)
+- revised logger style (#34)
+- first figure does not use correct style
+- added 10 cm tolerance to section width correction
+- main section width check
+- output path compare1d2d discharge figure
+- #33
+
 ## v2.1.2 (2022-07-05)
 
 ## v2.1.1 (2022-07-04)
