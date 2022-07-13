@@ -8,6 +8,7 @@ from typing import Dict, Generator, List, Mapping, NoReturn, Union
 
 import geojson
 import numpy as np
+import tqdm
 from geojson import Feature, FeatureCollection, Polygon
 from netCDF4 import Dataset
 from scipy.spatial import ConvexHull
@@ -42,10 +43,10 @@ class Fm2ProfRunner(FM2ProfBase):
         self._output_files: OutputFiles = OutputFiles()
 
         self._create_logger()
-        self._print_header()
 
         iniFilePath = Path(iniFilePath)
 
+        self.start_new_log_task("Loading configuration file")
         try:
             self.load_inifile(iniFilePath)
         except (FileNotFoundError, IOError) as e:
@@ -58,9 +59,14 @@ class Fm2ProfRunner(FM2ProfBase):
             )
             return
 
+        # Add a log file
         self.set_logfile(
             output_dir=self.get_inifile().get_output_directory(), filename="fm2prof.log"
         )
+
+        self.finish_log_task()
+        # print header to log
+        self._print_header()
 
         # Print configuration to log
         self.set_logger_message(self.get_inifile().print_configuration(), header=True)
@@ -72,6 +78,7 @@ class Fm2ProfRunner(FM2ProfBase):
         Parameters:
             overwrite: if True, overwrites existing output. If False, exits if output detected
         """
+
         if self.get_inifile() is None:
             self.set_logger_message(
                 "No ini file was specified: the run cannot go further.", "Warning"
@@ -105,18 +112,19 @@ class Fm2ProfRunner(FM2ProfBase):
         self.set_inifile(IniFileObject)
 
     def _print_header(self):
-        self.set_logger_message(
-            "=" * 80
-            + "\n"
-            + f"FM2PROF version {__version__}\n\n"
-            + f"{self.__copyright__:>6}\n\n"
-            + f"Authors: {self.__authors__:>6}\n"
-            + f"Contact: {self.__contact__:>6}\n"
-            + f"License: {self.__license__:>6} license. For more info see LICENSE.txt\n"
-            + "=" * 80
-            + "\n",
-            header=True,
-        )
+        header_text = [
+            "=" * 80,
+            f"FM2PROF version {__version__}",
+            f"Documentation: {self.__url__:>6}",
+            f"Authors: {self.__authors__:>6}",
+            f"Contact: {self.__contact__:>6}",
+            f"License: {self.__license__:>6} license. For more info see LICENSE.txt",
+            f"{self.__copyright__:>6}",
+            "=" * 80,
+            "",
+        ]
+        for line in header_text:
+            self.set_logger_message(line, header=True)
 
     def _run_inifile(self) -> None:
         """Runs the desired emulation from 2d to 1d given the mapfile
@@ -129,6 +137,7 @@ class Fm2ProfRunner(FM2ProfBase):
         """
 
         # Initialise the project
+        self.start_new_log_task("Initialising FM2PROF")
         try:
             self._initialise_fm2prof()
         except:
@@ -138,6 +147,7 @@ class Fm2ProfRunner(FM2ProfBase):
             for line in traceback.format_exc().splitlines():
                 self.set_logger_message(line, "debug")
             return False
+        self.finish_log_task()
 
         # Generate cross-sections
         try:
@@ -152,6 +162,7 @@ class Fm2ProfRunner(FM2ProfBase):
             return False
 
         # Finalise and write output
+        self.start_new_log_task("Finalizing")
         try:
             self._finalise_fm2prof(cross_sections)
         except:
@@ -167,6 +178,7 @@ class Fm2ProfRunner(FM2ProfBase):
             self.set_logger_message(
                 "Unexpected exception during printing of log report", "error"
             )
+        self.finish_log_task()
 
         return True
 
@@ -241,7 +253,6 @@ class Fm2ProfRunner(FM2ProfBase):
         """
         Write to output, perform checks
         """
-        self.start_new_log_task("Finalizing")
         self.set_logger_message("Interpolating roughness")
         FE.interpolate_roughness(cross_sections)
 
@@ -590,14 +601,20 @@ class Fm2ProfRunner(FM2ProfBase):
         # Set the number of cross-section for progress bar
         css_selection = self._get_css_range(number_of_css=len(css_data_list))
         self.get_logformatter().set_number_of_iterations(len(css_selection) + 1)
+        selected_list = np.array(css_data_list)[css_selection]
 
         # Generate cross-sections one by one
-        for css_data in np.array(css_data_list)[css_selection]:
+        pbar = tqdm.tqdm(total=len(selected_list))
+        for i, css_data in enumerate(selected_list):
+            self.start_new_log_task(
+                f"{css_data.get('id')}  ({i}/{len(selected_list)})", pbar=pbar
+            )
             generated_cross_section = self._generate_cross_section(
                 css_data, self.fm_model_data
             )
             if generated_cross_section is not None:
                 cross_sections.append(generated_cross_section)
+            pbar.update(1)
 
         return cross_sections
 
@@ -644,8 +661,6 @@ class Fm2ProfRunner(FM2ProfBase):
                 "No FM data given for new cross section {}".format(css_name)
             )
 
-        self.start_new_log_task(f"{css_name}")
-
         # Create cross section
         created_css = self._get_new_cross_section(css_data=css_data)
 
@@ -670,10 +685,7 @@ class Fm2ProfRunner(FM2ProfBase):
         created_css.set_edge_output_list()
 
         if created_css is not None:
-            elapsed_time = self.get_logformatter().get_elapsed_time(time.time())
-            self.set_logger_message(
-                f"Cross-section {created_css.name} derived in {elapsed_time:.2f} s"
-            )
+            self.finish_log_task()
         return created_css
 
     def _build_cross_section_geometry(
@@ -806,6 +818,7 @@ class Fm2ProfRunner(FM2ProfBase):
             self._output_files.dimr_css_definitions
         )
 
+        # Legacy file formats
         csv_geometry_file = output_dir.joinpath(self._output_files.sobek3_geometry)
         csv_roughness_file = output_dir.joinpath(self._output_files.sobek3_roughness)
 

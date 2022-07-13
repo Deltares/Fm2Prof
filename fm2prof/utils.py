@@ -14,10 +14,11 @@ import matplotlib.dates as mdates
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import tqdm
+from matplotlib.figure import Figure
 from matplotlib.ticker import AutoMinorLocator, FormatStrFormatter, MultipleLocator
 from netCDF4 import Dataset
 from pandas.plotting import register_matplotlib_converters
-from tqdm import tqdm
 
 from fm2prof import Project
 from fm2prof.common import FM2ProfBase
@@ -49,6 +50,7 @@ class GenerateCrossSectionLocationFile(FM2ProfBase):
         crossectionlocationfile: Union[str, Path],
         branchrulefile: Optional[Union[str, Path]] = "",
     ):
+        super().__init__()
 
         networkdefinitionfile, crossectionlocationfile, branchrulefile = map(
             Path, [networkdefinitionfile, crossectionlocationfile, branchrulefile]
@@ -107,6 +109,7 @@ class GenerateCrossSectionLocationFile(FM2ProfBase):
                                 [0], np.diff(cofftmp) / 2
                             )
 
+                    cdistmp = list(cdistmp)
                     # Append branchids
                     bidtmp = [branchid] * len(xtmp)
 
@@ -124,18 +127,30 @@ class GenerateCrossSectionLocationFile(FM2ProfBase):
 
                     # Apply Branchrules
                     if branchid in branchrules:
-                        rule = branchrules[branchid]
-                        (
-                            xtmp,
-                            ytmp,
-                            cidtmp,
-                            cdistmp,
-                            bidtmp,
-                            cofftmp,
-                        ) = self._applyBranchRules(
-                            rule, xtmp, ytmp, cidtmp, cdistmp, bidtmp, cofftmp
-                        )
-
+                        rule = branchrules[branchid].get("rule")
+                        exceptions = branchrules[branchid].get("exceptions")
+                        if rule:
+                            (
+                                xtmp,
+                                ytmp,
+                                cidtmp,
+                                cdistmp,
+                                bidtmp,
+                                cofftmp,
+                            ) = self._applyBranchRules(
+                                rule, xtmp, ytmp, cidtmp, cdistmp, bidtmp, cofftmp
+                            )
+                        if exceptions:
+                            (
+                                xtmp,
+                                ytmp,
+                                cidtmp,
+                                cdistmp,
+                                bidtmp,
+                                cofftmp,
+                            ) = self._applyBranchExceptions(
+                                exceptions, xtmp, ytmp, cidtmp, cdistmp, bidtmp, cofftmp
+                            )
                         c = len(xtmp)
                         for ic in xtmp, ytmp, cidtmp, cdistmp, bidtmp, cofftmp:
                             if len(ic) != c:
@@ -157,7 +172,7 @@ class GenerateCrossSectionLocationFile(FM2ProfBase):
         crossectionlocationfile: Path,
         branchrulefile: Path,
     ):
-        branchrules: dict = {}
+        branchrules: Dict = {}
 
         if branchrulefile.is_file():
             branchrules = self._parseBranchRuleFile(branchrulefile)
@@ -168,14 +183,71 @@ class GenerateCrossSectionLocationFile(FM2ProfBase):
 
         self._writeCrossSectionLocationFile(crossectionlocationfile, network_dict)
 
-    def _applyBranchRules(self, rule, x, y, cid, cdis, bid, coff):
-        bfunc = {
-            "onlyedges": lambda x: [x[0], x[-1]],
-            "ignoreedges": lambda x: x[1:-1],
-            "ignorelast": lambda x: x[:-1],
-            "ignorefirst": lambda x: x[1:],
-        }
+    def _applyBranchExceptions(self, exceptions, x, y, cid, cdis, bid, coff):
+        for exc in exceptions:
+            if exc not in cid:
+                self.set_logger_message(f"{exc} not found in branch", "error")
+                continue
 
+        pop_indices = [cid.index(exc) for exc in exceptions]
+
+        for pop_index in sorted(pop_indices, reverse=True):
+            if pop_index == 0:
+                (
+                    x,
+                    y,
+                    cid,
+                    cdis,
+                    bid,
+                    coff,
+                ) = self._applyBranchRules("ignorefirst", x, y, cid, cdis, bid, coff)
+            elif pop_index == len(x) - 1:
+                (
+                    x,
+                    y,
+                    cid,
+                    cdis,
+                    bid,
+                    coff,
+                ) = self._applyBranchRules("ignorelast", x, y, cid, cdis, bid, coff)
+            else:
+                # pop the index
+                for l in [x, y, cid, bid, coff]:
+                    l.pop(pop_index)
+
+                # divide the length
+                next_pop = pop_index + 1
+                prev_pop = pop_index - 1
+                while next_pop in pop_indices:
+                    next_pop += 1
+                while prev_pop in pop_indices:
+                    prev_pop -= 1
+
+                cdis[pop_index - 1] += cdis[pop_index] / 2
+                cdis[pop_index + 1] += cdis[pop_index] / 2
+
+        if len(x) != len(cdis):
+            for pop_index in sorted(pop_indices, reverse=True):
+                del cdis[pop_index]
+
+        return x, y, cid, cdis, bid, coff
+
+    def _applyBranchRules(self, rule, x, y, cid, cdis, bid, coff):
+        # bfunc: what points to pop
+        bfunc = {
+            "onlyedges": lambda x: [
+                x[0],
+                x[-1],
+            ],  # only keep the 2 cross-section on either end of the branch
+            "ignoreedges": lambda x: x[
+                1:-1
+            ],  # keep everything except 2 css on either end of the branch
+            "ignorelast": lambda x: x[:-1],  # keep everything except last css on branch
+            "ignorefirst": lambda x: x[
+                1:
+            ],  # keep everything except first css on branch
+        }
+        # disfunc: how to modify lengths
         disfunc = {
             "onlyedges": lambda x: [sum(x) / 2] * 2,
             "ignoreedges": lambda x: [sum(x[:2]), *x[2:-2], sum(x[-2:])],
@@ -188,16 +260,23 @@ class GenerateCrossSectionLocationFile(FM2ProfBase):
             df = disfunc[rule.lower().strip()]
             return bf(x), bf(y), bf(cid), df(cdis), bf(bid), bf(coff)
         except KeyError:
-            raise NotImplementedError(rule)
+            self.set_logger_message(
+                f"'{rule}' is not a known branchrules. Known rules are: {list(bfunc.keys())}",
+                "error",
+            )
 
-    def _parseBranchRuleFile(self, branchrulefile: Path) -> Dict:
+    def _parseBranchRuleFile(self, branchrulefile: Path, delimiter: str = ",") -> Dict:
         branchrules: dict = {}
         with open(branchrulefile, "r") as f:
             for line in f:
-                key = line.split(",")[0].strip()
-                value = line.split(",")[1].strip()
+                values: List = line.strip().split(delimiter)
+                branch: str = values[0].strip()
+                rule: str = values[1].strip()
+                exceptions: List = []
+                if len(values) > 2:
+                    exceptions = [e.strip() for e in values[2:]]
 
-                branchrules[key] = value
+                branchrules[branch] = dict(rule=rule, exceptions=exceptions)
 
         return branchrules
 
@@ -242,7 +321,9 @@ class VisualiseOutput(FM2ProfBase):
         logger: Logger = None,
     ):
         super().__init__(logger=logger)
-        self._create_logger()
+
+        if not logger:
+            self._create_logger()
         self.output_dir = Path(output_directory)
         self.fig_dir = self._generate_output_dir()
         self._set_files()
@@ -251,6 +332,10 @@ class VisualiseOutput(FM2ProfBase):
         self._ref_geom_fw = []
 
         self.set_logger_message(f"Using {self.fig_dir} as output directory for figures")
+
+        # initiate plotstyle
+        # TODO: make configurable which style to use?
+        PlotStyles.van_veen()
 
     def figure_roughness_longitudinal(self, branch: str):
         """
@@ -432,6 +517,10 @@ class VisualiseOutput(FM2ProfBase):
         return cssdata
 
     @property
+    def number_of_cross_sections(self) -> int:
+        return len(list(self.cross_sections))
+
+    @property
     def cross_sections(self) -> Generator[Dict, None, None]:
         """
         Generator to loop through all cross-sections in definition file.
@@ -463,7 +552,9 @@ class VisualiseOutput(FM2ProfBase):
         reference_geometry: tuple = (),
         reference_roughness: tuple = (),
         save_to_file: bool = True,
-    ):
+        overwrite: bool = False,
+        pbar: tqdm.std.tqdm = None,
+    ) -> None:
         """
         Creates a figure
 
@@ -480,6 +571,10 @@ class VisualiseOutput(FM2ProfBase):
                                  if false, returns pyplot figure object
 
         """
+        output_file = self.fig_dir.joinpath(f"{css['id']}.png")
+        if output_file.is_file() & ~overwrite:
+            self.set_logger_message("file already exists", "debug")
+            return
         try:
             fig = plt.figure(figsize=(8, 12))
             gs = fig.add_gridspec(2, 2)
@@ -496,9 +591,8 @@ class VisualiseOutput(FM2ProfBase):
             fig, lgd = self._SetPlotStyle(fig)
 
             if save_to_file:
-                self.set_logger_message(f"New figure {css['id']}.png written to output")
                 plt.savefig(
-                    f"{self.fig_dir}/{css['id']}.png",
+                    output_file,
                     bbox_extra_artists=[lgd],
                     bbox_inches="tight",
                 )
@@ -506,11 +600,25 @@ class VisualiseOutput(FM2ProfBase):
                 return fig
 
         except Exception as e:
-            self.set_logger_message(f"error processing: {css['id']} {str(e)}", "error")
+            self.set_logger_message(
+                f"error processing: {css['id']} {str(e)}", "error", pbar=pbar
+            )
             return None
 
         finally:
             plt.close()
+
+    def plot_cross_sections(self):
+        """Makes figures for all cross-sections in project,
+        output to output directory of project"""
+        pbar = tqdm.tqdm(total=self.number_of_cross_sections)
+        self.start_new_log_task("Plotting cross-secton figures", pbar=pbar)
+
+        for css in self.cross_sections:
+            self.figure_cross_section(css, pbar=pbar)
+            pbar.update(1)
+
+        self.finish_log_task()
 
     def _SetPlotStyle(self, *args, **kwargs):
         """todo: add preference to switch styles or
@@ -671,7 +779,7 @@ class VisualiseOutput(FM2ProfBase):
             levels, values = self.getRoughnessInfoForCss(
                 css["id"], rtype="roughnessFP1"
             )
-            if levels is not None:
+            if levels is not None and values is not None:
                 ax.plot(levels, values, label="Floodplain1")
         except FileNotFoundError:
             pass
@@ -779,84 +887,87 @@ class PlotStyles:
             legend.get_frame().set_boxstyle("square", pad=0)
 
     @classmethod
-    def van_veen(cls, fig, use_legend: bool = True):
+    def van_veen(cls, fig: Figure = None, use_legend: bool = True):
         """Stijl van Van Veen"""
-        # Set default locale to NL
-        PlotStyles.set_locale("nl_NL.UTF-8")
 
-        font = {"family": "Bahnschrift", "weight": "normal", "size": 18}
-        mpl.rc("font", **font)
+        def initiate():
+            # Set default locale to NL
+            # TODO: add localization options
+            PlotStyles.set_locale("nl_NL.UTF-8")
 
-        mpl.rcParams["axes.unicode_minus"] = False
-
-        mpl.rcParams["axes.prop_cycle"] = mpl.cycler(
-            color=["k", "00cc96", "#0d38e0"] * 3,
-            linestyle=["-"] * 3 + ["--"] * 3 + ["-."] * 3,
-            linewidth=np.linspace(0.5, 3, 9),
-        )
-
-        fig.canvas.draw()  # this forces labels to be generated
-        font = {"family": "Bahnschrift", "weight": "normal", "size": 18}
-        mpl.rc("font", **font)
-        mpl.rcParams["axes.unicode_minus"] = False
-        legend_title = r"toelichting"
-
-        handles = list()
-        labels = list()
-
-        for ax in fig.axes:
-
-            ax.grid(b=True, which="major", linestyle="-", linewidth=1, color="k")
-            ax.grid(b=True, which="minor", linestyle="-", linewidth=0.5, color="k")
-
-            for _, spine in ax.spines.items():
-                spine.set_linewidth(2)
-
-            if cls._is_timeaxis(ax.xaxis):
-                ax.xaxis.set_major_formatter(cls.myFmt)
-                ax.xaxis.set_major_locator(cls.monthlocator)
-                ax.xaxis.set_minor_locator(cls.daylocator)
-            if cls._is_timeaxis(ax.yaxis):
-                ax.yaxis.set_major_formatter(cls.myFmt)
-                ax.yaxis.set_major_locator(cls.monthlocator)
-                ax.yaxis.set_minor_locator(cls.daylocator)
-
-            """
-            if legend:
-                ax.legend(loc='best',
-                          edgecolor="k", 
-                          facecolor='white',
-                          framealpha=1,
-                          borderaxespad=0,
-                          title=legend_title.upper())
-            
-            """
-            ax.set_title(ax.get_title().upper())
-            ax.set_xlabel(ax.get_xlabel().upper())
-            ax.set_ylabel(ax.get_ylabel().upper())
-
-            h, l = ax.get_legend_handles_labels()
-            handles.extend(h)
-            labels.extend(l)
-
-        fig.tight_layout()
-        if use_legend:
-            lgd = fig.legend(
-                handles,
-                labels,
-                loc="upper left",
-                bbox_to_anchor=(1.0, 0.9),
-                bbox_transform=fig.transFigure,
-                edgecolor="k",
-                facecolor="white",
-                framealpha=1,
-                borderaxespad=0,
-                title=legend_title.upper(),
+            # Color style
+            mpl.rcParams["axes.prop_cycle"] = mpl.cycler(
+                color=["k", "00cc96", "#0d38e0"] * 3,
+                linestyle=["-"] * 3 + ["--"] * 3 + ["-."] * 3,
+                linewidth=np.linspace(0.5, 3, 9),
             )
 
-            return fig, lgd
+            # Font style
+            font = {"family": "Bahnschrift", "weight": "normal", "size": 18}
+            mpl.rc("font", **font)
+            mpl.rcParams[
+                "axes.unicode_minus"
+            ] = False  # not all fonts support the unicode minus
+
+        def styleFigure(fig, use_legend):
+
+            # this forces labels to be generated. Necessary to detect datetimes
+            fig.canvas.draw()
+
+            # Set styles for each axis
+            legend_title = r"toelichting"
+            handles = list()
+            labels = list()
+
+            for ax in fig.axes:
+
+                ax.grid(b=True, which="major", linestyle="-", linewidth=1, color="k")
+                ax.grid(b=True, which="minor", linestyle="-", linewidth=0.5, color="k")
+
+                for _, spine in ax.spines.items():
+                    spine.set_linewidth(2)
+
+                if cls._is_timeaxis(ax.xaxis):
+                    ax.xaxis.set_major_formatter(cls.myFmt)
+                    ax.xaxis.set_major_locator(cls.monthlocator)
+                    ax.xaxis.set_minor_locator(cls.daylocator)
+                if cls._is_timeaxis(ax.yaxis):
+                    ax.yaxis.set_major_formatter(cls.myFmt)
+                    ax.yaxis.set_major_locator(cls.monthlocator)
+                    ax.yaxis.set_minor_locator(cls.daylocator)
+
+                ax.set_title(ax.get_title().upper())
+                ax.set_xlabel(ax.get_xlabel().upper())
+                ax.set_ylabel(ax.get_ylabel().upper())
+
+                h, l = ax.get_legend_handles_labels()
+                handles.extend(h)
+                labels.extend(l)
+
+            fig.tight_layout()
+            if use_legend:
+                lgd = fig.legend(
+                    handles,
+                    labels,
+                    loc="upper left",
+                    bbox_to_anchor=(1.0, 0.9),
+                    bbox_transform=fig.transFigure,
+                    edgecolor="k",
+                    facecolor="white",
+                    framealpha=1,
+                    borderaxespad=0,
+                    title=legend_title.upper(),
+                )
+
+                return fig, lgd
+            else:
+                return fig, handles, labels
+
+        if not fig:
+            return initiate()
         else:
-            return fig, handles, labels
+            initiate()
+            return styleFigure(fig, use_legend)
 
 
 @dataclass
@@ -1047,7 +1158,22 @@ class ModelOutputReader(FM2ProfBase):
             )
             self.set_logger_message("Using existing flow2d csv files")
         else:
+            # write to file
             self._import_2Dobservations()
+
+            # then load
+            self.data_2D_Q = pd.read_csv(
+                self.file_2D_Q,
+                index_col=0,
+                parse_dates=True,
+                date_parser=self._dateparser,
+            )
+            self.data_2D_H = pd.read_csv(
+                self.file_2D_H,
+                index_col=0,
+                parse_dates=True,
+                date_parser=self._dateparser,
+            )
 
     def get_1d2d_map(self):
         """Writes a map between stations in 1D and stations in 2D. Matches based on identical characters in first nine slots"""
@@ -1133,7 +1259,7 @@ class ModelOutputReader(FM2ProfBase):
                 time = self._parse_time(f.variables["time"])
                 df = pd.DataFrame(columns=station_map.index, index=time)
                 print("Matching 1D and 2D data")
-                for index, station in tqdm(
+                for index, station in tqdm.tqdm(
                     station_map.iterrows(), total=len(station_map.index)
                 ):
                     # Get index of the current station, or skip if ValueError
@@ -1198,7 +1324,7 @@ class ModelOutputReader(FM2ProfBase):
             # get matching names based on first nine characters
             with open(self.file_1D2D_map, "w") as fw:
                 fw.write("1D,2D_H,2D_Q\n")
-                for n in tqdm(list(self._parse_1D_stations())):
+                for n in tqdm.tqdm(list(self._parse_1D_stations())):
                     try:
                         qn = next(x for x in qnames if x.startswith(n[:9]))
                     except StopIteration:
@@ -1230,10 +1356,10 @@ class Compare1D2D(ModelOutputReader):
 
     def __init__(
         self,
-        project: Project = None,
-        path_1d: Union[Path, str] = None,
-        path_2d: Union[Path, str] = None,
-        routes: List[List[str]] = None,
+        project: Project,
+        path_1d: Union[Path, str],
+        path_2d: Union[Path, str],
+        routes: List[List[str]],
     ):
         if project:
             super().__init__(logger=project.get_logger())
@@ -1247,6 +1373,8 @@ class Compare1D2D(ModelOutputReader):
             self.path_flow2d = path_2d
 
         self.routes = routes
+        self.data_1D_H: pd.DataFrame = None
+        self.data_2D_H: pd.DataFrame = None
         self.data_1D_H_digitized: pd.DataFrame = None
         self.data_2D_H_digitized: pd.DataFrame = None
         self._qsteps = np.arange(0, 100 * np.ceil(18000 / 100), 200)
@@ -1269,7 +1397,7 @@ class Compare1D2D(ModelOutputReader):
 
     def eval(self):
 
-        for route in tqdm(self.routes):
+        for route in tqdm.tqdm(self.routes):
             self.set_logger_message(f"Making figures for route {route}")
             self.figure_longitudinal_rating_curve(route)
             self.figure_longitudinal_time(route)
@@ -1277,7 +1405,7 @@ class Compare1D2D(ModelOutputReader):
             self.heatmap_time(route)
 
         self.set_logger_message(f"Making figures for stations")
-        for station in tqdm(self.stations(), total=self.data_1D_H.shape[1]):
+        for station in tqdm.tqdm(self.stations(), total=self.data_1D_H.shape[1]):
             self.figure_at_station(station)
 
     @property
@@ -1381,6 +1509,10 @@ class Compare1D2D(ModelOutputReader):
         sorted_stations = [stations[i] for i in sorted_indices]
         sorted_rkms = [routekms[i] for i in sorted_indices]
 
+        # sort lmw stations
+        lmw_stations = [
+            lmw_stations[j] for j in np.argsort([i[1] for i in lmw_stations])
+        ]
         return sorted_stations, sorted_rkms, lmw_stations
 
     def figure_at_station(self, station: str) -> None:
@@ -1496,7 +1628,9 @@ class Compare1D2D(ModelOutputReader):
         plt.suptitle(title.upper())
         fig.tight_layout()
         PlotStyles.van_veen(fig, use_legend=[True, False])
-        fig.savefig(self.output_path.joinpath("discharge").joinpath(f"{title}.png"))
+        fig.savefig(
+            self.output_path.joinpath("figures/discharge").joinpath(f"{title}.png")
+        )
 
     def get_data_along_route_for_time(
         self, data: pd.DataFrame, route: List[str], time_index: int
@@ -1706,7 +1840,7 @@ class Compare1D2D(ModelOutputReader):
 
         for i in range(n):
             t = station.min() + i * stepsize
-            yield (station < t).idxmin()
+            yield (station.dropna() < t).idxmin()
 
     def heatmap_time(self, route: List[str]) -> None:
         """
