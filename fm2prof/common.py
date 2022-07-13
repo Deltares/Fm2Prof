@@ -7,7 +7,7 @@ import logging
 
 # Imports from standard library
 import os
-import time
+from time import time
 from datetime import datetime
 from logging import Logger, LogRecord
 from typing import AnyStr, Mapping
@@ -24,102 +24,84 @@ from colorama import Back, Fore, Style
 IniFile = "fm2prof.IniFile.IniFile"
 
 
-class ElapsedFormatter:
-    """
-    Logger formatting class
-    """
+class ElapsedFormatter():
+    __new_iteration = 1
 
     def __init__(self):
-        self.start_time = time.time()
+        self.start_time = time()
         self.number_of_iterations = 1
         self.current_iteration = 0
-
-        self._new_iteration = False
-        self._intro = False
-        self._colors = {
-            "INFO": [Back.BLUE, Fore.BLUE],
-            "DEBUG": [Back.CYAN + Fore.BLACK, Fore.CYAN + Back.BLACK],
-            "WARNING": [Back.YELLOW + Fore.BLACK, Fore.YELLOW],
-            "ERROR": [Back.RED, Fore.RED],
-            "RESET": Style.RESET_ALL,
-        }
-
-        self._loglibrary = {
-            "INFO": 0,
-            "DEBUG": 0,
-            "WARNING": 0,
-            "ERROR": 0,
-        }  # used to store the number of messages
-
         colorama.init()
-
+        
     def format(self, record):
         if self._intro:
             return self.__format_intro(record)
-        elif self._new_iteration:
+        if self.__new_iteration > 0:
             return self.__format_header(record)
+        if self.__new_iteration == -1:
+            return self.__format_footer(record)
         else:
             return self.__format_message(record)
 
-    def get_elapsed_time(self, current_time):
-        return current_time - self.start_time
-
-    def __current_time(self) -> AnyStr:
-        return datetime.now().strftime("%Y-%m-%d %H:%M")
-
-    def __format_intro(self, record: LogRecord) -> AnyStr:
+    def __format_intro(self, record:LogRecord):
         level = record.levelname
-        color = self._colors[level]
-        reset = self._colors["RESET"]
+        #color = self._colors[level]
+        #reset = self._colors["RESET"]
         return f"{record.getMessage()}"
 
-    def __format_header(self, record: LogRecord) -> AnyStr:
-        # Only one header
-        self._new_iteration = False
-        color = self._colors["DEBUG"][0]
-        reset = self._colors["RESET"]
-        return f"{color}{self.__current_time()} {record.getMessage()} {reset}"
+    def __format_header(self, record:LogRecord):
+        """ Formats the header of a new task"""
+        
+        self.__new_iteration -= 1
+        message= record.getMessage()
+        current_time = datetime.now().strftime("%Y-%m-%d %H:%M")
+        return f"╔═════╣ {Back.BLACK}{current_time} {message}{Style.RESET_ALL}"
 
-    def __format_message(self, record) -> AnyStr:
+    def __format_footer(self, record:LogRecord):
+        self.__new_iteration -= 1
+        elapsed_seconds = record.created - self.start_time
+        message= record.getMessage()
+        return f"╚═════╣ {Back.BLACK}Task finished in {elapsed_seconds:.2f}sec{Style.RESET_ALL}"
+
+    def __format_message(self, record:LogRecord):
+        elapsed_seconds = record.created - self.start_time
+        color = {'INFO': [Back.BLUE, Fore.BLUE],
+                 'DEBUG': [Back.CYAN, Fore.CYAN],
+                 'WARNING': [Back.YELLOW + Fore.BLACK, Fore.YELLOW],
+                 'ERROR': [Back.RED, Fore.RED]}
+
         level = record.levelname
-        color = self._colors[level]
-        elapsed_seconds = self.get_elapsed_time(record.created)
+        message= record.getMessage()
 
-        # log the number of warnings, errors
-        self._loglibrary[level] += 1
-
-        return "{color}{now} {level:>7} {reset}{color2}{reset} {progress:4.0f}% T+ {elapsed:.2f}s {message}".format(
-            color=color[0],
-            color2=color[1],
-            now=self.__current_time(),
-            level=level,
-            reset=self._colors["RESET"],
-            elapsed=elapsed_seconds,
-            message=record.getMessage(),
-            progress=100 * self.current_iteration / self.number_of_iterations,
-        )
-
-    def __reset_time(self):
-        self.start_time = time.time()
+        formatted_string = f"║  {color[level][0]} {level:>7} "+\
+                           f"{Style.RESET_ALL}{color[level][1]}{Style.RESET_ALL} T+ {elapsed_seconds:.2f}s {message}"
+        
+        return formatted_string
+    
+    def __reset(self):
+        self.start_time = time()
 
     def start_new_iteration(self):
-        """
-        Use this method to print a header
-        """
         self.current_iteration += 1
-        self._next_step()
+        self.new_task()
 
-    def _next_step(self):
-        self._new_iteration = True
-        self.__reset_time()
+    def new_task(self):
+        self.__new_iteration = 1
+        self.__reset()
 
+    def finish_task(self):
+        self.__new_iteration = -1
+        
     def set_number_of_iterations(self, n):
-        assert n > 0, "Total number of iterations should be higher than zero"
+        assert n > 0, 'Total number of iterations should be higher than zero'
         self.number_of_iterations = n
 
     def set_intro(self, flag: bool = True):
         self._intro = flag
 
+    def get_elapsed_time(self):
+        current_time = datetime.now().strftime("%Y-%m-%d %H:%M")
+        return current_time - self.start_time
 
 class ElapsedFileFormatter(ElapsedFormatter):
     def __init__(self):
@@ -185,7 +167,7 @@ class FM2ProfBase:
         self.__logger = logger
 
     def set_logger_message(
-        self, err_mssg: str, level: str = "info", header: bool = False
+        self, err_mssg: str = "" , level: str = "info", header: bool = False
     ) -> None:
         """Sets message to logger if this is set.
 
@@ -224,6 +206,15 @@ class FM2ProfBase:
         """
         self.get_logformatter().start_new_iteration()
         self.set_logger_message(f"Starting new task: {task_name}")
+
+    def finish_log_task(self) -> None:
+        """ 
+        Use this method to finish task. 
+
+        :param task_name: task name, will be displayed in log message
+        """
+        self.get_logformatter().finish_task()
+        self.set_logger_message()
 
     def get_logformatter(self) -> ElapsedFormatter:
         """Returns formatter"""

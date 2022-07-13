@@ -72,6 +72,7 @@ class Fm2ProfRunner(FM2ProfBase):
         Parameters:
             overwrite: if True, overwrites existing output. If False, exits if output detected
         """
+
         if self.get_inifile() is None:
             self.set_logger_message(
                 "No ini file was specified: the run cannot go further.", "Warning"
@@ -105,18 +106,19 @@ class Fm2ProfRunner(FM2ProfBase):
         self.set_inifile(IniFileObject)
 
     def _print_header(self):
-        self.set_logger_message(
-            "=" * 80
-            + "\n"
-            + f"FM2PROF version {__version__}\n\n"
-            + f"{self.__copyright__:>6}\n\n"
-            + f"Authors: {self.__authors__:>6}\n"
-            + f"Contact: {self.__contact__:>6}\n"
-            + f"License: {self.__license__:>6} license. For more info see LICENSE.txt\n"
-            + "=" * 80
-            + "\n",
-            header=True,
-        )
+        header_text = [
+            "=" * 80,
+            "",
+            f"FM2PROF version {__version__}",
+            f"{self.__copyright__:>6}",
+            f"Authors: {self.__authors__:>6}",
+            f"Contact: {self.__contact__:>6}",
+            f"License: {self.__license__:>6} license. For more info see LICENSE.txt",
+            "=" * 80,
+            ""
+        ]
+        for line in header_text:
+            self.set_logger_message(line, header=True)
 
     def _run_inifile(self) -> None:
         """Runs the desired emulation from 2d to 1d given the mapfile
@@ -129,6 +131,7 @@ class Fm2ProfRunner(FM2ProfBase):
         """
 
         # Initialise the project
+        self.start_new_log_task("Initialising FM2PROF")
         try:
             self._initialise_fm2prof()
         except:
@@ -138,6 +141,7 @@ class Fm2ProfRunner(FM2ProfBase):
             for line in traceback.format_exc().splitlines():
                 self.set_logger_message(line, "debug")
             return False
+        self.finish_log_task()
 
         # Generate cross-sections
         try:
@@ -670,10 +674,7 @@ class Fm2ProfRunner(FM2ProfBase):
         created_css.set_edge_output_list()
 
         if created_css is not None:
-            elapsed_time = self.get_logformatter().get_elapsed_time(time.time())
-            self.set_logger_message(
-                f"Cross-section {created_css.name} derived in {elapsed_time:.2f} s"
-            )
+            self.finish_log_task()
         return created_css
 
     def _build_cross_section_geometry(
