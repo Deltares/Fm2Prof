@@ -10,6 +10,7 @@ from pathlib import Path
 from typing import Any, Callable, Dict, Generator, List, Optional, Tuple, Union
 
 import matplotlib as mpl
+from matplotlib.figure import Figure
 import matplotlib.dates as mdates
 import matplotlib.pyplot as plt
 import numpy as np
@@ -323,6 +324,10 @@ class VisualiseOutput(FM2ProfBase):
         self._ref_geom_fw = []
 
         self.set_logger_message(f"Using {self.fig_dir} as output directory for figures")
+
+        # initiate plotstyle
+        # TODO: make configurable which style to use?
+        PlotStyles.van_veen()
 
     def figure_roughness_longitudinal(self, branch: str):
         """
@@ -859,85 +864,87 @@ class PlotStyles:
             legend.get_frame().set_boxstyle("square", pad=0)
 
     @classmethod
-    def van_veen(cls, fig, use_legend: bool = True):
+    def van_veen(cls, fig:Figure=None, use_legend: bool = True):
         """Stijl van Van Veen"""
-        # Set default locale to NL
-        PlotStyles.set_locale("nl_NL.UTF-8")
 
-        font = {"family": "Bahnschrift", "weight": "normal", "size": 18}
-        mpl.rc("font", **font)
+        def initiate():
+            # Set default locale to NL
+            # TODO: add localization options
+            PlotStyles.set_locale("nl_NL.UTF-8")
 
-        mpl.rcParams["axes.unicode_minus"] = False
-
-        mpl.rcParams["axes.prop_cycle"] = mpl.cycler(
-            color=["k", "00cc96", "#0d38e0"] * 3,
-            linestyle=["-"] * 3 + ["--"] * 3 + ["-."] * 3,
-            linewidth=np.linspace(0.5, 3, 9),
-        )
-
-        fig.canvas.draw()  # this forces labels to be generated
-        font = {"family": "Bahnschrift", "weight": "normal", "size": 18}
-        mpl.rc("font", **font)
-        mpl.rcParams["axes.unicode_minus"] = False
-        legend_title = r"toelichting"
-
-        handles = list()
-        labels = list()
-
-        for ax in fig.axes:
-
-            ax.grid(b=True, which="major", linestyle="-", linewidth=1, color="k")
-            ax.grid(b=True, which="minor", linestyle="-", linewidth=0.5, color="k")
-
-            for _, spine in ax.spines.items():
-                spine.set_linewidth(2)
-
-            if cls._is_timeaxis(ax.xaxis):
-                ax.xaxis.set_major_formatter(cls.myFmt)
-                ax.xaxis.set_major_locator(cls.monthlocator)
-                ax.xaxis.set_minor_locator(cls.daylocator)
-            if cls._is_timeaxis(ax.yaxis):
-                ax.yaxis.set_major_formatter(cls.myFmt)
-                ax.yaxis.set_major_locator(cls.monthlocator)
-                ax.yaxis.set_minor_locator(cls.daylocator)
-
-            """
-            if legend:
-                ax.legend(loc='best',
-                          edgecolor="k", 
-                          facecolor='white',
-                          framealpha=1,
-                          borderaxespad=0,
-                          title=legend_title.upper())
-            
-            """
-            ax.set_title(ax.get_title().upper())
-            ax.set_xlabel(ax.get_xlabel().upper())
-            ax.set_ylabel(ax.get_ylabel().upper())
-
-            h, l = ax.get_legend_handles_labels()
-            handles.extend(h)
-            labels.extend(l)
-
-        fig.tight_layout()
-        if use_legend:
-            lgd = fig.legend(
-                handles,
-                labels,
-                loc="upper left",
-                bbox_to_anchor=(1.0, 0.9),
-                bbox_transform=fig.transFigure,
-                edgecolor="k",
-                facecolor="white",
-                framealpha=1,
-                borderaxespad=0,
-                title=legend_title.upper(),
+            # Color style
+            mpl.rcParams["axes.prop_cycle"] = mpl.cycler(
+                color=["k", "00cc96", "#0d38e0"] * 3,
+                linestyle=["-"] * 3 + ["--"] * 3 + ["-."] * 3,
+                linewidth=np.linspace(0.5, 3, 9),
             )
 
-            return fig, lgd
-        else:
-            return fig, handles, labels
+            # Font style
+            font = {"family": "Bahnschrift", "weight": "normal", "size": 18}
+            mpl.rc("font", **font)
+            mpl.rcParams["axes.unicode_minus"] = False   # not all fonts support the unicode minus
 
+            
+        
+        def styleFigure(fig, use_legend):
+
+            # this forces labels to be generated. Necessary to detect datetimes
+            fig.canvas.draw()  
+            
+            # Set styles for each axis
+            legend_title = r"toelichting"
+            handles = list()
+            labels = list()
+
+            for ax in fig.axes:
+
+                ax.grid(b=True, which="major", linestyle="-", linewidth=1, color="k")
+                ax.grid(b=True, which="minor", linestyle="-", linewidth=0.5, color="k")
+
+                for _, spine in ax.spines.items():
+                    spine.set_linewidth(2)
+
+                if cls._is_timeaxis(ax.xaxis):
+                    ax.xaxis.set_major_formatter(cls.myFmt)
+                    ax.xaxis.set_major_locator(cls.monthlocator)
+                    ax.xaxis.set_minor_locator(cls.daylocator)
+                if cls._is_timeaxis(ax.yaxis):
+                    ax.yaxis.set_major_formatter(cls.myFmt)
+                    ax.yaxis.set_major_locator(cls.monthlocator)
+                    ax.yaxis.set_minor_locator(cls.daylocator)
+
+                ax.set_title(ax.get_title().upper())
+                ax.set_xlabel(ax.get_xlabel().upper())
+                ax.set_ylabel(ax.get_ylabel().upper())
+
+                h, l = ax.get_legend_handles_labels()
+                handles.extend(h)
+                labels.extend(l)
+
+            fig.tight_layout()
+            if use_legend:
+                lgd = fig.legend(
+                    handles,
+                    labels,
+                    loc="upper left",
+                    bbox_to_anchor=(1.0, 0.9),
+                    bbox_transform=fig.transFigure,
+                    edgecolor="k",
+                    facecolor="white",
+                    framealpha=1,
+                    borderaxespad=0,
+                    title=legend_title.upper(),
+                )
+
+                return fig, lgd
+            else:
+                return fig, handles, labels
+
+        if not fig:
+            return initiate()
+        else:
+            initiate()
+            return styleFigure(fig, use_legend)
 
 @dataclass
 class DeltaresSectionItem:
@@ -1127,7 +1134,23 @@ class ModelOutputReader(FM2ProfBase):
             )
             self.set_logger_message("Using existing flow2d csv files")
         else:
+            # write to file
             self._import_2Dobservations()
+
+            # then load
+            self.data_2D_Q = pd.read_csv(
+                self.file_2D_Q,
+                index_col=0,
+                parse_dates=True,
+                date_parser=self._dateparser,
+            )
+            self.data_2D_H = pd.read_csv(
+                self.file_2D_H,
+                index_col=0,
+                parse_dates=True,
+                date_parser=self._dateparser,
+            )
+            
 
     def get_1d2d_map(self):
         """Writes a map between stations in 1D and stations in 2D. Matches based on identical characters in first nine slots"""
@@ -1327,6 +1350,8 @@ class Compare1D2D(ModelOutputReader):
             self.path_flow2d = path_2d
 
         self.routes = routes
+        self.data_1D_H: pd.DataFrame = None
+        self.data_2D_H: pd.DataFrame = None
         self.data_1D_H_digitized: pd.DataFrame = None
         self.data_2D_H_digitized: pd.DataFrame = None
         self._qsteps = np.arange(0, 100 * np.ceil(18000 / 100), 200)
@@ -1461,6 +1486,8 @@ class Compare1D2D(ModelOutputReader):
         sorted_stations = [stations[i] for i in sorted_indices]
         sorted_rkms = [routekms[i] for i in sorted_indices]
 
+        # sort lmw stations
+        lmw_stations = [lmw_stations[j] for j in np.argsort([i[1] for i in lmw_stations])]
         return sorted_stations, sorted_rkms, lmw_stations
 
     def figure_at_station(self, station: str) -> None:
@@ -1786,7 +1813,7 @@ class Compare1D2D(ModelOutputReader):
 
         for i in range(n):
             t = station.min() + i * stepsize
-            yield (station < t).idxmin()
+            yield (station.dropna() < t).idxmin()
 
     def heatmap_time(self, route: List[str]) -> None:
         """
