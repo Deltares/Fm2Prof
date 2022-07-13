@@ -156,6 +156,7 @@ class Fm2ProfRunner(FM2ProfBase):
             return False
 
         # Finalise and write output
+        self.start_new_log_task("Finalizing")
         try:
             self._finalise_fm2prof(cross_sections)
         except:
@@ -171,6 +172,7 @@ class Fm2ProfRunner(FM2ProfBase):
             self.set_logger_message(
                 "Unexpected exception during printing of log report", "error"
             )
+        self.finish_log_task()
 
         return True
 
@@ -245,7 +247,6 @@ class Fm2ProfRunner(FM2ProfBase):
         """
         Write to output, perform checks
         """
-        self.start_new_log_task("Finalizing")
         self.set_logger_message("Interpolating roughness")
         FE.interpolate_roughness(cross_sections)
 
