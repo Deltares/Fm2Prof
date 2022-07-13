@@ -18,7 +18,7 @@ import pandas as pd
 from matplotlib.ticker import AutoMinorLocator, FormatStrFormatter, MultipleLocator
 from netCDF4 import Dataset
 from pandas.plotting import register_matplotlib_converters
-from tqdm import tqdm
+import tqdm
 
 from fm2prof import Project
 from fm2prof.common import FM2ProfBase
@@ -315,14 +315,16 @@ class VisualiseOutput(FM2ProfBase):
         logger: Logger = None,
     ):
         super().__init__(logger=logger)
-        self._create_logger()
+        
+        if not logger:
+            self._create_logger()
         self.output_dir = Path(output_directory)
         self.fig_dir = self._generate_output_dir()
         self._set_files()
         self._ref_geom_y = []
         self._ref_geom_tw = []
         self._ref_geom_fw = []
-
+        
         self.set_logger_message(f"Using {self.fig_dir} as output directory for figures")
 
         # initiate plotstyle
@@ -544,7 +546,8 @@ class VisualiseOutput(FM2ProfBase):
         reference_geometry: tuple = (),
         reference_roughness: tuple = (),
         save_to_file: bool = True,
-        overwrite: bool = False
+        overwrite: bool = False,
+        pbar:tqdm.std.tqdm = None,
     ) -> None:
         """
         Creates a figure
@@ -591,11 +594,24 @@ class VisualiseOutput(FM2ProfBase):
                 return fig
 
         except Exception as e:
-            self.set_logger_message(f"error processing: {css['id']} {str(e)}", "error")
+            self.set_logger_message(f"error processing: {css['id']} {str(e)}", "error", pbar=pbar)
             return None
 
         finally:
             plt.close()
+
+    def plot_cross_sections(self):
+        """ Makes figures for all cross-sections in project, 
+        output to output directory of project """
+        pbar = tqdm.tqdm(total=self.number_of_cross_sections)
+        self.start_new_log_task("Plotting cross-secton figures", pbar=pbar)
+
+        for css in self.cross_sections:
+            self.figure_cross_section(css, pbar=pbar)
+            pbar.update(1)
+        
+        self.finish_log_task()
+
 
     def _SetPlotStyle(self, *args, **kwargs):
         """todo: add preference to switch styles or
@@ -890,7 +906,7 @@ class PlotStyles:
 
             # this forces labels to be generated. Necessary to detect datetimes
             fig.canvas.draw()  
-            
+
             # Set styles for each axis
             legend_title = r"toelichting"
             handles = list()
@@ -1236,7 +1252,7 @@ class ModelOutputReader(FM2ProfBase):
                 time = self._parse_time(f.variables["time"])
                 df = pd.DataFrame(columns=station_map.index, index=time)
                 print("Matching 1D and 2D data")
-                for index, station in tqdm(
+                for index, station in tqdm.tqdm(
                     station_map.iterrows(), total=len(station_map.index)
                 ):
                     # Get index of the current station, or skip if ValueError
@@ -1301,7 +1317,7 @@ class ModelOutputReader(FM2ProfBase):
             # get matching names based on first nine characters
             with open(self.file_1D2D_map, "w") as fw:
                 fw.write("1D,2D_H,2D_Q\n")
-                for n in tqdm(list(self._parse_1D_stations())):
+                for n in tqdm.tqdm(list(self._parse_1D_stations())):
                     try:
                         qn = next(x for x in qnames if x.startswith(n[:9]))
                     except StopIteration:
@@ -1374,7 +1390,7 @@ class Compare1D2D(ModelOutputReader):
 
     def eval(self):
 
-        for route in tqdm(self.routes):
+        for route in tqdm.tqdm(self.routes):
             self.set_logger_message(f"Making figures for route {route}")
             self.figure_longitudinal_rating_curve(route)
             self.figure_longitudinal_time(route)
@@ -1382,7 +1398,7 @@ class Compare1D2D(ModelOutputReader):
             self.heatmap_time(route)
 
         self.set_logger_message(f"Making figures for stations")
-        for station in tqdm(self.stations(), total=self.data_1D_H.shape[1]):
+        for station in tqdm.tqdm(self.stations(), total=self.data_1D_H.shape[1]):
             self.figure_at_station(station)
 
     @property
