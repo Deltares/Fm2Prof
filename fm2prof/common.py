@@ -7,21 +7,23 @@ import logging
 
 # Imports from standard library
 import os
-from time import time
 from datetime import datetime
 from logging import Logger, LogRecord
+from time import time
 from typing import AnyStr, Mapping
-import tqdm 
+
 import colorama
 
 # Import from dependencies
 import numpy as np
+import tqdm
 from colorama import Back, Fore, Style
 
 # Import from package
 # none
 
 IniFile = "fm2prof.IniFile.IniFile"
+
 
 class TqdmLoggingHandler(logging.StreamHandler):
     def __init__(self):
@@ -33,30 +35,32 @@ class TqdmLoggingHandler(logging.StreamHandler):
             if self.formatter.pbar:
                 self.formatter.pbar.write(msg)
             else:
-                stream=self.stream
-                stream.write(msg+self.terminator)
+                stream = self.stream
+                stream.write(msg + self.terminator)
 
             self.flush()
         except Exception as e:
-            self.handleError(record)  
+            self.handleError(record)
 
 
-class ElapsedFormatter():
+class ElapsedFormatter:
     __new_iteration = 1
 
     def __init__(self):
         self.start_time = time()
-        self.number_of_iterations:int = 1
-        self.current_iteration:int = 0
-        self._pbar:tqdm.tqdm=None
+        self.number_of_iterations: int = 1
+        self.current_iteration: int = 0
+        self._pbar: tqdm.tqdm = None
         self._resetStyle = Style.RESET_ALL
-        self._colors = {'INFO': [Back.BLUE, Fore.BLUE],
-                        'DEBUG': [Back.CYAN, Fore.CYAN],
-                        'WARNING': [Back.YELLOW + Fore.BLACK, Fore.YELLOW],
-                        'ERROR': [Back.RED, Fore.RED]}
+        self._colors = {
+            "INFO": [Back.BLUE, Fore.BLUE],
+            "DEBUG": [Back.CYAN, Fore.CYAN],
+            "WARNING": [Back.YELLOW + Fore.BLACK, Fore.YELLOW],
+            "ERROR": [Back.RED, Fore.RED],
+        }
 
         colorama.init()
-    
+
     @property
     def pbar(self):
         return self._pbar
@@ -78,46 +82,47 @@ class ElapsedFormatter():
         else:
             return self.__format_message(record)
 
-    def __format_intro(self, record:LogRecord):
+    def __format_intro(self, record: LogRecord):
         level = record.levelname
-        #color = self._colors[level]
-        #reset = self._colors["RESET"]
+        # color = self._colors[level]
+        # reset = self._colors["RESET"]
         return f"{record.getMessage()}"
 
-    def __format_header(self, record:LogRecord):
-        """ Formats the header of a new task"""
-        
+    def __format_header(self, record: LogRecord):
+        """Formats the header of a new task"""
+
         self.__new_iteration -= 1
-        message= record.getMessage()
+        message = record.getMessage()
         current_time = datetime.now().strftime("%Y-%m-%d %H:%M")
         return f"╔═════╣ {self._resetStyle}{current_time} {message}{self._resetStyle}"
 
-    def __format_footer(self, record:LogRecord):
+    def __format_footer(self, record: LogRecord):
         self.__new_iteration -= 1
         elapsed_seconds = record.created - self.start_time
-        message= record.getMessage()
+        message = record.getMessage()
         return f"╚═════╣ {self._resetStyle}Task finished in {elapsed_seconds:.2f}sec{self._resetStyle}"
 
-    def __format_message(self, record:LogRecord):
+    def __format_message(self, record: LogRecord):
         elapsed_seconds = record.created - self.start_time
         color = self._colors
 
         level = record.levelname
-        message= record.getMessage()
+        message = record.getMessage()
 
-        formatted_string = f"║  {color[level][0]} {level:>7} "+\
-                           f"{self._resetStyle}{color[level][1]}{self._resetStyle} T+ {elapsed_seconds:.2f}s {message}"
-        
+        formatted_string = (
+            f"║  {color[level][0]} {level:>7} "
+            + f"{self._resetStyle}{color[level][1]}{self._resetStyle} T+ {elapsed_seconds:.2f}s {message}"
+        )
+
         return formatted_string
-    
+
     def __reset(self):
         self.start_time = time()
 
-    def start_new_iteration(self, pbar:tqdm.tqdm=None):
+    def start_new_iteration(self, pbar: tqdm.tqdm = None):
         self.current_iteration += 1
         self.new_task()
-        self.pbar=pbar
-        
+        self.pbar = pbar
 
     def new_task(self):
         self.__new_iteration = 1
@@ -125,9 +130,9 @@ class ElapsedFormatter():
 
     def finish_task(self):
         self.__new_iteration = -1
-        
+
     def set_number_of_iterations(self, n):
-        assert n > 0, 'Total number of iterations should be higher than zero'
+        assert n > 0, "Total number of iterations should be higher than zero"
         self.number_of_iterations = n
 
     def set_intro(self, flag: bool = True):
@@ -141,7 +146,7 @@ class ElapsedFormatter():
 class ElapsedFileFormatter(ElapsedFormatter):
     def __init__(self):
         super().__init__()
-        self._resetStyle = "" 
+        self._resetStyle = ""
         self._colors = {
             "INFO": ["", ""],
             "DEBUG": ["", ""],
@@ -156,7 +161,8 @@ class ElapsedFileFormatter(ElapsedFormatter):
 
     @pbar.setter
     def pbar(self, pbar):
-        self._pbar=None
+        self._pbar = None
+
 
 class FM2ProfBase:
     """
@@ -185,7 +191,7 @@ class FM2ProfBase:
         # create formatter
         self.__logger.__logformatter = ElapsedFormatter()
         self.__logger._Filelogformatter = ElapsedFileFormatter()
-        
+
         # create console handler
         if TqdmLoggingHandler not in map(type, self.__logger.handlers):
             ch = TqdmLoggingHandler()
@@ -210,7 +216,7 @@ class FM2ProfBase:
         self.__logger = logger
 
     def set_logger_message(
-        self, err_mssg: str = "" , level: str = "info", header: bool = False
+        self, err_mssg: str = "", level: str = "info", header: bool = False
     ) -> None:
         """Sets message to logger if this is set.
 
@@ -241,7 +247,9 @@ class FM2ProfBase:
         elif level.lower() == "critical":
             self.__logger.critical(err_mssg)
 
-    def start_new_log_task(self, task_name: str = "NOT DEFINED", pbar:tqdm.tqdm = None) -> None:
+    def start_new_log_task(
+        self, task_name: str = "NOT DEFINED", pbar: tqdm.tqdm = None
+    ) -> None:
         """
         Use this method to start a new task. Will reset the internal clock.
 
@@ -252,19 +260,19 @@ class FM2ProfBase:
         self.set_logger_message(f"Starting new task: {task_name}")
 
     def finish_log_task(self) -> None:
-        """ 
-        Use this method to finish task. 
+        """
+        Use this method to finish task.
 
         :param task_name: task name, will be displayed in log message
         """
         self.get_logformatter().finish_task()
         self.set_logger_message()
-        self.pbar=None
+        self.pbar = None
 
     def get_logformatter(self) -> ElapsedFormatter:
         """Returns formatter"""
         return self.get_logger().__logformatter
-    
+
     def get_filelogformatter(self) -> ElapsedFormatter:
         """Returns formatter"""
         return self.get_logger()._Filelogformatter
