@@ -1426,15 +1426,15 @@ class CrossSection(FM2ProfBase):
         dif = self.section_widths["main"] - self._css_flow_width[0]
 
         # cm accuracy, and at least 10 cm difference
-        # TODO: decide and implement some accuracy, e.g. 1e-3. 
+        # TODO: decide and implement some accuracy, e.g. 1e-3.
         # rounding errors may still lead to problems if main==flow width [0]
         # in sobek
         tol = 0.10
-        dif = math.floor(dif * 100) / 100 
+        dif = math.floor(dif * 100) / 100
 
-        if (dif-tol) < 0:
-            self.section_widths["main"] -= (dif-tol)
-            self.section_widths["floodplain1"] += (dif-tol)
+        if (dif - tol) < 0:
+            self.section_widths["main"] -= dif - tol
+            self.section_widths["floodplain1"] += dif - tol
             self.set_logger_message(
                 f"Increased main section width by {-1*(dif-tol):.2f}", "warning"
             )

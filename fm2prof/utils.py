@@ -10,15 +10,15 @@ from pathlib import Path
 from typing import Any, Callable, Dict, Generator, List, Optional, Tuple, Union
 
 import matplotlib as mpl
-from matplotlib.figure import Figure
 import matplotlib.dates as mdates
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import tqdm
+from matplotlib.figure import Figure
 from matplotlib.ticker import AutoMinorLocator, FormatStrFormatter, MultipleLocator
 from netCDF4 import Dataset
 from pandas.plotting import register_matplotlib_converters
-import tqdm
 
 from fm2prof import Project
 from fm2prof.common import FM2ProfBase
@@ -127,8 +127,8 @@ class GenerateCrossSectionLocationFile(FM2ProfBase):
 
                     # Apply Branchrules
                     if branchid in branchrules:
-                        rule = branchrules[branchid].get('rule')
-                        exceptions = branchrules[branchid].get('exceptions')
+                        rule = branchrules[branchid].get("rule")
+                        exceptions = branchrules[branchid].get("exceptions")
                         if rule:
                             (
                                 xtmp,
@@ -136,18 +136,18 @@ class GenerateCrossSectionLocationFile(FM2ProfBase):
                                 cidtmp,
                                 cdistmp,
                                 bidtmp,
-                                cofftmp
+                                cofftmp,
                             ) = self._applyBranchRules(
                                 rule, xtmp, ytmp, cidtmp, cdistmp, bidtmp, cofftmp
                             )
                         if exceptions:
                             (
-                            xtmp,
-                            ytmp,
-                            cidtmp,
-                            cdistmp,
-                            bidtmp,
-                            cofftmp,
+                                xtmp,
+                                ytmp,
+                                cidtmp,
+                                cdistmp,
+                                bidtmp,
+                                cofftmp,
                             ) = self._applyBranchExceptions(
                                 exceptions, xtmp, ytmp, cidtmp, cdistmp, bidtmp, cofftmp
                             )
@@ -185,10 +185,10 @@ class GenerateCrossSectionLocationFile(FM2ProfBase):
 
     def _applyBranchExceptions(self, exceptions, x, y, cid, cdis, bid, coff):
         for exc in exceptions:
-            if exc not in cid: 
-                self.set_logger_message(f"{exc} not found in branch", 'error')
+            if exc not in cid:
+                self.set_logger_message(f"{exc} not found in branch", "error")
                 continue
-        
+
         pop_indices = [cid.index(exc) for exc in exceptions]
 
         for pop_index in sorted(pop_indices, reverse=True):
@@ -200,9 +200,7 @@ class GenerateCrossSectionLocationFile(FM2ProfBase):
                     cdis,
                     bid,
                     coff,
-                ) = self._applyBranchRules(
-                    'ignorefirst', x, y, cid, cdis, bid, coff
-                )
+                ) = self._applyBranchRules("ignorefirst", x, y, cid, cdis, bid, coff)
             elif pop_index == len(x) - 1:
                 (
                     x,
@@ -211,39 +209,43 @@ class GenerateCrossSectionLocationFile(FM2ProfBase):
                     cdis,
                     bid,
                     coff,
-                ) = self._applyBranchRules(
-                    'ignorelast', x, y, cid, cdis, bid, coff
-                )
+                ) = self._applyBranchRules("ignorelast", x, y, cid, cdis, bid, coff)
             else:
                 # pop the index
                 for l in [x, y, cid, bid, coff]:
                     l.pop(pop_index)
 
                 # divide the length
-                next_pop = pop_index+1
-                prev_pop = pop_index-1
+                next_pop = pop_index + 1
+                prev_pop = pop_index - 1
                 while next_pop in pop_indices:
                     next_pop += 1
                 while prev_pop in pop_indices:
                     prev_pop -= 1
 
-                cdis[pop_index-1] += cdis[pop_index]/2
-                cdis[pop_index+1] += cdis[pop_index]/2
+                cdis[pop_index - 1] += cdis[pop_index] / 2
+                cdis[pop_index + 1] += cdis[pop_index] / 2
 
         if len(x) != len(cdis):
             for pop_index in sorted(pop_indices, reverse=True):
                 del cdis[pop_index]
 
-
         return x, y, cid, cdis, bid, coff
-            
+
     def _applyBranchRules(self, rule, x, y, cid, cdis, bid, coff):
         # bfunc: what points to pop
         bfunc = {
-            "onlyedges": lambda x: [x[0], x[-1]],  # only keep the 2 cross-section on either end of the branch
-            "ignoreedges": lambda x: x[1:-1],  # keep everything except 2 css on either end of the branch
+            "onlyedges": lambda x: [
+                x[0],
+                x[-1],
+            ],  # only keep the 2 cross-section on either end of the branch
+            "ignoreedges": lambda x: x[
+                1:-1
+            ],  # keep everything except 2 css on either end of the branch
             "ignorelast": lambda x: x[:-1],  # keep everything except last css on branch
-            "ignorefirst": lambda x: x[1:],  # keep everything except first css on branch
+            "ignorefirst": lambda x: x[
+                1:
+            ],  # keep everything except first css on branch
         }
         # disfunc: how to modify lengths
         disfunc = {
@@ -258,19 +260,23 @@ class GenerateCrossSectionLocationFile(FM2ProfBase):
             df = disfunc[rule.lower().strip()]
             return bf(x), bf(y), bf(cid), df(cdis), bf(bid), bf(coff)
         except KeyError:
-            self.set_logger_message(f"'{rule}' is not a known branchrules. Known rules are: {list(bfunc.keys())}", 'error')
+            self.set_logger_message(
+                f"'{rule}' is not a known branchrules. Known rules are: {list(bfunc.keys())}",
+                "error",
+            )
 
-    def _parseBranchRuleFile(self, branchrulefile: Path, delimiter:str=',') -> Dict:
+    def _parseBranchRuleFile(self, branchrulefile: Path, delimiter: str = ",") -> Dict:
         branchrules: dict = {}
         with open(branchrulefile, "r") as f:
             for line in f:
-                values:List = line.strip().split(delimiter)
-                branch:str = values[0].strip()
-                rule:str = values[1].strip()
-                exceptions:List = []
-                if len(values)>2: exceptions = [e.strip() for e in values[2:]]
-                
-                branchrules[branch] = dict(rule=rule, exceptions= exceptions)
+                values: List = line.strip().split(delimiter)
+                branch: str = values[0].strip()
+                rule: str = values[1].strip()
+                exceptions: List = []
+                if len(values) > 2:
+                    exceptions = [e.strip() for e in values[2:]]
+
+                branchrules[branch] = dict(rule=rule, exceptions=exceptions)
 
         return branchrules
 
@@ -315,7 +321,7 @@ class VisualiseOutput(FM2ProfBase):
         logger: Logger = None,
     ):
         super().__init__(logger=logger)
-        
+
         if not logger:
             self._create_logger()
         self.output_dir = Path(output_directory)
@@ -324,7 +330,7 @@ class VisualiseOutput(FM2ProfBase):
         self._ref_geom_y = []
         self._ref_geom_tw = []
         self._ref_geom_fw = []
-        
+
         self.set_logger_message(f"Using {self.fig_dir} as output directory for figures")
 
         # initiate plotstyle
@@ -547,7 +553,7 @@ class VisualiseOutput(FM2ProfBase):
         reference_roughness: tuple = (),
         save_to_file: bool = True,
         overwrite: bool = False,
-        pbar:tqdm.std.tqdm = None,
+        pbar: tqdm.std.tqdm = None,
     ) -> None:
         """
         Creates a figure
@@ -567,7 +573,7 @@ class VisualiseOutput(FM2ProfBase):
         """
         output_file = self.fig_dir.joinpath(f"{css['id']}.png")
         if output_file.is_file() & ~overwrite:
-            self.set_logger_message('file already exists', 'debug')
+            self.set_logger_message("file already exists", "debug")
             return
         try:
             fig = plt.figure(figsize=(8, 12))
@@ -594,24 +600,25 @@ class VisualiseOutput(FM2ProfBase):
                 return fig
 
         except Exception as e:
-            self.set_logger_message(f"error processing: {css['id']} {str(e)}", "error", pbar=pbar)
+            self.set_logger_message(
+                f"error processing: {css['id']} {str(e)}", "error", pbar=pbar
+            )
             return None
 
         finally:
             plt.close()
 
     def plot_cross_sections(self):
-        """ Makes figures for all cross-sections in project, 
-        output to output directory of project """
+        """Makes figures for all cross-sections in project,
+        output to output directory of project"""
         pbar = tqdm.tqdm(total=self.number_of_cross_sections)
         self.start_new_log_task("Plotting cross-secton figures", pbar=pbar)
 
         for css in self.cross_sections:
             self.figure_cross_section(css, pbar=pbar)
             pbar.update(1)
-        
-        self.finish_log_task()
 
+        self.finish_log_task()
 
     def _SetPlotStyle(self, *args, **kwargs):
         """todo: add preference to switch styles or
@@ -880,7 +887,7 @@ class PlotStyles:
             legend.get_frame().set_boxstyle("square", pad=0)
 
     @classmethod
-    def van_veen(cls, fig:Figure=None, use_legend: bool = True):
+    def van_veen(cls, fig: Figure = None, use_legend: bool = True):
         """Stijl van Van Veen"""
 
         def initiate():
@@ -898,14 +905,14 @@ class PlotStyles:
             # Font style
             font = {"family": "Bahnschrift", "weight": "normal", "size": 18}
             mpl.rc("font", **font)
-            mpl.rcParams["axes.unicode_minus"] = False   # not all fonts support the unicode minus
+            mpl.rcParams[
+                "axes.unicode_minus"
+            ] = False  # not all fonts support the unicode minus
 
-            
-        
         def styleFigure(fig, use_legend):
 
             # this forces labels to be generated. Necessary to detect datetimes
-            fig.canvas.draw()  
+            fig.canvas.draw()
 
             # Set styles for each axis
             legend_title = r"toelichting"
@@ -961,6 +968,7 @@ class PlotStyles:
         else:
             initiate()
             return styleFigure(fig, use_legend)
+
 
 @dataclass
 class DeltaresSectionItem:
@@ -1166,7 +1174,6 @@ class ModelOutputReader(FM2ProfBase):
                 parse_dates=True,
                 date_parser=self._dateparser,
             )
-            
 
     def get_1d2d_map(self):
         """Writes a map between stations in 1D and stations in 2D. Matches based on identical characters in first nine slots"""
@@ -1503,7 +1510,9 @@ class Compare1D2D(ModelOutputReader):
         sorted_rkms = [routekms[i] for i in sorted_indices]
 
         # sort lmw stations
-        lmw_stations = [lmw_stations[j] for j in np.argsort([i[1] for i in lmw_stations])]
+        lmw_stations = [
+            lmw_stations[j] for j in np.argsort([i[1] for i in lmw_stations])
+        ]
         return sorted_stations, sorted_rkms, lmw_stations
 
     def figure_at_station(self, station: str) -> None:
@@ -1619,7 +1628,9 @@ class Compare1D2D(ModelOutputReader):
         plt.suptitle(title.upper())
         fig.tight_layout()
         PlotStyles.van_veen(fig, use_legend=[True, False])
-        fig.savefig(self.output_path.joinpath("figures/discharge").joinpath(f"{title}.png"))
+        fig.savefig(
+            self.output_path.joinpath("figures/discharge").joinpath(f"{title}.png")
+        )
 
     def get_data_along_route_for_time(
         self, data: pd.DataFrame, route: List[str], time_index: int

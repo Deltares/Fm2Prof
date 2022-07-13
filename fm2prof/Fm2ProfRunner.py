@@ -7,8 +7,8 @@ from pathlib import Path
 from typing import Dict, Generator, List, Mapping, NoReturn, Union
 
 import geojson
-import tqdm
 import numpy as np
+import tqdm
 from geojson import Feature, FeatureCollection, Polygon
 from netCDF4 import Dataset
 from scipy.spatial import ConvexHull
@@ -43,11 +43,10 @@ class Fm2ProfRunner(FM2ProfBase):
         self._output_files: OutputFiles = OutputFiles()
 
         self._create_logger()
-        
 
         iniFilePath = Path(iniFilePath)
 
-        self.start_new_log_task('Loading configuration file')
+        self.start_new_log_task("Loading configuration file")
         try:
             self.load_inifile(iniFilePath)
         except (FileNotFoundError, IOError) as e:
@@ -59,7 +58,6 @@ class Fm2ProfRunner(FM2ProfBase):
                 "Output directory must be set in configuration file", "error"
             )
             return
-        
 
         # Add a log file
         self.set_logfile(
@@ -123,7 +121,7 @@ class Fm2ProfRunner(FM2ProfBase):
             f"License: {self.__license__:>6} license. For more info see LICENSE.txt",
             f"{self.__copyright__:>6}",
             "=" * 80,
-            ""
+            "",
         ]
         for line in header_text:
             self.set_logger_message(line, header=True)
@@ -604,11 +602,13 @@ class Fm2ProfRunner(FM2ProfBase):
         css_selection = self._get_css_range(number_of_css=len(css_data_list))
         self.get_logformatter().set_number_of_iterations(len(css_selection) + 1)
         selected_list = np.array(css_data_list)[css_selection]
-        
+
         # Generate cross-sections one by one
         pbar = tqdm.tqdm(total=len(selected_list))
         for i, css_data in enumerate(selected_list):
-            self.start_new_log_task(f"{css_data.get('id')}  ({i}/{len(selected_list)})", pbar=pbar)
+            self.start_new_log_task(
+                f"{css_data.get('id')}  ({i}/{len(selected_list)})", pbar=pbar
+            )
             generated_cross_section = self._generate_cross_section(
                 css_data, self.fm_model_data
             )
@@ -659,7 +659,7 @@ class Fm2ProfRunner(FM2ProfBase):
         if fm_model_data is None:
             raise Exception(
                 "No FM data given for new cross section {}".format(css_name)
-            )        
+            )
 
         # Create cross section
         created_css = self._get_new_cross_section(css_data=css_data)
