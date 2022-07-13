@@ -78,7 +78,7 @@
 
 <header class="md-header" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href="../../contents.html" title="FM2PROF documentation" class="md-header__button md-logo" aria-label="FM2PROF documentation" data-md-component="logo">
+    <a href="../../index.html" title="FM2PROF documentation" class="md-header__button md-logo" aria-label="FM2PROF documentation" data-md-component="logo">
       <img src="../../_static/Deltares_logo_Wit_RGB.svg" alt="logo">
     </a>
     <label class="md-header__button md-icon" for="__drawer">
@@ -246,7 +246,7 @@
 
 <nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href="../../contents.html" title="FM2PROF documentation" class="md-nav__button md-logo" aria-label="FM2PROF documentation" data-md-component="logo">
+    <a href="../../index.html" title="FM2PROF documentation" class="md-nav__button md-logo" aria-label="FM2PROF documentation" data-md-component="logo">
       <img src="../../_static/Deltares_logo_Wit_RGB.svg" alt="logo">
     </a>
     FM2PROF documentation
@@ -405,15 +405,42 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#with-utils-visualiseoutput" class="md-nav__link">
-    <span class="md-ellipsis">With utils.<wbr>Visualise<wbr>Output</span>
+  <a href="#gis-output-files" class="md-nav__link">
+    <span class="md-ellipsis">GIS output files</span>
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#with-gis-software" class="md-nav__link">
-    <span class="md-ellipsis">With GIS software</span>
+  <a href="#crossection-and-roughness-output-files" class="md-nav__link">
+    <span class="md-ellipsis">Crossection and roughness output files</span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#compare-1d-and-2d" class="md-nav__link">
+    <span class="md-ellipsis">3.<wbr> Compare 1D and 2D</span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3. Compare 1D and 2D">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#longitudinal-plot-and-heatmaps" class="md-nav__link">
+    <span class="md-ellipsis">Longitudinal plot and heatmaps</span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#timeseries-and-rating-curve-at-a-single-station" class="md-nav__link">
+    <span class="md-ellipsis">Timeseries and rating curve at a single station</span>
   </a>
   
 </li>
@@ -609,15 +636,42 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#with-utils-visualiseoutput" class="md-nav__link">
-    <span class="md-ellipsis">With utils.<wbr>Visualise<wbr>Output</span>
+  <a href="#gis-output-files" class="md-nav__link">
+    <span class="md-ellipsis">GIS output files</span>
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#with-gis-software" class="md-nav__link">
-    <span class="md-ellipsis">With GIS software</span>
+  <a href="#crossection-and-roughness-output-files" class="md-nav__link">
+    <span class="md-ellipsis">Crossection and roughness output files</span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#compare-1d-and-2d" class="md-nav__link">
+    <span class="md-ellipsis">3.<wbr> Compare 1D and 2D</span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3. Compare 1D and 2D">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#longitudinal-plot-and-heatmaps" class="md-nav__link">
+    <span class="md-ellipsis">Longitudinal plot and heatmaps</span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#timeseries-and-rating-curve-at-a-single-station" class="md-nav__link">
+    <span class="md-ellipsis">Timeseries and rating curve at a single station</span>
   </a>
   
 </li>
@@ -723,70 +777,92 @@
 </div>
 <h2 id="visualising-output"><span id="diagnosevisualiseoutput"></span>2. Visualising output<a class="headerlink" href="#visualising-output" title="Permalink to this headline">¶</a></h2>
 <p>There are various ways to visualise FM2PROF output.</p>
-<h3 id="with-utils-visualiseoutput">With utils.VisualiseOutput<a class="headerlink" href="#with-utils-visualiseoutput" title="Permalink to this headline">¶</a></h3>
-<p>First, the <a class="reference internal" href="source.html#module-fm2prof.utils" title="fm2prof.utils (Python module)"><code class="xref any py py-mod docutils literal notranslate"><span class="pre">fm2prof.utils</span></code></a> module provides a class to directly load and visualise the output:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">fm2prof</span> <span class="kn">import</span> <span class="n">utils</span>
-
-<span class="n">output_dir</span> <span class="o">=</span> <span class="s1">&#39;tests\Output\RunWithFiles_Output\case_05_dyke\CaseName01&#39;</span>
-
-<span class="n">viz</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">VisualiseOutput</span><span class="p">(</span><span class="n">output_dir</span><span class="p">)</span>
-
-<span class="k">for</span> <span class="n">css</span> <span class="ow">in</span> <span class="n">viz</span><span class="o">.</span><span class="n">cross_sections</span><span class="p">():</span>
-    <span class="c1"># This creates a directory &#39;figures&#39; in output_dir</span>
-    <span class="n">viz</span><span class="o">.</span><span class="n">make_figure</span><span class="p">(</span><span class="n">css</span><span class="p">)</span>
-</code></pre></div>
+<h3 id="gis-output-files">GIS output files<a class="headerlink" href="#gis-output-files" title="Permalink to this headline">¶</a></h3>
+<p>By default two files can be readily loaded in GIS software: the cross-section input file (which is a text delimited format) and the <code class="xref any docutils literal notranslate"><span class="pre">cross_section_volumes.geojson</span></code> file. The latter is a convex-hull approximation of the control volumes (see <a class="reference internal" href="../technical_manual/glossary.html#terminology"><span class="std std-ref">Glossary of terms</span></a>). Below you see some examples of what you can visualise.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The most important check to do here is to verify the <code class="xref any docutils literal notranslate"><span class="pre">cross_section_volumes.geojson</span></code> output file (see example below). It is particularily important to check that minor side channels do not ‘take volume from the main channel’. If that is the case, you will need to use ‘RegionPolygons’ and/or check that you are not generating a cross-section for the minor channel in the main channel.</p>
 </div>
-<p>This produces figures in the output directory.</p>
-<figure class="align-center" id="id1">
-<a class="reference internal image-reference" href="../../_images/interprete_figure.png"><img alt="alternate text" src="../../_images/interprete_figure.png" style="width: 100%;" /></a>
-<figcaption>
-<p><span class="caption-text"><span class="caption-text">
-Example interpretation of a ` fm2prof.utils.VisualiseOutput`  figure for testcase <a class="reference internal" href="../technical_manual/validation.html#validation-summerdike"><span class="std std-ref">05 - Summer dike</span></a>.</span><a class="headerlink" href="#id1" title="Permalink to this image">¶</a></span><a class="headerlink" href="#id1" title="Permalink to this image">¶</a></p>
-</figcaption>
-</figure>
-<p>The shape of the volume graph depends on the shape of the geometry:</p>
-<figure class="align-center" id="id2">
-<a class="reference internal image-reference" href="../../_images/volume_graphs_types.png"><img alt="alternate text" src="../../_images/volume_graphs_types.png" style="width: 50%;" /></a>
-<figcaption>
-<p><span class="caption-text"><span class="caption-text">
-The shape of the volume graph for given geometries</span><a class="headerlink" href="#id2" title="Permalink to this image">¶</a></span><a class="headerlink" href="#id2" title="Permalink to this image">¶</a></p>
-</figcaption>
-</figure>
-<p>For most real-world rivers, the volume graphs will follow a compound ‘trapezoidal’ model, with one or several ‘compartimentalisation’ effects.</p>
-<h3 id="with-gis-software">With GIS software<a class="headerlink" href="#with-gis-software" title="Permalink to this headline">¶</a></h3>
-<p>A second way to visualise is with GIS software (such as QGIS). By default two files can be readily loaded in GIS software: the cross-section input file (which is a text delimited format) and the <code class="xref any docutils literal notranslate"><span class="pre">cross_section_volumes.geojson</span></code> file. The latter is a convex-hull approximation of the control volumes (see <a class="reference internal" href="../technical_manual/glossary.html#terminology"><span class="std std-ref">Glossary of terms</span></a>).</p>
-<figure class="align-center" id="id3">
+<figure class="align-left align-center" id="id1">
 <a class="reference internal image-reference" href="../../_images/gis_visualisation_maas_01.png"><img alt="alternate text" src="../../_images/gis_visualisation_maas_01.png" style="width: 100%;" /></a>
 <figcaption>
 <p><span class="caption-text"><span class="caption-text">
-Visualisation of the cross-section location (input) file and the convex-hull approximation of the control volumes (cross_section_volumes.geojson). The overlap of the polygons follows from the convex hull approximation - overlap is not actually possible.</span><a class="headerlink" href="#id3" title="Permalink to this image">¶</a></span><a class="headerlink" href="#id3" title="Permalink to this image">¶</a></p>
+Visualisation of the cross-section location (input) file and the convex-hull approximation of the control volumes (cross_section_volumes.geojson). The overlap of the polygons follows from the convex hull approximation - overlap is not actually possible.</span><a class="headerlink" href="#id1" title="Permalink to this image">¶</a></span><a class="headerlink" href="#id1" title="Permalink to this image">¶</a></p>
 </figcaption>
 </figure>
-<p>Closer inspection is possible by setting <code class="xref any docutils literal notranslate"><span class="pre">ExportMapFiles</span></code> to <a class="reference external" href="https://docs.python.org/3/library/constants.html#True" title="(in Python v3.10)"><code class="xref any docutils literal notranslate"><span class="pre">True</span></code></a> in the configuration file. Note that this an create really large files.</p>
+<p>If you see strange results, you may want to look further. Closer inspection is possible by setting <code class="xref any docutils literal notranslate"><span class="pre">ExportMapFiles</span></code> to <a class="reference external" href="https://docs.python.org/3/library/constants.html#True" title="(in Python v3.10)"><code class="xref any docutils literal notranslate"><span class="pre">True</span></code></a> in the configuration file. Note that this an create really large files.</p>
 <div class="admonition tip">
 <p class="admonition-title">Tip</p>
 <p>For inspecting one or just a few cross-sections, use the <code class="xref any docutils literal notranslate"><span class="pre">CssSelection</span></code> parameter to limit the output.</p>
 </div>
-<figure class="align-center" id="id4">
+<figure class="align-left align-center" id="id2">
 <a class="reference internal image-reference" href="../../_images/gis_visualisation_maas_02.png"><img alt="alternate text" src="../../_images/gis_visualisation_maas_02.png" style="width: 100%;" /></a>
 <figcaption>
 <p><span class="caption-text"><span class="caption-text">
-Visualisation of the actual assignment of 2D points to cross-sections using nearest-neighbour approximation. (note: region polygons were used here)</span><a class="headerlink" href="#id4" title="Permalink to this image">¶</a></span><a class="headerlink" href="#id4" title="Permalink to this image">¶</a></p>
+Visualisation of the actual assignment of 2D points to cross-sections using nearest-neighbour approximation. (note: region polygons were used here)</span><a class="headerlink" href="#id2" title="Permalink to this image">¶</a></span><a class="headerlink" href="#id2" title="Permalink to this image">¶</a></p>
 </figcaption>
 </figure>
-<figure class="align-center" id="id5">
+<figure class="align-left align-center" id="id3">
 <a class="reference internal image-reference" href="../../_images/gis_visualisation_maas_03.png"><img alt="alternate text" src="../../_images/gis_visualisation_maas_03.png" style="width: 100%;" /></a>
 <figcaption>
 <p><span class="caption-text"><span class="caption-text">
-Visualisation of the (automatically classified) <a class="reference internal" href="../technical_manual/glossary.html#term-Lakes"><span class="xref std std-term">lakes</span></a>. Be aware of the specific definition of ‘lake’. Water bodies that are hydraulically connected to the main channel at low water depths are not flagged as ‘lake’.</span><a class="headerlink" href="#id5" title="Permalink to this image">¶</a></span><a class="headerlink" href="#id5" title="Permalink to this image">¶</a></p>
+Visualisation of the (automatically classified) <a class="reference internal" href="../technical_manual/glossary.html#term-Lakes"><span class="xref std std-term">lakes</span></a>. Be aware of the specific definition of ‘lake’. Water bodies that are hydraulically connected to the main channel at low water depths are not flagged as ‘lake’.</span><a class="headerlink" href="#id3" title="Permalink to this image">¶</a></span><a class="headerlink" href="#id3" title="Permalink to this image">¶</a></p>
 </figcaption>
 </figure>
-<figure class="align-center" id="id6">
+<figure class="align-left align-center" id="id4">
 <a class="reference internal image-reference" href="../../_images/gis_visualisation_maas_04.png"><img alt="alternate text" src="../../_images/gis_visualisation_maas_04.png" style="width: 100%;" /></a>
 <figcaption>
 <p><span class="caption-text"><span class="caption-text">
-Visualisation of the roughness section. The red dots are 2D points that were not within any polygon in the <code class="xref any docutils literal notranslate"><span class="pre">SectionPolygonFile</span></code>. These are automatically added to the main section. This will yield a warning in the log file. In general it is a good idea to expand the polygons to cover all files.</span><a class="headerlink" href="#id6" title="Permalink to this image">¶</a></span><a class="headerlink" href="#id6" title="Permalink to this image">¶</a></p>
+Visualisation of the roughness section. The red dots are 2D points that were not within any polygon in the <code class="xref any docutils literal notranslate"><span class="pre">SectionPolygonFile</span></code>. These are automatically added to the main section. This will yield a warning in the log file. In general it is a good idea to expand the polygons to cover all files.</span><a class="headerlink" href="#id4" title="Permalink to this image">¶</a></span><a class="headerlink" href="#id4" title="Permalink to this image">¶</a></p>
 </figcaption>
+</figure>
+<h3 id="crossection-and-roughness-output-files">Crossection and roughness output files<a class="headerlink" href="#crossection-and-roughness-output-files" title="Permalink to this headline">¶</a></h3>
+<p>You can visualise the cross-section and roughness by either using the <a class="reference internal" href="source.html#fm2prof.Project.run" title="fm2prof.Project.run (Python method) — Executes FM2PROF routines."><code class="xref any py py-meth docutils literal notranslate"><span class="pre">run</span></code></a> command in combination with the <code class="xref any docutils literal notranslate"><span class="pre">p</span></code> flag (see <a class="reference internal" href="cli.html#cli-documentation"><span class="std std-ref">CLI API</span></a>) or by using the <a class="reference internal" href="source.html#module-fm2prof.utils" title="fm2prof.utils (Python module)"><code class="xref any py py-mod docutils literal notranslate"><span class="pre">fm2prof.utils</span></code></a> python module (see <a class="reference internal" href="source.html#pythonapi"><span class="std std-ref">Python API</span></a>). This produces figures in the output directory.</p>
+<figure class="align-left align-center" id="id5">
+<a class="reference internal image-reference" href="../../_images/interprete_figure.png"><img alt="alternate text" src="../../_images/interprete_figure.png" style="width: 100%;" /></a>
+<figcaption>
+<p><span class="caption-text"><span class="caption-text">
+Example interpretation of a ` fm2prof.utils.VisualiseOutput`  figure for testcase <a class="reference internal" href="../technical_manual/validation.html#validation-summerdike"><span class="std std-ref">05 - Summer dike</span></a>.</span><a class="headerlink" href="#id5" title="Permalink to this image">¶</a></span><a class="headerlink" href="#id5" title="Permalink to this image">¶</a></p>
+</figcaption>
+</figure>
+<p>The shape of the volume graph depends on the shape of the geometry:</p>
+<figure class="align-left align-center" id="id6">
+<a class="reference internal image-reference" href="../../_images/volume_graphs_types.png"><img alt="alternate text" src="../../_images/volume_graphs_types.png" style="width: 50%;" /></a>
+<figcaption>
+<p><span class="caption-text"><span class="caption-text">
+The shape of the volume graph for given geometries</span><a class="headerlink" href="#id6" title="Permalink to this image">¶</a></span><a class="headerlink" href="#id6" title="Permalink to this image">¶</a></p>
+</figcaption>
+</figure>
+<p>For most real-world rivers, the volume graphs will follow a compound ‘trapezoidal’ model, with one or several ‘compartimentalisation’ effects.</p>
+<h2 id="compare-1d-and-2d">3. Compare 1D and 2D<a class="headerlink" href="#compare-1d-and-2d" title="Permalink to this headline">¶</a></h2>
+<p>A final test is to apply the cross-sections and roughness to your 1D model, and to run the same simulation with 1D and 2D. A good candidate for this run is the 2D model run you used to derive cross-sections. In this way, you are making an uncalibrated comparison between 1D and 2D. FM2PROF provides you with some tools to carry out this analysis:</p>
+<ul class="simple">
+<li><p>Use <code class="xref any docutils literal notranslate"><span class="pre">FM2PROF</span> <span class="pre">compare</span></code> command in the <a class="reference internal" href="cli.html#cli-documentation"><span class="std std-ref">CLI API</span></a></p></li>
+<li><p>Or use <a class="reference internal" href="source.html#module-fm2prof.utils" title="fm2prof.utils (Python module)"><code class="xref any py py-mod docutils literal notranslate"><span class="pre">fm2prof.utils</span></code></a> in the <a class="reference internal" href="source.html#pythonapi"><span class="std std-ref">Python API</span></a></p></li>
+</ul>
+<h3 id="longitudinal-plot-and-heatmaps">Longitudinal plot and heatmaps<a class="headerlink" href="#longitudinal-plot-and-heatmaps" title="Permalink to this headline">¶</a></h3>
+<p>Longitudinal plots and heatmaps give you an overview of the difference between 1D and 2D along the river.</p>
+<div class="admonition hint">
+<p class="admonition-title">Hint</p>
+<p>The difference between 1D and 2D can be large, but this may be mitigated by later calibrating the 1D model. In this step, however, you are looking for sudden deviations between 1D and 2D that may indicate an error in the model setup or generated cross-sections. Such errors can generaly not be fixed in calibration, so need to be addressed in this step.</p>
+</div>
+<p>For example, take the figure below:</p>
+<figure class="align-left align-center">
+<a class="reference internal image-reference" href="../../_images/example_rating_curve.png"><img alt="alternate text" src="../../_images/example_rating_curve.png" style="width: 70%;" /></a>
+</figure>
+<p>Here we see that the differences (lower panel) are generally between 0 and 1 m and vary smoothly along the channel. However, at a few points the difference is larger. At 930 km, for example. This may or may not require follow-up, to see if you understand <em>why</em> the difference is shown the way it is.</p>
+<p>Heatmaps provide you with the same information as the Longitudinal plots, but in finer detail</p>
+<figure class="align-left align-center">
+<a class="reference internal image-reference" href="../../_images/example_time_series.png"><img alt="alternate text" src="../../_images/example_time_series.png" style="width: 70%;" /></a>
+</figure>
+<h3 id="timeseries-and-rating-curve-at-a-single-station">Timeseries and rating curve at a single station<a class="headerlink" href="#timeseries-and-rating-curve-at-a-single-station" title="Permalink to this headline">¶</a></h3>
+<p>Output at a single station can help you understand differences observed in the longitudinal plot.</p>
+<div class="admonition hint">
+<p class="admonition-title">Hint</p>
+<p>Here, you are looking for similarity: do 1D and 2D follow roughly the same shape? Are the results plausible?</p>
+</div>
+<figure class="align-left align-center">
+<a class="reference internal image-reference" href="../../_images/example.png"><img alt="alternate text" src="../../_images/example.png" style="width: 100%;" /></a>
 </figure>
 
 
@@ -796,7 +872,7 @@ Visualisation of the roughness section. The red dots are 2D points that were not
   <small>
     
       Last update:
-      Jul 05, 2022
+      Jul 13, 2022
     
   </small>
 </div>

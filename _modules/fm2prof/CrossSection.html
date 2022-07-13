@@ -73,7 +73,7 @@
 
 <header class="md-header" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href="../../contents.html" title="FM2PROF documentation" class="md-header__button md-logo" aria-label="FM2PROF documentation" data-md-component="logo">
+    <a href="../../index.html" title="FM2PROF documentation" class="md-header__button md-logo" aria-label="FM2PROF documentation" data-md-component="logo">
       <img src="../../_static/Deltares_logo_Wit_RGB.svg" alt="logo">
     </a>
     <label class="md-header__button md-icon" for="__drawer">
@@ -239,7 +239,7 @@
 
 <nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href="../../contents.html" title="FM2PROF documentation" class="md-nav__button md-logo" aria-label="FM2PROF documentation" data-md-component="logo">
+    <a href="../../index.html" title="FM2PROF documentation" class="md-nav__button md-logo" aria-label="FM2PROF documentation" data-md-component="logo">
       <img src="../../_static/Deltares_logo_Wit_RGB.svg" alt="logo">
     </a>
     FM2PROF documentation
@@ -1957,14 +1957,18 @@
 
         <span class="n">dif</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">section_widths</span><span class="p">[</span><span class="s2">&quot;main&quot;</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_css_flow_width</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
 
-        <span class="c1"># cm accuracy</span>
-        <span class="n">dif</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">dif</span> <span class="o">*</span> <span class="mi">100</span><span class="p">)</span> <span class="o">/</span> <span class="mi">100</span>
+        <span class="c1"># cm accuracy, and at least 10 cm difference</span>
+        <span class="c1"># TODO: decide and implement some accuracy, e.g. 1e-3.</span>
+        <span class="c1"># rounding errors may still lead to problems if main==flow width [0]</span>
+        <span class="c1"># in sobek</span>
+        <span class="n">tol</span> <span class="o">=</span> <span class="mf">0.10</span>
+        <span class="n">dif</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">dif</span> <span class="o">*</span> <span class="mi">100</span><span class="p">)</span> <span class="o">/</span> <span class="mi">100</span>
 
-        <span class="k">if</span> <span class="n">dif</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">section_widths</span><span class="p">[</span><span class="s2">&quot;main&quot;</span><span class="p">]</span> <span class="o">-=</span> <span class="n">dif</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">section_widths</span><span class="p">[</span><span class="s2">&quot;floodplain1&quot;</span><span class="p">]</span> <span class="o">+=</span> <span class="n">dif</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">dif</span> <span class="o">-</span> <span class="n">tol</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">section_widths</span><span class="p">[</span><span class="s2">&quot;main&quot;</span><span class="p">]</span> <span class="o">-=</span> <span class="n">dif</span> <span class="o">-</span> <span class="n">tol</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">section_widths</span><span class="p">[</span><span class="s2">&quot;floodplain1&quot;</span><span class="p">]</span> <span class="o">+=</span> <span class="n">dif</span> <span class="o">-</span> <span class="n">tol</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">set_logger_message</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;Increased main section width by </span><span class="si">{</span><span class="n">dif</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2"> m&quot;</span><span class="p">,</span> <span class="s2">&quot;warning&quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;Increased main section width by </span><span class="si">{</span><span class="o">-</span><span class="mi">1</span><span class="o">*</span><span class="p">(</span><span class="n">dif</span><span class="o">-</span><span class="n">tol</span><span class="p">)</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="s2">&quot;warning&quot;</span>
             <span class="p">)</span>
             <span class="k">return</span> <span class="kc">True</span>
         <span class="k">return</span> <span class="kc">False</span>
@@ -1979,7 +1983,7 @@
   <small>
     
       Last update:
-      Jul 05, 2022
+      Jul 13, 2022
     
   </small>
 </div>

@@ -73,7 +73,7 @@
 
 <header class="md-header" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href="../../contents.html" title="FM2PROF documentation" class="md-header__button md-logo" aria-label="FM2PROF documentation" data-md-component="logo">
+    <a href="../../index.html" title="FM2PROF documentation" class="md-header__button md-logo" aria-label="FM2PROF documentation" data-md-component="logo">
       <img src="../../_static/Deltares_logo_Wit_RGB.svg" alt="logo">
     </a>
     <label class="md-header__button md-icon" for="__drawer">
@@ -239,7 +239,7 @@
 
 <nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href="../../contents.html" title="FM2PROF documentation" class="md-nav__button md-logo" aria-label="FM2PROF documentation" data-md-component="logo">
+    <a href="../../index.html" title="FM2PROF documentation" class="md-nav__button md-logo" aria-label="FM2PROF documentation" data-md-component="logo">
       <img src="../../_static/Deltares_logo_Wit_RGB.svg" alt="logo">
     </a>
     FM2PROF documentation
@@ -536,10 +536,11 @@
 <span class="kn">import</span> <span class="nn">time</span>
 <span class="kn">import</span> <span class="nn">traceback</span>
 <span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">,</span> <span class="n">NoReturn</span><span class="p">,</span> <span class="n">Union</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Generator</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">,</span> <span class="n">NoReturn</span><span class="p">,</span> <span class="n">Union</span>
 
 <span class="kn">import</span> <span class="nn">geojson</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">tqdm</span>
 <span class="kn">from</span> <span class="nn">geojson</span> <span class="kn">import</span> <span class="n">Feature</span><span class="p">,</span> <span class="n">FeatureCollection</span><span class="p">,</span> <span class="n">Polygon</span>
 <span class="kn">from</span> <span class="nn">netCDF4</span> <span class="kn">import</span> <span class="n">Dataset</span>
 <span class="kn">from</span> <span class="nn">scipy.spatial</span> <span class="kn">import</span> <span class="n">ConvexHull</span>
@@ -548,7 +549,7 @@
 <span class="kn">from</span> <span class="nn">fm2prof</span> <span class="kn">import</span> <span class="n">__version__</span>
 <span class="kn">from</span> <span class="nn">fm2prof.common</span> <span class="kn">import</span> <span class="n">FM2ProfBase</span>
 <span class="kn">from</span> <span class="nn">fm2prof.CrossSection</span> <span class="kn">import</span> <span class="n">CrossSection</span>
-<span class="kn">from</span> <span class="nn">fm2prof.Export</span> <span class="kn">import</span> <span class="n">Export1DModelData</span>
+<span class="kn">from</span> <span class="nn">fm2prof.Export</span> <span class="kn">import</span> <span class="n">Export1DModelData</span><span class="p">,</span> <span class="n">OutputFiles</span>
 <span class="kn">from</span> <span class="nn">fm2prof.Import</span> <span class="kn">import</span> <span class="n">FMDataImporter</span><span class="p">,</span> <span class="n">FmModelData</span><span class="p">,</span> <span class="n">ImportInputFiles</span>
 <span class="kn">from</span> <span class="nn">fm2prof.IniFile</span> <span class="kn">import</span> <span class="n">IniFile</span>
 <span class="kn">from</span> <span class="nn">fm2prof.MaskOutputFile</span> <span class="kn">import</span> <span class="n">MaskOutputFile</span>
@@ -571,12 +572,13 @@
 <span class="sd">                               default values will be used.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">fm_model_data</span><span class="p">:</span> <span class="n">FmModelData</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_output_files</span><span class="p">:</span> <span class="n">OutputFiles</span> <span class="o">=</span> <span class="n">OutputFiles</span><span class="p">()</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_create_logger</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_print_header</span><span class="p">()</span>
 
         <span class="n">iniFilePath</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">iniFilePath</span><span class="p">)</span>
 
+        <span class="bp">self</span><span class="o">.</span><span class="n">start_new_log_task</span><span class="p">(</span><span class="s2">&quot;Loading configuration file&quot;</span><span class="p">)</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">load_inifile</span><span class="p">(</span><span class="n">iniFilePath</span><span class="p">)</span>
         <span class="k">except</span> <span class="p">(</span><span class="ne">FileNotFoundError</span><span class="p">,</span> <span class="ne">IOError</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
@@ -589,24 +591,41 @@
             <span class="p">)</span>
             <span class="k">return</span>
 
+        <span class="c1"># Add a log file</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">set_logfile</span><span class="p">(</span>
             <span class="n">output_dir</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">get_inifile</span><span class="p">()</span><span class="o">.</span><span class="n">get_output_directory</span><span class="p">(),</span> <span class="n">filename</span><span class="o">=</span><span class="s2">&quot;fm2prof.log&quot;</span>
         <span class="p">)</span>
 
+        <span class="bp">self</span><span class="o">.</span><span class="n">finish_log_task</span><span class="p">()</span>
+        <span class="c1"># print header to log</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_print_header</span><span class="p">()</span>
+
         <span class="c1"># Print configuration to log</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">set_logger_message</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_inifile</span><span class="p">()</span><span class="o">.</span><span class="n">print_configuration</span><span class="p">(),</span> <span class="n">header</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">overwrite</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Use this method to run FM2PROF.</span>
+<span class="sd">        Executes FM2PROF routines.</span>
 
+<span class="sd">        Parameters:</span>
+<span class="sd">            overwrite: if True, overwrites existing output. If False, exits if output detected</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_inifile</span><span class="p">()</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">set_logger_message</span><span class="p">(</span>
-                <span class="s2">&quot;No ini file was specified and the run cannot go further.&quot;</span><span class="p">,</span> <span class="s2">&quot;Warning&quot;</span>
+                <span class="s2">&quot;No ini file was specified: the run cannot go further.&quot;</span><span class="p">,</span> <span class="s2">&quot;Warning&quot;</span>
             <span class="p">)</span>
             <span class="k">return</span>
 
+        <span class="c1"># Check for already existing output</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_output_exists</span><span class="p">()</span> <span class="o">&amp;</span> <span class="o">~</span><span class="n">overwrite</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">set_logger_message</span><span class="p">(</span>
+                <span class="s2">&quot;Output already exists. Use overwrite option if you want to re-run the program&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;warning&quot;</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">return</span>
+
+        <span class="c1"># Run</span>
         <span class="n">succes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_run_inifile</span><span class="p">()</span>
 
         <span class="k">if</span> <span class="ow">not</span> <span class="n">succes</span><span class="p">:</span>
@@ -625,18 +644,19 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">set_inifile</span><span class="p">(</span><span class="n">IniFileObject</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_print_header</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">set_logger_message</span><span class="p">(</span>
-            <span class="s2">&quot;=&quot;</span> <span class="o">*</span> <span class="mi">80</span>
-            <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span>
-            <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot;FM2PROF version </span><span class="si">{</span><span class="n">__version__</span><span class="si">}</span><span class="se">\n\n</span><span class="s2">&quot;</span>
-            <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">__copyright__</span><span class="si">:</span><span class="s2">&gt;6</span><span class="si">}</span><span class="se">\n\n</span><span class="s2">&quot;</span>
-            <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot;Authors: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">__authors__</span><span class="si">:</span><span class="s2">&gt;6</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
-            <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot;Contact: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">__contact__</span><span class="si">:</span><span class="s2">&gt;6</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
-            <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot;License: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">__license__</span><span class="si">:</span><span class="s2">&gt;6</span><span class="si">}</span><span class="s2"> license. For more info see LICENSE.txt</span><span class="se">\n</span><span class="s2">&quot;</span>
-            <span class="o">+</span> <span class="s2">&quot;=&quot;</span> <span class="o">*</span> <span class="mi">80</span>
-            <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span>
-            <span class="n">header</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-        <span class="p">)</span>
+        <span class="n">header_text</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="s2">&quot;=&quot;</span> <span class="o">*</span> <span class="mi">80</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">&quot;FM2PROF version </span><span class="si">{</span><span class="n">__version__</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">&quot;Documentation: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">__url__</span><span class="si">:</span><span class="s2">&gt;6</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">&quot;Authors: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">__authors__</span><span class="si">:</span><span class="s2">&gt;6</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">&quot;Contact: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">__contact__</span><span class="si">:</span><span class="s2">&gt;6</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">&quot;License: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">__license__</span><span class="si">:</span><span class="s2">&gt;6</span><span class="si">}</span><span class="s2"> license. For more info see LICENSE.txt&quot;</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">__copyright__</span><span class="si">:</span><span class="s2">&gt;6</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;=&quot;</span> <span class="o">*</span> <span class="mi">80</span><span class="p">,</span>
+            <span class="s2">&quot;&quot;</span><span class="p">,</span>
+        <span class="p">]</span>
+        <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">header_text</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">set_logger_message</span><span class="p">(</span><span class="n">line</span><span class="p">,</span> <span class="n">header</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_run_inifile</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Runs the desired emulation from 2d to 1d given the mapfile</span>
@@ -649,6 +669,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="c1"># Initialise the project</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">start_new_log_task</span><span class="p">(</span><span class="s2">&quot;Initialising FM2PROF&quot;</span><span class="p">)</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_initialise_fm2prof</span><span class="p">()</span>
         <span class="k">except</span><span class="p">:</span>
@@ -658,6 +679,7 @@
             <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">traceback</span><span class="o">.</span><span class="n">format_exc</span><span class="p">()</span><span class="o">.</span><span class="n">splitlines</span><span class="p">():</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">set_logger_message</span><span class="p">(</span><span class="n">line</span><span class="p">,</span> <span class="s2">&quot;debug&quot;</span><span class="p">)</span>
             <span class="k">return</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">finish_log_task</span><span class="p">()</span>
 
         <span class="c1"># Generate cross-sections</span>
         <span class="k">try</span><span class="p">:</span>
@@ -672,6 +694,7 @@
             <span class="k">return</span> <span class="kc">False</span>
 
         <span class="c1"># Finalise and write output</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">start_new_log_task</span><span class="p">(</span><span class="s2">&quot;Finalizing&quot;</span><span class="p">)</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_finalise_fm2prof</span><span class="p">(</span><span class="n">cross_sections</span><span class="p">)</span>
         <span class="k">except</span><span class="p">:</span>
@@ -687,6 +710,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">set_logger_message</span><span class="p">(</span>
                 <span class="s2">&quot;Unexpected exception during printing of log report&quot;</span><span class="p">,</span> <span class="s2">&quot;error&quot;</span>
             <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">finish_log_task</span><span class="p">()</span>
 
         <span class="k">return</span> <span class="kc">True</span>
 
@@ -761,7 +785,6 @@
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Write to output, perform checks</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">start_new_log_task</span><span class="p">(</span><span class="s2">&quot;Finalizing&quot;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">set_logger_message</span><span class="p">(</span><span class="s2">&quot;Interpolating roughness&quot;</span><span class="p">)</span>
         <span class="n">FE</span><span class="o">.</span><span class="n">interpolate_roughness</span><span class="p">(</span><span class="n">cross_sections</span><span class="p">)</span>
 
@@ -1110,14 +1133,20 @@
         <span class="c1"># Set the number of cross-section for progress bar</span>
         <span class="n">css_selection</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_css_range</span><span class="p">(</span><span class="n">number_of_css</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">css_data_list</span><span class="p">))</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">get_logformatter</span><span class="p">()</span><span class="o">.</span><span class="n">set_number_of_iterations</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">css_selection</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">selected_list</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">css_data_list</span><span class="p">)[</span><span class="n">css_selection</span><span class="p">]</span>
 
         <span class="c1"># Generate cross-sections one by one</span>
-        <span class="k">for</span> <span class="n">css_data</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">css_data_list</span><span class="p">)[</span><span class="n">css_selection</span><span class="p">]:</span>
+        <span class="n">pbar</span> <span class="o">=</span> <span class="n">tqdm</span><span class="o">.</span><span class="n">tqdm</span><span class="p">(</span><span class="n">total</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">selected_list</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">css_data</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">selected_list</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">start_new_log_task</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">css_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;id&#39;</span><span class="p">)</span><span class="si">}</span><span class="s2">  (</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">selected_list</span><span class="p">)</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">,</span> <span class="n">pbar</span><span class="o">=</span><span class="n">pbar</span>
+            <span class="p">)</span>
             <span class="n">generated_cross_section</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_generate_cross_section</span><span class="p">(</span>
                 <span class="n">css_data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">fm_model_data</span>
             <span class="p">)</span>
             <span class="k">if</span> <span class="n">generated_cross_section</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="n">cross_sections</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">generated_cross_section</span><span class="p">)</span>
+            <span class="n">pbar</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="n">cross_sections</span>
 
@@ -1164,8 +1193,6 @@
                 <span class="s2">&quot;No FM data given for new cross section </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">css_name</span><span class="p">)</span>
             <span class="p">)</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">start_new_log_task</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">css_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-
         <span class="c1"># Create cross section</span>
         <span class="n">created_css</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_new_cross_section</span><span class="p">(</span><span class="n">css_data</span><span class="o">=</span><span class="n">css_data</span><span class="p">)</span>
 
@@ -1190,10 +1217,7 @@
         <span class="n">created_css</span><span class="o">.</span><span class="n">set_edge_output_list</span><span class="p">()</span>
 
         <span class="k">if</span> <span class="n">created_css</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">elapsed_time</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_logformatter</span><span class="p">()</span><span class="o">.</span><span class="n">get_elapsed_time</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">())</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">set_logger_message</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;Cross-section </span><span class="si">{</span><span class="n">created_css</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> derived in </span><span class="si">{</span><span class="n">elapsed_time</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2"> s&quot;</span>
-            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">finish_log_task</span><span class="p">()</span>
         <span class="k">return</span> <span class="n">created_css</span>
 
     <span class="k">def</span> <span class="nf">_build_cross_section_geometry</span><span class="p">(</span>
@@ -1297,12 +1321,11 @@
                 <span class="o">+</span> <span class="s2">&quot;</span><span class="si">{}</span><span class="s2">, message: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">css_data_id</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">e_info</span><span class="p">)),</span>
                 <span class="s2">&quot;error&quot;</span><span class="p">,</span>
             <span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">set_logger_message</span><span class="p">(</span><span class="n">traceback</span><span class="o">.</span><span class="n">print_exc</span><span class="p">(</span><span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="p">),</span> <span class="s2">&quot;error&quot;</span><span class="p">)</span>
             <span class="k">return</span> <span class="kc">None</span>
 
         <span class="k">return</span> <span class="n">css</span>
 
-    <span class="k">def</span> <span class="nf">_write_output</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cross_sections</span><span class="p">:</span> <span class="nb">list</span><span class="p">,</span> <span class="n">output_dir</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_write_output</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cross_sections</span><span class="p">:</span> <span class="nb">list</span><span class="p">,</span> <span class="n">output_dir</span><span class="p">:</span> <span class="n">Path</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Exports all cross sections to the necessary file formats</span>
 
 <span class="sd">        Arguments:</span>
@@ -1320,18 +1343,21 @@
         <span class="n">OutputExporter</span> <span class="o">=</span> <span class="n">Export1DModelData</span><span class="p">(</span><span class="n">logger</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">get_logger</span><span class="p">())</span>
 
         <span class="c1"># File paths</span>
-        <span class="n">css_location_ini_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">output_dir</span><span class="p">,</span> <span class="s2">&quot;CrossSectionLocations.ini&quot;</span><span class="p">)</span>
-        <span class="n">css_definitions_ini_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
-            <span class="n">output_dir</span><span class="p">,</span> <span class="s2">&quot;CrossSectionDefinitions.ini&quot;</span>
+        <span class="n">css_location_ini_file</span> <span class="o">=</span> <span class="n">output_dir</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_output_files</span><span class="o">.</span><span class="n">dimr_css_locations</span>
+        <span class="p">)</span>
+        <span class="n">css_definitions_ini_file</span> <span class="o">=</span> <span class="n">output_dir</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_output_files</span><span class="o">.</span><span class="n">dimr_css_definitions</span>
         <span class="p">)</span>
 
-        <span class="n">csv_geometry_file</span> <span class="o">=</span> <span class="n">output_dir</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\\</span><span class="s2">geometry.csv&quot;</span>
-        <span class="n">csv_roughness_file</span> <span class="o">=</span> <span class="n">output_dir</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\\</span><span class="s2">roughness.csv&quot;</span>
+        <span class="c1"># Legacy file formats</span>
+        <span class="n">csv_geometry_file</span> <span class="o">=</span> <span class="n">output_dir</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_output_files</span><span class="o">.</span><span class="n">sobek3_geometry</span><span class="p">)</span>
+        <span class="n">csv_roughness_file</span> <span class="o">=</span> <span class="n">output_dir</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_output_files</span><span class="o">.</span><span class="n">sobek3_roughness</span><span class="p">)</span>
 
-        <span class="n">csv_geometry_test_file</span> <span class="o">=</span> <span class="n">output_dir</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\\</span><span class="s2">geometry_test.csv&quot;</span>
-        <span class="n">csv_roughness_test_file</span> <span class="o">=</span> <span class="n">output_dir</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\\</span><span class="s2">roughness_test.csv&quot;</span>
+        <span class="n">csv_geometry_test_file</span> <span class="o">=</span> <span class="n">output_dir</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_output_files</span><span class="o">.</span><span class="n">test_geometry</span><span class="p">)</span>
+        <span class="n">csv_roughness_test_file</span> <span class="o">=</span> <span class="n">output_dir</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_output_files</span><span class="o">.</span><span class="n">test_roughness</span><span class="p">)</span>
 
-        <span class="n">csv_volumes_file</span> <span class="o">=</span> <span class="n">output_dir</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\\</span><span class="s2">volumes.csv&quot;</span>
+        <span class="n">csv_volumes_file</span> <span class="o">=</span> <span class="n">output_dir</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_output_files</span><span class="o">.</span><span class="n">fm2prof_volume</span><span class="p">)</span>
 
         <span class="c1"># export fm1D format</span>
         <span class="k">try</span><span class="p">:</span>
@@ -1350,18 +1376,27 @@
                 <span class="p">[</span><span class="n">s</span> <span class="k">for</span> <span class="n">css</span> <span class="ow">in</span> <span class="n">cross_sections</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">css</span><span class="o">.</span><span class="n">friction_tables</span><span class="o">.</span><span class="n">keys</span><span class="p">()]</span>
             <span class="p">)</span>
             <span class="n">sectionFileKeyDict</span> <span class="o">=</span> <span class="p">{</span>
-                <span class="s2">&quot;main&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;</span><span class="se">\\</span><span class="s2">roughness-Main.ini&quot;</span><span class="p">,</span> <span class="s2">&quot;Main&quot;</span><span class="p">],</span>
-                <span class="s2">&quot;floodplain1&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;</span><span class="se">\\</span><span class="s2">roughness-FloodPlain1.ini&quot;</span><span class="p">,</span> <span class="s2">&quot;FloodPlain1&quot;</span><span class="p">],</span>
-                <span class="s2">&quot;floodplain2&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;</span><span class="se">\\</span><span class="s2">roughness-FloodPlain2.ini&quot;</span><span class="p">,</span> <span class="s2">&quot;FloodPlain2&quot;</span><span class="p">],</span>
+                <span class="s2">&quot;main&quot;</span><span class="p">:</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_output_files</span><span class="o">.</span><span class="n">dimr_roughness_main</span><span class="p">,</span> <span class="s2">&quot;Main&quot;</span><span class="p">],</span>
+                <span class="s2">&quot;floodplain1&quot;</span><span class="p">:</span> <span class="p">[</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_output_files</span><span class="o">.</span><span class="n">dimr_roughness_floodplain1</span><span class="p">,</span>
+                    <span class="s2">&quot;FloodPlain1&quot;</span><span class="p">,</span>
+                <span class="p">],</span>
+                <span class="s2">&quot;floodplain2&quot;</span><span class="p">:</span> <span class="p">[</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_output_files</span><span class="o">.</span><span class="n">dimr_roughness_floodplain2</span><span class="p">,</span>
+                    <span class="s2">&quot;FloodPlain2&quot;</span><span class="p">,</span>
+                <span class="p">],</span>
             <span class="p">}</span>
             <span class="k">for</span> <span class="n">section</span> <span class="ow">in</span> <span class="n">sections</span><span class="p">:</span>
-                <span class="n">csv_roughness_ini_file</span> <span class="o">=</span> <span class="n">output_dir</span> <span class="o">+</span> <span class="n">sectionFileKeyDict</span><span class="p">[</span><span class="n">section</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+                <span class="n">csv_roughness_ini_file</span> <span class="o">=</span> <span class="n">output_dir</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span>
+                    <span class="n">sectionFileKeyDict</span><span class="p">[</span><span class="n">section</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+                <span class="p">)</span>
                 <span class="n">OutputExporter</span><span class="o">.</span><span class="n">export_roughness</span><span class="p">(</span>
                     <span class="n">cross_sections</span><span class="p">,</span>
                     <span class="n">file_path</span><span class="o">=</span><span class="n">csv_roughness_ini_file</span><span class="p">,</span>
                     <span class="n">fmt</span><span class="o">=</span><span class="s2">&quot;dflow1d&quot;</span><span class="p">,</span>
                     <span class="n">roughness_section</span><span class="o">=</span><span class="n">sectionFileKeyDict</span><span class="p">[</span><span class="n">section</span><span class="p">][</span><span class="mi">1</span><span class="p">],</span>
                 <span class="p">)</span>
+
         <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e_info</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">set_logger_message</span><span class="p">(</span>
                 <span class="s2">&quot;An error was produced while exporting files to DIMR format,&quot;</span>
@@ -1429,7 +1464,6 @@
                 <span class="o">+</span> <span class="s2">&quot;</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">e_message</span><span class="p">),</span>
                 <span class="s2">&quot;error&quot;</span><span class="p">,</span>
             <span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">set_logger_message</span><span class="p">(</span><span class="n">traceback</span><span class="o">.</span><span class="n">print_exc</span><span class="p">(</span><span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="p">),</span> <span class="s2">&quot;error&quot;</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="n">cross_section</span>
 
@@ -1469,13 +1503,27 @@
                 <span class="o">+</span> <span class="s2">&quot;</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">e_message</span><span class="p">),</span>
                 <span class="s2">&quot;error&quot;</span><span class="p">,</span>
             <span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">set_logger_message</span><span class="p">(</span><span class="n">traceback</span><span class="o">.</span><span class="n">print_exc</span><span class="p">(</span><span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="p">),</span> <span class="s2">&quot;error&quot;</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">css</span>
 
     <span class="k">def</span> <span class="nf">_print_log_report</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">ll</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_logformatter</span><span class="p">()</span><span class="o">.</span><span class="n">_loglibrary</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">set_logger_message</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Warnings: </span><span class="si">{</span><span class="n">ll</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;WARNING&#39;</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">set_logger_message</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Errors: </span><span class="si">{</span><span class="n">ll</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;ERROR&#39;</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_output_exists</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Checks whether output exists</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">output_file</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_output_files</span><span class="p">:</span>
+            <span class="k">if</span> <span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">get_inifile</span><span class="p">()</span>
+                <span class="o">.</span><span class="n">get_output_directory</span><span class="p">()</span>
+                <span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="n">output_file</span><span class="p">)</span>
+                <span class="o">.</span><span class="n">is_file</span><span class="p">()</span>
+            <span class="p">):</span>
+                <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
 
 
 <div class="viewcode-block" id="Project"><a class="viewcode-back" href="../../chapters/user_manual/source.html#fm2prof.Fm2ProfRunner.Project">[docs]</a><span class="k">class</span> <span class="nc">Project</span><span class="p">(</span><span class="n">Fm2ProfRunner</span><span class="p">):</span>
@@ -1564,7 +1612,12 @@
 <span class="sd">            string</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_inifile</span><span class="p">()</span><span class="o">.</span><span class="n">print_configuration</span><span class="p">()</span></div></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_inifile</span><span class="p">()</span><span class="o">.</span><span class="n">print_configuration</span><span class="p">()</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">output_files</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Generator</span><span class="p">[</span><span class="n">Path</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]:</span>
+        <span class="k">for</span> <span class="n">of</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_output_files</span><span class="p">:</span>
+            <span class="k">yield</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_output_directory</span><span class="p">()</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="n">of</span><span class="p">)</span></div>
 </code></pre></div>
 
 
@@ -1573,7 +1626,7 @@
   <small>
     
       Last update:
-      Jul 05, 2022
+      Jul 13, 2022
     
   </small>
 </div>
