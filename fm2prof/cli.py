@@ -2,6 +2,7 @@ from pathlib import Path
 from typing import Optional
 
 import typer
+from tqdm import tqdm
 
 from fm2prof import Project, __version__
 from fm2prof.IniFile import IniFile
@@ -77,7 +78,7 @@ def cli_load_project(
         vis = VisualiseOutput(
             project.get_output_directory(), logger=project.get_logger()
         )
-        for css in vis.cross_sections:
+        for css in tqdm(vis.cross_sections):
             vis.figure_cross_section(css)
 
     raise typer.Exit()
