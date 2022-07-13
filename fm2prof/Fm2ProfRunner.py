@@ -595,9 +595,10 @@ class Fm2ProfRunner(FM2ProfBase):
         # Set the number of cross-section for progress bar
         css_selection = self._get_css_range(number_of_css=len(css_data_list))
         self.get_logformatter().set_number_of_iterations(len(css_selection) + 1)
-
+        selected_list = np.array(css_data_list)[css_selection]
         # Generate cross-sections one by one
-        for css_data in np.array(css_data_list)[css_selection]:
+        for i, css_data in enumerate(selected_list):
+            self.start_new_log_task(f"{css_data.get('id')}  ({i}/{len(selected_list)})")
             generated_cross_section = self._generate_cross_section(
                 css_data, self.fm_model_data
             )
@@ -647,9 +648,7 @@ class Fm2ProfRunner(FM2ProfBase):
         if fm_model_data is None:
             raise Exception(
                 "No FM data given for new cross section {}".format(css_name)
-            )
-
-        self.start_new_log_task(f"{css_name}")
+            )        
 
         # Create cross section
         created_css = self._get_new_cross_section(css_data=css_data)
@@ -808,6 +807,7 @@ class Fm2ProfRunner(FM2ProfBase):
             self._output_files.dimr_css_definitions
         )
 
+        # Legacy file formats
         csv_geometry_file = output_dir.joinpath(self._output_files.sobek3_geometry)
         csv_roughness_file = output_dir.joinpath(self._output_files.sobek3_roughness)
 
