@@ -544,6 +544,7 @@
 <span class="kn">import</span> <span class="nn">matplotlib</span> <span class="k">as</span> <span class="nn">mpl</span>
 <span class="kn">import</span> <span class="nn">matplotlib.dates</span> <span class="k">as</span> <span class="nn">mdates</span>
 <span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">import</span> <span class="nn">matplotlib.patches</span> <span class="k">as</span> <span class="nn">mpatches</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
 <span class="kn">import</span> <span class="nn">tqdm</span>
@@ -557,6 +558,7 @@
 
 <span class="n">register_matplotlib_converters</span><span class="p">()</span>
 
+<span class="n">COLORSCHEME</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;k&quot;</span><span class="p">,</span> <span class="s2">&quot;#00cc96&quot;</span><span class="p">,</span> <span class="s2">&quot;#0d38e0&quot;</span><span class="p">]</span>
 
 <div class="viewcode-block" id="GenerateCrossSectionLocationFile"><a class="viewcode-back" href="../../chapters/user_manual/source.html#fm2prof.utils.GenerateCrossSectionLocationFile">[docs]</a><span class="k">class</span> <span class="nc">GenerateCrossSectionLocationFile</span><span class="p">(</span><span class="n">FM2ProfBase</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
@@ -1369,8 +1371,8 @@
 
 <span class="k">class</span> <span class="nc">PlotStyles</span><span class="p">:</span>
     <span class="n">myFmt</span> <span class="o">=</span> <span class="n">mdates</span><span class="o">.</span><span class="n">DateFormatter</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%d</span><span class="s2">-%b&quot;</span><span class="p">)</span>
-    <span class="n">monthlocator</span> <span class="o">=</span> <span class="n">mdates</span><span class="o">.</span><span class="n">MonthLocator</span><span class="p">()</span>
-    <span class="n">daylocator</span> <span class="o">=</span> <span class="n">mdates</span><span class="o">.</span><span class="n">DayLocator</span><span class="p">(</span><span class="mi">15</span><span class="p">)</span>
+    <span class="n">monthlocator</span> <span class="o">=</span> <span class="n">mdates</span><span class="o">.</span><span class="n">MonthLocator</span><span class="p">(</span><span class="n">bymonthday</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">20</span><span class="p">))</span>
+    <span class="n">daylocator</span> <span class="o">=</span> <span class="n">mdates</span><span class="o">.</span><span class="n">DayLocator</span><span class="p">(</span><span class="n">interval</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
 
     <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">set_locale</span><span class="p">(</span><span class="n">localeString</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
@@ -1385,7 +1387,10 @@
     <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">_is_timeaxis</span><span class="p">(</span><span class="n">axis</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
         <span class="k">try</span><span class="p">:</span>
-            <span class="nb">float</span><span class="p">(</span><span class="n">axis</span><span class="o">.</span><span class="n">get_ticklabels</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">get_text</span><span class="p">()</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;−&quot;</span><span class="p">,</span> <span class="s2">&quot;-&quot;</span><span class="p">))</span>
+            <span class="n">label_string</span> <span class="o">=</span> <span class="n">axis</span><span class="o">.</span><span class="n">get_ticklabels</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">get_text</span><span class="p">()</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;−&quot;</span><span class="p">,</span> <span class="s2">&quot;-&quot;</span><span class="p">)</span>
+            <span class="c1"># if label_string is empty (e.g. because of twin_axis, return false)</span>
+            <span class="k">if</span> <span class="n">label_string</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="n">label_string</span><span class="p">)</span>
+
         <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
             <span class="k">return</span> <span class="kc">True</span>
         <span class="k">except</span> <span class="ne">IndexError</span><span class="p">:</span>
@@ -1419,9 +1424,9 @@
             <span class="n">legend</span><span class="o">.</span><span class="n">get_frame</span><span class="p">()</span><span class="o">.</span><span class="n">set_boxstyle</span><span class="p">(</span><span class="s2">&quot;square&quot;</span><span class="p">,</span> <span class="n">pad</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
 
     <span class="nd">@classmethod</span>
-    <span class="k">def</span> <span class="nf">van_veen</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">fig</span><span class="p">:</span> <span class="n">Figure</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">use_legend</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">van_veen</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">fig</span><span class="p">:</span> <span class="n">Figure</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">use_legend</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">extra_labels</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">List</span><span class="p">,</span> <span class="nb">type</span><span class="p">(</span><span class="kc">None</span><span class="p">)]</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">ax_align_legend</span><span class="p">:</span> <span class="n">plt</span><span class="o">.</span><span class="n">Axes</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Stijl van Van Veen&quot;&quot;&quot;</span>
-
+            
         <span class="k">def</span> <span class="nf">initiate</span><span class="p">():</span>
             <span class="c1"># Set default locale to NL</span>
             <span class="c1"># TODO: add localization options</span>
@@ -1429,7 +1434,7 @@
 
             <span class="c1"># Color style</span>
             <span class="n">mpl</span><span class="o">.</span><span class="n">rcParams</span><span class="p">[</span><span class="s2">&quot;axes.prop_cycle&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">mpl</span><span class="o">.</span><span class="n">cycler</span><span class="p">(</span>
-                <span class="n">color</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;k&quot;</span><span class="p">,</span> <span class="s2">&quot;00cc96&quot;</span><span class="p">,</span> <span class="s2">&quot;#0d38e0&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="mi">3</span><span class="p">,</span>
+                <span class="n">color</span><span class="o">=</span><span class="n">COLORSCHEME</span> <span class="o">*</span> <span class="mi">3</span><span class="p">,</span>
                 <span class="n">linestyle</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;-&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="mi">3</span> <span class="o">+</span> <span class="p">[</span><span class="s2">&quot;--&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="mi">3</span> <span class="o">+</span> <span class="p">[</span><span class="s2">&quot;-.&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="mi">3</span><span class="p">,</span>
                 <span class="n">linewidth</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">9</span><span class="p">),</span>
             <span class="p">)</span>
@@ -1441,7 +1446,9 @@
                 <span class="s2">&quot;axes.unicode_minus&quot;</span>
             <span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>  <span class="c1"># not all fonts support the unicode minus</span>
 
-        <span class="k">def</span> <span class="nf">styleFigure</span><span class="p">(</span><span class="n">fig</span><span class="p">,</span> <span class="n">use_legend</span><span class="p">):</span>
+        <span class="k">def</span> <span class="nf">styleFigure</span><span class="p">(</span><span class="n">fig</span><span class="p">,</span> <span class="n">use_legend</span><span class="p">,</span> <span class="n">extra_labels</span><span class="p">,</span> <span class="n">ax_align_legend</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">ax_align_legend</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span> <span class="n">ax_align_legend</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">axes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        
 
             <span class="c1"># this forces labels to be generated. Necessary to detect datetimes</span>
             <span class="n">fig</span><span class="o">.</span><span class="n">canvas</span><span class="o">.</span><span class="n">draw</span><span class="p">()</span>
@@ -1462,27 +1469,30 @@
                 <span class="k">if</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_is_timeaxis</span><span class="p">(</span><span class="n">ax</span><span class="o">.</span><span class="n">xaxis</span><span class="p">):</span>
                     <span class="n">ax</span><span class="o">.</span><span class="n">xaxis</span><span class="o">.</span><span class="n">set_major_formatter</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="n">myFmt</span><span class="p">)</span>
                     <span class="n">ax</span><span class="o">.</span><span class="n">xaxis</span><span class="o">.</span><span class="n">set_major_locator</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="n">monthlocator</span><span class="p">)</span>
-                    <span class="n">ax</span><span class="o">.</span><span class="n">xaxis</span><span class="o">.</span><span class="n">set_minor_locator</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="n">daylocator</span><span class="p">)</span>
+                    <span class="c1">#ax.xaxis.set_minor_locator(cls.daylocator)</span>
                 <span class="k">if</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_is_timeaxis</span><span class="p">(</span><span class="n">ax</span><span class="o">.</span><span class="n">yaxis</span><span class="p">):</span>
                     <span class="n">ax</span><span class="o">.</span><span class="n">yaxis</span><span class="o">.</span><span class="n">set_major_formatter</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="n">myFmt</span><span class="p">)</span>
                     <span class="n">ax</span><span class="o">.</span><span class="n">yaxis</span><span class="o">.</span><span class="n">set_major_locator</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="n">monthlocator</span><span class="p">)</span>
-                    <span class="n">ax</span><span class="o">.</span><span class="n">yaxis</span><span class="o">.</span><span class="n">set_minor_locator</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="n">daylocator</span><span class="p">)</span>
+                    <span class="c1">#ax.yaxis.set_minor_locator(cls.daylocator)</span>
 
                 <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="n">ax</span><span class="o">.</span><span class="n">get_title</span><span class="p">()</span><span class="o">.</span><span class="n">upper</span><span class="p">())</span>
                 <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="n">ax</span><span class="o">.</span><span class="n">get_xlabel</span><span class="p">()</span><span class="o">.</span><span class="n">upper</span><span class="p">())</span>
                 <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="n">ax</span><span class="o">.</span><span class="n">get_ylabel</span><span class="p">()</span><span class="o">.</span><span class="n">upper</span><span class="p">())</span>
-
+                <span class="n">ax</span><span class="o">.</span><span class="n">patch</span><span class="o">.</span><span class="n">set_visible</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>  
                 <span class="n">h</span><span class="p">,</span> <span class="n">l</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">get_legend_handles_labels</span><span class="p">()</span>
                 <span class="n">handles</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">h</span><span class="p">)</span>
                 <span class="n">labels</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">l</span><span class="p">)</span>
 
+            <span class="k">if</span> <span class="n">extra_labels</span><span class="p">:</span>
+                <span class="n">handles</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">extra_labels</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+                <span class="n">labels</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">extra_labels</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
             <span class="n">fig</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
             <span class="k">if</span> <span class="n">use_legend</span><span class="p">:</span>
                 <span class="n">lgd</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span>
                     <span class="n">handles</span><span class="p">,</span>
                     <span class="n">labels</span><span class="p">,</span>
                     <span class="n">loc</span><span class="o">=</span><span class="s2">&quot;upper left&quot;</span><span class="p">,</span>
-                    <span class="n">bbox_to_anchor</span><span class="o">=</span><span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.9</span><span class="p">),</span>
+                    <span class="n">bbox_to_anchor</span><span class="o">=</span><span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">ax_align_legend</span><span class="o">.</span><span class="n">get_position</span><span class="p">()</span><span class="o">.</span><span class="n">y1</span><span class="p">),</span>
                     <span class="n">bbox_transform</span><span class="o">=</span><span class="n">fig</span><span class="o">.</span><span class="n">transFigure</span><span class="p">,</span>
                     <span class="n">edgecolor</span><span class="o">=</span><span class="s2">&quot;k&quot;</span><span class="p">,</span>
                     <span class="n">facecolor</span><span class="o">=</span><span class="s2">&quot;white&quot;</span><span class="p">,</span>
@@ -1499,7 +1509,8 @@
             <span class="k">return</span> <span class="n">initiate</span><span class="p">()</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">initiate</span><span class="p">()</span>
-            <span class="k">return</span> <span class="n">styleFigure</span><span class="p">(</span><span class="n">fig</span><span class="p">,</span> <span class="n">use_legend</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">styleFigure</span><span class="p">(</span><span class="n">fig</span><span class="p">,</span> <span class="n">use_legend</span><span class="p">,</span> <span class="n">extra_labels</span><span class="p">,</span> <span class="n">ax_align_legend</span><span class="p">)</span>
+
 
 
 <div class="viewcode-block" id="DeltaresSectionItem"><a class="viewcode-back" href="../../chapters/user_manual/source.html#fm2prof.utils.DeltaresSectionItem">[docs]</a><span class="nd">@dataclass</span>
@@ -1607,15 +1618,27 @@
 
     <span class="n">_time_fmt</span> <span class="o">=</span> <span class="s2">&quot;%Y-%m-</span><span class="si">%d</span><span class="s2"> %H:%M:%S&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">start_time</span><span class="p">:</span><span class="n">datetime</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">logger</span><span class="o">=</span><span class="n">logger</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_path_out</span><span class="p">:</span> <span class="n">Path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_path_flow1d</span><span class="p">:</span> <span class="n">Path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_path_flow2d</span><span class="p">:</span> <span class="n">Path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">data_1D_Q</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_data_1D_Q</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_time_offset_1d</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_start_time</span><span class="p">:</span><span class="n">Union</span><span class="p">[</span><span class="n">datetime</span><span class="p">,</span> <span class="nb">type</span><span class="p">(</span><span class="kc">None</span><span class="p">)]</span> <span class="o">=</span> <span class="n">start_time</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">start_time</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">-&gt;</span><span class="n">Union</span><span class="p">[</span><span class="n">datetime</span><span class="p">,</span> <span class="kc">None</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot; if defined, used to mask data &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_start_time</span>
+
+    <span class="nd">@start_time</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">start_time</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_time</span><span class="p">:</span><span class="n">datetime</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">input_time</span><span class="p">,</span> <span class="n">datetime</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_start_time</span> <span class="o">=</span> <span class="n">input_time</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">path_flow1d</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -1648,13 +1671,13 @@
 <span class="sd">            &gt;&gt;&gt; ModelOutputReader.path_flow1d = path_to_dir_that_contains_dimr_xml</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">file_1D_Q</span><span class="o">.</span><span class="n">is_file</span><span class="p">()</span> <span class="o">&amp;</span> <span class="bp">self</span><span class="o">.</span><span class="n">file_1D_H</span><span class="o">.</span><span class="n">is_file</span><span class="p">():</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">data_1D_Q</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_data_1D_Q</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">file_1D_Q</span><span class="p">,</span>
                 <span class="n">index_col</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
                 <span class="n">parse_dates</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
                 <span class="n">date_parser</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_dateparser</span><span class="p">,</span>
             <span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">data_1D_H</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_data_1D_H</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">file_1D_H</span><span class="p">,</span>
                 <span class="n">index_col</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
                 <span class="n">parse_dates</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
@@ -1662,9 +1685,9 @@
             <span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">set_logger_message</span><span class="p">(</span><span class="s2">&quot;Using existing flow1d csv files&quot;</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">data_1D_H</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_1D_Q</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_import_1Dobservations</span><span class="p">()</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">data_1D_H</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">file_1D_H</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">data_1D_Q</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">file_1D_Q</span><span class="p">)</span></div>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_data_1D_H</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data_1D_Q</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_import_1Dobservations</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_data_1D_H</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">file_1D_H</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_data_1D_Q</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">file_1D_Q</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="ModelOutputReader.load_flow2d_data"><a class="viewcode-back" href="../../chapters/user_manual/source.html#fm2prof.utils.ModelOutputReader.load_flow2d_data">[docs]</a>    <span class="k">def</span> <span class="nf">load_flow2d_data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -1676,13 +1699,13 @@
 <span class="sd">            &gt;&gt;&gt; ModelOutputReader.path_flow2d = path_to_netcdf_file</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">file_2D_Q</span><span class="o">.</span><span class="n">is_file</span><span class="p">()</span> <span class="o">&amp;</span> <span class="bp">self</span><span class="o">.</span><span class="n">file_2D_H</span><span class="o">.</span><span class="n">is_file</span><span class="p">():</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">data_2D_Q</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_data_2D_Q</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">file_2D_Q</span><span class="p">,</span>
                 <span class="n">index_col</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
                 <span class="n">parse_dates</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
                 <span class="n">date_parser</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_dateparser</span><span class="p">,</span>
             <span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">data_2D_H</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_data_2D_H</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">file_2D_H</span><span class="p">,</span>
                 <span class="n">index_col</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
                 <span class="n">parse_dates</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
@@ -1694,13 +1717,13 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">_import_2Dobservations</span><span class="p">()</span>
 
             <span class="c1"># then load</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">data_2D_Q</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_data_2D_Q</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">file_2D_Q</span><span class="p">,</span>
                 <span class="n">index_col</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
                 <span class="n">parse_dates</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
                 <span class="n">date_parser</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_dateparser</span><span class="p">,</span>
             <span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">data_2D_H</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_data_2D_H</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">file_2D_H</span><span class="p">,</span>
                 <span class="n">index_col</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
                 <span class="n">parse_dates</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
@@ -1757,12 +1780,33 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_path</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__fileOutName_1D2DMap</span><span class="p">)</span>
 
     <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">data_1D_H</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_from_start_time</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_data_1D_H</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">data_2D_H</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_from_start_time</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_data_2D_H</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">data_1D_Q</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_from_start_time</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_data_1D_Q</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">data_2D_Q</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_from_start_time</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_data_2D_Q</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">time_offset_1d</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_time_offset_1d</span>
 
     <span class="nd">@time_offset_1d</span><span class="o">.</span><span class="n">setter</span>
     <span class="k">def</span> <span class="nf">time_offset_1d</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">seconds</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_time_offset_1d</span> <span class="o">=</span> <span class="n">seconds</span>
+
+    <span class="k">def</span> <span class="nf">_from_start_time</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">)</span><span class="o">-&gt;</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">start_time</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">data</span><span class="p">[</span><span class="n">data</span><span class="o">.</span><span class="n">index</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">start_time</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">data</span>
 
     <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">_parse_names</span><span class="p">(</span><span class="n">nclist</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">):</span>
@@ -1844,7 +1888,7 @@
 
     <span class="k">def</span> <span class="nf">_parse_1D_stations</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Generator</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]:</span>
         <span class="sd">&quot;&quot;&quot;Reads the names of observations stations from 1D model&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data_1D_H</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_data_1D_H</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_get_1d2d_map</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">_file_his</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">path_flow2d</span>
@@ -1892,9 +1936,10 @@
         <span class="n">path_1d</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Path</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span>
         <span class="n">path_2d</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Path</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span>
         <span class="n">routes</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]],</span>
+        <span class="n">start_time</span><span class="p">:</span> <span class="n">datetime</span><span class="p">,</span>
     <span class="p">):</span>
         <span class="k">if</span> <span class="n">project</span><span class="p">:</span>
-            <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">logger</span><span class="o">=</span><span class="n">project</span><span class="o">.</span><span class="n">get_logger</span><span class="p">())</span>
+            <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">logger</span><span class="o">=</span><span class="n">project</span><span class="o">.</span><span class="n">get_logger</span><span class="p">(),</span> <span class="n">start_time</span><span class="o">=</span><span class="n">start_time</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">output_path</span> <span class="o">=</span> <span class="n">project</span><span class="o">.</span><span class="n">get_output_directory</span><span class="p">()</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
@@ -1905,15 +1950,23 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">path_flow2d</span> <span class="o">=</span> <span class="n">path_2d</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">routes</span> <span class="o">=</span> <span class="n">routes</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">data_1D_H</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">data_2D_H</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">data_1D_H_digitized</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">data_2D_H_digitized</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_data_1D_H</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_data_2D_H</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_data_1D_H_digitized</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_data_2D_H_digitized</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_qsteps</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">100</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="mi">18000</span> <span class="o">/</span> <span class="mi">100</span><span class="p">),</span> <span class="mi">200</span><span class="p">)</span>
+        
+        <span class="c1"># initiate plotstyle</span>
+        <span class="n">PlotStyles</span><span class="o">.</span><span class="n">van_veen</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_error_colors</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;#7e3e00&#39;</span><span class="p">,</span> <span class="s1">&#39;#b25800&#39;</span><span class="p">,</span> <span class="s2">&quot;#d86a00&quot;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_color_error</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_error_colors</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+        <span class="c1">#set start time</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">start_time</span> <span class="o">=</span> <span class="n">start_time</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">read_all_data</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">digitize_data</span><span class="p">()</span>
-
+        <span class="bp">self</span><span class="o">.</span><span class="n">statistics</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compute_statistics</span><span class="p">()</span>
         <span class="c1"># create output folder</span>
         <span class="n">output_dirs</span> <span class="o">=</span> <span class="p">[</span>
             <span class="s2">&quot;figures/longitudinal&quot;</span><span class="p">,</span>
@@ -1937,7 +1990,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">heatmap_time</span><span class="p">(</span><span class="n">route</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">set_logger_message</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Making figures for stations&quot;</span><span class="p">)</span>
-        <span class="k">for</span> <span class="n">station</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="o">.</span><span class="n">tqdm</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">stations</span><span class="p">(),</span> <span class="n">total</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">data_1D_H</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]):</span>
+        <span class="k">for</span> <span class="n">station</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="o">.</span><span class="n">tqdm</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">stations</span><span class="p">(),</span> <span class="n">total</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_data_1D_H</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">figure_at_station</span><span class="p">(</span><span class="n">station</span><span class="p">)</span>
 
     <span class="nd">@property</span>
@@ -1962,27 +2015,27 @@
     <span class="k">def</span> <span class="nf">digitize_data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">file_1D_H_digitized</span><span class="o">.</span><span class="n">is_file</span><span class="p">():</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">set_logger_message</span><span class="p">(</span><span class="s2">&quot;Using existing digitized file for 1d&quot;</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">data_1D_H_digitized</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_data_1D_H_digitized</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">file_1D_H_digitized</span><span class="p">,</span> <span class="n">index_col</span><span class="o">=</span><span class="mi">0</span>
             <span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">data_1D_H_digitized</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_digitize_data</span><span class="p">(</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">data_1D_H</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_1D_Q</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_qsteps</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_data_1D_H_digitized</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_digitize_data</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_data_1D_H</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data_1D_Q</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_qsteps</span>
             <span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">data_1D_H_digitized</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">file_1D_H_digitized</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_data_1D_H_digitized</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">file_1D_H_digitized</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">file_2D_H_digitized</span><span class="o">.</span><span class="n">is_file</span><span class="p">():</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">set_logger_message</span><span class="p">(</span><span class="s2">&quot;Using existing digitized file for 2d&quot;</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">data_2D_H_digitized</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_data_2D_H_digitized</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">file_2D_H_digitized</span><span class="p">,</span> <span class="n">index_col</span><span class="o">=</span><span class="mi">0</span>
             <span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">data_2D_H_digitized</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_digitize_data</span><span class="p">(</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">data_2D_H</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_2D_Q</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_qsteps</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_data_2D_H_digitized</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_digitize_data</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_data_2D_H</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data_2D_Q</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_qsteps</span>
             <span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">data_2D_H_digitized</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">file_2D_H_digitized</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_data_2D_H_digitized</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">file_2D_H_digitized</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">stations</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Generator</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]:</span>
-        <span class="k">for</span> <span class="n">station</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_1D_H</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">station</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data_1D_H</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
             <span class="k">yield</span> <span class="n">station</span>
 
     <span class="nd">@staticmethod</span>
@@ -2002,22 +2055,26 @@
         <span class="n">C</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">C</span><span class="p">)</span>  <span class="c1"># [sort]</span>
         <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="n">stations</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">bins</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">C</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
 
+    <span class="k">def</span> <span class="nf">_names_to_rkms</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">station_names</span><span class="p">:</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span><span class="o">-&gt;</span><span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]:</span>
+        <span class="k">return</span>  <span class="p">[</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_catch_e</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="n">i</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;_&quot;</span><span class="p">)[</span><span class="mi">1</span><span class="p">]),</span> <span class="p">(</span><span class="ne">IndexError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">))</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">station_names</span>
+        <span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">_names_to_branches</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">station_names</span><span class="p">:</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span><span class="o">-&gt;</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="p">[</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_catch_e</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="n">i</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;_&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">],</span> <span class="ne">IndexError</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">station_names</span>
+        <span class="p">]</span>
+
 <div class="viewcode-block" id="Compare1D2D.get_route"><a class="viewcode-back" href="../../chapters/user_manual/source.html#fm2prof.utils.Compare1D2D.get_route">[docs]</a>    <span class="k">def</span> <span class="nf">get_route</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">route</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]]:</span>
         <span class="sd">&quot;&quot;&quot;returns a sorted list of stations along a route, with rkms&quot;&quot;&quot;</span>
-        <span class="n">station_names</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_2D_H</span><span class="o">.</span><span class="n">columns</span>
+        <span class="n">station_names</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data_2D_H</span><span class="o">.</span><span class="n">columns</span>
 
         <span class="c1"># Parse names</span>
-        <span class="n">unique_branches</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">([</span><span class="n">i</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;_&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">station_names</span><span class="p">])</span>
-        <span class="n">rkms</span> <span class="o">=</span> <span class="p">[</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_catch_e</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="n">i</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;_&quot;</span><span class="p">)[</span><span class="mi">1</span><span class="p">]),</span> <span class="p">(</span><span class="ne">IndexError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">))</span>
-            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">station_names</span>
-        <span class="p">]</span>
-        <span class="c1"># lmws = [self._catch_e(lambda:(i, float(i.split(&quot;_&quot;)[1])), (ValueError)) for i in station_names if &quot;LMW&quot; in i]</span>
-        <span class="n">branches</span> <span class="o">=</span> <span class="p">[</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_catch_e</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="n">i</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;_&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">],</span> <span class="ne">IndexError</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">station_names</span>
-        <span class="p">]</span>
+        <span class="n">rkms</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_names_to_rkms</span><span class="p">(</span><span class="n">station_names</span><span class="p">)</span>
+        <span class="n">branches</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_names_to_branches</span><span class="p">(</span><span class="n">station_names</span><span class="p">)</span>
 
         <span class="c1"># select along route</span>
         <span class="n">routekms</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
@@ -2047,6 +2104,26 @@
         <span class="p">]</span>
         <span class="k">return</span> <span class="n">sorted_stations</span><span class="p">,</span> <span class="n">sorted_rkms</span><span class="p">,</span> <span class="n">lmw_stations</span></div>
 
+    <span class="k">def</span> <span class="nf">statistics_to_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file_path</span><span class="p">:</span><span class="nb">str</span><span class="o">=</span><span class="s2">&quot;error_statistics&quot;</span><span class="p">)</span><span class="o">-&gt;</span><span class="kc">None</span><span class="p">:</span>
+        <span class="n">statfile</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_path</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="n">file_path</span><span class="p">)</span><span class="o">.</span><span class="n">with_suffix</span><span class="p">(</span><span class="s1">&#39;.csv&#39;</span><span class="p">)</span>
+        <span class="n">sumfile</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_path</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="n">file_path</span><span class="o">+</span><span class="s2">&quot;_summary&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">with_suffix</span><span class="p">(</span><span class="s1">&#39;.csv&#39;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">statistics</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span> <span class="k">return</span>
+        
+        <span class="c1"># all statistics</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">statistics</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="n">statfile</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_logger_message</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;statistics written to </span><span class="si">{</span><span class="n">statfile</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="c1"># summary of statistics</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">statistics</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">sumfile</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">branch</span> <span class="ow">in</span> <span class="n">s</span><span class="o">.</span><span class="n">branch</span><span class="o">.</span><span class="n">unique</span><span class="p">():</span>
+                <span class="n">bbias</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">bias</span><span class="p">[</span><span class="n">s</span><span class="o">.</span><span class="n">branch</span><span class="o">==</span><span class="n">branch</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+                <span class="n">bstd</span> <span class="o">=</span> <span class="n">s</span><span class="p">[</span><span class="s1">&#39;std&#39;</span><span class="p">][</span><span class="n">s</span><span class="o">.</span><span class="n">branch</span><span class="o">==</span><span class="n">branch</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+                <span class="n">lmw_bias</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">bias</span><span class="p">[(</span><span class="n">s</span><span class="o">.</span><span class="n">branch</span><span class="o">==</span><span class="n">branch</span><span class="p">)</span> <span class="o">&amp;</span> <span class="n">s</span><span class="o">.</span><span class="n">is_lmw</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+                <span class="n">lmw_std</span> <span class="o">=</span> <span class="n">s</span><span class="p">[</span><span class="s1">&#39;std&#39;</span><span class="p">][(</span><span class="n">s</span><span class="o">.</span><span class="n">branch</span><span class="o">==</span><span class="n">branch</span><span class="p">)</span> <span class="o">&amp;</span> <span class="n">s</span><span class="o">.</span><span class="n">is_lmw</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+                <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">branch</span><span class="si">}</span><span class="s2">,</span><span class="si">{</span><span class="n">bbias</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">±(</span><span class="si">{</span><span class="n">bstd</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">), </span><span class="si">{</span><span class="n">lmw_bias</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">±(</span><span class="si">{</span><span class="n">lmw_std</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">)</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+
 <div class="viewcode-block" id="Compare1D2D.figure_at_station"><a class="viewcode-back" href="../../chapters/user_manual/source.html#fm2prof.utils.Compare1D2D.figure_at_station">[docs]</a>    <span class="k">def</span> <span class="nf">figure_at_station</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">station</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Create a figure with the results at an observation station.</span>
@@ -2062,21 +2139,20 @@
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="n">fig</span><span class="p">,</span> <span class="n">axs</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">12</span><span class="p">,</span> <span class="mi">5</span><span class="p">))</span>
+        <span class="n">error_axes</span> <span class="o">=</span> <span class="p">[</span><span class="n">axs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">twinx</span><span class="p">(),</span> <span class="n">axs</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">twinx</span><span class="p">()]</span>
+        
 
         <span class="c1"># q/h view</span>
-        <span class="c1"># axs[0].plot(self.data_2D_Q[station], self.data_2D_H[station], &#39;--&#39;, linewidth=2, label=&quot;2D&quot;)</span>
-        <span class="c1"># axs[0].plot(self.data_1D_Q[station], self.data_1D_H[station], label=&quot;1D&quot;)</span>
-
         <span class="n">axs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_qsteps</span><span class="p">,</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">data_2D_H_digitized</span><span class="p">[</span><span class="n">station</span><span class="p">],</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_data_2D_H_digitized</span><span class="p">[</span><span class="n">station</span><span class="p">],</span>
             <span class="s2">&quot;--&quot;</span><span class="p">,</span>
             <span class="n">linewidth</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
             <span class="n">label</span><span class="o">=</span><span class="s2">&quot;2D&quot;</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="n">axs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_qsteps</span><span class="p">,</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">data_1D_H_digitized</span><span class="p">[</span><span class="n">station</span><span class="p">],</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_data_1D_H_digitized</span><span class="p">[</span><span class="n">station</span><span class="p">],</span>
             <span class="s2">&quot;-&quot;</span><span class="p">,</span>
             <span class="n">linewidth</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
             <span class="n">label</span><span class="o">=</span><span class="s2">&quot;1D&quot;</span><span class="p">,</span>
@@ -2085,20 +2161,63 @@
         <span class="n">axs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">&quot;QH-relatie&quot;</span><span class="p">)</span>
         <span class="n">axs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;afvoer [m$^3$/s]&quot;</span><span class="p">)</span>
         <span class="n">axs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;Waterstand [m+NAP]&quot;</span><span class="p">)</span>
-
+        <span class="n">error_axes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_qsteps</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data_1D_H_digitized</span><span class="p">[</span><span class="n">station</span><span class="p">]</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">_data_2D_H_digitized</span><span class="p">[</span><span class="n">station</span><span class="p">],</span> <span class="s1">&#39;.&#39;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_color_error</span><span class="p">)</span>
         <span class="c1"># time view</span>
-        <span class="n">axs</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data_2D_H</span><span class="p">[</span><span class="n">station</span><span class="p">],</span> <span class="s2">&quot;--&quot;</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;2D&quot;</span><span class="p">)</span>
-        <span class="n">axs</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data_1D_H</span><span class="p">[</span><span class="n">station</span><span class="p">],</span> <span class="s2">&quot;-&quot;</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;1D&quot;</span><span class="p">)</span>
+        <span class="n">axs</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data_2D_H</span><span class="p">[</span><span class="n">station</span><span class="p">],</span> <span class="s2">&quot;--&quot;</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+        <span class="n">axs</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data_1D_H</span><span class="p">[</span><span class="n">station</span><span class="p">],</span> <span class="s2">&quot;-&quot;</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
         <span class="n">axs</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">&quot;tijdserie&quot;</span><span class="p">)</span>
 
-        <span class="n">fig</span><span class="o">.</span><span class="n">suptitle</span><span class="p">(</span><span class="n">station</span><span class="p">)</span>
-        <span class="n">fig</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
-        <span class="n">PlotStyles</span><span class="o">.</span><span class="n">van_veen</span><span class="p">(</span><span class="n">fig</span><span class="p">,</span> <span class="n">use_legend</span><span class="o">=</span><span class="p">[</span><span class="kc">True</span><span class="p">,</span> <span class="kc">False</span><span class="p">])</span>
+        <span class="n">error_axes</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data_1D_H</span><span class="p">[</span><span class="n">station</span><span class="p">]</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">data_2D_H</span><span class="p">[</span><span class="n">station</span><span class="p">],</span> <span class="s1">&#39;.&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;1D-2D&#39;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_color_error</span><span class="p">)</span>
+        
+        
+        <span class="c1"># statistics</span>
+        <span class="n">stats</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_statistics</span><span class="p">(</span><span class="n">station</span><span class="p">)</span>
+        
+        <span class="n">stats_labels</span> <span class="o">=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">&quot;bias=</span><span class="si">{</span><span class="n">stats</span><span class="p">[</span><span class="s1">&#39;bias&#39;</span><span class="p">]</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;std=</span><span class="si">{</span><span class="n">stats</span><span class="p">[</span><span class="s1">&#39;std&#39;</span><span class="p">]</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;MAE=</span><span class="si">{</span><span class="n">stats</span><span class="p">[</span><span class="s1">&#39;mae&#39;</span><span class="p">]</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">]</span>
+        <span class="n">stats_handles</span> <span class="o">=</span> <span class="p">[</span><span class="n">mpatches</span><span class="o">.</span><span class="n">Patch</span><span class="p">(</span><span class="n">color</span><span class="o">=</span><span class="s1">&#39;white&#39;</span><span class="p">)]</span><span class="o">*</span><span class="nb">len</span><span class="p">(</span><span class="n">stats_labels</span><span class="p">)</span>
+        <span class="c1"># Style</span>
+        <span class="n">suptitle</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">suptitle</span><span class="p">(</span><span class="n">station</span><span class="p">)</span>
+        <span class="n">fig</span><span class="p">,</span> <span class="n">lgd</span> <span class="o">=</span> <span class="n">PlotStyles</span><span class="o">.</span><span class="n">van_veen</span><span class="p">(</span><span class="n">fig</span><span class="p">,</span> <span class="n">use_legend</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">extra_labels</span><span class="o">=</span><span class="p">[</span><span class="n">stats_handles</span><span class="p">,</span> <span class="n">stats_labels</span><span class="p">])</span>
+        
+        <span class="k">for</span> <span class="n">ax</span> <span class="ow">in</span> <span class="n">error_axes</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_style_error_axes</span><span class="p">(</span><span class="n">ax</span><span class="p">,</span> <span class="n">ylim</span><span class="o">=</span><span class="p">[</span><span class="o">-</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">])</span>
 
+        <span class="n">fig</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
         <span class="n">fig</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">output_path</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="s2">&quot;figures/stations&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">station</span><span class="si">}</span><span class="s2">.png&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">output_path</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="s2">&quot;figures/stations&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">station</span><span class="si">}</span><span class="s2">.png&quot;</span><span class="p">),</span>
+            <span class="n">bbox_extra_artists</span><span class="o">=</span><span class="p">[</span><span class="n">lgd</span><span class="p">,</span> <span class="n">suptitle</span><span class="p">],</span>
+            <span class="n">bbox_inches</span><span class="o">=</span><span class="s2">&quot;tight&quot;</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></div>
+
+    <span class="k">def</span> <span class="nf">_style_error_axes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ax</span><span class="p">,</span> <span class="n">ylim</span><span class="p">:</span><span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span><span class="o">=</span><span class="p">[</span><span class="o">-</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">]):</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">(</span><span class="n">ylim</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">spines</span><span class="p">[</span><span class="s1">&#39;right&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">set_edgecolor</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_color_error</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">tick_params</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="s1">&#39;y&#39;</span><span class="p">,</span> <span class="n">colors</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_color_error</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
+        
+
+    <span class="k">def</span> <span class="nf">_compute_statistics</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">diff</span> <span class="o">=</span>  <span class="bp">self</span><span class="o">.</span><span class="n">data_1D_H</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_2D_H</span>
+        <span class="n">station_names</span> <span class="o">=</span> <span class="n">diff</span><span class="o">.</span><span class="n">columns</span>
+        <span class="n">rkms</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_names_to_rkms</span><span class="p">(</span><span class="n">station_names</span><span class="p">)</span>
+        <span class="n">branches</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_names_to_branches</span><span class="p">(</span><span class="n">station_names</span><span class="p">)</span>
+        
+        <span class="n">stats</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">diff</span><span class="o">.</span><span class="n">mean</span><span class="p">(),</span> <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;bias&#39;</span><span class="p">])</span>
+        <span class="n">stats</span><span class="p">[</span><span class="s1">&#39;rkm&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">rkms</span>
+        <span class="n">stats</span><span class="p">[</span><span class="s1">&#39;branch&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">branches</span>
+        <span class="n">stats</span><span class="p">[</span><span class="s1">&#39;is_lmw&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="kc">True</span> <span class="k">if</span> <span class="s1">&#39;lmw&#39;</span> <span class="ow">in</span> <span class="n">name</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="k">else</span> <span class="kc">False</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">station_names</span><span class="p">]</span>
+        
+        <span class="c1"># stats</span>
+        <span class="n">stats</span><span class="p">[</span><span class="s1">&#39;bias&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">diff</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+        <span class="n">stats</span><span class="p">[</span><span class="s1">&#39;std&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">diff</span><span class="o">.</span><span class="n">std</span><span class="p">()</span>
+        <span class="n">stats</span><span class="p">[</span><span class="s1">&#39;mae&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">diff</span><span class="o">.</span><span class="n">abs</span><span class="p">()</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+
+        
+        <span class="k">return</span> <span class="n">stats</span>
+
+    <span class="k">def</span> <span class="nf">_get_statistics</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">station</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">statistics</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">station</span><span class="p">]</span>
 
 <div class="viewcode-block" id="Compare1D2D.figure_compare_discharge_at_stations"><a class="viewcode-back" href="../../chapters/user_manual/source.html#fm2prof.utils.Compare1D2D.figure_compare_discharge_at_stations">[docs]</a>    <span class="k">def</span> <span class="nf">figure_compare_discharge_at_stations</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">title</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;notitle&quot;</span><span class="p">,</span> <span class="n">stations</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
@@ -2121,33 +2240,44 @@
 
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">fig</span><span class="p">,</span> <span class="n">axs</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">12</span><span class="p">,</span> <span class="mi">5</span><span class="p">))</span>
+
+        <span class="n">ax_error</span> <span class="o">=</span> <span class="n">axs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">twinx</span><span class="p">()</span>
+        <span class="n">ax_error</span><span class="o">.</span><span class="n">set_zorder</span><span class="p">(</span><span class="n">axs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">get_zorder</span><span class="p">()</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>  <span class="c1"># default zorder is 0 for ax1 and ax2</span>
+        
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">stations</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
             <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;error: must define 2 stations&quot;</span><span class="p">)</span>
+        <span class="n">linestyles_2d</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;-&#39;</span><span class="p">,</span> <span class="s1">&#39;--&#39;</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="n">station</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">stations</span><span class="p">):</span>
 
-        <span class="k">for</span> <span class="n">station</span> <span class="ow">in</span> <span class="n">stations</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">station</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">stations</span><span class="p">():</span>
-                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;warnin&#39;, </span><span class="si">{</span><span class="n">station</span><span class="si">}</span><span class="s2"> not known&quot;</span><span class="p">)</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;warning&#39;, </span><span class="si">{</span><span class="n">station</span><span class="si">}</span><span class="s2"> not known&quot;</span><span class="p">)</span>
 
             <span class="c1"># tijdserie</span>
             <span class="n">axs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">data_2D_Q</span><span class="p">[</span><span class="n">station</span><span class="p">],</span>
                 <span class="n">label</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;2D, </span><span class="si">{</span><span class="n">station</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;_&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
                 <span class="n">linewidth</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+                <span class="n">linestyle</span><span class="o">=</span><span class="n">linestyles_2d</span><span class="p">[</span><span class="n">j</span><span class="p">],</span>
+                <span class="n">color</span><span class="o">=</span><span class="s1">&#39;k&#39;</span>
             <span class="p">)</span>
             <span class="n">axs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">data_1D_Q</span><span class="p">[</span><span class="n">station</span><span class="p">],</span>
                 <span class="n">label</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;1D, </span><span class="si">{</span><span class="n">station</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;_&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
                 <span class="n">linewidth</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+                <span class="n">linestyle</span><span class="o">=</span><span class="s1">&#39;-&#39;</span><span class="p">,</span>
+                <span class="n">color</span><span class="o">=</span><span class="n">COLORSCHEME</span><span class="p">[</span><span class="n">j</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span>
             <span class="p">)</span>
 
-        <span class="c1"># discharge distribution</span>
-        <span class="n">Q</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_2D_Q</span><span class="p">[</span><span class="n">stations</span><span class="p">]</span>
-        <span class="n">axs</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">Q</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="n">Q</span><span class="o">.</span><span class="n">iloc</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">/</span> <span class="n">Q</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span> <span class="o">*</span> <span class="mi">100</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
-        <span class="n">axs</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">Q</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="n">Q</span><span class="o">.</span><span class="n">iloc</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">/</span> <span class="n">Q</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span> <span class="o">*</span> <span class="mi">100</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+            <span class="n">ax_error</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_data_1D_Q</span><span class="p">[</span><span class="n">station</span><span class="p">]</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">_data_2D_Q</span><span class="p">[</span><span class="n">station</span><span class="p">],</span> <span class="s1">&#39;.&#39;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_error_colors</span><span class="p">[</span><span class="n">j</span><span class="o">+</span><span class="mi">1</span><span class="p">],</span> <span class="n">markersize</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;1D-2D (</span><span class="si">{</span><span class="n">station</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;_&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">)</span>
 
-        <span class="n">Q</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_1D_Q</span><span class="p">[</span><span class="n">stations</span><span class="p">]</span>
-        <span class="n">axs</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">Q</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="n">Q</span><span class="o">.</span><span class="n">iloc</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">/</span> <span class="n">Q</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span> <span class="o">*</span> <span class="mi">100</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
-        <span class="n">axs</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">Q</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="n">Q</span><span class="o">.</span><span class="n">iloc</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">/</span> <span class="n">Q</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span> <span class="o">*</span> <span class="mi">100</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+        
+        <span class="c1"># discharge distribution</span>
+        <span class="n">Q2D</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_2D_Q</span><span class="p">[</span><span class="n">stations</span><span class="p">]</span>
+        <span class="n">Q1D</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_1D_Q</span><span class="p">[</span><span class="n">stations</span><span class="p">]</span>
+        <span class="n">axs</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">Q2D</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="n">Q2D</span><span class="o">.</span><span class="n">iloc</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">/</span> <span class="n">Q2D</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span> <span class="o">*</span> <span class="mi">100</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="n">linestyles_2d</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;k&#39;</span><span class="p">)</span>
+        <span class="n">axs</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">Q1D</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="n">Q1D</span><span class="o">.</span><span class="n">iloc</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">/</span> <span class="n">Q1D</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span> <span class="o">*</span> <span class="mi">100</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s1">&#39;-&#39;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">COLORSCHEME</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+        <span class="n">axs</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">Q2D</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="n">Q2D</span><span class="o">.</span><span class="n">iloc</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">/</span> <span class="n">Q2D</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span> <span class="o">*</span> <span class="mi">100</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="n">linestyles_2d</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;k&#39;</span><span class="p">)</span>
+        <span class="n">axs</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">Q1D</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="n">Q1D</span><span class="o">.</span><span class="n">iloc</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">/</span> <span class="n">Q1D</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span> <span class="o">*</span> <span class="mi">100</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s1">&#39;-&#39;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">COLORSCHEME</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
 
         <span class="c1"># style</span>
         <span class="n">axs</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">100</span><span class="p">)</span>
@@ -2157,11 +2287,16 @@
         <span class="n">axs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;afvoer [m$^3$/s]&quot;</span><span class="p">)</span>
         <span class="n">axs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">&quot;tijdserie&quot;</span><span class="p">)</span>
 
-        <span class="n">plt</span><span class="o">.</span><span class="n">suptitle</span><span class="p">(</span><span class="n">title</span><span class="o">.</span><span class="n">upper</span><span class="p">())</span>
+        <span class="n">suptitle</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">suptitle</span><span class="p">(</span><span class="n">title</span><span class="o">.</span><span class="n">upper</span><span class="p">())</span>
+
+        <span class="c1"># Style figure</span>
+        <span class="n">fig</span><span class="p">,</span> <span class="n">lgd</span> <span class="o">=</span> <span class="n">PlotStyles</span><span class="o">.</span><span class="n">van_veen</span><span class="p">(</span><span class="n">fig</span><span class="p">,</span> <span class="n">use_legend</span><span class="o">=</span><span class="p">[</span><span class="kc">True</span><span class="p">,</span> <span class="kc">False</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_style_error_axes</span><span class="p">(</span><span class="n">ax_error</span><span class="p">,</span> <span class="n">ylim</span><span class="o">=</span><span class="p">[</span><span class="o">-</span><span class="mi">500</span><span class="p">,</span> <span class="mi">500</span><span class="p">])</span>
         <span class="n">fig</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
-        <span class="n">PlotStyles</span><span class="o">.</span><span class="n">van_veen</span><span class="p">(</span><span class="n">fig</span><span class="p">,</span> <span class="n">use_legend</span><span class="o">=</span><span class="p">[</span><span class="kc">True</span><span class="p">,</span> <span class="kc">False</span><span class="p">])</span>
         <span class="n">fig</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">output_path</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="s2">&quot;figures/discharge&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">title</span><span class="si">}</span><span class="s2">.png&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">output_path</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="s2">&quot;figures/discharge&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">title</span><span class="si">}</span><span class="s2">.png&quot;</span><span class="p">),</span>
+            <span class="n">bbox_extra_artists</span><span class="o">=</span><span class="p">[</span><span class="n">lgd</span><span class="p">,</span> <span class="n">suptitle</span><span class="p">],</span>
+            <span class="n">bbox_inches</span><span class="o">=</span><span class="s2">&quot;tight&quot;</span><span class="p">,</span>
         <span class="p">)</span></div>
 
     <span class="k">def</span> <span class="nf">get_data_along_route_for_time</span><span class="p">(</span>
@@ -2211,9 +2346,9 @@
 
         <span class="n">fig</span><span class="p">,</span> <span class="n">axs</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">12</span><span class="p">,</span> <span class="mi">12</span><span class="p">))</span>
 
-        <span class="c1"># plot line every 7 days</span>
-        <span class="n">delta_days</span> <span class="o">=</span> <span class="mi">7</span>
-        <span class="n">first_day</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_1D_H</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">days</span><span class="o">=</span><span class="n">delta_days</span><span class="p">)</span> <span class="o">*</span> <span class="mi">2</span>
+        <span class="c1"># plot line every delta_days days</span>
+        <span class="n">delta_days</span> <span class="o">=</span> <span class="mi">2</span>
+        <span class="n">first_day</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_1D_H</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="c1"># + timedelta(days=delta_days) * 2</span>
         <span class="n">last_day</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_1D_H</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
         <span class="n">number_of_days</span> <span class="o">=</span> <span class="p">(</span><span class="n">last_day</span> <span class="o">-</span> <span class="n">first_day</span><span class="p">)</span><span class="o">.</span><span class="n">days</span>
 
@@ -2255,14 +2390,8 @@
                 <span class="n">time_index</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_nearest_time</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">data_2D_H</span><span class="p">,</span> <span class="n">date</span><span class="o">=</span><span class="n">day</span><span class="p">),</span>
             <span class="p">)</span>
 
-            <span class="n">axs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">h1d</span><span class="p">)</span>
-            <span class="n">axs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">text</span><span class="p">(</span>
-                <span class="n">h1d</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span>
-                <span class="n">h1d</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span>
-                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">day</span><span class="si">:</span><span class="s2">%b-%d</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
-                <span class="n">verticalalignment</span><span class="o">=</span><span class="s2">&quot;center&quot;</span><span class="p">,</span>
-            <span class="p">)</span>
-
+            <span class="n">axs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">h1d</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">day</span><span class="si">:</span><span class="s2">%b-%d</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            
             <span class="n">axs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;waterstand [m+nap]&quot;</span><span class="p">)</span>
             <span class="n">routestr</span> <span class="o">=</span> <span class="s2">&quot;-&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">route</span><span class="p">)</span>
 
@@ -2276,9 +2405,12 @@
                 <span class="n">ax</span><span class="o">.</span><span class="n">xaxis</span><span class="o">.</span><span class="n">set_major_locator</span><span class="p">(</span><span class="n">MultipleLocator</span><span class="p">(</span><span class="mi">20</span><span class="p">))</span>
                 <span class="n">ax</span><span class="o">.</span><span class="n">xaxis</span><span class="o">.</span><span class="n">set_minor_locator</span><span class="p">(</span><span class="n">MultipleLocator</span><span class="p">(</span><span class="mi">10</span><span class="p">))</span>
 
-        <span class="n">PlotStyles</span><span class="o">.</span><span class="n">van_veen</span><span class="p">(</span><span class="n">fig</span><span class="p">,</span> <span class="n">use_legend</span><span class="o">=</span><span class="p">[</span><span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">])</span>
+        <span class="n">axs</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">fig</span><span class="p">,</span> <span class="n">lgd</span> <span class="o">=</span> <span class="n">PlotStyles</span><span class="o">.</span><span class="n">van_veen</span><span class="p">(</span><span class="n">fig</span><span class="p">,</span> <span class="n">use_legend</span><span class="o">=</span><span class="p">[</span><span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">])</span>
         <span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
-        <span class="n">fig</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">output_path</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;figures/longitudinal/</span><span class="si">{</span><span class="n">routename</span><span class="si">}</span><span class="s2">.png&quot;</span><span class="p">))</span>
+        <span class="n">fig</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">output_path</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;figures/longitudinal/</span><span class="si">{</span><span class="n">routename</span><span class="si">}</span><span class="s2">.png&quot;</span><span class="p">),</span>
+            <span class="n">bbox_extra_artists</span><span class="o">=</span><span class="p">[</span><span class="n">lgd</span><span class="p">],</span>
+            <span class="n">bbox_inches</span><span class="o">=</span><span class="s2">&quot;tight&quot;</span><span class="p">,)</span>
         <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></div>
 
 <div class="viewcode-block" id="Compare1D2D.figure_longitudinal_rating_curve"><a class="viewcode-back" href="../../chapters/user_manual/source.html#fm2prof.utils.Compare1D2D.figure_longitudinal_rating_curve">[docs]</a>    <span class="k">def</span> <span class="nf">figure_longitudinal_rating_curve</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">route</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
@@ -2299,10 +2431,12 @@
         <span class="n">routename</span> <span class="o">=</span> <span class="s2">&quot;-&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">route</span><span class="p">)</span>
         <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">lmw_stations</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_route</span><span class="p">(</span><span class="n">route</span><span class="p">)</span>
 
-        <span class="n">h1d</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_data_along_route</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">data_1D_H_digitized</span><span class="p">,</span> <span class="n">route</span><span class="o">=</span><span class="n">route</span><span class="p">)</span>
-        <span class="n">h2d</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_data_along_route</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">data_2D_H_digitized</span><span class="p">,</span> <span class="n">route</span><span class="o">=</span><span class="n">route</span><span class="p">)</span>
+        <span class="n">h1d</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_data_along_route</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_data_1D_H_digitized</span><span class="p">,</span> <span class="n">route</span><span class="o">=</span><span class="n">route</span><span class="p">)</span>
+        <span class="n">h2d</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_data_along_route</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_data_2D_H_digitized</span><span class="p">,</span> <span class="n">route</span><span class="o">=</span><span class="n">route</span><span class="p">)</span>
 
-        <span class="n">fig</span><span class="p">,</span> <span class="n">axs</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">12</span><span class="p">,</span> <span class="mi">12</span><span class="p">))</span>
+        <span class="n">fig</span><span class="p">,</span> <span class="n">axs</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">12</span><span class="p">,</span> <span class="mi">10</span><span class="p">))</span>
+
+        <span class="n">discharge_steps</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_iter_discharge_steps</span><span class="p">(</span><span class="n">h1d</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="mi">8</span><span class="p">))</span>
 
         <span class="c1"># Plot LMW station locations</span>
         <span class="n">prevloc</span> <span class="o">=</span> <span class="o">-</span><span class="mi">9999</span>
@@ -2312,10 +2446,10 @@
             <span class="n">newloc</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">lmw</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">prevloc</span> <span class="o">+</span> <span class="mi">3</span><span class="p">)</span>
             <span class="n">prevloc</span> <span class="o">=</span> <span class="n">lmw</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
             <span class="k">for</span> <span class="n">ax</span> <span class="ow">in</span> <span class="n">axs</span><span class="p">:</span>
-                <span class="n">ax</span><span class="o">.</span><span class="n">axvline</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">lmw</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">linestyle</span><span class="o">=</span><span class="s2">&quot;--&quot;</span><span class="p">)</span>
+                <span class="n">ax</span><span class="o">.</span><span class="n">axvline</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">lmw</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">linestyle</span><span class="o">=</span><span class="s2">&quot;--&quot;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;#7a8ca0&quot;</span><span class="p">)</span>
             <span class="n">axs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">text</span><span class="p">(</span>
                 <span class="n">newloc</span><span class="p">,</span>
-                <span class="n">h1d</span><span class="o">.</span><span class="n">min</span><span class="p">()</span><span class="o">.</span><span class="n">min</span><span class="p">(),</span>
+                <span class="n">h1d</span><span class="p">[</span><span class="n">discharge_steps</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span><span class="o">.</span><span class="n">min</span><span class="p">(),</span>
                 <span class="n">lmw</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
                 <span class="n">fontsize</span><span class="o">=</span><span class="mi">12</span><span class="p">,</span>
                 <span class="n">rotation</span><span class="o">=</span><span class="mi">90</span><span class="p">,</span>
@@ -2324,19 +2458,24 @@
             <span class="p">)</span>
 
         <span class="c1"># Plot betrekkingslijnen</span>
-        <span class="k">for</span> <span class="n">discharge</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_iter_discharge_steps</span><span class="p">(</span><span class="n">h1d</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="mi">8</span><span class="p">):</span>
+        <span class="n">texty_previous</span> <span class="o">=</span> <span class="o">-</span><span class="mi">999</span>
+        <span class="k">for</span> <span class="n">discharge</span> <span class="ow">in</span> <span class="n">discharge_steps</span><span class="p">:</span>
+            <span class="n">axs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">h1d</span><span class="p">[</span><span class="n">discharge</span><span class="p">],</span> <span class="n">label</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">discharge</span><span class="si">:</span><span class="s2">.0f</span><span class="si">}</span><span class="s2"> m$^3$/s&quot;</span><span class="p">)</span>
+            <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            texty = h1d[discharge].values[-1]</span>
+<span class="sd">            texty += max(0, 1 - (texty - texty_previous))</span>
+<span class="sd">            texty_previous = texty</span>
+<span class="sd">            </span>
 
-            <span class="n">axs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">h1d</span><span class="p">[</span><span class="n">discharge</span><span class="p">])</span>
-
-            <span class="n">axs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">text</span><span class="p">(</span>
-                <span class="n">h1d</span><span class="p">[</span><span class="n">discharge</span><span class="p">]</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="mi">2</span><span class="p">,</span>
-                <span class="n">h1d</span><span class="p">[</span><span class="n">discharge</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span>
-                <span class="n">discharge</span><span class="p">,</span>
-                <span class="n">verticalalignment</span><span class="o">=</span><span class="s2">&quot;center&quot;</span><span class="p">,</span>
-                <span class="n">fontsize</span><span class="o">=</span><span class="mi">12</span><span class="p">,</span>
-                <span class="n">bbox</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;facecolor&quot;</span><span class="p">:</span> <span class="s2">&quot;white&quot;</span><span class="p">,</span> <span class="s2">&quot;edgecolor&quot;</span><span class="p">:</span> <span class="s2">&quot;none&quot;</span><span class="p">},</span>
-            <span class="p">)</span>
-
+<span class="sd">            axs[0].text(</span>
+<span class="sd">                h1d[discharge].index[-1] + 2,</span>
+<span class="sd">                texty,</span>
+<span class="sd">                f&quot;{discharge:.0f} m$^3$/s&quot;,</span>
+<span class="sd">                verticalalignment=&quot;center&quot;,</span>
+<span class="sd">                fontsize=12,</span>
+<span class="sd">                bbox={&quot;facecolor&quot;: &quot;white&quot;, &quot;edgecolor&quot;: &quot;none&quot;},</span>
+<span class="sd">            )</span>
+<span class="sd">            &quot;&quot;&quot;</span>
             <span class="n">axs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;waterstand [m+nap]&quot;</span><span class="p">)</span>
             <span class="n">routestr</span> <span class="o">=</span> <span class="s2">&quot;-&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">route</span><span class="p">)</span>
 
@@ -2351,12 +2490,15 @@
                 <span class="n">ax</span><span class="o">.</span><span class="n">xaxis</span><span class="o">.</span><span class="n">set_minor_locator</span><span class="p">(</span><span class="n">MultipleLocator</span><span class="p">(</span><span class="mi">10</span><span class="p">))</span>
 
         <span class="c1"># style figure</span>
-        <span class="n">PlotStyles</span><span class="o">.</span><span class="n">van_veen</span><span class="p">(</span><span class="n">fig</span><span class="p">,</span> <span class="n">use_legend</span><span class="o">=</span><span class="p">[</span><span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">])</span>
+        <span class="n">axs</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">fig</span><span class="p">,</span> <span class="n">lgd</span> <span class="o">=</span> <span class="n">PlotStyles</span><span class="o">.</span><span class="n">van_veen</span><span class="p">(</span><span class="n">fig</span><span class="p">,</span> <span class="n">use_legend</span><span class="o">=</span><span class="p">[</span><span class="kc">True</span><span class="p">,</span> <span class="kc">False</span><span class="p">])</span>
         <span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
         <span class="n">fig</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">output_path</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;figures/longitudinal/</span><span class="si">{</span><span class="n">routename</span><span class="si">}</span><span class="s2">_rating_curve.png&quot;</span>
-            <span class="p">)</span>
+                <span class="sa">f</span><span class="s2">&quot;figures/longitudinal/</span><span class="si">{</span><span class="n">routename</span><span class="si">}</span><span class="s2">_rating_curve.png&quot;</span><span class="p">,</span>
+            <span class="p">),</span>
+            <span class="n">bbox_extra_artists</span><span class="o">=</span><span class="p">[</span><span class="n">lgd</span><span class="p">],</span>
+            <span class="n">bbox_inches</span><span class="o">=</span><span class="s2">&quot;tight&quot;</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></div>
 
@@ -2366,13 +2508,16 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">station</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="n">data</span><span class="o">.</span><span class="n">columns</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]]</span>
 
-        <span class="n">wl_range</span> <span class="o">=</span> <span class="n">station</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">-</span> <span class="n">station</span><span class="o">.</span><span class="n">min</span><span class="p">()</span>
+        <span class="n">wl_range</span> <span class="o">=</span> <span class="n">station</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">-</span> <span class="n">station</span><span class="p">[</span><span class="n">station</span><span class="o">.</span><span class="n">index</span><span class="o">&gt;</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">min</span><span class="p">()</span>
 
-        <span class="n">stepsize</span> <span class="o">=</span> <span class="n">wl_range</span> <span class="o">/</span> <span class="n">n</span>
-
-        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
-            <span class="n">t</span> <span class="o">=</span> <span class="n">station</span><span class="o">.</span><span class="n">min</span><span class="p">()</span> <span class="o">+</span> <span class="n">i</span> <span class="o">*</span> <span class="n">stepsize</span>
-            <span class="k">yield</span> <span class="p">(</span><span class="n">station</span><span class="o">.</span><span class="n">dropna</span><span class="p">()</span> <span class="o">&lt;</span> <span class="n">t</span><span class="p">)</span><span class="o">.</span><span class="n">idxmin</span><span class="p">()</span>
+        <span class="n">stepsize</span> <span class="o">=</span> <span class="n">wl_range</span> <span class="o">/</span> <span class="p">(</span><span class="n">n</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">q_at_t_previous</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">n</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span>
+            <span class="n">t</span> <span class="o">=</span> <span class="n">station</span><span class="p">[</span><span class="n">station</span><span class="o">.</span><span class="n">index</span><span class="o">&gt;</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">min</span><span class="p">()</span> <span class="o">+</span> <span class="n">i</span> <span class="o">*</span> <span class="n">stepsize</span>
+            <span class="n">q_at_t</span> <span class="o">=</span> <span class="p">(</span><span class="n">station</span><span class="o">.</span><span class="n">dropna</span><span class="p">()</span> <span class="o">&lt;</span> <span class="n">t</span><span class="p">)</span><span class="o">.</span><span class="n">idxmin</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">q_at_t</span> <span class="o">==</span> <span class="n">q_at_t_previous</span><span class="p">:</span> <span class="k">continue</span>
+            <span class="n">q_at_t_previous</span> <span class="o">=</span> <span class="n">q_at_t</span>
+            <span class="k">yield</span> <span class="n">q_at_t</span>
 
 <div class="viewcode-block" id="Compare1D2D.heatmap_time"><a class="viewcode-back" href="../../chapters/user_manual/source.html#fm2prof.utils.Compare1D2D.heatmap_time">[docs]</a>    <span class="k">def</span> <span class="nf">heatmap_time</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">route</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -2391,7 +2536,7 @@
 
         <span class="n">routename</span> <span class="o">=</span> <span class="s2">&quot;-&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">route</span><span class="p">)</span>
         <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">lmw_stations</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_route</span><span class="p">(</span><span class="n">route</span><span class="p">)</span>
-        <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_1D_H</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_2D_H</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data_1D_H</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data_2D_H</span>
         <span class="n">routedata</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_data_along_route</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">dropna</span><span class="p">(</span><span class="n">how</span><span class="o">=</span><span class="s2">&quot;all&quot;</span><span class="p">),</span> <span class="n">route</span><span class="p">)</span>
 
         <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">12</span><span class="p">,</span> <span class="mi">7</span><span class="p">))</span>
@@ -2440,7 +2585,7 @@
 
         <span class="n">routename</span> <span class="o">=</span> <span class="s2">&quot;-&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">route</span><span class="p">)</span>
         <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">lmw_stations</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_route</span><span class="p">(</span><span class="n">route</span><span class="p">)</span>
-        <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_1D_H_digitized</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_2D_H_digitized</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data_1D_H_digitized</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data_2D_H_digitized</span>
 
         <span class="n">routedata</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_data_along_route</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">dropna</span><span class="p">(</span><span class="n">how</span><span class="o">=</span><span class="s2">&quot;all&quot;</span><span class="p">),</span> <span class="n">route</span><span class="p">)</span>
 
@@ -2490,7 +2635,7 @@
   <small>
     
       Last update:
-      Jul 13, 2022
+      Aug 24, 2022
     
   </small>
 </div>
