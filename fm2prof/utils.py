@@ -12,6 +12,7 @@ from typing import Any, Callable, Dict, Generator, List, Optional, Tuple, Union
 import matplotlib as mpl
 import matplotlib.dates as mdates
 import matplotlib.pyplot as plt
+import matplotlib.patches as mpatches
 import numpy as np
 import pandas as pd
 import tqdm
@@ -25,6 +26,7 @@ from fm2prof.common import FM2ProfBase
 
 register_matplotlib_converters()
 
+COLORSCHEME = ["k", "#00cc96", "#0d38e0"]
 
 class GenerateCrossSectionLocationFile(FM2ProfBase):
     """
@@ -837,8 +839,8 @@ class VisualiseOutput(FM2ProfBase):
 
 class PlotStyles:
     myFmt = mdates.DateFormatter("%d-%b")
-    monthlocator = mdates.MonthLocator()
-    daylocator = mdates.DayLocator(15)
+    monthlocator = mdates.MonthLocator(bymonthday=(1, 10, 20))
+    daylocator = mdates.DayLocator(interval=5)
 
     @staticmethod
     def set_locale(localeString: str):
@@ -853,7 +855,10 @@ class PlotStyles:
     @staticmethod
     def _is_timeaxis(axis) -> bool:
         try:
-            float(axis.get_ticklabels()[0].get_text().replace("−", "-"))
+            label_string = axis.get_ticklabels()[0].get_text().replace("−", "-")
+            # if label_string is empty (e.g. because of twin_axis, return false)
+            if label_string: float(label_string)
+
         except ValueError:
             return True
         except IndexError:
@@ -887,9 +892,9 @@ class PlotStyles:
             legend.get_frame().set_boxstyle("square", pad=0)
 
     @classmethod
-    def van_veen(cls, fig: Figure = None, use_legend: bool = True):
+    def van_veen(cls, fig: Figure = None, use_legend: bool = True, extra_labels: Union[List, type(None)]=None, ax_align_legend: plt.Axes=None):
         """Stijl van Van Veen"""
-
+            
         def initiate():
             # Set default locale to NL
             # TODO: add localization options
@@ -897,7 +902,7 @@ class PlotStyles:
 
             # Color style
             mpl.rcParams["axes.prop_cycle"] = mpl.cycler(
-                color=["k", "00cc96", "#0d38e0"] * 3,
+                color=COLORSCHEME * 3,
                 linestyle=["-"] * 3 + ["--"] * 3 + ["-."] * 3,
                 linewidth=np.linspace(0.5, 3, 9),
             )
@@ -909,7 +914,9 @@ class PlotStyles:
                 "axes.unicode_minus"
             ] = False  # not all fonts support the unicode minus
 
-        def styleFigure(fig, use_legend):
+        def styleFigure(fig, use_legend, extra_labels, ax_align_legend):
+            if ax_align_legend is None: ax_align_legend = fig.axes[0]
+        
 
             # this forces labels to be generated. Necessary to detect datetimes
             fig.canvas.draw()
@@ -930,27 +937,30 @@ class PlotStyles:
                 if cls._is_timeaxis(ax.xaxis):
                     ax.xaxis.set_major_formatter(cls.myFmt)
                     ax.xaxis.set_major_locator(cls.monthlocator)
-                    ax.xaxis.set_minor_locator(cls.daylocator)
+                    #ax.xaxis.set_minor_locator(cls.daylocator)
                 if cls._is_timeaxis(ax.yaxis):
                     ax.yaxis.set_major_formatter(cls.myFmt)
                     ax.yaxis.set_major_locator(cls.monthlocator)
-                    ax.yaxis.set_minor_locator(cls.daylocator)
+                    #ax.yaxis.set_minor_locator(cls.daylocator)
 
                 ax.set_title(ax.get_title().upper())
                 ax.set_xlabel(ax.get_xlabel().upper())
                 ax.set_ylabel(ax.get_ylabel().upper())
-
+                ax.patch.set_visible(False)  
                 h, l = ax.get_legend_handles_labels()
                 handles.extend(h)
                 labels.extend(l)
 
+            if extra_labels:
+                handles.extend(extra_labels[0])
+                labels.extend(extra_labels[1])
             fig.tight_layout()
             if use_legend:
                 lgd = fig.legend(
                     handles,
                     labels,
                     loc="upper left",
-                    bbox_to_anchor=(1.0, 0.9),
+                    bbox_to_anchor=(1.0, ax_align_legend.get_position().y1),
                     bbox_transform=fig.transFigure,
                     edgecolor="k",
                     facecolor="white",
@@ -967,7 +977,8 @@ class PlotStyles:
             return initiate()
         else:
             initiate()
-            return styleFigure(fig, use_legend)
+            return styleFigure(fig, use_legend, extra_labels, ax_align_legend)
+
 
 
 @dataclass
@@ -1075,15 +1086,27 @@ class ModelOutputReader(FM2ProfBase):
 
     _time_fmt = "%Y-%m-%d %H:%M:%S"
 
-    def __init__(self, logger=None):
+    def __init__(self, logger=None, start_time:datetime=None):
         super().__init__(logger=logger)
 
         self._path_out: Path = Path(".")
         self._path_flow1d: Path = Path(".")
         self._path_flow2d: Path = Path(".")
 
-        self.data_1D_Q: pd.DataFrame = None
+        self._data_1D_Q: pd.DataFrame = None
         self._time_offset_1d: int = 0
+
+        self._start_time:Union[datetime, type(None)] = start_time
+
+    @property
+    def start_time(self)->Union[datetime, None]:
+        """ if defined, used to mask data """
+        return self._start_time
+
+    @start_time.setter
+    def start_time(self, input_time:datetime):
+        if isinstance(input_time, datetime):
+            self._start_time = input_time
 
     @property
     def path_flow1d(self):
@@ -1116,13 +1139,13 @@ class ModelOutputReader(FM2ProfBase):
             >>> ModelOutputReader.path_flow1d = path_to_dir_that_contains_dimr_xml
         """
         if self.file_1D_Q.is_file() & self.file_1D_H.is_file():
-            self.data_1D_Q = pd.read_csv(
+            self._data_1D_Q = pd.read_csv(
                 self.file_1D_Q,
                 index_col=0,
                 parse_dates=True,
                 date_parser=self._dateparser,
             )
-            self.data_1D_H = pd.read_csv(
+            self._data_1D_H = pd.read_csv(
                 self.file_1D_H,
                 index_col=0,
                 parse_dates=True,
@@ -1130,9 +1153,9 @@ class ModelOutputReader(FM2ProfBase):
             )
             self.set_logger_message("Using existing flow1d csv files")
         else:
-            self.data_1D_H, self.data_1D_Q = self._import_1Dobservations()
-            self.data_1D_H.to_csv(self.file_1D_H)
-            self.data_1D_Q.to_csv(self.file_1D_Q)
+            self._data_1D_H, self._data_1D_Q = self._import_1Dobservations()
+            self._data_1D_H.to_csv(self.file_1D_H)
+            self._data_1D_Q.to_csv(self.file_1D_Q)
 
     def load_flow2d_data(self):
         """
@@ -1144,13 +1167,13 @@ class ModelOutputReader(FM2ProfBase):
             >>> ModelOutputReader.path_flow2d = path_to_netcdf_file
         """
         if self.file_2D_Q.is_file() & self.file_2D_H.is_file():
-            self.data_2D_Q = pd.read_csv(
+            self._data_2D_Q = pd.read_csv(
                 self.file_2D_Q,
                 index_col=0,
                 parse_dates=True,
                 date_parser=self._dateparser,
             )
-            self.data_2D_H = pd.read_csv(
+            self._data_2D_H = pd.read_csv(
                 self.file_2D_H,
                 index_col=0,
                 parse_dates=True,
@@ -1162,13 +1185,13 @@ class ModelOutputReader(FM2ProfBase):
             self._import_2Dobservations()
 
             # then load
-            self.data_2D_Q = pd.read_csv(
+            self._data_2D_Q = pd.read_csv(
                 self.file_2D_Q,
                 index_col=0,
                 parse_dates=True,
                 date_parser=self._dateparser,
             )
-            self.data_2D_H = pd.read_csv(
+            self._data_2D_H = pd.read_csv(
                 self.file_2D_H,
                 index_col=0,
                 parse_dates=True,
@@ -1225,12 +1248,33 @@ class ModelOutputReader(FM2ProfBase):
         return self.output_path.joinpath(self.__fileOutName_1D2DMap)
 
     @property
+    def data_1D_H(self):
+        return self._from_start_time(self._data_1D_H)
+
+    @property
+    def data_2D_H(self):
+        return self._from_start_time(self._data_2D_H)
+
+    @property
+    def data_1D_Q(self):
+        return self._from_start_time(self._data_1D_Q)
+
+    @property
+    def data_2D_Q(self):
+        return self._from_start_time(self._data_2D_Q)
+
+    @property
     def time_offset_1d(self):
         return self._time_offset_1d
 
     @time_offset_1d.setter
     def time_offset_1d(self, seconds: int = 0):
         self._time_offset_1d = seconds
+
+    def _from_start_time(self, data:pd.DataFrame)->pd.DataFrame:
+        if self.start_time:
+            return data[data.index > self.start_time]
+        return data
 
     @staticmethod
     def _parse_names(nclist, encoding="utf-8"):
@@ -1312,7 +1356,7 @@ class ModelOutputReader(FM2ProfBase):
 
     def _parse_1D_stations(self) -> Generator[str, None, None]:
         """Reads the names of observations stations from 1D model"""
-        return list(self.data_1D_H.columns)
+        return list(self._data_1D_H.columns)
 
     def _get_1d2d_map(self):
         _file_his = self.path_flow2d
@@ -1360,9 +1404,10 @@ class Compare1D2D(ModelOutputReader):
         path_1d: Union[Path, str],
         path_2d: Union[Path, str],
         routes: List[List[str]],
+        start_time: datetime,
     ):
         if project:
-            super().__init__(logger=project.get_logger())
+            super().__init__(logger=project.get_logger(), start_time=start_time)
             self.output_path = project.get_output_directory()
         else:
             super().__init__()
@@ -1373,15 +1418,23 @@ class Compare1D2D(ModelOutputReader):
             self.path_flow2d = path_2d
 
         self.routes = routes
-        self.data_1D_H: pd.DataFrame = None
-        self.data_2D_H: pd.DataFrame = None
-        self.data_1D_H_digitized: pd.DataFrame = None
-        self.data_2D_H_digitized: pd.DataFrame = None
+        self._data_1D_H: pd.DataFrame = None
+        self._data_2D_H: pd.DataFrame = None
+        self._data_1D_H_digitized: pd.DataFrame = None
+        self._data_2D_H_digitized: pd.DataFrame = None
         self._qsteps = np.arange(0, 100 * np.ceil(18000 / 100), 200)
+        
+        # initiate plotstyle
+        PlotStyles.van_veen()
+        self._error_colors = ['#7e3e00', '#b25800', "#d86a00"]
+        self._color_error = self._error_colors[1]
+
+        #set start time
+        self.start_time = start_time
 
         self.read_all_data()
         self.digitize_data()
-
+        self.statistics = self._compute_statistics()
         # create output folder
         output_dirs = [
             "figures/longitudinal",
@@ -1405,7 +1458,7 @@ class Compare1D2D(ModelOutputReader):
             self.heatmap_time(route)
 
         self.set_logger_message(f"Making figures for stations")
-        for station in tqdm.tqdm(self.stations(), total=self.data_1D_H.shape[1]):
+        for station in tqdm.tqdm(self.stations(), total=self._data_1D_H.shape[1]):
             self.figure_at_station(station)
 
     @property
@@ -1430,27 +1483,27 @@ class Compare1D2D(ModelOutputReader):
     def digitize_data(self):
         if self.file_1D_H_digitized.is_file():
             self.set_logger_message("Using existing digitized file for 1d")
-            self.data_1D_H_digitized = pd.read_csv(
+            self._data_1D_H_digitized = pd.read_csv(
                 self.file_1D_H_digitized, index_col=0
             )
         else:
-            self.data_1D_H_digitized = self._digitize_data(
-                self.data_1D_H, self.data_1D_Q, self._qsteps
+            self._data_1D_H_digitized = self._digitize_data(
+                self._data_1D_H, self._data_1D_Q, self._qsteps
             )
-            self.data_1D_H_digitized.to_csv(self.file_1D_H_digitized)
+            self._data_1D_H_digitized.to_csv(self.file_1D_H_digitized)
         if self.file_2D_H_digitized.is_file():
             self.set_logger_message("Using existing digitized file for 2d")
-            self.data_2D_H_digitized = pd.read_csv(
+            self._data_2D_H_digitized = pd.read_csv(
                 self.file_2D_H_digitized, index_col=0
             )
         else:
-            self.data_2D_H_digitized = self._digitize_data(
-                self.data_2D_H, self.data_2D_Q, self._qsteps
+            self._data_2D_H_digitized = self._digitize_data(
+                self._data_2D_H, self._data_2D_Q, self._qsteps
             )
-            self.data_2D_H_digitized.to_csv(self.file_2D_H_digitized)
+            self._data_2D_H_digitized.to_csv(self.file_2D_H_digitized)
 
     def stations(self) -> Generator[str, None, None]:
-        for station in self.data_1D_H.columns:
+        for station in self._data_1D_H.columns:
             yield station
 
     @staticmethod
@@ -1470,22 +1523,26 @@ class Compare1D2D(ModelOutputReader):
         C = np.array(C)  # [sort]
         return pd.DataFrame(columns=stations, index=bins, data=C.T)
 
+    def _names_to_rkms(self, station_names:List[str])->List[float]:
+        return  [
+            self._catch_e(lambda: float(i.split("_")[1]), (IndexError, ValueError))
+            for i in station_names
+        ]
+
+    def _names_to_branches(self, station_names:List[str])->List[str]:
+        return [
+            self._catch_e(lambda: i.split("_")[0], IndexError) for i in station_names
+        ]
+
     def get_route(
         self, route: List[str]
     ) -> Tuple[List[str], List[float], List[Tuple[str, float]]]:
         """returns a sorted list of stations along a route, with rkms"""
-        station_names = self.data_2D_H.columns
+        station_names = self._data_2D_H.columns
 
         # Parse names
-        unique_branches = np.unique([i.split("_")[0] for i in station_names])
-        rkms = [
-            self._catch_e(lambda: float(i.split("_")[1]), (IndexError, ValueError))
-            for i in station_names
-        ]
-        # lmws = [self._catch_e(lambda:(i, float(i.split("_")[1])), (ValueError)) for i in station_names if "LMW" in i]
-        branches = [
-            self._catch_e(lambda: i.split("_")[0], IndexError) for i in station_names
-        ]
+        rkms = self._names_to_rkms(station_names)
+        branches = self._names_to_branches(station_names)
 
         # select along route
         routekms = list()
@@ -1515,6 +1572,26 @@ class Compare1D2D(ModelOutputReader):
         ]
         return sorted_stations, sorted_rkms, lmw_stations
 
+    def statistics_to_file(self, file_path:str="error_statistics")->None:
+        statfile = self.output_path.joinpath(file_path).with_suffix('.csv')
+        sumfile = self.output_path.joinpath(file_path+"_summary").with_suffix('.csv')
+
+        if self.statistics is None: return
+        
+        # all statistics
+        self.statistics.to_csv(statfile)
+        self.set_logger_message(f"statistics written to {statfile}")
+
+        # summary of statistics
+        s = self.statistics
+        with open(sumfile, 'w') as f:
+            for branch in s.branch.unique():
+                bbias = s.bias[s.branch==branch].mean()
+                bstd = s['std'][s.branch==branch].mean()
+                lmw_bias = s.bias[(s.branch==branch) & s.is_lmw].mean()
+                lmw_std = s['std'][(s.branch==branch) & s.is_lmw].mean()
+                f.write(f"{branch},{bbias:.2f}±({bstd:.2f}), {lmw_bias:.2f}±({lmw_std:.2f})\n")
+
     def figure_at_station(self, station: str) -> None:
         """
         Create a figure with the results at an observation station.
@@ -1530,21 +1607,20 @@ class Compare1D2D(ModelOutputReader):
         """
 
         fig, axs = plt.subplots(1, 2, figsize=(12, 5))
+        error_axes = [axs[0].twinx(), axs[1].twinx()]
+        
 
         # q/h view
-        # axs[0].plot(self.data_2D_Q[station], self.data_2D_H[station], '--', linewidth=2, label="2D")
-        # axs[0].plot(self.data_1D_Q[station], self.data_1D_H[station], label="1D")
-
         axs[0].plot(
             self._qsteps,
-            self.data_2D_H_digitized[station],
+            self._data_2D_H_digitized[station],
             "--",
             linewidth=2,
             label="2D",
         )
         axs[0].plot(
             self._qsteps,
-            self.data_1D_H_digitized[station],
+            self._data_1D_H_digitized[station],
             "-",
             linewidth=2,
             label="1D",
@@ -1553,20 +1629,63 @@ class Compare1D2D(ModelOutputReader):
         axs[0].set_title("QH-relatie")
         axs[0].set_xlabel("afvoer [m$^3$/s]")
         axs[0].set_ylabel("Waterstand [m+NAP]")
-
+        error_axes[0].plot(self._qsteps, self._data_1D_H_digitized[station]-self._data_2D_H_digitized[station], '.', color=self._color_error)
         # time view
-        axs[1].plot(self.data_2D_H[station], "--", linewidth=2, label="2D")
-        axs[1].plot(self.data_1D_H[station], "-", linewidth=2, label="1D")
+        axs[1].plot(self.data_2D_H[station], "--", linewidth=2)
+        axs[1].plot(self.data_1D_H[station], "-", linewidth=2)
         axs[1].set_title("tijdserie")
 
-        fig.suptitle(station)
-        fig.tight_layout()
-        PlotStyles.van_veen(fig, use_legend=[True, False])
+        error_axes[1].plot(self.data_1D_H[station]-self.data_2D_H[station], '.', label='1D-2D', color=self._color_error)
+        
+        
+        # statistics
+        stats = self._get_statistics(station)
+        
+        stats_labels = [f"bias={stats['bias']:.2f}", f"std={stats['std']:.2f}", f"MAE={stats['mae']:.2f}"]
+        stats_handles = [mpatches.Patch(color='white')]*len(stats_labels)
+        # Style
+        suptitle = plt.suptitle(station)
+        fig, lgd = PlotStyles.van_veen(fig, use_legend=True, extra_labels=[stats_handles, stats_labels])
+        
+        for ax in error_axes:
+            self._style_error_axes(ax, ylim=[-0.5, 0.5])
 
+        fig.tight_layout()
         fig.savefig(
-            self.output_path.joinpath("figures/stations").joinpath(f"{station}.png")
+            self.output_path.joinpath("figures/stations").joinpath(f"{station}.png"),
+            bbox_extra_artists=[lgd, suptitle],
+            bbox_inches="tight",
         )
         plt.close()
+
+    def _style_error_axes(self, ax, ylim:List[float]=[-0.5, 0.5]):
+        ax.set_ylim(ylim)
+        ax.spines['right'].set_edgecolor(self._color_error)
+        ax.tick_params(axis='y', colors=self._color_error)
+        ax.grid(False)
+        
+
+    def _compute_statistics(self):
+        diff =  self.data_1D_H - self.data_2D_H
+        station_names = diff.columns
+        rkms = self._names_to_rkms(station_names)
+        branches = self._names_to_branches(station_names)
+        
+        stats = pd.DataFrame(data=diff.mean(), columns=['bias'])
+        stats['rkm'] = rkms
+        stats['branch'] = branches
+        stats['is_lmw'] = [True if 'lmw' in name.lower() else False for name in station_names]
+        
+        # stats
+        stats['bias'] = diff.mean()
+        stats['std'] = diff.std()
+        stats['mae'] = diff.abs().mean()
+
+        
+        return stats
+
+    def _get_statistics(self, station):
+        return self.statistics.loc[station]
 
     def figure_compare_discharge_at_stations(
         self, title: str = "notitle", stations: Tuple[str, str] = None
@@ -1589,33 +1708,44 @@ class Compare1D2D(ModelOutputReader):
 
         """
         fig, axs = plt.subplots(1, 2, figsize=(12, 5))
+
+        ax_error = axs[0].twinx()
+        ax_error.set_zorder(axs[0].get_zorder()-1)  # default zorder is 0 for ax1 and ax2
+        
         if len(stations) != 2:
             print("error: must define 2 stations")
+        linestyles_2d = ['-', '--']
+        for j, station in enumerate(stations):
 
-        for station in stations:
             if station not in self.stations():
-                print(f"warnin', {station} not known")
+                print(f"warning', {station} not known")
 
             # tijdserie
             axs[0].plot(
                 self.data_2D_Q[station],
                 label=f"2D, {station.split('_')[0]}",
                 linewidth=2,
+                linestyle=linestyles_2d[j],
+                color='k'
             )
             axs[0].plot(
                 self.data_1D_Q[station],
                 label=f"1D, {station.split('_')[0]}",
                 linewidth=2,
+                linestyle='-',
+                color=COLORSCHEME[j+1]
             )
 
-        # discharge distribution
-        Q = self.data_2D_Q[stations]
-        axs[1].plot(Q.sum(axis=1), (Q.iloc[:, 0] / Q.sum(axis=1)) * 100, linewidth=2)
-        axs[1].plot(Q.sum(axis=1), (Q.iloc[:, 1] / Q.sum(axis=1)) * 100, linewidth=2)
+            ax_error.plot(self._data_1D_Q[station]-self._data_2D_Q[station], '.', color=self._error_colors[j+1], markersize=5, label=f"1D-2D ({station.split('_')[0]})")
 
-        Q = self.data_1D_Q[stations]
-        axs[1].plot(Q.sum(axis=1), (Q.iloc[:, 0] / Q.sum(axis=1)) * 100, linewidth=2)
-        axs[1].plot(Q.sum(axis=1), (Q.iloc[:, 1] / Q.sum(axis=1)) * 100, linewidth=2)
+        
+        # discharge distribution
+        Q2D = self.data_2D_Q[stations]
+        Q1D = self.data_1D_Q[stations]
+        axs[1].plot(Q2D.sum(axis=1), (Q2D.iloc[:, 0] / Q2D.sum(axis=1)) * 100, linewidth=2, linestyle=linestyles_2d[0], color='k')
+        axs[1].plot(Q1D.sum(axis=1), (Q1D.iloc[:, 0] / Q1D.sum(axis=1)) * 100, linewidth=2, linestyle='-', color=COLORSCHEME[1])
+        axs[1].plot(Q2D.sum(axis=1), (Q2D.iloc[:, 1] / Q2D.sum(axis=1)) * 100, linewidth=2, linestyle=linestyles_2d[1], color='k')
+        axs[1].plot(Q1D.sum(axis=1), (Q1D.iloc[:, 1] / Q1D.sum(axis=1)) * 100, linewidth=2, linestyle='-', color=COLORSCHEME[2])
 
         # style
         axs[1].set_ylim(0, 100)
@@ -1625,11 +1755,16 @@ class Compare1D2D(ModelOutputReader):
         axs[0].set_ylabel("afvoer [m$^3$/s]")
         axs[0].set_title("tijdserie")
 
-        plt.suptitle(title.upper())
+        suptitle = plt.suptitle(title.upper())
+
+        # Style figure
+        fig, lgd = PlotStyles.van_veen(fig, use_legend=[True, False])
+        self._style_error_axes(ax_error, ylim=[-500, 500])
         fig.tight_layout()
-        PlotStyles.van_veen(fig, use_legend=[True, False])
         fig.savefig(
-            self.output_path.joinpath("figures/discharge").joinpath(f"{title}.png")
+            self.output_path.joinpath("figures/discharge").joinpath(f"{title}.png"),
+            bbox_extra_artists=[lgd, suptitle],
+            bbox_inches="tight",
         )
 
     def get_data_along_route_for_time(
@@ -1679,9 +1814,9 @@ class Compare1D2D(ModelOutputReader):
 
         fig, axs = plt.subplots(2, 1, figsize=(12, 12))
 
-        # plot line every 7 days
-        delta_days = 7
-        first_day = self.data_1D_H.index[0] + timedelta(days=delta_days) * 2
+        # plot line every delta_days days
+        delta_days = 2
+        first_day = self.data_1D_H.index[0] # + timedelta(days=delta_days) * 2
         last_day = self.data_1D_H.index[-1]
         number_of_days = (last_day - first_day).days
 
@@ -1723,14 +1858,8 @@ class Compare1D2D(ModelOutputReader):
                 time_index=self._get_nearest_time(data=self.data_2D_H, date=day),
             )
 
-            axs[0].plot(h1d)
-            axs[0].text(
-                h1d.index[-1],
-                h1d.values[-1],
-                f"{day:%b-%d}",
-                verticalalignment="center",
-            )
-
+            axs[0].plot(h1d, label=f"{day:%b-%d}")
+            
             axs[0].set_ylabel("waterstand [m+nap]")
             routestr = "-".join(route)
 
@@ -1744,9 +1873,12 @@ class Compare1D2D(ModelOutputReader):
                 ax.xaxis.set_major_locator(MultipleLocator(20))
                 ax.xaxis.set_minor_locator(MultipleLocator(10))
 
-        PlotStyles.van_veen(fig, use_legend=[False, False])
+        axs[1].set_ylim(-1, 1)
+        fig, lgd = PlotStyles.van_veen(fig, use_legend=[False, False])
         plt.tight_layout()
-        fig.savefig(self.output_path.joinpath(f"figures/longitudinal/{routename}.png"))
+        fig.savefig(self.output_path.joinpath(f"figures/longitudinal/{routename}.png"),
+            bbox_extra_artists=[lgd],
+            bbox_inches="tight",)
         plt.close()
 
     def figure_longitudinal_rating_curve(self, route: List[str]) -> None:
@@ -1767,10 +1899,12 @@ class Compare1D2D(ModelOutputReader):
         routename = "-".join(route)
         _, _, lmw_stations = self.get_route(route)
 
-        h1d = self.get_data_along_route(data=self.data_1D_H_digitized, route=route)
-        h2d = self.get_data_along_route(data=self.data_2D_H_digitized, route=route)
+        h1d = self.get_data_along_route(data=self._data_1D_H_digitized, route=route)
+        h2d = self.get_data_along_route(data=self._data_2D_H_digitized, route=route)
 
-        fig, axs = plt.subplots(2, 1, figsize=(12, 12))
+        fig, axs = plt.subplots(2, 1, figsize=(12, 10))
+
+        discharge_steps = list(self._iter_discharge_steps(h1d.T, n=8))
 
         # Plot LMW station locations
         prevloc = -9999
@@ -1780,10 +1914,10 @@ class Compare1D2D(ModelOutputReader):
             newloc = max(lmw[1], prevloc + 3)
             prevloc = lmw[1]
             for ax in axs:
-                ax.axvline(x=lmw[1], linestyle="--")
+                ax.axvline(x=lmw[1], linestyle="--", color="#7a8ca0")
             axs[0].text(
                 newloc,
-                h1d.min().min(),
+                h1d[discharge_steps[0]].min(),
                 lmw[0],
                 fontsize=12,
                 rotation=90,
@@ -1792,19 +1926,24 @@ class Compare1D2D(ModelOutputReader):
             )
 
         # Plot betrekkingslijnen
-        for discharge in self._iter_discharge_steps(h1d.T, n=8):
-
-            axs[0].plot(h1d[discharge])
+        texty_previous = -999
+        for discharge in discharge_steps:
+            axs[0].plot(h1d[discharge], label=f"{discharge:.0f} m$^3$/s")
+            """
+            texty = h1d[discharge].values[-1]
+            texty += max(0, 1 - (texty - texty_previous))
+            texty_previous = texty
+            
 
             axs[0].text(
                 h1d[discharge].index[-1] + 2,
-                h1d[discharge].values[-1],
-                discharge,
+                texty,
+                f"{discharge:.0f} m$^3$/s",
                 verticalalignment="center",
                 fontsize=12,
                 bbox={"facecolor": "white", "edgecolor": "none"},
             )
-
+            """
             axs[0].set_ylabel("waterstand [m+nap]")
             routestr = "-".join(route)
 
@@ -1819,12 +1958,15 @@ class Compare1D2D(ModelOutputReader):
                 ax.xaxis.set_minor_locator(MultipleLocator(10))
 
         # style figure
-        PlotStyles.van_veen(fig, use_legend=[False, False])
+        axs[1].set_ylim(-1, 1)
+        fig, lgd = PlotStyles.van_veen(fig, use_legend=[True, False])
         plt.tight_layout()
         fig.savefig(
             self.output_path.joinpath(
-                f"figures/longitudinal/{routename}_rating_curve.png"
-            )
+                f"figures/longitudinal/{routename}_rating_curve.png",
+            ),
+            bbox_extra_artists=[lgd],
+            bbox_inches="tight",
         )
         plt.close()
 
@@ -1834,13 +1976,16 @@ class Compare1D2D(ModelOutputReader):
         """
         station = data[data.columns[-1]]
 
-        wl_range = station.max() - station.min()
+        wl_range = station.max() - station[station.index> 0].min()
 
-        stepsize = wl_range / n
-
-        for i in range(n):
-            t = station.min() + i * stepsize
-            yield (station.dropna() < t).idxmin()
+        stepsize = wl_range / (n+1)
+        q_at_t_previous = 0
+        for i in range(1, n+1):
+            t = station[station.index> 0].min() + i * stepsize
+            q_at_t = (station.dropna() < t).idxmin()
+            if q_at_t == q_at_t_previous: continue
+            q_at_t_previous = q_at_t
+            yield q_at_t
 
     def heatmap_time(self, route: List[str]) -> None:
         """
@@ -1859,7 +2004,7 @@ class Compare1D2D(ModelOutputReader):
 
         routename = "-".join(route)
         _, _, lmw_stations = self.get_route(route)
-        data = self.data_1D_H - self.data_2D_H
+        data = self._data_1D_H - self._data_2D_H
         routedata = self.get_data_along_route(data.dropna(how="all"), route)
 
         fig, ax = plt.subplots(1, figsize=(12, 7))
@@ -1908,7 +2053,7 @@ class Compare1D2D(ModelOutputReader):
 
         routename = "-".join(route)
         _, _, lmw_stations = self.get_route(route)
-        data = self.data_1D_H_digitized - self.data_2D_H_digitized
+        data = self._data_1D_H_digitized - self._data_2D_H_digitized
 
         routedata = self.get_data_along_route(data.dropna(how="all"), route)
 
