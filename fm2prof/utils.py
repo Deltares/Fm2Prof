@@ -1800,7 +1800,7 @@ class Compare1D2D(ModelOutputReader):
             return list(data.index < date).index(False)
         except ValueError:
             # False is not list, return last index
-            return list(data.index)[:-1]
+            return len(data.index)-1
 
     def figure_longitudinal_time(self, route: List[str]) -> None:
         """
