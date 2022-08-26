@@ -1798,7 +1798,7 @@ class Compare1D2D(ModelOutputReader):
     def _get_nearest_time(data: pd.DataFrame, date: datetime = None) -> int:
         try:
             return list(data.index < date).index(False)
-        except IndexError:
+        except ValueError:
             # False is not list, return last index
             return list(data.index)[:-1]
 
