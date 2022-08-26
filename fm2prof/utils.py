@@ -1766,6 +1766,7 @@ class Compare1D2D(ModelOutputReader):
             bbox_extra_artists=[lgd, suptitle],
             bbox_inches="tight",
         )
+        plt.close()
 
     def get_data_along_route_for_time(
         self, data: pd.DataFrame, route: List[str], time_index: int
