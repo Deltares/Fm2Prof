@@ -2332,7 +2332,7 @@
             <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">index</span> <span class="o">&lt;</span> <span class="n">date</span><span class="p">)</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
         <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
             <span class="c1"># False is not list, return last index</span>
-            <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">index</span><span class="p">)[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+            <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">index</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span>
 
 <div class="viewcode-block" id="Compare1D2D.figure_longitudinal_time"><a class="viewcode-back" href="../../chapters/user_manual/source.html#fm2prof.utils.Compare1D2D.figure_longitudinal_time">[docs]</a>    <span class="k">def</span> <span class="nf">figure_longitudinal_time</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">route</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
