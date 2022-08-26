@@ -1796,7 +1796,11 @@ class Compare1D2D(ModelOutputReader):
 
     @staticmethod
     def _get_nearest_time(data: pd.DataFrame, date: datetime = None) -> int:
-        return list(data.index < date).index(False)
+        try:
+            return list(data.index < date).index(False)
+        except IndexError:
+            # False is not list, return last index
+            return list(data.index)[:-1]
 
     def figure_longitudinal_time(self, route: List[str]) -> None:
         """
