@@ -1,3 +1,11 @@
+## v2.2.2 (2022-08-26)
+
+### Fix
+
+- wrong method output type
+- catching wrong exception
+- exception in utils
+
 ## v2.2.1 (2022-08-24)
 
 ## v2.2.0 (2022-07-13)
