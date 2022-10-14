@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from logging import Logger
 from pathlib import Path
-from typing import Any, Callable, Dict, Generator, List, Optional, Tuple, Union
+from typing import Any, Callable, Dict, Generator, List, Optional, Tuple, Union, Iterable
 
 import matplotlib as mpl
 import matplotlib.dates as mdates
@@ -16,6 +16,7 @@ import matplotlib.patches as mpatches
 import numpy as np
 import pandas as pd
 import tqdm
+from scipy.interpolate import interp1d
 from matplotlib.figure import Figure
 from matplotlib.ticker import AutoMinorLocator, FormatStrFormatter, MultipleLocator
 from netCDF4 import Dataset
@@ -339,6 +340,40 @@ class VisualiseOutput(FM2ProfBase):
         # TODO: make configurable which style to use?
         PlotStyles.van_veen()
 
+    @property
+    def branches(self) -> Generator[List[str], None, None]:
+        def split_css(name) -> Tuple[str, float, str]:
+            chainage = float(name.split("_")[-1])
+            branch = "_".join(name.split("_")[:-1])
+            return (name, chainage, branch)
+
+        def find_branches(css_list) -> List[str]:
+            branches = np.unique([i[2] for i in css_names])
+            contiguous_branches = np.unique([b.split("_")[0] for b in branches])
+            return branches, contiguous_branches
+
+        css_names = [split_css(css.get("id")) for css in self.cross_sections]
+        branches, contiguous_branches = find_branches(css_names)
+        return branches, contiguous_branches
+
+    @property
+    def number_of_cross_sections(self) -> int:
+        return len(list(self.cross_sections))
+
+    @property
+    def cross_sections(self) -> Generator[Dict, None, None]:
+        """
+        Generator to loop through all cross-sections in definition file.
+
+        Example use:
+
+        >>> for css in visualiser.cross_sections:
+        >>>     visualiser.make_figure(css)
+        """
+        csslist = self._readCSSDefFile()
+        for css in csslist:
+            yield css
+
     def figure_roughness_longitudinal(self, branch: str):
         """
         Assumes the following naming convention:
@@ -394,83 +429,6 @@ class VisualiseOutput(FM2ProfBase):
 
         return branch_list
 
-    @property
-    def branches(self) -> Generator[List[str], None, None]:
-        def split_css(name) -> Tuple[str, float, str]:
-            chainage = float(name.split("_")[-1])
-            branch = "_".join(name.split("_")[:-1])
-            return (name, chainage, branch)
-
-        def find_branches(css_list) -> List[str]:
-            branches = np.unique([i[2] for i in css_names])
-            contiguous_branches = np.unique([b.split("_")[0] for b in branches])
-            return branches, contiguous_branches
-
-        css_names = [split_css(css.get("id")) for css in self.cross_sections]
-        branches, contiguous_branches = find_branches(css_names)
-        return branches, contiguous_branches
-
-    def _generate_output_dir(self, figure_type: str = "png", overwrite: bool = True):
-        """
-        Creates a new directory in the output map to store figures for each cross-section
-
-        Arguments:
-            output_map - path to fm2prof output directory
-
-        Returns:
-            png images saved to file
-        """
-
-        figdir = self.output_dir.joinpath("figures/cross_sections")
-        if not figdir.is_dir():
-            figdir.mkdir(parents=True)
-        return figdir
-
-    def _set_files(self):
-        self.files = {
-            "css_def": os.path.join(self.output_dir, self.__cssdeffile),
-            "volumes": os.path.join(self.output_dir, self.__volumefile),
-            "roughnessMain": os.path.join(self.output_dir, self.__rmainfile),
-            "roughnessFP1": os.path.join(self.output_dir, self.__rfp1file),
-        }
-
-    def _getValueFromLine(self, f):
-        return f.readline().strip().split("=")[1].strip()
-
-    def _readCSSDefFile(self) -> List[Dict]:
-        csslist = list()
-
-        with open(self.files.get("css_def"), "r") as f:
-            for line in f:
-                if line.lower().strip() == "[definition]":
-                    css_id = f.readline().strip().split("=")[1]
-                    [f.readline() for i in range(3)]
-                    css_levels = list(map(float, self._getValueFromLine(f).split()))
-                    css_fwidth = list(map(float, self._getValueFromLine(f).split()))
-                    css_twidth = list(map(float, self._getValueFromLine(f).split()))
-                    css_sdcrest = float(self._getValueFromLine(f))
-                    css_sdflow = float(self._getValueFromLine(f))
-                    css_sdtotal = float(self._getValueFromLine(f))
-                    css_sdbaselevel = float(self._getValueFromLine(f))
-                    css_mainsectionwidth = float(self._getValueFromLine(f))
-                    css_fp1sectionwidth = float(self._getValueFromLine(f))
-
-                    css = {
-                        "id": css_id.strip(),
-                        "levels": css_levels,
-                        "flow_width": css_fwidth,
-                        "total_width": css_twidth,
-                        "SD_crest": css_sdcrest,
-                        "SD_flow_area": css_sdflow,
-                        "SD_total_area": css_sdtotal,
-                        "SD_baselevel": css_sdbaselevel,
-                        "mainsectionwidth": css_mainsectionwidth,
-                        "fp1sectionwidth": css_fp1sectionwidth,
-                    }
-                    csslist.append(css)
-
-        return csslist
-
     def getRoughnessInfoForCss(self, cssname, rtype: str = "roughnessMain"):
         """
         Opens roughness file and reads information for a given cross-section
@@ -517,24 +475,6 @@ class VisualiseOutput(FM2ProfBase):
                         cssdata[column].append(float(values[i + 1]))
 
         return cssdata
-
-    @property
-    def number_of_cross_sections(self) -> int:
-        return len(list(self.cross_sections))
-
-    @property
-    def cross_sections(self) -> Generator[Dict, None, None]:
-        """
-        Generator to loop through all cross-sections in definition file.
-
-        Example use:
-
-        >>> for css in visualiser.cross_sections:
-        >>>     visualiser.make_figure(css)
-        """
-        csslist = self._readCSSDefFile()
-        for css in csslist:
-            yield css
 
     def get_cross_section_by_id(self, id: str) -> dict:
         """
@@ -621,6 +561,67 @@ class VisualiseOutput(FM2ProfBase):
             pbar.update(1)
 
         self.finish_log_task()
+
+    def _generate_output_dir(self, figure_type: str = "png", overwrite: bool = True):
+        """
+        Creates a new directory in the output map to store figures for each cross-section
+
+        Arguments:
+            output_map - path to fm2prof output directory
+
+        Returns:
+            png images saved to file
+        """
+
+        figdir = self.output_dir.joinpath("figures/cross_sections")
+        if not figdir.is_dir():
+            figdir.mkdir(parents=True)
+        return figdir
+
+    def _set_files(self):
+        self.files = {
+            "css_def": os.path.join(self.output_dir, self.__cssdeffile),
+            "volumes": os.path.join(self.output_dir, self.__volumefile),
+            "roughnessMain": os.path.join(self.output_dir, self.__rmainfile),
+            "roughnessFP1": os.path.join(self.output_dir, self.__rfp1file),
+        }
+
+    def _getValueFromLine(self, f):
+        return f.readline().strip().split("=")[1].strip()
+
+    def _readCSSDefFile(self) -> List[Dict]:
+        csslist = list()
+
+        with open(self.files.get("css_def"), "r") as f:
+            for line in f:
+                if line.lower().strip() == "[definition]":
+                    css_id = f.readline().strip().split("=")[1]
+                    [f.readline() for i in range(3)]
+                    css_levels = list(map(float, self._getValueFromLine(f).split()))
+                    css_fwidth = list(map(float, self._getValueFromLine(f).split()))
+                    css_twidth = list(map(float, self._getValueFromLine(f).split()))
+                    css_sdcrest = float(self._getValueFromLine(f))
+                    css_sdflow = float(self._getValueFromLine(f))
+                    css_sdtotal = float(self._getValueFromLine(f))
+                    css_sdbaselevel = float(self._getValueFromLine(f))
+                    css_mainsectionwidth = float(self._getValueFromLine(f))
+                    css_fp1sectionwidth = float(self._getValueFromLine(f))
+
+                    css = {
+                        "id": css_id.strip(),
+                        "levels": css_levels,
+                        "flow_width": css_fwidth,
+                        "total_width": css_twidth,
+                        "SD_crest": css_sdcrest,
+                        "SD_flow_area": css_sdflow,
+                        "SD_total_area": css_sdtotal,
+                        "SD_baselevel": css_sdbaselevel,
+                        "mainsectionwidth": css_mainsectionwidth,
+                        "fp1sectionwidth": css_fp1sectionwidth,
+                    }
+                    csslist.append(css)
+
+        return csslist
 
     def _SetPlotStyle(self, *args, **kwargs):
         """todo: add preference to switch styles or
@@ -978,8 +979,6 @@ class PlotStyles:
         else:
             initiate()
             return styleFigure(fig, use_legend, extra_labels, ax_align_legend)
-
-
 
 @dataclass
 class DeltaresSectionItem:
@@ -2099,3 +2098,341 @@ class Compare1D2D(ModelOutputReader):
             return func(*args, **kwargs)
         except exception as e:
             return None
+
+
+class Network1D:
+    def __init__(self, networkdefinitionfile:Union[Path, str],
+                       observationpointfile:Union[Path, str],
+                       structuresfile:Union[Path, str],
+                       crosssectiondefinitionfile:Union[Path, str],
+                       crosssectionlocationfile:Union[Path, str]):
+        
+        self._ignore_branchlist = ["ark_betuwepand", "twentekanaal"]
+        self._branch_chainage_rkm: Dict[List[Tuple[float]]] = dict()
+        self._regex_rkm = re.compile(r"(?<=_)(\d+.\d+)")
+        self._regex_branch = re.compile(r"([a-z]+)")
+        self._network = self.parse_network(networkdefinitionfile)
+        self._observationpoints = self.parse_observationpoint(observationpointfile)
+        self._structures = self.parse_structures(structuresfile)
+        self._crosssectiondefinitions = self.parse_crosssections(crosssectiondefinitionfile)
+        self._crosssectionlocations = self.parse_crosssections(crosssectionlocationfile)
+        self._digraph:nx.DiGraph = None
+
+    @property
+    def unique_branches(self):
+        ub = list()
+        for branch in self.branches:
+            ub_id = self._regex_branch.search(branch)
+            if not ub_id: continue
+            if ub_id[0] not in ub: ub.append(ub_id[0])
+
+        return ub
+
+    @property
+    def branches(self)->Generator[str, None, None]:
+        for branch in self._network.sections.get('branch'):
+            yield branch
+
+    @property
+    def nodes(self)->Generator[str, None, None]:
+        for node in self._network.sections.get('node'):
+            yield node
+    
+    @property
+    def observationpoints(self):
+        return self._observationpoints.sections.get('observationpoint')
+
+    @property
+    def crosssections(self):
+        return self._crosssectiondefinitions.sections.get('definition')
+
+    @property
+    def structures(self):
+        return self._structures.sections.get('structure')
+
+    def get_crosssection_on_branch(self, branch:str):
+        for css in self._crosssectionlocations.sections['crosssection']:
+            if css.get('branchid').value==branch:
+                yield {'id':css.get('id').value, 
+                       'chainage':css.get('chainage').value, 
+                       'definition':self.get_crosssection_definition(css.get('id').value)}
+
+    def get_crosssection_definition(self, name:str):
+        for css in self._crosssectiondefinitions.sections['definition']:
+            if css.get('id').value==name:
+                return css
+
+    def get_maximum_width_for_branch(self, branch:str):
+        total_width = []
+        for css in self.get_crosssection_on_branch(branch):
+            tw = css.get('definition').get('totalwidths').value[-1]
+            fw = css.get('definition').get('flowwidths').value[-1]
+            rkm = self.chainage_to_rkm(branch, css.get('chainage'))
+            total_width.append((rkm, tw, fw))
+
+        return np.array(total_width)
+
+    def get_section_width_for_branch(self, branch:str):
+        section_width = []
+        for css in self.get_crosssection_on_branch(branch):
+            mw = css.get('definition').get('main').value
+            f1w = css.get('definition').get('floodplain1').value
+            f2w = css.get('definition').get('floodplain2').value
+            
+            rkm = self.chainage_to_rkm(branch, css.get('chainage'))
+            
+            section_width.append((rkm, mw, f1w, f2w))
+        return np.array(section_width)
+
+    def get_sd_for_branch(self, branch:str):
+        sd = []
+        for css in self.get_crosssection_on_branch(branch):
+            cl = css.get('definition').get('sd_crest').value
+            ta = css.get('definition').get('sd_totalarea').value
+            rkm = self.chainage_to_rkm(branch, css.get('chainage'))
+            sd.append((rkm, cl, ta))
+        return np.array(sd)
+
+    def get_bedlevel_for_branch(self, branch:str):
+        bedlevel = []
+        for css in self.get_crosssection_on_branch(branch):
+            bl = min(css.get('definition').get('levels').value)
+            rkm = self.chainage_to_rkm(branch, css.get('chainage'))
+            bedlevel.append((rkm, bl))
+        return np.array(bedlevel)
+
+    def get_structures_on_branch(self, branch:str, only_compounds:bool=False):
+        compounds = list()
+        for structure in self.structures:
+            if structure.get('branchid').value == branch:
+                if structure.get('compound').value in compounds:
+                    pass
+                else:
+                    compounds.append(structure.get('compound').value)
+                    yield structure
+
+    def get_observationpoint_on_branch(self, branch:str):
+        for op in self.observationpoints:
+            if op.get('branchid').value==branch:
+                yield op
+
+    def get_outgoing_branch(self, node:str):
+        for branch in self.branches:
+            if branch.get('fromnode').value==node:
+                yield branch
+
+    def get_incoming_branch(self, node:str):
+        for branch in self.branches:
+            if branch.get('tonode').value==node:
+                yield branch
+
+    def get_branch(self, id):
+        for branch in self._network.sections.get('branch'):
+            if branch.get('id').value == id:
+                return branch
+
+    def get_branch_length(self, branch:str)->float:
+        return self.get_branch(branch)['gridpointoffsets'].value[-1]
+
+    def parse_network(self, networkdefinitionfile):
+        data = self._read_deltares_ini(networkdefinitionfile)
+        data.sections['node'] = self._key_to_float(data.sections['node'], ['x', 'y'])
+        return data
+
+    def parse_observationpoint(self, observationpointfile):
+        data = self._read_deltares_ini(observationpointfile)
+        data.sections['observationpoint'] = self._key_to_float(data.sections.get('observationpoint'), ['chainage'])
+
+        for obs in data.sections['observationpoint']:
+            rkm = self._regex_rkm.search(obs.get('id').value)
+            if rkm:
+                obs['rkm'] = float(rkm[0])
+                self._append_to_bcrkm(obs['branchid'].value, obs['chainage'].value, obs['rkm'])
+
+        return data 
+
+    def parse_structures(self, structuresfile):
+        data = self._read_deltares_ini(structuresfile)
+        data.sections['structure'] = self._key_to_float(data.sections.get('structure'), ['chainage'])
+        return data 
+
+    def parse_crosssections(self, crosssectiondefinitionfile):
+        data = self._read_deltares_ini(crosssectiondefinitionfile)
+        return data 
+
+    def chainage_to_rkm(self, branch:str, chainage:Union[float,Iterable[float]])->Union[float, List[float]]:
+        xy = np.array(self._branch_chainage_rkm[branch])
+        f = interp1d(xy[:,0], xy[:,1], fill_value="extrapolate")
+        if not hasattr(chainage, "__iter__"): return f(chainage)
+
+        out = []
+        for ch in chainage:
+            out.append(f(ch))
+        return out
+
+    def figure_network_along_route(self, route:Tuple[str], output_file: Union[str, Path]):
+        """
+        Plots the network along a route. The 
+        """
+        _color_width='navy'
+        fig, ax = plt.subplots(1, figsize=(15, 8))
+        ax2 = ax.twinx()
+
+        for branch in self.branches:
+            if branch.get('id').value.startswith(route):
+                self._plot_branch(ax=ax, ax2=ax2, branch = branch)
+
+        #hStruct.set_label('Kunstwerk')
+        ##hNode.set_label('Knoop')
+        #hSD.set_label('Zomerdijkhoogte')
+        #hBed.set_label('Bodemhoogte')
+        #hWidth.set_label('Breedte')
+        #hObs.set_label('LMW meetstation')
+
+        # style
+        ax.set_title(f"schematisatie\n{'-'.join(route)}")
+        ax.set_xlabel('rivierkilometer')
+
+        ax2.set_ylabel('Breedte [m]')
+        ax.set_ylabel('m+nap')
+        #ax.set_xlim(e._extent_rkm())\
+        ax.set_ylim(-8, 30)
+        ax2.spines['right'].set_color(_color_width)
+        ax2.yaxis.label.set_color(_color_width)
+        ax2.tick_params(axis='y', colors=_color_width)
+        ax2.set_ylim(0, 1000)
+        
+        PlotStyles.van_veen()
+        fig, lgd = PlotStyles.van_veen(fig)
+
+        plt.savefig(
+            output_file,
+            bbox_extra_artists=[lgd],
+            bbox_inches="tight",
+        )
+    
+    def _plot_node(self, ax, node, chainage, branchname):
+        _annotate_y = 20
+        h, = ax.plot(self.chainage_to_rkm(branchname, chainage), _annotate_y, 'ok', markersize=10)
+
+        return node, h
+        
+    def _plot_in_out_branches(self, ax, node, branchname):
+        _annotate_y = 20
+        arrow_out = dict(horizontalalignment='center',
+                            fontsize=14,
+                            color='b',backgroundcolor='w',
+                            arrowprops=dict(arrowstyle="-|>",
+                                            linewidth=2,
+                                            linestyle='-',
+                                            color='#0d38e0',
+                                            connectionstyle="arc3"))
+        arrow_in = dict(horizontalalignment='center',
+                            color='b',
+                        fontsize=14,
+                        backgroundcolor='w',
+                            arrowprops=dict(arrowstyle="<|-",
+                                            linestyle='-',
+                                            linewidth=2,
+                                            color='#0d38e0',
+                                            connectionstyle="arc3"))
+        for branch_in in self.get_incoming_branch(node):
+            if not branch_in.get('id').value.startswith(branchname):
+                ax.annotate(branch_in.get('id').value.upper(),
+                            xy=(self.chainage_to_rkm(branchname, 0), _annotate_y),
+                            xytext=(self.chainage_to_rkm(branchname, 0), _annotate_y+5),
+                            **arrow_out
+                            )
+
+        for branch_in in self.get_outgoing_branch(node):
+            if not branch_in.get('id').value.startswith(branchname):
+                ax.annotate(branch_in.get('id').value.upper(),
+                            xy=(self.chainage_to_rkm(branchname, 0), _annotate_y),
+                            xytext=(self.chainage_to_rkm(branchname, 0), _annotate_y-5),
+                            **arrow_in
+                            )
+
+    def _plot_branch(self, ax, ax2, branch):
+        branchname = branch.get('id').value
+        _color_width='navy'
+        _annotate_y = 20
+        hStruct=None
+        hObs=None
+
+        bl = self.get_bedlevel_for_branch(branchname)
+        tw = self.get_section_width_for_branch(branchname)
+        cl = self.get_sd_for_branch(branchname)
+        l  = self.get_branch_length(branchname)
+        
+        # plot bedlevel
+        hBed, = ax.plot(bl[:,0], bl[:,1], '-k', linewidth=2)
+        
+        # plot width
+        hWidth, = ax2.plot(tw[:,0], tw[:,1], '--', color=_color_width, linewidth=1)
+        
+        # plot crest_level
+        mask = cl[:,2] > 10 
+        hSD, = ax.plot(cl[mask,0], cl[mask,1], '--', color='orange', linewidth=1)
+        
+        # Plot branch
+        ax.plot([self.chainage_to_rkm(branchname, 0),
+                 self.chainage_to_rkm(branchname, l)],
+                 [_annotate_y]*2, '-k', linewidth=3)
+        
+        # Plot nodes
+        
+        
+        node, hNode = self._plot_node(ax=ax, node=branch.get('tonode').value, chainage=l, branchname=branchname)
+        node, _ = self._plot_node(ax=ax, node=branch.get('fromnode').value, chainage=0, branchname=branchname)
+        self._plot_in_out_branches(ax=ax, node=node, branchname=branchname)
+        
+        # Plot structures
+        for structure in self.get_structures_on_branch(branchname, only_compounds=True):
+            x = self.chainage_to_rkm(branchname, structure.get('chainage').value)
+            hStruct, = ax.plot(x, _annotate_y, '^', markersize=15, color="#b20000")
+            ax.text(x, _annotate_y-1, structure.get('compoundname').value.upper(), 
+                    color='#b20000', fontsize=14, rotation=-10,
+                   verticalalignment='top')
+        
+        # plot observationpoints
+        for observationpoint in self.get_observationpoint_on_branch(branchname):
+            if not observationpoint.get('branchid').value.startswith(branchname): continue
+            oname = observationpoint.get('id').value
+            ochain = observationpoint.get('chainage').value
+            if 'lmw' in oname:
+                orkm=self.chainage_to_rkm(branchname, ochain)
+                
+                hObs, = ax.plot(orkm, _annotate_y, '.', color='#00cc96', markersize=15)
+
+        return dict(struct=hStruct, node=hNode, summerdike=hSD, bed=hBed, 
+                    width=hWidth, observationpoints=hObs)
+        
+        
+
+    def _append_to_bcrkm(self, branch, chainage, rkm):
+        if branch not in self._branch_chainage_rkm:
+            self._branch_chainage_rkm[branch] = list()
+        self._branch_chainage_rkm[branch].append((chainage, rkm))
+
+    def _read_deltares_ini(self, networkdefinitionfile):
+        return DeltaresConfig(networkdefinitionfile)
+
+    @staticmethod
+    def _key_to_float(data, keys:List[str]):
+        for node in data:
+            for key in keys:
+                node[key].value = float(node[key].value)
+        return data
+
+    def _extent_rkm(self):
+        rkm_min = 1e10
+        rkm_max=1e-10
+        for branch, arr in self._branch_chainage_rkm.items():
+            if branch in self._ignore_branchlist: continue
+            arr = np.array(arr)
+            rkm_min = min(rkm_min, min(arr[:,1]))
+            rkm_max = max(rkm_max, max(arr[:,1]))
+
+            print(f"branch {branch}: {rkm_min}, {rkm_max}")
+
+        return rkm_min, rkm_max
