@@ -1664,7 +1664,6 @@ class Compare1D2D(ModelOutputReader):
         ax.tick_params(axis='y', colors=self._color_error)
         ax.grid(False)
         
-
     def _compute_statistics(self):
         diff =  self.data_1D_H - self.data_2D_H
         station_names = diff.columns
