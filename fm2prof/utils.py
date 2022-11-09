@@ -1,4 +1,5 @@
 import ast
+from enum import unique
 import locale
 import os
 import re
@@ -12,6 +13,7 @@ from typing import Any, Callable, Dict, Generator, List, Optional, Tuple, Union,
 import matplotlib as mpl
 import matplotlib.dates as mdates
 import matplotlib.pyplot as plt
+import matplotlib.gridspec as gridspec
 import matplotlib.patches as mpatches
 import numpy as np
 import pandas as pd
@@ -37,6 +39,12 @@ class GenerateCrossSectionLocationFile(FM2ProfBase):
     The beginning and end point of each branch are treated as half-distance control volumes.
 
     It supports an optional :ref:`branchRuleFile.
+
+    Use as a function, i.e.:
+
+    >>> GenerateCrossSectionLocationFile(**input)
+
+    generates cross-section location file. 
 
     Parameters
 
@@ -985,6 +993,27 @@ class DeltaresSectionItem:
     value: Any
     comment: str = ""
 
+@dataclass
+class DeltaresSection:
+    parameters: Dict 
+    timeseries: List[List]
+
+    def __getitem__(self, key:str) -> Union[List[DeltaresSectionItem], DeltaresSectionItem]:
+        """ This makes the class subscriptable """
+        if len(self.parameters[key])==1:
+            return self.parameters[key][0]
+        else:
+            return self.parameters[key]
+
+    def __setitem__(self, key:str, value:Union[List,Any]):
+        if isinstance(value, list):
+            self.parameters[key] = value
+        else:
+            self.parameters[key] = [value]
+
+    def get(self, key:str) -> Union[List[DeltaresSectionItem], DeltaresSectionItem]:
+        """ mimicks get method of dictionary """
+        return self.__getitem__(key)
 
 class DeltaresConfig:
     """
@@ -997,38 +1026,86 @@ class DeltaresConfig:
         self._regex_key = re.compile(r".+(?=\=)")
         self._regex_value = re.compile(r"(?<==)([^#\n\r]+)")
         self._regex_comment = re.compile(r"(?<=#)([^\n\r]+)")
+        self._regex_timeseries = re.compile(r"(-?\d+\.?\d*)[\t ](-?\d+\.?\d*)[\t\n ]")
         self._read_deltares_ini(configfile)
+
+        self._fmt_kvwidth = 40
 
     @property
     def sections(self):
         return self._sections
 
+    def to_file(self, outputfile: Union[Path, str])->None:
+        with open(outputfile, 'w') as f:
+            for unique_section in self.sections:
+                for section in self.sections[unique_section]:
+                    f.write(f'[{unique_section}]\n')
+                    for unique_parameter in section.parameters:
+                        for param in section.parameters[unique_parameter]:
+                            f.write(f"\t{unique_parameter:40}=\t{param.value}\n")
+
+                    for ts in section.timeseries:
+                        f.write(f"{ts[0]} {ts[1]}\n")
+                    f.write("\n")
+
+    def list_parameters(self, section:str, key:str):
+        
+        for section in self.sections[section]:
+            param = section.parameters[key]
+            yield [p.value for p in param]
+
     def _read_deltares_ini(self, configfile: Path):
-        dini = {}
+        
+        section_store = list()
+
         with open(configfile, "r") as f:
             for line in f:
                 if self._regex_section.search(line):
-                    self._add_section(f, self._regex_section.search(line)[0])
+                    # Add current section
+                    if len(section_store) > 0:
+                        self._add_section(section_name, section_store)
+                        section_store.clear()
 
-    def _add_section(self, f, section_name: str):
+                    # Parse new section
+                    section_name = self._regex_section.search(line)[0]
+                section_store.append(line)
+            
+            # add final sections
+            self._add_section(section_name, section_store)
+
+    def _add_section(self, section_name: str, section_store:list):
         section_name = section_name.lower()
+        section = DeltaresSection(parameters={}, timeseries=[])
+        
+        # Parse section
+        for line in section_store:
+            if self._regex_key.search(line):
+                self._add_key_value_to_section(section, line)
+
+            if self._regex_timeseries.search(line):
+                p = self._regex_timeseries.search(line)
+                section.timeseries.append([p[1], p[2]])
+            
+        # Sections may occur multiple times, store in list
         if section_name not in self._sections:
-            self._sections[section_name] = []
+            self._sections[section_name] = [section]
+        else:
+            self._sections[section_name].append(section)
 
-        section_dict = dict()
-        for line in f:
-            if self._regex_section.search(line):
-                self._add_section(f, self._regex_section.search(line)[0])
-            if not self._regex_key.search(line):
-                continue
-            key = self._regex_key.search(line)[0].strip().lower()
-            value = self._parse_value(self._regex_value.search(line)[0].strip().lower())
-            comment = ""
-            if self._regex_comment.search(line):
-                comment = self._regex_comment.search(line)[0].strip()
-            section_dict[key] = DeltaresSectionItem(value=value, comment=comment)
+    def _add_key_value_to_section(self, section:DeltaresSection, line:str)->None:
+        
+        # Parse key/value pair
+        key = self._regex_key.search(line)[0].strip().lower()
+        value = self._parse_value(self._regex_value.search(line)[0].strip())
+        comment = ""
 
-        self._sections[section_name].append(section_dict)
+        if self._regex_comment.search(line):
+            comment = self._regex_comment.search(line)[0].strip()
+            
+        if key not in section.parameters:
+            section.parameters[key] = [DeltaresSectionItem(value=value, comment=comment)]
+        else:
+            section.parameters[key].append(DeltaresSectionItem(value=value, comment=comment))
 
     def _parse_value(self, value: str):
         """attempts to parse value"""
@@ -2101,6 +2178,12 @@ class Compare1D2D(ModelOutputReader):
 
 
 class Network1D:
+    """
+    Class to parse a 1D network. Provides functions to 
+    visualise the network and compare two Network1D 
+    objects. 
+    """
+
     def __init__(self, networkdefinitionfile:Union[Path, str],
                        observationpointfile:Union[Path, str],
                        structuresfile:Union[Path, str],
@@ -2116,7 +2199,17 @@ class Network1D:
         self._structures = self.parse_structures(structuresfile)
         self._crosssectiondefinitions = self.parse_crosssections(crosssectiondefinitionfile)
         self._crosssectionlocations = self.parse_crosssections(crosssectionlocationfile)
-        self._digraph:nx.DiGraph = None
+        
+        self._name = "Name not set"
+
+    @property
+    def name(self):
+        return self._name
+
+    @name.setter
+    def name(self, value:str):
+        if not isinstance(value, str): raise TypeError("Name must be string")
+        self._name = value
 
     @property
     def unique_branches(self):
@@ -2277,17 +2370,23 @@ class Network1D:
         _color_width='navy'
         fig, ax = plt.subplots(1, figsize=(15, 8))
         ax2 = ax.twinx()
+        labels = dict(struct=[None, "kunstwerk"], 
+                      node=[None, "knoop"], 
+                      summerdike=[None, "zomerdijkhoogte"], 
+                      bed=[None, "bodemhoogte"], 
+                      width=[None, "Zomerbedbreedte"], 
+                      observationpoints=[None, "Meetstation"])
 
         for branch in self.branches:
             if branch.get('id').value.startswith(route):
-                self._plot_branch(ax=ax, ax2=ax2, branch = branch)
-
-        #hStruct.set_label('Kunstwerk')
-        ##hNode.set_label('Knoop')
-        #hSD.set_label('Zomerdijkhoogte')
-        #hBed.set_label('Bodemhoogte')
-        #hWidth.set_label('Breedte')
-        #hObs.set_label('LMW meetstation')
+                branch_labels = self._plot_branch(ax=ax, ax2=ax2, branch = branch)
+                for key in labels:
+                    if branch_labels[key] is not None:
+                        labels[key][0] = branch_labels[key]
+        
+        for key in labels:
+            if labels[key][0] is None: break
+            labels[key][0].set_label(labels[key][1])
 
         # style
         ax.set_title(f"schematisatie\n{'-'.join(route)}")
@@ -2301,6 +2400,7 @@ class Network1D:
         ax2.yaxis.label.set_color(_color_width)
         ax2.tick_params(axis='y', colors=_color_width)
         ax2.set_ylim(0, 1000)
+        ax2.grid(False)
         
         PlotStyles.van_veen()
         fig, lgd = PlotStyles.van_veen(fig)
@@ -2311,6 +2411,50 @@ class Network1D:
             bbox_inches="tight",
         )
     
+    def figure_difference_with_other_network(self, route:Tuple[str], network2:'Network1D', output_file: Union[str, Path]):
+        """
+        Generates difference figures between two networks
+        """
+
+        fig, axs = plt.subplots(2, 3, figsize=(15, 8))
+        
+        labels = ('Bodemhoogte', 'Breedte', 'Zomerdijkhoogte')
+        # get data
+        data_1 = None
+        data_2 = None
+        for branch in self.branches:
+            branchname = branch.get('id').value
+            if branchname.startswith(route):
+                data_1 = self._get_data_for_branch(branchname)  #bl1, tw1, cl1, l1
+                data_2 = network2._get_data_for_branch(branchname)
+                        
+        if (data_1 is None) or (data_2 is None): raise KeyError("no corresponding branches found for route in of the networks")
+        
+        # plot bedlevel
+        for i, label in enumerate(labels):
+            hBed, = axs[0, i].plot(data_1[i][:,0], data_1[i][:,1], '-k', linewidth=2, label=self.name)
+            hBed, = axs[0, i].plot(data_2[i][:,0], data_2[i][:,1], '--b', linewidth=1, label=network2.name)
+        
+            hdiff, = axs[1, i].plot(data_2[i][:,0], data_1[i][:,1]-data_2[i][:,1], '--o', linewidth=2)
+
+            axs[0,i].set_title(label)
+        
+        PlotStyles.van_veen()
+        
+        fig, lgd = PlotStyles.van_veen(fig)
+        for ax in axs[0]: 
+            ax.set_xticklabels([])
+        for ax in axs[1]:
+            ax.set_ylabel('Verschil [m]')
+            ax.set_xlabel('Rivierkilometer')
+        suptitle = fig.suptitle('-'.join(route))
+        plt.subplots_adjust(hspace=0)
+        plt.savefig(
+            output_file,
+            bbox_extra_artists=[lgd, suptitle],
+            bbox_inches="tight",
+        )
+
     def _plot_node(self, ax, node, chainage, branchname):
         _annotate_y = 20
         h, = ax.plot(self.chainage_to_rkm(branchname, chainage), _annotate_y, 'ok', markersize=10)
@@ -2352,6 +2496,14 @@ class Network1D:
                             **arrow_in
                             )
 
+    def _get_data_for_branch(self, branchname:str)->Tuple:
+        bedlevel = self.get_bedlevel_for_branch(branchname)
+        total_width = self.get_section_width_for_branch(branchname)
+        crest_summer_dike = self.get_sd_for_branch(branchname)
+        length  = self.get_branch_length(branchname)
+
+        return bedlevel, total_width, crest_summer_dike, length
+
     def _plot_branch(self, ax, ax2, branch):
         branchname = branch.get('id').value
         _color_width='navy'
@@ -2359,15 +2511,12 @@ class Network1D:
         hStruct=None
         hObs=None
 
-        bl = self.get_bedlevel_for_branch(branchname)
-        tw = self.get_section_width_for_branch(branchname)
-        cl = self.get_sd_for_branch(branchname)
-        l  = self.get_branch_length(branchname)
+        bl, tw, cl, l = self._get_data_for_branch(branchname)
         
         # plot bedlevel
         hBed, = ax.plot(bl[:,0], bl[:,1], '-k', linewidth=2)
         
-        # plot width
+        # plot main section width
         hWidth, = ax2.plot(tw[:,0], tw[:,1], '--', color=_color_width, linewidth=1)
         
         # plot crest_level
@@ -2380,8 +2529,6 @@ class Network1D:
                  [_annotate_y]*2, '-k', linewidth=3)
         
         # Plot nodes
-        
-        
         node, hNode = self._plot_node(ax=ax, node=branch.get('tonode').value, chainage=l, branchname=branchname)
         node, _ = self._plot_node(ax=ax, node=branch.get('fromnode').value, chainage=0, branchname=branchname)
         self._plot_in_out_branches(ax=ax, node=node, branchname=branchname)
@@ -2407,8 +2554,6 @@ class Network1D:
         return dict(struct=hStruct, node=hNode, summerdike=hSD, bed=hBed, 
                     width=hWidth, observationpoints=hObs)
         
-        
-
     def _append_to_bcrkm(self, branch, chainage, rkm):
         if branch not in self._branch_chainage_rkm:
             self._branch_chainage_rkm[branch] = list()
@@ -2436,3 +2581,53 @@ class Network1D:
             print(f"branch {branch}: {rkm_min}, {rkm_max}")
 
         return rkm_min, rkm_max
+
+
+class Convert2D():
+    """
+    Class to convert 2D input to 1D input
+    """
+
+        
+    
+    def _convert_bc(self, file2d:Union[str, Path], file1d: Union[str, Path], outputfile: Union[str, Path], is_boundary:bool=False):
+        
+        bc1d = DeltaresConfig(file1d)
+
+
+        bc2d = DeltaresConfig(file2d)
+        if is_boundary:
+            bc1d = self._overwrite_matching(bc1d, bc2d, 'boundary', 'forcing', truncate_2d=-5)
+        else:
+            bc1d = self._overwrite_matching(bc1d, bc2d, 'lateraldischarge', 'forcing', truncate_2d=40)
+        
+        
+        bc1d.to_file(outputfile)
+
+    def _overwrite_matching(self, bc1d, bc2d, sectionname_1d, sectionname_2d, truncate_2d:int=40) -> DeltaresConfig:
+        # find matches=        
+        
+        names_2d = [name[0][:truncate_2d] for name in bc2d.list_parameters(sectionname_2d, 'name')]
+        names_1d = [name[0] for name in bc1d.list_parameters(sectionname_1d, 'name')]
+
+        # match 1D to 2D truncated
+        for index_1d, name_1d in enumerate(names_1d):
+            try:
+                index_2d = names_2d.index(name_1d)
+            except ValueError:
+                print (f"Warning: no match not found for {name_1d}")
+                continue
+            
+            # overwrite data
+            bc1d.sections[sectionname_1d][index_1d].timeseries = bc2d.sections[sectionname_2d][index_2d].timeseries
+            for key in ['function', 'time-interpolation', 'quantity', 'unit']:
+                bc1d.sections[sectionname_1d][index_1d].parameters[key] = bc2d.sections[sectionname_2d][index_2d].parameters[key]
+            
+
+
+        
+        return bc1d
+        
+
+
+
