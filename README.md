@@ -33,6 +33,7 @@ You can find the documentation here: [https://deltares.github.io/fm2prof/](https
 ## Development
 
 - We enforce [black](https://github.com/psf/black) formatting on push. So after pushing, pull to get the reformatted code, or do a black reformat locally. 
+- Direct commits to master are not allowed (except for admins)
 - We use [commitizen tools](https://commitizen-tools.github.io/commitizen/bump/) to bump version. Version bump is done manually after a pull request. E.g. after a minor improvement:
 
 ```bash
@@ -41,3 +42,5 @@ poetry run cz bump --increment MINOR --dry run
 # then for real
 poetry run cz bump --increment MINOR
 ```
+
+
