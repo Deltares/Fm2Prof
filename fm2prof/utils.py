@@ -1776,7 +1776,6 @@ class Compare1D2D(ModelOutputReader):
         fig.tight_layout()
         fig.savefig(
             self.output_path.joinpath("figures/stations").joinpath(f"{station}.png"),
-              
         )
         plt.close()
 
@@ -1973,10 +1972,10 @@ class Compare1D2D(ModelOutputReader):
         fig, axs = plt.subplots(2, 1, figsize=(12, 12))
 
         # plot line every delta_days days
-        first_day = self.data_1D_H.index[0] # + timedelta(days=delta_days) * 2
+        first_day = self.data_1D_H.index[0]  # + timedelta(days=delta_days) * 2
         last_day = self.data_1D_H.index[-1]
         number_of_days = (last_day - first_day).days
-        delta_days = int(number_of_days/6)
+        delta_days = int(number_of_days / 6)
 
         moments = [
             first_day + timedelta(days=i) for i in range(0, number_of_days, delta_days)
@@ -2032,9 +2031,13 @@ class Compare1D2D(ModelOutputReader):
                 ax.xaxis.set_minor_locator(MultipleLocator(10))
 
         # bias
-        diff = self.get_data_along_route(data=self.data_1D_H, route=route) - self.get_data_along_route(data=self.data_2D_H, route=route)
+        diff = self.get_data_along_route(
+            data=self.data_1D_H, route=route
+        ) - self.get_data_along_route(data=self.data_2D_H, route=route)
 
-        axs[1].plot(diff.mean(axis=1), '-', linewidth=4, color='#c65387', label='Gemiddeld')
+        axs[1].plot(
+            diff.mean(axis=1), "-", linewidth=4, color="#c65387", label="Gemiddeld"
+        )
         axs[1].set_ylim(-1, 1)
         fig, lgd = PlotStyles.van_veen(fig, use_legend=[False, False])
         plt.tight_layout()
@@ -2334,35 +2337,37 @@ class Network1D:
 
     @property
     def structures(self):
-        return self._structures.sections.get('structure')
+        return self._structures.sections.get("structure")
 
-    def get_crosssection_on_branch(self, branch:str):
+    def get_crosssection_on_branch(self, branch: str):
         """
         Returns a generator that yields data on
-        location and definition for each cross-section 
-        on a branch. 
+        location and definition for each cross-section
+        on a branch.
 
         Arguments:
             Branch (str): name of branch
         """
-        for css in self._crosssectionlocations.sections['crosssection']:
-            if css.get('branchid').value==branch:
-                yield {'id':css.get('id').value, 
-                       'chainage':css.get('chainage').value, 
-                       'definition':self.get_crosssection_definition(css.get('id').value)}
+        for css in self._crosssectionlocations.sections["crosssection"]:
+            if css.get("branchid").value == branch:
+                yield {
+                    "id": css.get("id").value,
+                    "chainage": css.get("chainage").value,
+                    "definition": self.get_crosssection_definition(css.get("id").value),
+                }
 
-    def get_crosssection_definition(self, name:str) -> DeltaresSection:
+    def get_crosssection_definition(self, name: str) -> DeltaresSection:
         """
         Returns the definition of a cross-section
 
         Arguments
             name: name of the cross-section as defined in the configuration files
         """
-        for css in self._crosssectiondefinitions.sections['definition']:
-            if css.get('id').value==name:
+        for css in self._crosssectiondefinitions.sections["definition"]:
+            if css.get("id").value == name:
                 return css
 
-    def get_crosssection_rkm_on_branch(self, branch:str) -> np.ndarray:
+    def get_crosssection_rkm_on_branch(self, branch: str) -> np.ndarray:
         """
         Returns an array with each row a location on the branch and columns:
 
@@ -2373,14 +2378,14 @@ class Network1D:
         """
         css_info = []
         for css in self.get_crosssection_on_branch(branch):
-            chainage = css.get('chainage')
-            name = css['id']
+            chainage = css.get("chainage")
+            name = css["id"]
             rkm = self.chainage_to_rkm(branch, chainage)
             css_info.append((rkm, chainage, name))
 
         return np.array(css_info)
 
-    def get_maximum_width_for_branch(self, branch:str) -> np.ndarray:
+    def get_maximum_width_for_branch(self, branch: str) -> np.ndarray:
         """
         Returns an array with each row a location on the branch and columns:
 
@@ -2398,12 +2403,11 @@ class Network1D:
 
         return np.array(total_width)
 
-
-    def get_section_width_for_branch(self, branch:str) -> np.ndarray:
+    def get_section_width_for_branch(self, branch: str) -> np.ndarray:
         """
         Returns an array with each row a location on the branch and in the columns
-        the coordinate and width of the 'roughness sections': 
-        
+        the coordinate and width of the 'roughness sections':
+
         [river kilometre, main, floodplain1, floodplain2]
 
         Argument:
@@ -2420,11 +2424,11 @@ class Network1D:
             section_width.append((rkm, mw, f1w, f2w))
         return np.array(section_width)
 
-    def get_sd_for_branch(self, branch:str) -> np. ndarray:
+    def get_sd_for_branch(self, branch: str) -> np.ndarray:
         """
         Returns an array with each row a location on the branch and in the columns
         the coordinate and crest height of the summer dike
-        
+
         [river kilometre, crest height summer dike, total area behind summerdike]
 
         Argument:
@@ -2585,11 +2589,16 @@ class Network1D:
         Generates difference figures between two networks
         """
 
-
         fig, axs = plt.subplots(2, 3, figsize=(15, 7))
-        
-        variables = [("Bodemhoogte",0, 1), ("Breedte zomerbed", 1, 1), ("Zomerdijkhoogte", 2, 1), ("sd_total_volume", 2, 2), ("max_flow_width", 5, 2)] 
-        
+
+        variables = [
+            ("Bodemhoogte", 0, 1),
+            ("Breedte zomerbed", 1, 1),
+            ("Zomerdijkhoogte", 2, 1),
+            ("sd_total_volume", 2, 2),
+            ("max_flow_width", 5, 2),
+        ]
+
         # get data
         data_1 = None
         data_2 = None
@@ -2598,32 +2607,50 @@ class Network1D:
             if branchname.startswith(route):
                 data_1 = self._get_data_for_branch(branchname)  # bl1, tw1, cl1, l1
                 data_2 = network2._get_data_for_branch(branchname)
-                        
-        if (data_1 is None) or (data_2 is None): raise KeyError("no corresponding branches found for route in of the networks")
-        
+
+        if (data_1 is None) or (data_2 is None):
+            raise KeyError(
+                "no corresponding branches found for route in of the networks"
+            )
+
         # output to csv
-        output_file_csv = Path(output_file).with_suffix('.csv')
-        with open(output_file_csv, 'w') as f:
+        output_file_csv = Path(output_file).with_suffix(".csv")
+        with open(output_file_csv, "w") as f:
             # name, index of output from self._get_data_for_branch, index of column within that output
-            
+
             # write header
-            header = "css,rkm,"+",".join(f"{v[0]}_{self.name},{v[0]}_{network2.name},{v[0]}_diff" for v in variables)
-            f.write(header+"\n")
+            header = "css,rkm," + ",".join(
+                f"{v[0]}_{self.name},{v[0]}_{network2.name},{v[0]}_diff"
+                for v in variables
+            )
+            f.write(header + "\n")
 
             for i in range(data_1[0].shape[0]):
                 rkm = data_1[0][i][0]
                 info = (data_1[4][i][2], data_2[4][i][2])
                 f.write(f"{info[0]},{rkm}")
                 for v, j, k in variables:
-                    f.write(f",{data_1[j][i][k]},{data_2[j][i][k]},{data_1[j][i][k]-data_2[j][i][k]}")
+                    f.write(
+                        f",{data_1[j][i][k]},{data_2[j][i][k]},{data_1[j][i][k]-data_2[j][i][k]}"
+                    )
                 f.write("\n")
         # plot bedlevel
         for i, v in enumerate(variables[:3]):
             label = v[0]
-            hBed, = axs[0, i].plot(data_1[i][:,0], data_1[i][:,1], '-k', linewidth=2, label=self.name)
-            hBed, = axs[0, i].plot(data_2[i][:,0], data_2[i][:,1], '--b', linewidth=1, label=network2.name)
-        
-            hdiff, = axs[1, i].plot(data_2[i][:,0], data_1[i][:,1]-data_2[i][:,1], '--o', linewidth=2)
+            (hBed,) = axs[0, i].plot(
+                data_1[i][:, 0], data_1[i][:, 1], "-k", linewidth=2, label=self.name
+            )
+            (hBed,) = axs[0, i].plot(
+                data_2[i][:, 0],
+                data_2[i][:, 1],
+                "--b",
+                linewidth=1,
+                label=network2.name,
+            )
+
+            (hdiff,) = axs[1, i].plot(
+                data_2[i][:, 0], data_1[i][:, 1] - data_2[i][:, 1], "--o", linewidth=2
+            )
 
         PlotStyles.van_veen()
 
@@ -2631,10 +2658,10 @@ class Network1D:
         for ax in axs[0]:
             ax.set_xticklabels([])
         for ax in axs[1]:
-            ax.set_ylabel('Verschil [m]')
-            ax.set_xlabel('Rivierkilometer')
-        
-        suptitle_label = route[0] if len(route)==1 else '-'.join(route)
+            ax.set_ylabel("Verschil [m]")
+            ax.set_xlabel("Rivierkilometer")
+
+        suptitle_label = route[0] if len(route) == 1 else "-".join(route)
         suptitle = fig.suptitle(suptitle_label, y=1.05)
 
         plt.subplots_adjust(hspace=0)
@@ -2698,17 +2725,16 @@ class Network1D:
                     **arrow_in,
                 )
 
-
-    def _get_data_for_branch(self, branchname:str)->Tuple:
+    def _get_data_for_branch(self, branchname: str) -> Tuple:
         """
         Returns bedlevel, section_width, crest_summer_dike, length and css_info
-        in one tuple        
+        in one tuple
         """
         bedlevel = self.get_bedlevel_for_branch(branchname)
         section_width = self.get_section_width_for_branch(branchname)
         max_width = self.get_maximum_width_for_branch(branchname)
 
-        length  = self.get_branch_length(branchname)
+        length = self.get_branch_length(branchname)
         css_info = self.get_crosssection_rkm_on_branch(branchname)
 
         return bedlevel, section_width, crest_summer_dike, length, css_info, max_width
@@ -2721,7 +2747,7 @@ class Network1D:
         hObs = None
 
         bl, tw, cl, l, _, _ = self._get_data_for_branch(branchname)
-  
+
         # plot bedlevel
         (hBed,) = ax.plot(bl[:, 0], bl[:, 1], "-k", linewidth=2)
 
