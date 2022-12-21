@@ -30,3 +30,14 @@ FM2PROF currently works with the following model software systems and versions
 ## Getting started &  Documentation.
 You can find the documentation here: [https://deltares.github.io/fm2prof/](https://deltares.github.io/fm2prof/).
 
+## Development
+
+- We enforce [black](https://github.com/psf/black) formatting on push. So after pushing, pull to get the reformatted code, or do a black reformat locally. 
+- We use [commitizen tools](https://commitizen-tools.github.io/commitizen/bump/) to bump version. Version bump is done manually after a pull request. E.g. after a minor improvement:
+
+```bash
+# first do a dry run to test
+poetry run cz bump --increment MINOR --dry run
+# then for real
+poetry run cz bump --increment MINOR
+```
