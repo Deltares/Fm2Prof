@@ -76,3 +76,28 @@ class Test_GenerateCrossSectionLocationFile:
 
         # 4. verify
         assert output_file.is_file()
+
+
+    def test_given_branchrulefile_output_is_generated(self):
+        # 1. Set up initial test data
+        path_1d = TestUtils.get_local_test_file(
+            "cases/case_02_compound/Model_SOBEK/dimr/dflow1d/NetworkDefinition.ini"
+        )
+        output_file = TestUtils.get_local_test_file(
+            "cases/case_02_compound/Data/cross_section_locations.xyz"
+        )
+
+        branch_rule_file = TestUtils.get_local_test_file(
+            "cases/case_02_compound/Data/branchrules_onlyfirst.ini"
+        )
+        # 2. Set Expectations
+
+        # 3. Run test
+        GenerateCrossSectionLocationFile(
+            networkdefinitionfile=path_1d, crossectionlocationfile=output_file,
+            branchrulefile=branch_rule_file
+        )
+
+        # 4. verify
+        assert output_file.is_file()
+    
