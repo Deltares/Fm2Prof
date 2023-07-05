@@ -51,11 +51,9 @@ class GenerateCrossSectionLocationFile(FM2ProfBase):
 
     It supports an optional :ref:`branchRuleFile.
 
-    Use as a function, i.e.:
+    Use as a function i.e. this code will generate a cross-section location file:
 
     >>> GenerateCrossSectionLocationFile(**input)
-
-    generates cross-section location file.
 
     Parameters
 
@@ -64,6 +62,49 @@ class GenerateCrossSectionLocationFile(FM2ProfBase):
         crossectionlocationfile: path to the desired output file
 
         branchrulefile: OPTIONAL path to a branchrulefile
+
+    
+
+
+    branchrulefile
+    ^^^^^^^^^^^^^^
+    This file may be used to exclude certain computational points from being
+    used as the location of a cross-section. This is particularily useful
+    when smaller branches connect to a major branch. 
+
+    The branchrule file is a comma-seperates file with the following syntaxt:
+
+    .. code-block:: shell
+    
+        branch,rules
+
+    Here, `branch` is the name of the branch and `rules` are rules for exclusion 
+    
+    Supported general rules are:
+
+    - onlyFirst: only keep the first cross-section, and exclude all others
+    - onlyLast: only keep the last cross-section, and exclude all others
+    - onlyEdges: only keep the first and last cross-section, and exclude all others
+    - ignoreFirst: exclude the first cross-section on a branch
+    - ignoreLast: exclude the last cross-section on a branch
+    - ignoreEdges: exclude the first and last cross-section on a branch
+
+    Additionally, specific cross-sections can be excluded by id. For example:
+
+
+    .. code-block:: shell
+    
+        Channel1, channel_1_350.000
+
+    In this case, the computational point with name `channel_1_350.000` will 
+    not be used as the location of a cross-section. 
+
+    Rules and individual exclusions can be mixed, e.g.:
+
+    .. code-block:: shell
+    
+        Channel1, ignoreLast, channel_1_350.000
+
     """
 
     def __init__(
@@ -254,8 +295,8 @@ class GenerateCrossSectionLocationFile(FM2ProfBase):
 
         return x, y, cid, cdis, bid, coff
 
-    def _applyBranchRules(self, rule, x, y, cid, cdis, bid, coff):
-        # bfunc: what points to pop
+    def _applyBranchRules(self, rule:str, x:float, y:float, cid:float, cdis:float, bid:str, coff:float):
+        # bfunc: what points to pop (remove from list)
         bfunc = {
             "onlyedges": lambda x: [
                 x[0],
@@ -265,9 +306,9 @@ class GenerateCrossSectionLocationFile(FM2ProfBase):
                 1:-1
             ],  # keep everything except 2 css on either end of the branch
             "ignorelast": lambda x: x[:-1],  # keep everything except last css on branch
-            "ignorefirst": lambda x: x[
-                1:
-            ],  # keep everything except first css on branch
+            "ignorefirst": lambda x: x[1:],  # keep everything except first css on branch
+            "onlyfirst": lambda x: [x[0]], # keep only the first css on branch
+            "onlylast": lambda x: [x[-1]] # keep only the last css on branch
         }
         # disfunc: how to modify lengths
         disfunc = {
@@ -275,6 +316,8 @@ class GenerateCrossSectionLocationFile(FM2ProfBase):
             "ignoreedges": lambda x: [sum(x[:2]), *x[2:-2], sum(x[-2:])],
             "ignorelast": lambda x: [*x[:-2], sum(x[-2:])],
             "ignorefirst": lambda x: [sum(x[:2]), *x[2:]],
+            "onlyfirst": lambda x: [sum(x)],
+            "onlylast": lambda x: [sum(x)],
         }
 
         try:
