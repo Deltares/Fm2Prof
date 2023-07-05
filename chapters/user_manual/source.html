@@ -2603,17 +2603,43 @@ example output figure</span><a class="headerlink" href="#id8" title="Permalink t
 <p>The distance between cross-section is computed from the differences between the offsets/chainages.
 The beginning and end point of each branch are treated as half-distance control volumes.</p>
 <p>It supports an optional :ref:<a href="#id1"><span class="problematic" id="id2">`</span></a>branchRuleFile.</p>
-<p>Use as a function, i.e.:</p>
+<p>Use as a function i.e. this code will generate a cross-section location file:</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">GenerateCrossSectionLocationFile</span><span class="p">(</span><span class="o">**</span><span class="nb">input</span><span class="p">)</span>
 </code></pre></div>
 </div>
-<p>generates cross-section location file.</p>
 <p>Parameters</p>
 <blockquote>
 <div><p>networkdefinitionfile: path to NetworkDefinitionFile.ini</p>
 <p>crossectionlocationfile: path to the desired output file</p>
 <p>branchrulefile: OPTIONAL path to a branchrulefile</p>
 </div></blockquote>
+<p>This file may be used to exclude certain computational points from being
+used as the location of a cross-section. This is particularily useful
+when smaller branches connect to a major branch.</p>
+<p>The branchrule file is a comma-seperates file with the following syntaxt:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><code>branch,rules
+</code></pre></div>
+</div>
+<p>Here, <code class="xref any docutils literal notranslate"><span class="pre">branch</span></code> is the name of the branch and <code class="xref any docutils literal notranslate"><span class="pre">rules</span></code> are rules for exclusion</p>
+<p>Supported general rules are:</p>
+<ul class="simple">
+<li><p>onlyFirst: only keep the first cross-section, and exclude all others</p></li>
+<li><p>onlyLast: only keep the last cross-section, and exclude all others</p></li>
+<li><p>onlyEdges: only keep the first and last cross-section, and exclude all others</p></li>
+<li><p>ignoreFirst: exclude the first cross-section on a branch</p></li>
+<li><p>ignoreLast: exclude the last cross-section on a branch</p></li>
+<li><p>ignoreEdges: exclude the first and last cross-section on a branch</p></li>
+</ul>
+<p>Additionally, specific cross-sections can be excluded by id. For example:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><code>Channel1, channel_1_350.000
+</code></pre></div>
+</div>
+<p>In this case, the computational point with name <code class="xref any docutils literal notranslate"><span class="pre">channel_1_350.000</span></code> will
+not be used as the location of a cross-section.</p>
+<p>Rules and individual exclusions can be mixed, e.g.:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><code>Channel1, ignoreLast, channel_1_350.000
+</code></pre></div>
+</div>
 </dd></dl>
 
 <dl class="py class objdesc">
@@ -2843,7 +2869,7 @@ output to output directory of project</p>
   <small>
     
       Last update:
-      Dec 21, 2022
+      Jul 05, 2023
     
   </small>
 </div>

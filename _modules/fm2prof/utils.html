@@ -583,11 +583,9 @@
 
 <span class="sd">    It supports an optional :ref:`branchRuleFile.</span>
 
-<span class="sd">    Use as a function, i.e.:</span>
+<span class="sd">    Use as a function i.e. this code will generate a cross-section location file:</span>
 
 <span class="sd">    &gt;&gt;&gt; GenerateCrossSectionLocationFile(**input)</span>
-
-<span class="sd">    generates cross-section location file.</span>
 
 <span class="sd">    Parameters</span>
 
@@ -596,6 +594,49 @@
 <span class="sd">        crossectionlocationfile: path to the desired output file</span>
 
 <span class="sd">        branchrulefile: OPTIONAL path to a branchrulefile</span>
+
+<span class="sd">    </span>
+
+
+<span class="sd">    branchrulefile</span>
+<span class="sd">    ^^^^^^^^^^^^^^</span>
+<span class="sd">    This file may be used to exclude certain computational points from being</span>
+<span class="sd">    used as the location of a cross-section. This is particularily useful</span>
+<span class="sd">    when smaller branches connect to a major branch. </span>
+
+<span class="sd">    The branchrule file is a comma-seperates file with the following syntaxt:</span>
+
+<span class="sd">    .. code-block:: shell</span>
+<span class="sd">    </span>
+<span class="sd">        branch,rules</span>
+
+<span class="sd">    Here, `branch` is the name of the branch and `rules` are rules for exclusion </span>
+<span class="sd">    </span>
+<span class="sd">    Supported general rules are:</span>
+
+<span class="sd">    - onlyFirst: only keep the first cross-section, and exclude all others</span>
+<span class="sd">    - onlyLast: only keep the last cross-section, and exclude all others</span>
+<span class="sd">    - onlyEdges: only keep the first and last cross-section, and exclude all others</span>
+<span class="sd">    - ignoreFirst: exclude the first cross-section on a branch</span>
+<span class="sd">    - ignoreLast: exclude the last cross-section on a branch</span>
+<span class="sd">    - ignoreEdges: exclude the first and last cross-section on a branch</span>
+
+<span class="sd">    Additionally, specific cross-sections can be excluded by id. For example:</span>
+
+
+<span class="sd">    .. code-block:: shell</span>
+<span class="sd">    </span>
+<span class="sd">        Channel1, channel_1_350.000</span>
+
+<span class="sd">    In this case, the computational point with name `channel_1_350.000` will </span>
+<span class="sd">    not be used as the location of a cross-section. </span>
+
+<span class="sd">    Rules and individual exclusions can be mixed, e.g.:</span>
+
+<span class="sd">    .. code-block:: shell</span>
+<span class="sd">    </span>
+<span class="sd">        Channel1, ignoreLast, channel_1_350.000</span>
+
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
@@ -786,8 +827,8 @@
 
         <span class="k">return</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">cid</span><span class="p">,</span> <span class="n">cdis</span><span class="p">,</span> <span class="n">bid</span><span class="p">,</span> <span class="n">coff</span>
 
-    <span class="k">def</span> <span class="nf">_applyBranchRules</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rule</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">cid</span><span class="p">,</span> <span class="n">cdis</span><span class="p">,</span> <span class="n">bid</span><span class="p">,</span> <span class="n">coff</span><span class="p">):</span>
-        <span class="c1"># bfunc: what points to pop</span>
+    <span class="k">def</span> <span class="nf">_applyBranchRules</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rule</span><span class="p">:</span><span class="nb">str</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span><span class="nb">float</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span><span class="nb">float</span><span class="p">,</span> <span class="n">cid</span><span class="p">:</span><span class="nb">float</span><span class="p">,</span> <span class="n">cdis</span><span class="p">:</span><span class="nb">float</span><span class="p">,</span> <span class="n">bid</span><span class="p">:</span><span class="nb">str</span><span class="p">,</span> <span class="n">coff</span><span class="p">:</span><span class="nb">float</span><span class="p">):</span>
+        <span class="c1"># bfunc: what points to pop (remove from list)</span>
         <span class="n">bfunc</span> <span class="o">=</span> <span class="p">{</span>
             <span class="s2">&quot;onlyedges&quot;</span><span class="p">:</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="p">[</span>
                 <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
@@ -797,9 +838,9 @@
                 <span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span>
             <span class="p">],</span>  <span class="c1"># keep everything except 2 css on either end of the branch</span>
             <span class="s2">&quot;ignorelast&quot;</span><span class="p">:</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span>  <span class="c1"># keep everything except last css on branch</span>
-            <span class="s2">&quot;ignorefirst&quot;</span><span class="p">:</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[</span>
-                <span class="mi">1</span><span class="p">:</span>
-            <span class="p">],</span>  <span class="c1"># keep everything except first css on branch</span>
+            <span class="s2">&quot;ignorefirst&quot;</span><span class="p">:</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span>  <span class="c1"># keep everything except first css on branch</span>
+            <span class="s2">&quot;onlyfirst&quot;</span><span class="p">:</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="p">[</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]],</span> <span class="c1"># keep only the first css on branch</span>
+            <span class="s2">&quot;onlylast&quot;</span><span class="p">:</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="p">[</span><span class="n">x</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]]</span> <span class="c1"># keep only the last css on branch</span>
         <span class="p">}</span>
         <span class="c1"># disfunc: how to modify lengths</span>
         <span class="n">disfunc</span> <span class="o">=</span> <span class="p">{</span>
@@ -807,6 +848,8 @@
             <span class="s2">&quot;ignoreedges&quot;</span><span class="p">:</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="p">[</span><span class="nb">sum</span><span class="p">(</span><span class="n">x</span><span class="p">[:</span><span class="mi">2</span><span class="p">]),</span> <span class="o">*</span><span class="n">x</span><span class="p">[</span><span class="mi">2</span><span class="p">:</span><span class="o">-</span><span class="mi">2</span><span class="p">],</span> <span class="nb">sum</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">:])],</span>
             <span class="s2">&quot;ignorelast&quot;</span><span class="p">:</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="p">[</span><span class="o">*</span><span class="n">x</span><span class="p">[:</span><span class="o">-</span><span class="mi">2</span><span class="p">],</span> <span class="nb">sum</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">:])],</span>
             <span class="s2">&quot;ignorefirst&quot;</span><span class="p">:</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="p">[</span><span class="nb">sum</span><span class="p">(</span><span class="n">x</span><span class="p">[:</span><span class="mi">2</span><span class="p">]),</span> <span class="o">*</span><span class="n">x</span><span class="p">[</span><span class="mi">2</span><span class="p">:]],</span>
+            <span class="s2">&quot;onlyfirst&quot;</span><span class="p">:</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="p">[</span><span class="nb">sum</span><span class="p">(</span><span class="n">x</span><span class="p">)],</span>
+            <span class="s2">&quot;onlylast&quot;</span><span class="p">:</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="p">[</span><span class="nb">sum</span><span class="p">(</span><span class="n">x</span><span class="p">)],</span>
         <span class="p">}</span>
 
         <span class="k">try</span><span class="p">:</span>
@@ -3437,7 +3480,7 @@
   <small>
     
       Last update:
-      Dec 21, 2022
+      Jul 05, 2023
     
   </small>
 </div>
