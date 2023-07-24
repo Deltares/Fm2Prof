@@ -23,8 +23,15 @@ from fm2prof.IniFile import IniFile
 from fm2prof.MaskOutputFile import MaskOutputFile
 from fm2prof.RegionPolygonFile import RegionPolygonFile, SectionPolygonFile
 
+class InitializationError(Exception):
+    pass
 
 class Fm2ProfRunner(FM2ProfBase):
+    __map_key = "2DMapOutput"
+    __css_key = "CrossSectionLocationFile"
+    __key_frictionweighingmethod = "FrictionweighingMethod"
+    __key_skipmaps = "SkipMaps"
+
     """
     Main class that executes all functionality.
 
@@ -127,9 +134,15 @@ class Fm2ProfRunner(FM2ProfBase):
             self.set_logger_message(line, header=True)
 
     def _run_inifile(self) -> None:
-        """Runs the desired emulation from 2d to 1d given the mapfile
-            and the cross section file.
+        """
+        Executes main program from the configuration file. 
 
+        The main steps in the program are:
+        
+        1. Initialize fm2prof
+        2. Generate cross-sections
+        3. Finalization
+        
         Arguments:
             iniFile {IniFile}
                 -- Object containing all the information
@@ -140,6 +153,8 @@ class Fm2ProfRunner(FM2ProfBase):
         self.start_new_log_task("Initialising FM2PROF")
         try:
             self._initialise_fm2prof()
+        except InitializationError:
+            return False
         except:
             self.set_logger_message(
                 "Unexpected exception during initialisation", "error"
@@ -184,23 +199,23 @@ class Fm2ProfRunner(FM2ProfBase):
 
     def _initialise_fm2prof(self) -> None:
         """
+        
         Loads data, inifile
         """
-        iniFile = self.get_inifile()
-        map_key = "2DMapOutput"
-        css_key = "CrossSectionLocationFile"
-        raiseFileNotFoundError = False
+
+        iniFile: IniFile = self.get_inifile()
+        raiseFileNotFoundError: bool = False
 
         # shorter local variables
-        map_file = iniFile.get_input_file(map_key)
-        css_file = iniFile.get_input_file(css_key)
+        map_file = iniFile.get_input_file(self.__map_key)
+        css_file = iniFile.get_input_file(self.__css_key)
         region_file = iniFile.get_input_file("RegionPolygonFile")
         section_file = iniFile.get_input_file("SectionPolygonFile")
         output_dir = iniFile.get_output_directory()
 
         # Read region & section polygon
-        regions = None
-        sections = None
+        regions: RegionPolygonFile = None
+        sections: SectionPolygonFile = None
 
         if region_file:
             regions = RegionPolygonFile(region_file, logger=self.get_logger())
@@ -208,19 +223,19 @@ class Fm2ProfRunner(FM2ProfBase):
         if bool(section_file):
             sections = SectionPolygonFile(section_file, logger=self.get_logger())
 
-        # Check if input exists
+        # Check if mandatory input exists
         if not Path(map_file).is_file():
             self.set_logger_message(
-                f"File for {map_key} not found at {map_file}", "warning"
+                f"File for {self.__map_key} not found at {map_file}", "error"
             )
             raiseFileNotFoundError = True
         if not Path(css_file).is_file():
             self.set_logger_message(
-                f"File for {css_key} not found at {css_file}", "warning"
+                f"File for {self.__css_key} not found at {css_file}", "error"
             )
             raiseFileNotFoundError = True
         if raiseFileNotFoundError:
-            raise FileNotFoundError
+            raise InitializationError
 
         # Read FM model data
         fm2prof_fm_model_data = self._set_fm_model_data(
@@ -228,9 +243,16 @@ class Fm2ProfRunner(FM2ProfBase):
         )
         self.fm_model_data = FmModelData(fm2prof_fm_model_data)
 
-        ntsteps = self.fm_model_data.time_dependent_data.get("waterlevel").shape[1]
-        nfaces = self.fm_model_data.time_dependent_data.get("waterlevel").shape[0]
-        nedges = self.fm_model_data.edge_data.get("x").shape[0]
+        # Validate config file
+        success:bool = self._validate_config_after_initalization()
+        if not success:
+            self.set_logger_message("Validation of configuration file not successful. Check the log to fix errors.", "error")
+            raise InitializationError
+        
+        # print goodbye
+        ntsteps: int = self.fm_model_data.time_dependent_data.get("waterlevel").shape[1]
+        nfaces: int = self.fm_model_data.time_dependent_data.get("waterlevel").shape[0]
+        nedges: int = self.fm_model_data.edge_data.get("x").shape[0]
         self.set_logger_message("finished reading FM and cross-sectional data data")
         self.set_logger_message(
             "Number of: timesteps ({}), ".format(ntsteps)
@@ -238,9 +260,35 @@ class Fm2ProfRunner(FM2ProfBase):
             + "edges ({})".format(nedges),
             level="debug",
         )
-        # check if edge/face data is available
+        
+        return success
+
+    def _validate_config_after_initalization(self) -> bool:
+        """
+        Performs validation checks on config file. Returns 
+        True if all checks succesfull, False if check fails. 
+        """
+        success:bool = True
+
+        self.set_logger_message("Validating settings", "Info")
+
+        # Check if skipmaps is lower than maximum amount of maps
+        nsteps:int = self.fm_model_data.time_dependent_data.get("waterlevel").shape[1]
+        skipmap:int = self.get_inifile().get_parameter(self.__key_skipmaps)
+
+        if skipmap >= nsteps:
+            self.set_logger_message(f"""You are attempting to skip more than  available timesteps.
+({self.__key_skipmaps} = {skipmap}, available maps in output file: {nsteps}). Modify the value of {self.__key_skipmaps}
+your configuration file to fix this error.""", level="error")
+            success = False
+        elif skipmap > nsteps/2:
+            self.set_logger_message(f"""You are skipping more than half of available timesteps.
+({self.__key_skipmaps} = {skipmap}, available maps in output file: {nsteps})""", level="warning")
+            
+
+        # Check if edge/face data is available
         if "edge_faces" not in self.fm_model_data.edge_data:
-            if iniFile.get_parameter("FrictionweighingMethod") == 1:
+            if self.get_inifile().get_parameter(self.__key_frictionweighingmethod) == 1:
                 self.set_logger_message(
                     "Friction weighing set to 1 (area-weighted average"
                     + "but FM map file does contain the *edge_faces* keyword."
@@ -249,6 +297,8 @@ class Fm2ProfRunner(FM2ProfBase):
                     level="warning",
                 )
 
+        return success
+    
     def _finalise_fm2prof(self, cross_sections: List) -> None:
         """
         Write to output, perform checks
@@ -660,7 +710,7 @@ class Fm2ProfRunner(FM2ProfBase):
             raise Exception(
                 "No FM data given for new cross section {}".format(css_name)
             )
-
+        
         # Create cross section
         created_css = self._get_new_cross_section(css_data=css_data)
 
@@ -692,7 +742,7 @@ class Fm2ProfRunner(FM2ProfBase):
         self, cross_section: CrossSection
     ) -> CrossSection:
         """
-        This method manages the options of buildling the cross-section geometry
+        This method manages the options of building the cross-section geometry
 
         Parameters:
             cross_section {CrossSection}
@@ -701,7 +751,6 @@ class Fm2ProfRunner(FM2ProfBase):
 
         if cross_section is None:
             return
-        css_name = cross_section.name
 
         # Build cross-section
         self.set_logger_message("Start building geometry", "debug")
