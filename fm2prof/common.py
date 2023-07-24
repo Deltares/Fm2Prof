@@ -57,6 +57,7 @@ class ElapsedFormatter:
             "DEBUG": [Back.CYAN, Fore.CYAN],
             "WARNING": [Back.YELLOW + Fore.BLACK, Fore.YELLOW],
             "ERROR": [Back.RED, Fore.RED],
+            "CRITICAL": [Back.GREEN, Fore.GREEN],
         }
 
         colorama.init()
@@ -83,9 +84,6 @@ class ElapsedFormatter:
             return self.__format_message(record)
 
     def __format_intro(self, record: LogRecord):
-        level = record.levelname
-        # color = self._colors[level]
-        # reset = self._colors["RESET"]
         return f"{record.getMessage()}"
 
     def __format_header(self, record: LogRecord):
@@ -244,7 +242,7 @@ class FM2ProfBase:
             self.__logger.warning(err_mssg)
         elif level.lower() == "error":
             self.__logger.error(err_mssg)
-        elif level.lower() == "critical":
+        elif level.lower() in ["succes", "critical"]:
             self.__logger.critical(err_mssg)
 
     def start_new_log_task(
