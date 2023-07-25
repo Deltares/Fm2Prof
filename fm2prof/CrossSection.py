@@ -1,15 +1,13 @@
 ﻿"""
 Contains CrossSection class
 """
-import logging
 import math
-import os
-from datetime import datetime, timedelta
-from functools import reduce
 from logging import Logger
-from time import time
-from typing import Mapping, Sequence
+from typing import List
+import traceback
+from functools import reduce 
 
+from tqdm import tqdm
 import numpy as np
 import pandas as pd
 import scipy.optimize as so
@@ -24,6 +22,76 @@ from fm2prof.MaskOutputFile import MaskOutputFile
 from .lib import polysimplify as PS
 
 pd.options.mode.chained_assignment = None  # default='warn'
+
+class CrossSectionHelpers(FM2ProfBase):
+    """
+    Collection of function(s) to help with post-processing of cross-sections.
+    Wrapped in a class to provide access to the shared logger. 
+    """
+    _friction_zstep = 0.1
+
+    def __init__(self, logger=None, inifile=None):
+        super().__init__(logger=logger, inifile=inifile)
+
+    
+    def interpolate_friction_across_cross_sections(self, cross_section_list: List['CrossSection']) -> bool:
+        """
+        Creates a uniform matrix of z/chezy values for all cross-sections by linear interpolation.
+
+        This function loops over a list of cross-sections, determines the minimim and maximum values,
+        and uses the `CrossSection.friction_tables` DataFrame to interpolate towards those values. 
+
+        .. warning::
+            The function modifies the input!
+        
+        outputs TRUE if succesful, FALSE if not. Does not raise exception. 
+
+        """
+        try:
+            return self._interpolate_friction_across_cross_sections(cross_section_list)
+        except Exception:
+            self.set_logger_message("There was an error while making friction tables", "error")
+            for line in traceback.format_exc().splitlines():
+                self.set_logger_message(line, "debug")
+            return False
+
+    def _interpolate_friction_across_cross_sections(self, cross_section_list: List['CrossSection']) -> bool:
+        """ Private function """
+
+        # Get a list of all sections
+        all_sections: List[str] = [s for css in cross_section_list for s in css.friction_tables.keys()]
+        sections: np.ndarray[str] = np.unique(all_sections)
+
+
+        # Parameters
+        zstep: float = 0.1  # Interpolate friction every 10 cm TODO: make this parameter configurable
+        
+        for section in sections:
+            minimal_z: float = 1e20  # Arbitrary large number. Will be overwritten
+            maximal_z: float = -1e20 # Arbitrary small number. Will be overwritten
+            
+            self.set_logger_message(f"Building friction table for {section}")
+
+            # Find min & max level 
+            
+            for css in cross_section_list:
+                if section in list(css.friction_tables.keys()):
+                    minimal_z = np.min(
+                        [minimal_z, np.min(css.friction_tables.get(section).level)]
+                    )
+                    maximal_z = np.max(
+                        [maximal_z, np.max(css.friction_tables.get(section).level)]
+                    )
+            # interpolate each cross-section to min-max level
+            pbar = tqdm(total=len(cross_section_list))
+            for css in cross_section_list:
+                if section in list(css.friction_tables.keys()):
+                    minmaxrange = np.arange(minimal_z, maximal_z, zstep)
+                    css.friction_tables.get(section).interpolate(minmaxrange)
+                
+                pbar.update(1)
+
+        return True
 
 
 class CrossSection(FM2ProfBase):

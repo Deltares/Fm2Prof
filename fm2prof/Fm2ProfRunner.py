@@ -16,7 +16,7 @@ from scipy.spatial import ConvexHull
 from fm2prof import Functions as FE
 from fm2prof import __version__
 from fm2prof.common import FM2ProfBase
-from fm2prof.CrossSection import CrossSection
+from fm2prof.CrossSection import CrossSection, CrossSectionHelpers
 from fm2prof.Export import Export1DModelData, OutputFiles
 from fm2prof.Import import FMDataImporter, FmModelData, ImportInputFiles
 from fm2prof.IniFile import IniFile
@@ -304,7 +304,7 @@ your configuration file to fix this error.""", level="error")
         Write to output, perform checks
         """
         self.set_logger_message("Interpolating roughness")
-        FE.interpolate_roughness(cross_sections)
+        CrossSectionHelpers().interpolate_friction_across_cross_sections(cross_sections)
 
         # Export cross sections
         output_dir = self.get_inifile().get_output_directory()
