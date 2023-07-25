@@ -169,34 +169,6 @@ def get_centre_values(location, x, y, waterdepth, waterlevel):
     return centre_depth[0], centre_level[0]
 
 
-def interpolate_roughness(cross_section_list):
-    """
-    Creates a uniform matrix of z/chezy values for all cross-sections by linear interpolation
-    """
-    all_sections = [s for css in cross_section_list for s in css.friction_tables.keys()]
-
-    sections = np.unique(all_sections)
-
-    zstep = 0.1
-
-    for section in sections:
-        minimal_z = 1e20
-        maximal_z = -1e20
-        for css in cross_section_list:
-            if section in list(css.friction_tables.keys()):
-                minimal_z = np.min(
-                    [minimal_z, np.min(css.friction_tables.get(section).level)]
-                )
-                maximal_z = np.max(
-                    [maximal_z, np.max(css.friction_tables.get(section).level)]
-                )
-
-        for css in cross_section_list:
-            if section in list(css.friction_tables.keys()):
-                minmaxrange = np.arange(minimal_z, maximal_z, zstep)
-                css.friction_tables.get(section).interpolate(minmaxrange)
-
-
 def empirical_ppf(qs, p, val=None, single_value=False):
     """
     Constructs empirical cdf, then draws quantile by linear interpolation
