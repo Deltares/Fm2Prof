@@ -1447,14 +1447,14 @@ class ModelOutputReader(FM2ProfBase):
 
             with Dataset(self._path_flow2d) as f:
 
-                print("loading 2D data")
+                self.set_logger_message(f"loading 2D data for {map_key}")
                 station_map = pd.read_csv(self.file_1D2D_map, index_col=0)
                 qnames = self._parse_names(f.variables[nkey][:])
                 qdata = f.variables[dkey][:]
 
                 time = self._parse_time(f.variables["time"])
                 df = pd.DataFrame(columns=station_map.index, index=time)
-                print("Matching 1D and 2D data")
+                self.set_logger_message("Matching 1D and 2D data")
                 for index, station in tqdm.tqdm(
                     station_map.iterrows(), total=len(station_map.index)
                 ):
@@ -1581,6 +1581,7 @@ class Compare1D2D(ModelOutputReader):
             self.set_logger_message(f'2D netCDF file does not exist or is not provided. Input found: {path_2d}.', 'debug')
 
         self.routes = routes
+        self.statistics = None
         self._data_1D_H: pd.DataFrame = None
         self._data_2D_H: pd.DataFrame = None
         self._data_1D_H_digitized: pd.DataFrame = None
@@ -1597,7 +1598,7 @@ class Compare1D2D(ModelOutputReader):
 
         self.read_all_data()
         self.digitize_data()
-        self.statistics = self._compute_statistics()
+        
         # create output folder
         output_dirs = [
             "figures/longitudinal",
@@ -1736,6 +1737,26 @@ class Compare1D2D(ModelOutputReader):
         return sorted_stations, sorted_rkms, lmw_stations
 
     def statistics_to_file(self, file_path: str = "error_statistics") -> None:
+        """
+        Creates and output a file `error_statistics.csv', which is a
+        comma-seperated file with the following columns:
+
+        ,bias,rkm,branch,is_lmw,std,mae
+
+        with for each station:
+        
+        - bias = bias, mean error
+        - rkm = river kilometer of the station
+        - branch = name of 1D branch on which the station lies
+        - is_lmw = if "LMW" is in the name of station, True. 
+        - std = standard deviation of the rror
+        - mae = mean absolute error of the error
+
+        """
+
+        if self.statistics == None:
+            self.statistics = self._compute_statistics()
+
         statfile = self.output_path.joinpath(file_path).with_suffix(".csv")
         sumfile = self.output_path.joinpath(file_path + "_summary").with_suffix(".csv")
 
@@ -1865,6 +1886,8 @@ class Compare1D2D(ModelOutputReader):
         return stats
 
     def _get_statistics(self, station):
+        if self.statistics is None:
+            self.statistics = self._compute_statistics()
         return self.statistics.loc[station]
 
     def figure_compare_discharge_at_stations(
