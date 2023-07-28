@@ -533,15 +533,13 @@
 <span></span><code><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">Contains CrossSection class</span>
 <span class="sd">&quot;&quot;&quot;</span>
-<span class="kn">import</span> <span class="nn">logging</span>
 <span class="kn">import</span> <span class="nn">math</span>
-<span class="kn">import</span> <span class="nn">os</span>
-<span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">datetime</span><span class="p">,</span> <span class="n">timedelta</span>
-<span class="kn">from</span> <span class="nn">functools</span> <span class="kn">import</span> <span class="n">reduce</span>
 <span class="kn">from</span> <span class="nn">logging</span> <span class="kn">import</span> <span class="n">Logger</span>
-<span class="kn">from</span> <span class="nn">time</span> <span class="kn">import</span> <span class="n">time</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Mapping</span><span class="p">,</span> <span class="n">Sequence</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span>
+<span class="kn">import</span> <span class="nn">traceback</span>
+<span class="kn">from</span> <span class="nn">functools</span> <span class="kn">import</span> <span class="n">reduce</span> 
 
+<span class="kn">from</span> <span class="nn">tqdm</span> <span class="kn">import</span> <span class="n">tqdm</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
 <span class="kn">import</span> <span class="nn">scipy.optimize</span> <span class="k">as</span> <span class="nn">so</span>
@@ -556,6 +554,76 @@
 <span class="kn">from</span> <span class="nn">.lib</span> <span class="kn">import</span> <span class="n">polysimplify</span> <span class="k">as</span> <span class="n">PS</span>
 
 <span class="n">pd</span><span class="o">.</span><span class="n">options</span><span class="o">.</span><span class="n">mode</span><span class="o">.</span><span class="n">chained_assignment</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># default=&#39;warn&#39;</span>
+
+<span class="k">class</span> <span class="nc">CrossSectionHelpers</span><span class="p">(</span><span class="n">FM2ProfBase</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Collection of function(s) to help with post-processing of cross-sections.</span>
+<span class="sd">    Wrapped in a class to provide access to the shared logger. </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_friction_zstep</span> <span class="o">=</span> <span class="mf">0.1</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">inifile</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">logger</span><span class="o">=</span><span class="n">logger</span><span class="p">,</span> <span class="n">inifile</span><span class="o">=</span><span class="n">inifile</span><span class="p">)</span>
+
+    
+    <span class="k">def</span> <span class="nf">interpolate_friction_across_cross_sections</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cross_section_list</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="s1">&#39;CrossSection&#39;</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Creates a uniform matrix of z/chezy values for all cross-sections by linear interpolation.</span>
+
+<span class="sd">        This function loops over a list of cross-sections, determines the minimim and maximum values,</span>
+<span class="sd">        and uses the `CrossSection.friction_tables` DataFrame to interpolate towards those values. </span>
+
+<span class="sd">        .. warning::</span>
+<span class="sd">            The function modifies the input!</span>
+<span class="sd">        </span>
+<span class="sd">        outputs TRUE if succesful, FALSE if not. Does not raise exception. </span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_interpolate_friction_across_cross_sections</span><span class="p">(</span><span class="n">cross_section_list</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">set_logger_message</span><span class="p">(</span><span class="s2">&quot;There was an error while making friction tables&quot;</span><span class="p">,</span> <span class="s2">&quot;error&quot;</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">traceback</span><span class="o">.</span><span class="n">format_exc</span><span class="p">()</span><span class="o">.</span><span class="n">splitlines</span><span class="p">():</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">set_logger_message</span><span class="p">(</span><span class="n">line</span><span class="p">,</span> <span class="s2">&quot;debug&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="k">def</span> <span class="nf">_interpolate_friction_across_cross_sections</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cross_section_list</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="s1">&#39;CrossSection&#39;</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot; Private function &quot;&quot;&quot;</span>
+
+        <span class="c1"># Get a list of all sections</span>
+        <span class="n">all_sections</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">s</span> <span class="k">for</span> <span class="n">css</span> <span class="ow">in</span> <span class="n">cross_section_list</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">css</span><span class="o">.</span><span class="n">friction_tables</span><span class="o">.</span><span class="n">keys</span><span class="p">()]</span>
+        <span class="n">sections</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">all_sections</span><span class="p">)</span>
+
+
+        <span class="c1"># Parameters</span>
+        <span class="n">zstep</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.1</span>  <span class="c1"># Interpolate friction every 10 cm TODO: make this parameter configurable</span>
+        
+        <span class="k">for</span> <span class="n">section</span> <span class="ow">in</span> <span class="n">sections</span><span class="p">:</span>
+            <span class="n">minimal_z</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e20</span>  <span class="c1"># Arbitrary large number. Will be overwritten</span>
+            <span class="n">maximal_z</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="o">-</span><span class="mf">1e20</span> <span class="c1"># Arbitrary small number. Will be overwritten</span>
+            
+            <span class="bp">self</span><span class="o">.</span><span class="n">set_logger_message</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Building friction table for </span><span class="si">{</span><span class="n">section</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+            <span class="c1"># Find min &amp; max level </span>
+            
+            <span class="k">for</span> <span class="n">css</span> <span class="ow">in</span> <span class="n">cross_section_list</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">section</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">css</span><span class="o">.</span><span class="n">friction_tables</span><span class="o">.</span><span class="n">keys</span><span class="p">()):</span>
+                    <span class="n">minimal_z</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span>
+                        <span class="p">[</span><span class="n">minimal_z</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">css</span><span class="o">.</span><span class="n">friction_tables</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">section</span><span class="p">)</span><span class="o">.</span><span class="n">level</span><span class="p">)]</span>
+                    <span class="p">)</span>
+                    <span class="n">maximal_z</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span>
+                        <span class="p">[</span><span class="n">maximal_z</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">css</span><span class="o">.</span><span class="n">friction_tables</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">section</span><span class="p">)</span><span class="o">.</span><span class="n">level</span><span class="p">)]</span>
+                    <span class="p">)</span>
+            <span class="c1"># interpolate each cross-section to min-max level</span>
+            <span class="n">pbar</span> <span class="o">=</span> <span class="n">tqdm</span><span class="p">(</span><span class="n">total</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">cross_section_list</span><span class="p">))</span>
+            <span class="k">for</span> <span class="n">css</span> <span class="ow">in</span> <span class="n">cross_section_list</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">section</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">css</span><span class="o">.</span><span class="n">friction_tables</span><span class="o">.</span><span class="n">keys</span><span class="p">()):</span>
+                    <span class="n">minmaxrange</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">minimal_z</span><span class="p">,</span> <span class="n">maximal_z</span><span class="p">,</span> <span class="n">zstep</span><span class="p">)</span>
+                    <span class="n">css</span><span class="o">.</span><span class="n">friction_tables</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">section</span><span class="p">)</span><span class="o">.</span><span class="n">interpolate</span><span class="p">(</span><span class="n">minmaxrange</span><span class="p">)</span>
+                
+                <span class="n">pbar</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="kc">True</span>
 
 
 <span class="k">class</span> <span class="nc">CrossSection</span><span class="p">(</span><span class="n">FM2ProfBase</span><span class="p">):</span>
@@ -1983,7 +2051,7 @@
   <small>
     
       Last update:
-      Jul 05, 2023
+      Jul 28, 2023
     
   </small>
 </div>

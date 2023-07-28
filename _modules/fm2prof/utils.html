@@ -862,18 +862,23 @@
                 <span class="s2">&quot;error&quot;</span><span class="p">,</span>
             <span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_parseBranchRuleFile</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">branchrulefile</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="n">delimiter</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;,&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">_parseBranchRuleFile</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">branchrulefile</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="n">delimiter</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;,&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Parses the branchrule file which is a delimited file (comma by default)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">branchrules</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">branchrulefile</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
-            <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">f</span><span class="p">:</span>
-                <span class="n">values</span><span class="p">:</span> <span class="n">List</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">delimiter</span><span class="p">)</span>
-                <span class="n">branch</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
-                <span class="n">rule</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">values</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
-                <span class="n">exceptions</span><span class="p">:</span> <span class="n">List</span> <span class="o">=</span> <span class="p">[]</span>
-                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">values</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="p">:</span>
-                    <span class="n">exceptions</span> <span class="o">=</span> <span class="p">[</span><span class="n">e</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">values</span><span class="p">[</span><span class="mi">2</span><span class="p">:]]</span>
+            <span class="n">lines</span> <span class="o">=</span> <span class="p">[</span><span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">delimiter</span><span class="p">)</span> <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">f</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">line</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">]</span>
+            
+        <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">:</span>
+            
+            <span class="n">branch</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">line</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+            <span class="n">rule</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">line</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+            <span class="n">exceptions</span><span class="p">:</span> <span class="n">List</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">line</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="p">:</span>
+                <span class="n">exceptions</span> <span class="o">=</span> <span class="p">[</span><span class="n">e</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">line</span><span class="p">[</span><span class="mi">2</span><span class="p">:]]</span>
 
-                <span class="n">branchrules</span><span class="p">[</span><span class="n">branch</span><span class="p">]</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">rule</span><span class="o">=</span><span class="n">rule</span><span class="p">,</span> <span class="n">exceptions</span><span class="o">=</span><span class="n">exceptions</span><span class="p">)</span>
+            <span class="n">branchrules</span><span class="p">[</span><span class="n">branch</span><span class="p">]</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">rule</span><span class="o">=</span><span class="n">rule</span><span class="p">,</span> <span class="n">exceptions</span><span class="o">=</span><span class="n">exceptions</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="n">branchrules</span>
 
@@ -1976,14 +1981,14 @@
 
             <span class="k">with</span> <span class="n">Dataset</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_path_flow2d</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
 
-                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;loading 2D data&quot;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">set_logger_message</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;loading 2D data for </span><span class="si">{</span><span class="n">map_key</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
                 <span class="n">station_map</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">file_1D2D_map</span><span class="p">,</span> <span class="n">index_col</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
                 <span class="n">qnames</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parse_names</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">variables</span><span class="p">[</span><span class="n">nkey</span><span class="p">][:])</span>
                 <span class="n">qdata</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">variables</span><span class="p">[</span><span class="n">dkey</span><span class="p">][:]</span>
 
                 <span class="n">time</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parse_time</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">variables</span><span class="p">[</span><span class="s2">&quot;time&quot;</span><span class="p">])</span>
                 <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="n">station_map</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">time</span><span class="p">)</span>
-                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Matching 1D and 2D data&quot;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">set_logger_message</span><span class="p">(</span><span class="s2">&quot;Matching 1D and 2D data&quot;</span><span class="p">)</span>
                 <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">station</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="o">.</span><span class="n">tqdm</span><span class="p">(</span>
                     <span class="n">station_map</span><span class="o">.</span><span class="n">iterrows</span><span class="p">(),</span> <span class="n">total</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">station_map</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
                 <span class="p">):</span>
@@ -2065,6 +2070,13 @@
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Class to compare the results of a 1D and 2D model.</span>
 
+<span class="sd">    .. note::</span>
+<span class="sd">        If 2D and 1D netCDF input files are provided, they will first be </span>
+<span class="sd">        converted to csv files. Once csv files are present, the original</span>
+<span class="sd">        netCDF files are no longer used. In that case, the arguments </span>
+<span class="sd">        to `path_1d` and `path_2d` should be `None`. </span>
+
+
 <span class="sd">    Example usage:</span>
 
 <span class="sd">        &gt;&gt;&gt; plotter = Compare1D2D()</span>
@@ -2093,12 +2105,17 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
 
-        <span class="k">if</span> <span class="n">path_1d</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">path_1d</span><span class="p">,</span> <span class="p">(</span><span class="n">Path</span><span class="p">,</span> <span class="nb">str</span><span class="p">))</span> <span class="o">&amp;</span> <span class="n">Path</span><span class="p">(</span><span class="n">path_1d</span><span class="p">)</span><span class="o">.</span><span class="n">is_file</span><span class="p">():</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">path_flow1d</span> <span class="o">=</span> <span class="n">path_1d</span>
-        <span class="k">if</span> <span class="n">path_2d</span><span class="p">:</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">set_logger_message</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;1D netCDF file does not exist or is not provided. Input found: </span><span class="si">{</span><span class="n">path_1d</span><span class="si">}</span><span class="s1">.&#39;</span><span class="p">,</span> <span class="s1">&#39;debug&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">path_1d</span><span class="p">,</span> <span class="p">(</span><span class="n">Path</span><span class="p">,</span> <span class="nb">str</span><span class="p">))</span> <span class="o">&amp;</span> <span class="n">Path</span><span class="p">(</span><span class="n">path_2d</span><span class="p">)</span><span class="o">.</span><span class="n">is_file</span><span class="p">():</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">path_flow2d</span> <span class="o">=</span> <span class="n">path_2d</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">set_logger_message</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;2D netCDF file does not exist or is not provided. Input found: </span><span class="si">{</span><span class="n">path_2d</span><span class="si">}</span><span class="s1">.&#39;</span><span class="p">,</span> <span class="s1">&#39;debug&#39;</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">routes</span> <span class="o">=</span> <span class="n">routes</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">statistics</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_data_1D_H</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_data_2D_H</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_data_1D_H_digitized</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span> <span class="o">=</span> <span class="kc">None</span>
@@ -2115,7 +2132,7 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">read_all_data</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">digitize_data</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">statistics</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compute_statistics</span><span class="p">()</span>
+        
         <span class="c1"># create output folder</span>
         <span class="n">output_dirs</span> <span class="o">=</span> <span class="p">[</span>
             <span class="s2">&quot;figures/longitudinal&quot;</span><span class="p">,</span>
@@ -2253,7 +2270,27 @@
         <span class="p">]</span>
         <span class="k">return</span> <span class="n">sorted_stations</span><span class="p">,</span> <span class="n">sorted_rkms</span><span class="p">,</span> <span class="n">lmw_stations</span></div>
 
-    <span class="k">def</span> <span class="nf">statistics_to_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;error_statistics&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<div class="viewcode-block" id="Compare1D2D.statistics_to_file"><a class="viewcode-back" href="../../chapters/user_manual/source.html#fm2prof.utils.Compare1D2D.statistics_to_file">[docs]</a>    <span class="k">def</span> <span class="nf">statistics_to_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;error_statistics&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Creates and output a file `error_statistics.csv&#39;, which is a</span>
+<span class="sd">        comma-seperated file with the following columns:</span>
+
+<span class="sd">        ,bias,rkm,branch,is_lmw,std,mae</span>
+
+<span class="sd">        with for each station:</span>
+<span class="sd">        </span>
+<span class="sd">        - bias = bias, mean error</span>
+<span class="sd">        - rkm = river kilometer of the station</span>
+<span class="sd">        - branch = name of 1D branch on which the station lies</span>
+<span class="sd">        - is_lmw = if &quot;LMW&quot; is in the name of station, True. </span>
+<span class="sd">        - std = standard deviation of the rror</span>
+<span class="sd">        - mae = mean absolute error of the error</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">statistics</span> <span class="o">==</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">statistics</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compute_statistics</span><span class="p">()</span>
+
         <span class="n">statfile</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_path</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="n">file_path</span><span class="p">)</span><span class="o">.</span><span class="n">with_suffix</span><span class="p">(</span><span class="s2">&quot;.csv&quot;</span><span class="p">)</span>
         <span class="n">sumfile</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_path</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="n">file_path</span> <span class="o">+</span> <span class="s2">&quot;_summary&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">with_suffix</span><span class="p">(</span><span class="s2">&quot;.csv&quot;</span><span class="p">)</span>
 
@@ -2274,7 +2311,7 @@
                 <span class="n">lmw_std</span> <span class="o">=</span> <span class="n">s</span><span class="p">[</span><span class="s2">&quot;std&quot;</span><span class="p">][(</span><span class="n">s</span><span class="o">.</span><span class="n">branch</span> <span class="o">==</span> <span class="n">branch</span><span class="p">)</span> <span class="o">&amp;</span> <span class="n">s</span><span class="o">.</span><span class="n">is_lmw</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
                 <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span>
                     <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">branch</span><span class="si">}</span><span class="s2">,</span><span class="si">{</span><span class="n">bbias</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">±(</span><span class="si">{</span><span class="n">bstd</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">), </span><span class="si">{</span><span class="n">lmw_bias</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">±(</span><span class="si">{</span><span class="n">lmw_std</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">)</span><span class="se">\n</span><span class="s2">&quot;</span>
-                <span class="p">)</span>
+                <span class="p">)</span></div>
 
 <div class="viewcode-block" id="Compare1D2D.figure_at_station"><a class="viewcode-back" href="../../chapters/user_manual/source.html#fm2prof.utils.Compare1D2D.figure_at_station">[docs]</a>    <span class="k">def</span> <span class="nf">figure_at_station</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">station</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -2351,6 +2388,8 @@
         <span class="n">fig</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
         <span class="n">fig</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">output_path</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="s2">&quot;figures/stations&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">station</span><span class="si">}</span><span class="s2">.png&quot;</span><span class="p">),</span>
+            <span class="n">bbox_extra_artists</span><span class="o">=</span><span class="p">[</span><span class="n">lgd</span><span class="p">,</span> <span class="n">suptitle</span><span class="p">],</span>
+            <span class="n">bbox_inches</span><span class="o">=</span><span class="s2">&quot;tight&quot;</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></div>
 
@@ -2381,6 +2420,8 @@
         <span class="k">return</span> <span class="n">stats</span>
 
     <span class="k">def</span> <span class="nf">_get_statistics</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">station</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">statistics</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">statistics</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compute_statistics</span><span class="p">()</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">statistics</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">station</span><span class="p">]</span>
 
 <div class="viewcode-block" id="Compare1D2D.figure_compare_discharge_at_stations"><a class="viewcode-back" href="../../chapters/user_manual/source.html#fm2prof.utils.Compare1D2D.figure_compare_discharge_at_stations">[docs]</a>    <span class="k">def</span> <span class="nf">figure_compare_discharge_at_stations</span><span class="p">(</span>
@@ -2644,11 +2685,13 @@
         <span class="n">h1d</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_data_along_route</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_data_1D_H_digitized</span><span class="p">,</span> <span class="n">route</span><span class="o">=</span><span class="n">route</span><span class="p">)</span>
         <span class="n">h2d</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_data_along_route</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_data_2D_H_digitized</span><span class="p">,</span> <span class="n">route</span><span class="o">=</span><span class="n">route</span><span class="p">)</span>
 
-        <span class="n">fig</span><span class="p">,</span> <span class="n">axs</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">12</span><span class="p">,</span> <span class="mi">10</span><span class="p">))</span>
-
         <span class="n">discharge_steps</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_iter_discharge_steps</span><span class="p">(</span><span class="n">h1d</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="mi">8</span><span class="p">))</span>
-
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">discharge_steps</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">set_logger_message</span><span class="p">(</span><span class="s2">&quot;There is too little data to plot a QH relationship&quot;</span><span class="p">,</span> <span class="s1">&#39;error&#39;</span><span class="p">)</span>
+            <span class="k">return</span> 
+        
         <span class="c1"># Plot LMW station locations</span>
+        <span class="n">fig</span><span class="p">,</span> <span class="n">axs</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">12</span><span class="p">,</span> <span class="mi">10</span><span class="p">))</span>
         <span class="n">prevloc</span> <span class="o">=</span> <span class="o">-</span><span class="mi">9999</span>
         <span class="k">for</span> <span class="n">lmw</span> <span class="ow">in</span> <span class="n">lmw_stations</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">lmw</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -3480,7 +3523,7 @@
   <small>
     
       Last update:
-      Jul 05, 2023
+      Jul 28, 2023
     
   </small>
 </div>

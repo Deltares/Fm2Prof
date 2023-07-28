@@ -548,15 +548,22 @@
 <span class="kn">from</span> <span class="nn">fm2prof</span> <span class="kn">import</span> <span class="n">Functions</span> <span class="k">as</span> <span class="n">FE</span>
 <span class="kn">from</span> <span class="nn">fm2prof</span> <span class="kn">import</span> <span class="n">__version__</span>
 <span class="kn">from</span> <span class="nn">fm2prof.common</span> <span class="kn">import</span> <span class="n">FM2ProfBase</span>
-<span class="kn">from</span> <span class="nn">fm2prof.CrossSection</span> <span class="kn">import</span> <span class="n">CrossSection</span>
+<span class="kn">from</span> <span class="nn">fm2prof.CrossSection</span> <span class="kn">import</span> <span class="n">CrossSection</span><span class="p">,</span> <span class="n">CrossSectionHelpers</span>
 <span class="kn">from</span> <span class="nn">fm2prof.Export</span> <span class="kn">import</span> <span class="n">Export1DModelData</span><span class="p">,</span> <span class="n">OutputFiles</span>
 <span class="kn">from</span> <span class="nn">fm2prof.Import</span> <span class="kn">import</span> <span class="n">FMDataImporter</span><span class="p">,</span> <span class="n">FmModelData</span><span class="p">,</span> <span class="n">ImportInputFiles</span>
 <span class="kn">from</span> <span class="nn">fm2prof.IniFile</span> <span class="kn">import</span> <span class="n">IniFile</span>
 <span class="kn">from</span> <span class="nn">fm2prof.MaskOutputFile</span> <span class="kn">import</span> <span class="n">MaskOutputFile</span>
 <span class="kn">from</span> <span class="nn">fm2prof.RegionPolygonFile</span> <span class="kn">import</span> <span class="n">RegionPolygonFile</span><span class="p">,</span> <span class="n">SectionPolygonFile</span>
 
+<span class="k">class</span> <span class="nc">InitializationError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="k">pass</span>
 
 <span class="k">class</span> <span class="nc">Fm2ProfRunner</span><span class="p">(</span><span class="n">FM2ProfBase</span><span class="p">):</span>
+    <span class="n">__map_key</span> <span class="o">=</span> <span class="s2">&quot;2DMapOutput&quot;</span>
+    <span class="n">__css_key</span> <span class="o">=</span> <span class="s2">&quot;CrossSectionLocationFile&quot;</span>
+    <span class="n">__key_frictionweighingmethod</span> <span class="o">=</span> <span class="s2">&quot;FrictionweighingMethod&quot;</span>
+    <span class="n">__key_skipmaps</span> <span class="o">=</span> <span class="s2">&quot;SkipMaps&quot;</span>
+
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Main class that executes all functionality.</span>
 
@@ -659,9 +666,15 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">set_logger_message</span><span class="p">(</span><span class="n">line</span><span class="p">,</span> <span class="n">header</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_run_inifile</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;Runs the desired emulation from 2d to 1d given the mapfile</span>
-<span class="sd">            and the cross section file.</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Executes main program from the configuration file. </span>
 
+<span class="sd">        The main steps in the program are:</span>
+<span class="sd">        </span>
+<span class="sd">        1. Initialize fm2prof</span>
+<span class="sd">        2. Generate cross-sections</span>
+<span class="sd">        3. Finalization</span>
+<span class="sd">        </span>
 <span class="sd">        Arguments:</span>
 <span class="sd">            iniFile {IniFile}</span>
 <span class="sd">                -- Object containing all the information</span>
@@ -672,6 +685,8 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">start_new_log_task</span><span class="p">(</span><span class="s2">&quot;Initialising FM2PROF&quot;</span><span class="p">)</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_initialise_fm2prof</span><span class="p">()</span>
+        <span class="k">except</span> <span class="n">InitializationError</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
         <span class="k">except</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">set_logger_message</span><span class="p">(</span>
                 <span class="s2">&quot;Unexpected exception during initialisation&quot;</span><span class="p">,</span> <span class="s2">&quot;error&quot;</span>
@@ -716,23 +731,23 @@
 
     <span class="k">def</span> <span class="nf">_initialise_fm2prof</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        </span>
 <span class="sd">        Loads data, inifile</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">iniFile</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_inifile</span><span class="p">()</span>
-        <span class="n">map_key</span> <span class="o">=</span> <span class="s2">&quot;2DMapOutput&quot;</span>
-        <span class="n">css_key</span> <span class="o">=</span> <span class="s2">&quot;CrossSectionLocationFile&quot;</span>
-        <span class="n">raiseFileNotFoundError</span> <span class="o">=</span> <span class="kc">False</span>
+
+        <span class="n">iniFile</span><span class="p">:</span> <span class="n">IniFile</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_inifile</span><span class="p">()</span>
+        <span class="n">raiseFileNotFoundError</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
 
         <span class="c1"># shorter local variables</span>
-        <span class="n">map_file</span> <span class="o">=</span> <span class="n">iniFile</span><span class="o">.</span><span class="n">get_input_file</span><span class="p">(</span><span class="n">map_key</span><span class="p">)</span>
-        <span class="n">css_file</span> <span class="o">=</span> <span class="n">iniFile</span><span class="o">.</span><span class="n">get_input_file</span><span class="p">(</span><span class="n">css_key</span><span class="p">)</span>
+        <span class="n">map_file</span> <span class="o">=</span> <span class="n">iniFile</span><span class="o">.</span><span class="n">get_input_file</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__map_key</span><span class="p">)</span>
+        <span class="n">css_file</span> <span class="o">=</span> <span class="n">iniFile</span><span class="o">.</span><span class="n">get_input_file</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__css_key</span><span class="p">)</span>
         <span class="n">region_file</span> <span class="o">=</span> <span class="n">iniFile</span><span class="o">.</span><span class="n">get_input_file</span><span class="p">(</span><span class="s2">&quot;RegionPolygonFile&quot;</span><span class="p">)</span>
         <span class="n">section_file</span> <span class="o">=</span> <span class="n">iniFile</span><span class="o">.</span><span class="n">get_input_file</span><span class="p">(</span><span class="s2">&quot;SectionPolygonFile&quot;</span><span class="p">)</span>
         <span class="n">output_dir</span> <span class="o">=</span> <span class="n">iniFile</span><span class="o">.</span><span class="n">get_output_directory</span><span class="p">()</span>
 
         <span class="c1"># Read region &amp; section polygon</span>
-        <span class="n">regions</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="n">sections</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">regions</span><span class="p">:</span> <span class="n">RegionPolygonFile</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">sections</span><span class="p">:</span> <span class="n">SectionPolygonFile</span> <span class="o">=</span> <span class="kc">None</span>
 
         <span class="k">if</span> <span class="n">region_file</span><span class="p">:</span>
             <span class="n">regions</span> <span class="o">=</span> <span class="n">RegionPolygonFile</span><span class="p">(</span><span class="n">region_file</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">get_logger</span><span class="p">())</span>
@@ -740,19 +755,19 @@
         <span class="k">if</span> <span class="nb">bool</span><span class="p">(</span><span class="n">section_file</span><span class="p">):</span>
             <span class="n">sections</span> <span class="o">=</span> <span class="n">SectionPolygonFile</span><span class="p">(</span><span class="n">section_file</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">get_logger</span><span class="p">())</span>
 
-        <span class="c1"># Check if input exists</span>
+        <span class="c1"># Check if mandatory input exists</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">Path</span><span class="p">(</span><span class="n">map_file</span><span class="p">)</span><span class="o">.</span><span class="n">is_file</span><span class="p">():</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">set_logger_message</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;File for </span><span class="si">{</span><span class="n">map_key</span><span class="si">}</span><span class="s2"> not found at </span><span class="si">{</span><span class="n">map_file</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="s2">&quot;warning&quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;File for </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">__map_key</span><span class="si">}</span><span class="s2"> not found at </span><span class="si">{</span><span class="n">map_file</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="s2">&quot;error&quot;</span>
             <span class="p">)</span>
             <span class="n">raiseFileNotFoundError</span> <span class="o">=</span> <span class="kc">True</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">Path</span><span class="p">(</span><span class="n">css_file</span><span class="p">)</span><span class="o">.</span><span class="n">is_file</span><span class="p">():</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">set_logger_message</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;File for </span><span class="si">{</span><span class="n">css_key</span><span class="si">}</span><span class="s2"> not found at </span><span class="si">{</span><span class="n">css_file</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="s2">&quot;warning&quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;File for </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">__css_key</span><span class="si">}</span><span class="s2"> not found at </span><span class="si">{</span><span class="n">css_file</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="s2">&quot;error&quot;</span>
             <span class="p">)</span>
             <span class="n">raiseFileNotFoundError</span> <span class="o">=</span> <span class="kc">True</span>
         <span class="k">if</span> <span class="n">raiseFileNotFoundError</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">FileNotFoundError</span>
+            <span class="k">raise</span> <span class="n">InitializationError</span>
 
         <span class="c1"># Read FM model data</span>
         <span class="n">fm2prof_fm_model_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_set_fm_model_data</span><span class="p">(</span>
@@ -760,9 +775,16 @@
         <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">fm_model_data</span> <span class="o">=</span> <span class="n">FmModelData</span><span class="p">(</span><span class="n">fm2prof_fm_model_data</span><span class="p">)</span>
 
-        <span class="n">ntsteps</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fm_model_data</span><span class="o">.</span><span class="n">time_dependent_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;waterlevel&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-        <span class="n">nfaces</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fm_model_data</span><span class="o">.</span><span class="n">time_dependent_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;waterlevel&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-        <span class="n">nedges</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fm_model_data</span><span class="o">.</span><span class="n">edge_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;x&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="c1"># Validate config file</span>
+        <span class="n">success</span><span class="p">:</span><span class="nb">bool</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_validate_config_after_initalization</span><span class="p">()</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">success</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">set_logger_message</span><span class="p">(</span><span class="s2">&quot;Validation of configuration file not successful. Check the log to fix errors.&quot;</span><span class="p">,</span> <span class="s2">&quot;error&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">InitializationError</span>
+        
+        <span class="c1"># print goodbye</span>
+        <span class="n">ntsteps</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fm_model_data</span><span class="o">.</span><span class="n">time_dependent_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;waterlevel&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">nfaces</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fm_model_data</span><span class="o">.</span><span class="n">time_dependent_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;waterlevel&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">nedges</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fm_model_data</span><span class="o">.</span><span class="n">edge_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;x&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">set_logger_message</span><span class="p">(</span><span class="s2">&quot;finished reading FM and cross-sectional data data&quot;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">set_logger_message</span><span class="p">(</span>
             <span class="s2">&quot;Number of: timesteps (</span><span class="si">{}</span><span class="s2">), &quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">ntsteps</span><span class="p">)</span>
@@ -770,9 +792,35 @@
             <span class="o">+</span> <span class="s2">&quot;edges (</span><span class="si">{}</span><span class="s2">)&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">nedges</span><span class="p">),</span>
             <span class="n">level</span><span class="o">=</span><span class="s2">&quot;debug&quot;</span><span class="p">,</span>
         <span class="p">)</span>
-        <span class="c1"># check if edge/face data is available</span>
+        
+        <span class="k">return</span> <span class="n">success</span>
+
+    <span class="k">def</span> <span class="nf">_validate_config_after_initalization</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Performs validation checks on config file. Returns </span>
+<span class="sd">        True if all checks succesfull, False if check fails. </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">success</span><span class="p">:</span><span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_logger_message</span><span class="p">(</span><span class="s2">&quot;Validating settings&quot;</span><span class="p">,</span> <span class="s2">&quot;Info&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Check if skipmaps is lower than maximum amount of maps</span>
+        <span class="n">nsteps</span><span class="p">:</span><span class="nb">int</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fm_model_data</span><span class="o">.</span><span class="n">time_dependent_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;waterlevel&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">skipmap</span><span class="p">:</span><span class="nb">int</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_inifile</span><span class="p">()</span><span class="o">.</span><span class="n">get_parameter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__key_skipmaps</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">skipmap</span> <span class="o">&gt;=</span> <span class="n">nsteps</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">set_logger_message</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;&quot;&quot;You are attempting to skip more than  available timesteps.</span>
+<span class="s2">(</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">__key_skipmaps</span><span class="si">}</span><span class="s2"> = </span><span class="si">{</span><span class="n">skipmap</span><span class="si">}</span><span class="s2">, available maps in output file: </span><span class="si">{</span><span class="n">nsteps</span><span class="si">}</span><span class="s2">). Modify the value of </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">__key_skipmaps</span><span class="si">}</span><span class="s2"></span>
+<span class="s2">your configuration file to fix this error.&quot;&quot;&quot;</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="s2">&quot;error&quot;</span><span class="p">)</span>
+            <span class="n">success</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">elif</span> <span class="n">skipmap</span> <span class="o">&gt;</span> <span class="n">nsteps</span><span class="o">/</span><span class="mi">2</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">set_logger_message</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;&quot;&quot;You are skipping more than half of available timesteps.</span>
+<span class="s2">(</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">__key_skipmaps</span><span class="si">}</span><span class="s2"> = </span><span class="si">{</span><span class="n">skipmap</span><span class="si">}</span><span class="s2">, available maps in output file: </span><span class="si">{</span><span class="n">nsteps</span><span class="si">}</span><span class="s2">)&quot;&quot;&quot;</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="s2">&quot;warning&quot;</span><span class="p">)</span>
+            
+
+        <span class="c1"># Check if edge/face data is available</span>
         <span class="k">if</span> <span class="s2">&quot;edge_faces&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">fm_model_data</span><span class="o">.</span><span class="n">edge_data</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">iniFile</span><span class="o">.</span><span class="n">get_parameter</span><span class="p">(</span><span class="s2">&quot;FrictionweighingMethod&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_inifile</span><span class="p">()</span><span class="o">.</span><span class="n">get_parameter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__key_frictionweighingmethod</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">set_logger_message</span><span class="p">(</span>
                     <span class="s2">&quot;Friction weighing set to 1 (area-weighted average&quot;</span>
                     <span class="o">+</span> <span class="s2">&quot;but FM map file does contain the *edge_faces* keyword.&quot;</span>
@@ -781,12 +829,14 @@
                     <span class="n">level</span><span class="o">=</span><span class="s2">&quot;warning&quot;</span><span class="p">,</span>
                 <span class="p">)</span>
 
+        <span class="k">return</span> <span class="n">success</span>
+    
     <span class="k">def</span> <span class="nf">_finalise_fm2prof</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cross_sections</span><span class="p">:</span> <span class="n">List</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Write to output, perform checks</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">set_logger_message</span><span class="p">(</span><span class="s2">&quot;Interpolating roughness&quot;</span><span class="p">)</span>
-        <span class="n">FE</span><span class="o">.</span><span class="n">interpolate_roughness</span><span class="p">(</span><span class="n">cross_sections</span><span class="p">)</span>
+        <span class="n">CrossSectionHelpers</span><span class="p">()</span><span class="o">.</span><span class="n">interpolate_friction_across_cross_sections</span><span class="p">(</span><span class="n">cross_sections</span><span class="p">)</span>
 
         <span class="c1"># Export cross sections</span>
         <span class="n">output_dir</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_inifile</span><span class="p">()</span><span class="o">.</span><span class="n">get_output_directory</span><span class="p">()</span>
@@ -1192,7 +1242,7 @@
             <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span>
                 <span class="s2">&quot;No FM data given for new cross section </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">css_name</span><span class="p">)</span>
             <span class="p">)</span>
-
+        
         <span class="c1"># Create cross section</span>
         <span class="n">created_css</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_new_cross_section</span><span class="p">(</span><span class="n">css_data</span><span class="o">=</span><span class="n">css_data</span><span class="p">)</span>
 
@@ -1224,7 +1274,7 @@
         <span class="bp">self</span><span class="p">,</span> <span class="n">cross_section</span><span class="p">:</span> <span class="n">CrossSection</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">CrossSection</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        This method manages the options of buildling the cross-section geometry</span>
+<span class="sd">        This method manages the options of building the cross-section geometry</span>
 
 <span class="sd">        Parameters:</span>
 <span class="sd">            cross_section {CrossSection}</span>
@@ -1233,7 +1283,6 @@
 
         <span class="k">if</span> <span class="n">cross_section</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">return</span>
-        <span class="n">css_name</span> <span class="o">=</span> <span class="n">cross_section</span><span class="o">.</span><span class="n">name</span>
 
         <span class="c1"># Build cross-section</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">set_logger_message</span><span class="p">(</span><span class="s2">&quot;Start building geometry&quot;</span><span class="p">,</span> <span class="s2">&quot;debug&quot;</span><span class="p">)</span>
@@ -1626,7 +1675,7 @@
   <small>
     
       Last update:
-      Jul 05, 2023
+      Jul 28, 2023
     
   </small>
 </div>

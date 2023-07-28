@@ -984,6 +984,13 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#fm2prof.utils.Compare1D2D.statistics_to_file" class="md-nav__link">
+    <span aria-label="Python method" class="objinfo-icon objinfo-icon__procedure" title="Python method">M</span><span title="fm2prof.utils.Compare1D2D.statistics_to_file (Python method) — Creates and output a file `error_statistics.csv&#39;, which is a comma-seperated file with the following columns:" class="md-ellipsis">statistics_<wbr>to_<wbr>file</span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -1904,6 +1911,13 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#fm2prof.utils.Compare1D2D.statistics_to_file" class="md-nav__link">
+    <span aria-label="Python method" class="objinfo-icon objinfo-icon__procedure" title="Python method">M</span><span title="fm2prof.utils.Compare1D2D.statistics_to_file (Python method) — Creates and output a file `error_statistics.csv&#39;, which is a comma-seperated file with the following columns:" class="md-ellipsis">statistics_<wbr>to_<wbr>file</span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -2451,6 +2465,13 @@ if it does not already exists!</p>
 <dt class="sig sig-object highlight sig-wrap py" id="fm2prof.utils.Compare1D2D">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">fm2prof.utils.</span></span><span class="sig-name descname"><span class="pre">Compare1D2D</span></span><span class="sig-paren">(</span><span class="sig-param-decl"><em class="sig-param"><span class="n"><span class="pre">project</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="desctype"><a class="reference internal" href="#fm2prof.Project" title="fm2prof.Fm2ProfRunner.Project (Python class)"><span class="pre">fm2prof.Fm2ProfRunner.Project</span></a></span></span></em>, </span><span class="sig-param-decl"><em class="sig-param"><span class="n"><span class="pre">path_1d</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="desctype"><a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.11)"><span class="pre">pathlib.Path</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a></span></span></em>, </span><span class="sig-param-decl"><em class="sig-param"><span class="n"><span class="pre">path_2d</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="desctype"><a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.11)"><span class="pre">pathlib.Path</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a></span></span></em>, </span><span class="sig-param-decl"><em class="sig-param"><span class="n"><span class="pre">routes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="desctype"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.11)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.11)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span></em>, </span><span class="sig-param-decl"><em class="sig-param"><span class="n"><span class="pre">start_time</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="desctype"><a class="reference external" href="https://docs.python.org/3/library/datetime.html#datetime.datetime" title="(in Python v3.11)"><span class="pre">datetime.datetime</span></a></span></span></em></span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/fm2prof/utils.html#Compare1D2D"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fm2prof.utils.Compare1D2D" title="Permalink to this definition">¶</a></dt>
 <dd><p>Class to compare the results of a 1D and 2D model.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>If 2D and 1D netCDF input files are provided, they will first be
+converted to csv files. Once csv files are present, the original
+netCDF files are no longer used. In that case, the arguments
+to <code class="xref any docutils literal notranslate"><span class="pre">path_1d</span></code> and <code class="xref any docutils literal notranslate"><span class="pre">path_2d</span></code> should be <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.11)"><code class="xref any docutils literal notranslate"><span class="pre">None</span></code></a>.</p>
+</div>
 <p>Example usage:</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">plotter</span> <span class="o">=</span> <span class="n">Compare1D2D</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># Set path to data</span>
@@ -2467,11 +2488,11 @@ if it does not already exists!</p>
 <dd><p>Create a figure with the results at an observation station.</p>
 <p>Figures are saved to <code class="xref any docutils literal notranslate"><span class="pre">[Compare1D2D.output_path]/figures/stations</span></code></p>
 <p>Example output:</p>
-<figure class="align-default" id="id3">
+<figure class="align-default" id="id5">
 <img alt="../../_images/example.png" src="../../_images/example.png" />
 <figcaption>
 <p><span class="caption-text"><span class="caption-text">
-example output figure</span><a class="headerlink" href="#id3" title="Permalink to this image">¶</a></span><a class="headerlink" href="#id3" title="Permalink to this image">¶</a></p>
+example output figure</span><a class="headerlink" href="#id5" title="Permalink to this image">¶</a></span><a class="headerlink" href="#id5" title="Permalink to this image">¶</a></p>
 </figcaption>
 </figure>
 </dd></dl>
@@ -2487,11 +2508,11 @@ distribution over two stations.</p>
 </div>
 <p>Figures are saved to <code class="xref any docutils literal notranslate"><span class="pre">[Compare1D2D.output_path]/figures/discharge</span></code></p>
 <p>Example output:</p>
-<figure class="align-default" id="id4">
+<figure class="align-default" id="id6">
 <img alt="../../_images/example1.png" src="../../_images/example1.png" />
 <figcaption>
 <p><span class="caption-text"><span class="caption-text">
-Example output figure</span><a class="headerlink" href="#id4" title="Permalink to this image">¶</a></span><a class="headerlink" href="#id4" title="Permalink to this image">¶</a></p>
+Example output figure</span><a class="headerlink" href="#id6" title="Permalink to this image">¶</a></span><a class="headerlink" href="#id6" title="Permalink to this image">¶</a></p>
 </figcaption>
 </figure>
 </dd></dl>
@@ -2504,11 +2525,11 @@ To to this, rating curves are generated at each point by digitizing
 the model output.</p>
 <p>Figures are saved to <code class="xref any docutils literal notranslate"><span class="pre">[Compare1D2D.output_path]/figures/longitudinal</span></code></p>
 <p>Example output:</p>
-<figure class="align-default" id="id5">
+<figure class="align-default" id="id7">
 <img alt="../../_images/example_rating_curve.png" src="../../_images/example_rating_curve.png" />
 <figcaption>
 <p><span class="caption-text"><span class="caption-text">
-example output figure</span><a class="headerlink" href="#id5" title="Permalink to this image">¶</a></span><a class="headerlink" href="#id5" title="Permalink to this image">¶</a></p>
+example output figure</span><a class="headerlink" href="#id7" title="Permalink to this image">¶</a></span><a class="headerlink" href="#id7" title="Permalink to this image">¶</a></p>
 </figcaption>
 </figure>
 </dd></dl>
@@ -2519,11 +2540,11 @@ example output figure</span><a class="headerlink" href="#id5" title="Permalink t
 <dd><p>Create a figure along a route with lines at various points in time.
 Figures are saved to <code class="xref any docutils literal notranslate"><span class="pre">[Compare1D2D.output_path]/figures/longitudinal</span></code></p>
 <p>Example output:</p>
-<figure class="align-default" id="id6">
+<figure class="align-default" id="id8">
 <img alt="../../_images/example_time_series1.png" src="../../_images/example_time_series1.png" />
 <figcaption>
 <p><span class="caption-text"><span class="caption-text">
-example output figure</span><a class="headerlink" href="#id6" title="Permalink to this image">¶</a></span><a class="headerlink" href="#id6" title="Permalink to this image">¶</a></p>
+example output figure</span><a class="headerlink" href="#id8" title="Permalink to this image">¶</a></span><a class="headerlink" href="#id8" title="Permalink to this image">¶</a></p>
 </figcaption>
 </figure>
 </dd></dl>
@@ -2541,11 +2562,11 @@ example output figure</span><a class="headerlink" href="#id6" title="Permalink t
 the digitized rating curves to match the two models</p>
 <p>Figures are saved to <code class="xref any docutils literal notranslate"><span class="pre">[Compare1D2D.output_path]/figures/heatmap</span></code></p>
 <p>Example output:</p>
-<figure class="align-default" id="id7">
+<figure class="align-default" id="id9">
 <img alt="../../_images/example_rating_curve1.png" src="../../_images/example_rating_curve1.png" />
 <figcaption>
 <p><span class="caption-text"><span class="caption-text">
-example output figure</span><a class="headerlink" href="#id7" title="Permalink to this image">¶</a></span><a class="headerlink" href="#id7" title="Permalink to this image">¶</a></p>
+example output figure</span><a class="headerlink" href="#id9" title="Permalink to this image">¶</a></span><a class="headerlink" href="#id9" title="Permalink to this image">¶</a></p>
 </figcaption>
 </figure>
 </dd></dl>
@@ -2557,13 +2578,30 @@ example output figure</span><a class="headerlink" href="#id7" title="Permalink t
 timemarks to match the 1D and 2D models</p>
 <p>Figures are saved to <code class="xref any docutils literal notranslate"><span class="pre">[Compare1D2D.output_path]/figures/heatmap</span></code></p>
 <p>Example output:</p>
-<figure class="align-default" id="id8">
+<figure class="align-default" id="id10">
 <img alt="../../_images/example_time_series.png" src="../../_images/example_time_series.png" />
 <figcaption>
 <p><span class="caption-text"><span class="caption-text">
-example output figure</span><a class="headerlink" href="#id8" title="Permalink to this image">¶</a></span><a class="headerlink" href="#id8" title="Permalink to this image">¶</a></p>
+example output figure</span><a class="headerlink" href="#id10" title="Permalink to this image">¶</a></span><a class="headerlink" href="#id10" title="Permalink to this image">¶</a></p>
 </figcaption>
 </figure>
+</dd></dl>
+
+<dl class="py method objdesc">
+<dt class="sig sig-object highlight py" id="fm2prof.utils.Compare1D2D.statistics_to_file">
+<span class="sig-name descname"><span class="pre">statistics_to_file</span></span><span class="sig-paren">(</span><span class="sig-param-decl"><em class="sig-param"><span class="n"><span class="pre">file_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="desctype"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><code class="code python default_value docutils literal highlight highlight-python"><span class="s1">&#39;error_statistics&#39;</span></code></em></span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="desctype"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.11)"><span class="pre">None</span></a></span></span></span><a class="reference internal" href="../../_modules/fm2prof/utils.html#Compare1D2D.statistics_to_file"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fm2prof.utils.Compare1D2D.statistics_to_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates and output a file <a href="#id1"><span class="problematic" id="id2">`</span></a>error_statistics.csv’, which is a
+comma-seperated file with the following columns:</p>
+<p>,bias,rkm,branch,is_lmw,std,mae</p>
+<p>with for each station:</p>
+<ul class="simple">
+<li><p>bias = bias, mean error</p></li>
+<li><p>rkm = river kilometer of the station</p></li>
+<li><p>branch = name of 1D branch on which the station lies</p></li>
+<li><p>is_lmw = if “LMW” is in the name of station, True.</p></li>
+<li><p>std = standard deviation of the rror</p></li>
+<li><p>mae = mean absolute error of the error</p></li>
+</ul>
 </dd></dl>
 
 </dd></dl>
@@ -2602,7 +2640,7 @@ example output figure</span><a class="headerlink" href="#id8" title="Permalink t
 <dd><p>Builds a cross-section input file for FM2PROF from a SOBEK 3 DIMR network definition file.</p>
 <p>The distance between cross-section is computed from the differences between the offsets/chainages.
 The beginning and end point of each branch are treated as half-distance control volumes.</p>
-<p>It supports an optional :ref:<a href="#id1"><span class="problematic" id="id2">`</span></a>branchRuleFile.</p>
+<p>It supports an optional :ref:<a href="#id3"><span class="problematic" id="id4">`</span></a>branchRuleFile.</p>
 <p>Use as a function i.e. this code will generate a cross-section location file:</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">GenerateCrossSectionLocationFile</span><span class="p">(</span><span class="o">**</span><span class="nb">input</span><span class="p">)</span>
 </code></pre></div>
@@ -2869,7 +2907,7 @@ output to output directory of project</p>
   <small>
     
       Last update:
-      Jul 05, 2023
+      Jul 28, 2023
     
   </small>
 </div>
