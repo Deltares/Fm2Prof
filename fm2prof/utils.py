@@ -1833,6 +1833,8 @@ class Compare1D2D(ModelOutputReader):
         fig.tight_layout()
         fig.savefig(
             self.output_path.joinpath("figures/stations").joinpath(f"{station}.png"),
+            bbox_extra_artists=[lgd, suptitle],
+            bbox_inches="tight",
         )
         plt.close()
 
@@ -2126,11 +2128,13 @@ class Compare1D2D(ModelOutputReader):
         h1d = self.get_data_along_route(data=self._data_1D_H_digitized, route=route)
         h2d = self.get_data_along_route(data=self._data_2D_H_digitized, route=route)
 
-        fig, axs = plt.subplots(2, 1, figsize=(12, 10))
-
         discharge_steps = list(self._iter_discharge_steps(h1d.T, n=8))
-
+        if len(discharge_steps) < 1:
+            self.set_logger_message("There is too little data to plot a QH relationship", 'error')
+            return 
+        
         # Plot LMW station locations
+        fig, axs = plt.subplots(2, 1, figsize=(12, 10))
         prevloc = -9999
         for lmw in lmw_stations:
             if lmw is None:
