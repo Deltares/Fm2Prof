@@ -330,7 +330,10 @@ class GenerateCrossSectionLocationFile(FM2ProfBase):
                 "error",
             )
 
-    def _parseBranchRuleFile(self, branchrulefile: Path, delimiter: str = ",") -> Dict:
+    def _parseBranchRuleFile(self, branchrulefile: Path, delimiter: str = ",") -> Dict[str, Dict]:
+        """
+        Parses the branchrule filem which is a delimited file (comma by default)
+        """
         branchrules: dict = {}
         with open(branchrulefile, "r") as f:
             for line in f:
@@ -1533,6 +1536,13 @@ class Compare1D2D(ModelOutputReader):
     """
     Class to compare the results of a 1D and 2D model.
 
+    .. note::
+        If 2D and 1D netCDF input files are provided, they will first be 
+        converted to csv files. Once csv files are present, the original
+        netCDF files are no longer used. In that case, the arguments 
+        to `path_1d` and `path_2d` should be `None`. 
+
+
     Example usage:
 
         >>> plotter = Compare1D2D()
@@ -1561,10 +1571,14 @@ class Compare1D2D(ModelOutputReader):
         else:
             super().__init__()
 
-        if path_1d:
+        if (type(path_1d) in [Path, str]) & Path(path_1d).is_file():
             self.path_flow1d = path_1d
-        if path_2d:
+        else:
+            self.set_logger_message(f'1D netCDF file does not exist or is not provided. Input found: {path_1d}.', 'debug')
+        if (type(path_2d) in [Path, str]) & Path(path_2d).is_file():
             self.path_flow2d = path_2d
+        else:
+            self.set_logger_message(f'2D netCDF file does not exist or is not provided. Input found: {path_2d}.', 'debug')
 
         self.routes = routes
         self._data_1D_H: pd.DataFrame = None
