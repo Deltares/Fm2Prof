@@ -84,8 +84,10 @@ class Test_GenerateCrossSectionLocationFile:
             "cases/case_02_compound/Model_SOBEK/dimr/dflow1d/NetworkDefinition.ini"
         )
         output_file = TestUtils.get_local_test_file(
-            "cases/case_02_compound/Data/cross_section_locations.xyz"
+            "cases/case_02_compound/Data/cross_section_locations_new.xyz"
         )
+        if output_file.is_file():
+            os.remove(output_file)
 
         branch_rule_file = TestUtils.get_local_test_file(
             "cases/case_02_compound/Data/branchrules_onlyfirst.ini"

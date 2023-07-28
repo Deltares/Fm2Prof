@@ -332,19 +332,21 @@ class GenerateCrossSectionLocationFile(FM2ProfBase):
 
     def _parseBranchRuleFile(self, branchrulefile: Path, delimiter: str = ",") -> Dict[str, Dict]:
         """
-        Parses the branchrule filem which is a delimited file (comma by default)
+        Parses the branchrule file which is a delimited file (comma by default)
         """
         branchrules: dict = {}
         with open(branchrulefile, "r") as f:
-            for line in f:
-                values: List = line.strip().split(delimiter)
-                branch: str = values[0].strip()
-                rule: str = values[1].strip()
-                exceptions: List = []
-                if len(values) > 2:
-                    exceptions = [e.strip() for e in values[2:]]
+            lines = [line.strip().split(delimiter) for line in f if len(line) > 1]
+            
+        for line in lines:
+            
+            branch: str = line[0].strip()
+            rule: str = line[1].strip()
+            exceptions: List = []
+            if len(line) > 2:
+                exceptions = [e.strip() for e in line[2:]]
 
-                branchrules[branch] = dict(rule=rule, exceptions=exceptions)
+            branchrules[branch] = dict(rule=rule, exceptions=exceptions)
 
         return branchrules
 
