@@ -1,6 +1,19 @@
+## v2.2.5 (2023-07-28)
+
+- FM2PROF now validates the "SkipMaps" parameter and throws error if its value is larger than the available number of maps
+- Fixed bug that threw exception if roughness tables could not be produced during finalization step
+- Fixed bug that prevented BranchRules file to be read if multiple empty lines existed at the end of the file
+- Fixed bug where `utils.Compare1D2D` would throw exception if input netCDF files did not exist, but csv files did. 
+- Fixed bug in `utils.Compare1D2D` where execution failed if a QH relationship could not be produced
+- Statistics are no longer computed on initialization of `utils.Compare1D2D`. Instead, they are not computed when requested during evaluation. 
+
 ## v2.2.4 (2023-07-05)
 
+- Implemented 'onlyFirst' and 'onlyLast' rules for BranchRules file
+
 ## v2.2.3 (2022-12-21)
+
+- Implemented functionality to compare two 1D models for bed level change, Summer dike change and width change
 
 ## v2.2.2 (2022-08-26)
 
