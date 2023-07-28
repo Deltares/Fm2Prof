@@ -1571,11 +1571,11 @@ class Compare1D2D(ModelOutputReader):
         else:
             super().__init__()
 
-        if (type(path_1d) in [Path, str]) & Path(path_1d).is_file():
+        if isinstance(path_1d, (Path, str)) & Path(path_1d).is_file():
             self.path_flow1d = path_1d
         else:
             self.set_logger_message(f'1D netCDF file does not exist or is not provided. Input found: {path_1d}.', 'debug')
-        if (type(path_2d) in [Path, str]) & Path(path_2d).is_file():
+        if isinstance(path_1d, (Path, str)) & Path(path_2d).is_file():
             self.path_flow2d = path_2d
         else:
             self.set_logger_message(f'2D netCDF file does not exist or is not provided. Input found: {path_2d}.', 'debug')
