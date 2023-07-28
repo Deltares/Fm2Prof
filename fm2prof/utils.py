@@ -330,18 +330,23 @@ class GenerateCrossSectionLocationFile(FM2ProfBase):
                 "error",
             )
 
-    def _parseBranchRuleFile(self, branchrulefile: Path, delimiter: str = ",") -> Dict:
+    def _parseBranchRuleFile(self, branchrulefile: Path, delimiter: str = ",") -> Dict[str, Dict]:
+        """
+        Parses the branchrule file which is a delimited file (comma by default)
+        """
         branchrules: dict = {}
         with open(branchrulefile, "r") as f:
-            for line in f:
-                values: List = line.strip().split(delimiter)
-                branch: str = values[0].strip()
-                rule: str = values[1].strip()
-                exceptions: List = []
-                if len(values) > 2:
-                    exceptions = [e.strip() for e in values[2:]]
+            lines = [line.strip().split(delimiter) for line in f if len(line) > 1]
+            
+        for line in lines:
+            
+            branch: str = line[0].strip()
+            rule: str = line[1].strip()
+            exceptions: List = []
+            if len(line) > 2:
+                exceptions = [e.strip() for e in line[2:]]
 
-                branchrules[branch] = dict(rule=rule, exceptions=exceptions)
+            branchrules[branch] = dict(rule=rule, exceptions=exceptions)
 
         return branchrules
 
@@ -1444,14 +1449,14 @@ class ModelOutputReader(FM2ProfBase):
 
             with Dataset(self._path_flow2d) as f:
 
-                print("loading 2D data")
+                self.set_logger_message(f"loading 2D data for {map_key}")
                 station_map = pd.read_csv(self.file_1D2D_map, index_col=0)
                 qnames = self._parse_names(f.variables[nkey][:])
                 qdata = f.variables[dkey][:]
 
                 time = self._parse_time(f.variables["time"])
                 df = pd.DataFrame(columns=station_map.index, index=time)
-                print("Matching 1D and 2D data")
+                self.set_logger_message("Matching 1D and 2D data")
                 for index, station in tqdm.tqdm(
                     station_map.iterrows(), total=len(station_map.index)
                 ):
@@ -1533,6 +1538,13 @@ class Compare1D2D(ModelOutputReader):
     """
     Class to compare the results of a 1D and 2D model.
 
+    .. note::
+        If 2D and 1D netCDF input files are provided, they will first be 
+        converted to csv files. Once csv files are present, the original
+        netCDF files are no longer used. In that case, the arguments 
+        to `path_1d` and `path_2d` should be `None`. 
+
+
     Example usage:
 
         >>> plotter = Compare1D2D()
@@ -1561,12 +1573,17 @@ class Compare1D2D(ModelOutputReader):
         else:
             super().__init__()
 
-        if path_1d:
+        if isinstance(path_1d, (Path, str)) & Path(path_1d).is_file():
             self.path_flow1d = path_1d
-        if path_2d:
+        else:
+            self.set_logger_message(f'1D netCDF file does not exist or is not provided. Input found: {path_1d}.', 'debug')
+        if isinstance(path_1d, (Path, str)) & Path(path_2d).is_file():
             self.path_flow2d = path_2d
+        else:
+            self.set_logger_message(f'2D netCDF file does not exist or is not provided. Input found: {path_2d}.', 'debug')
 
         self.routes = routes
+        self.statistics = None
         self._data_1D_H: pd.DataFrame = None
         self._data_2D_H: pd.DataFrame = None
         self._data_1D_H_digitized: pd.DataFrame = None
@@ -1583,7 +1600,7 @@ class Compare1D2D(ModelOutputReader):
 
         self.read_all_data()
         self.digitize_data()
-        self.statistics = self._compute_statistics()
+        
         # create output folder
         output_dirs = [
             "figures/longitudinal",
@@ -1722,6 +1739,26 @@ class Compare1D2D(ModelOutputReader):
         return sorted_stations, sorted_rkms, lmw_stations
 
     def statistics_to_file(self, file_path: str = "error_statistics") -> None:
+        """
+        Creates and output a file `error_statistics.csv', which is a
+        comma-seperated file with the following columns:
+
+        ,bias,rkm,branch,is_lmw,std,mae
+
+        with for each station:
+        
+        - bias = bias, mean error
+        - rkm = river kilometer of the station
+        - branch = name of 1D branch on which the station lies
+        - is_lmw = if "LMW" is in the name of station, True. 
+        - std = standard deviation of the rror
+        - mae = mean absolute error of the error
+
+        """
+
+        if self.statistics == None:
+            self.statistics = self._compute_statistics()
+
         statfile = self.output_path.joinpath(file_path).with_suffix(".csv")
         sumfile = self.output_path.joinpath(file_path + "_summary").with_suffix(".csv")
 
@@ -1819,6 +1856,8 @@ class Compare1D2D(ModelOutputReader):
         fig.tight_layout()
         fig.savefig(
             self.output_path.joinpath("figures/stations").joinpath(f"{station}.png"),
+            bbox_extra_artists=[lgd, suptitle],
+            bbox_inches="tight",
         )
         plt.close()
 
@@ -1849,6 +1888,8 @@ class Compare1D2D(ModelOutputReader):
         return stats
 
     def _get_statistics(self, station):
+        if self.statistics is None:
+            self.statistics = self._compute_statistics()
         return self.statistics.loc[station]
 
     def figure_compare_discharge_at_stations(
@@ -2112,11 +2153,13 @@ class Compare1D2D(ModelOutputReader):
         h1d = self.get_data_along_route(data=self._data_1D_H_digitized, route=route)
         h2d = self.get_data_along_route(data=self._data_2D_H_digitized, route=route)
 
-        fig, axs = plt.subplots(2, 1, figsize=(12, 10))
-
         discharge_steps = list(self._iter_discharge_steps(h1d.T, n=8))
-
+        if len(discharge_steps) < 1:
+            self.set_logger_message("There is too little data to plot a QH relationship", 'error')
+            return 
+        
         # Plot LMW station locations
+        fig, axs = plt.subplots(2, 1, figsize=(12, 10))
         prevloc = -9999
         for lmw in lmw_stations:
             if lmw is None:
