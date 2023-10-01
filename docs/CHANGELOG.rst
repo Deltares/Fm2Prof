@@ -1,3 +1,7 @@
+## v2.2.6 (2023-10-01)
+
+- Fixed an issue where irregular station names like `MA_67.00Z` caused a sorting error in `utils.Compare1D2D`
+
 ## v2.2.5 (2023-07-28)
 
 - FM2PROF now validates the "SkipMaps" parameter and throws error if its value is larger than the available number of maps
