@@ -2261,8 +2261,8 @@
 
         <span class="c1"># sort data</span>
         <span class="n">sorted_indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">routekms</span><span class="p">)</span>
-        <span class="n">sorted_stations</span> <span class="o">=</span> <span class="p">[</span><span class="n">stations</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">sorted_indices</span><span class="p">]</span>
-        <span class="n">sorted_rkms</span> <span class="o">=</span> <span class="p">[</span><span class="n">routekms</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">sorted_indices</span><span class="p">]</span>
+        <span class="n">sorted_stations</span> <span class="o">=</span> <span class="p">[</span><span class="n">stations</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">sorted_indices</span> <span class="k">if</span> <span class="n">routekms</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">]</span>
+        <span class="n">sorted_rkms</span> <span class="o">=</span> <span class="p">[</span><span class="n">routekms</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">sorted_indices</span> <span class="k">if</span> <span class="n">routekms</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">]</span>
 
         <span class="c1"># sort lmw stations</span>
         <span class="n">lmw_stations</span> <span class="o">=</span> <span class="p">[</span>
@@ -2880,7 +2880,7 @@
         <span class="k">try</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">func</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="k">except</span> <span class="n">exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-            <span class="k">return</span> <span class="kc">None</span></div>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span></div>
 
 
 <div class="viewcode-block" id="Network1D"><a class="viewcode-back" href="../../chapters/user_manual/source.html#fm2prof.utils.Network1D">[docs]</a><span class="k">class</span> <span class="nc">Network1D</span><span class="p">:</span>
@@ -3523,7 +3523,7 @@
   <small>
     
       Last update:
-      Jul 28, 2023
+      Oct 01, 2023
     
   </small>
 </div>
