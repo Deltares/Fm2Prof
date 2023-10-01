@@ -1729,8 +1729,8 @@ class Compare1D2D(ModelOutputReader):
 
         # sort data
         sorted_indices = np.argsort(routekms)
-        sorted_stations = [stations[i] for i in sorted_indices]
-        sorted_rkms = [routekms[i] for i in sorted_indices]
+        sorted_stations = [stations[i] for i in sorted_indices if routekms[i] is not np.nan]
+        sorted_rkms = [routekms[i] for i in sorted_indices if routekms[i] is not np.nan]
 
         # sort lmw stations
         lmw_stations = [
@@ -2348,7 +2348,7 @@ class Compare1D2D(ModelOutputReader):
         try:
             return func(*args, **kwargs)
         except exception as e:
-            return None
+            return np.nan
 
 
 class Network1D:
