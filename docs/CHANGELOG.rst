@@ -1,3 +1,5 @@
+## v2.2.7 (2023-10-03)
+
 ## v2.2.6 (2023-10-01)
 
 - Fixed an issue where irregular station names like `MA_67.00Z` caused a sorting error in `utils.Compare1D2D`
