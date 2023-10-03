@@ -1237,7 +1237,10 @@ class ModelOutputReader(FM2ProfBase):
 
     _time_fmt = "%Y-%m-%d %H:%M:%S"
 
-    def __init__(self, logger=None, start_time: datetime = None):
+    def __init__(self, 
+                 logger=None, 
+                 start_time: datetime = None,
+                 stop_time: datetime = None):
         super().__init__(logger=logger)
 
         self._path_out: Path = Path(".")
@@ -1248,6 +1251,7 @@ class ModelOutputReader(FM2ProfBase):
         self._time_offset_1d: int = 0
 
         self._start_time: Union[datetime, type(None)] = start_time
+        self._stop_time: Union[datetime, type(None)] = stop_time
 
     @property
     def start_time(self) -> Union[datetime, None]:
@@ -1258,6 +1262,16 @@ class ModelOutputReader(FM2ProfBase):
     def start_time(self, input_time: datetime):
         if isinstance(input_time, datetime):
             self._start_time = input_time
+
+    @property
+    def stop_time(self) -> Union[datetime, None]:
+        """if defined, used to mask data"""
+        return self._stop_time
+
+    @stop_time.setter
+    def stop_time(self, input_time: datetime):
+        if isinstance(input_time, datetime):
+            self._stop_time = input_time
 
     @property
     def path_flow1d(self):
@@ -1403,19 +1417,19 @@ class ModelOutputReader(FM2ProfBase):
 
     @property
     def data_1D_H(self):
-        return self._from_start_time(self._data_1D_H)
+        return self._apply_startstop_time(self._data_1D_H)
 
     @property
     def data_2D_H(self):
-        return self._from_start_time(self._data_2D_H)
+        return self._apply_startstop_time(self._data_2D_H)
 
     @property
     def data_1D_Q(self):
-        return self._from_start_time(self._data_1D_Q)
+        return self._apply_startstop_time(self._data_1D_Q)
 
     @property
     def data_2D_Q(self):
-        return self._from_start_time(self._data_2D_Q)
+        return self._apply_startstop_time(self._data_2D_Q)
 
     @property
     def time_offset_1d(self):
@@ -1425,10 +1439,26 @@ class ModelOutputReader(FM2ProfBase):
     def time_offset_1d(self, seconds: int = 0):
         self._time_offset_1d = seconds
 
-    def _from_start_time(self, data: pd.DataFrame) -> pd.DataFrame:
-        if self.start_time:
-            return data[data.index > self.start_time]
-        return data
+    def _apply_startstop_time(self, data: pd.DataFrame) -> pd.DataFrame:
+        """ Applies stop/start time to data """
+        if self.start_time >= self.stop_time:
+            self.set_logger_message("Stop time ({self.stop_time}) should be later than start time ({self.start_time})", "error")
+            raise ValueError
+        if bool(self.start_time) and (self.start_time >= data.index[-1]):
+            self.set_logger_message(f'Provided start time {self.start_time} is later than last record in data ({data.index[-1]})', 'error')
+            raise ValueError
+        if bool(self.stop_time) and (self.stop_time <= data.index[0]):
+            self.set_logger_message(f'Provided stop time {self.stop_time} is earlier than first record in data ({data.index[0]})', 'error')
+            raise ValueError
+
+        if (bool(self.start_time) and bool(self.stop_time)):
+            return data[(data.index >= self.start_time) & (data.index <= self.stop_time)]
+        elif (bool(self.start_time) and not bool(self.stop_time)):
+            return data[(data.index >= self.start_time)]
+        elif (not bool(self.start_time) and bool(self.stop_time)):
+            return data[data.index <= self.stop_time]
+        else:
+            return data
 
     @staticmethod
     def _parse_names(nclist, encoding="utf-8"):
@@ -1555,6 +1585,19 @@ class Compare1D2D(ModelOutputReader):
         >>> route = ['BR', "PK", "NR", "LE"]
         >>> plotter.figure_longitudinal_time(route=route)
 
+    Parameters
+        project: Project
+
+        path_1d: Union[Path, str],
+        
+        path_2d: Union[Path, str],
+        
+        routes: List[List[str]],
+        
+        start_time: Union[None, datetime] = None,
+        
+        stop_time: Union[None, datetime] = None,
+
     """
 
     _routes: List[List[str]] = None
@@ -1565,10 +1608,11 @@ class Compare1D2D(ModelOutputReader):
         path_1d: Union[Path, str],
         path_2d: Union[Path, str],
         routes: List[List[str]],
-        start_time: datetime,
+        start_time: Union[None, datetime] = None,
+        stop_time: Union[None, datetime] = None,
     ):
         if project:
-            super().__init__(logger=project.get_logger(), start_time=start_time)
+            super().__init__(logger=project.get_logger(), start_time=start_time, stop_time=stop_time)
             self.output_path = project.get_output_directory()
         else:
             super().__init__()
@@ -1576,11 +1620,11 @@ class Compare1D2D(ModelOutputReader):
         if isinstance(path_1d, (Path, str)) & Path(path_1d).is_file():
             self.path_flow1d = path_1d
         else:
-            self.set_logger_message(f'1D netCDF file does not exist or is not provided. Input found: {path_1d}.', 'debug')
+            self.set_logger_message(f'1D netCDF file does not exist or is not provided. Input provided: {path_1d}.', 'debug')
         if isinstance(path_1d, (Path, str)) & Path(path_2d).is_file():
             self.path_flow2d = path_2d
         else:
-            self.set_logger_message(f'2D netCDF file does not exist or is not provided. Input found: {path_2d}.', 'debug')
+            self.set_logger_message(f'2D netCDF file does not exist or is not provided. Input provided: {path_2d}.', 'debug')
 
         self.routes = routes
         self.statistics = None
@@ -1597,6 +1641,7 @@ class Compare1D2D(ModelOutputReader):
 
         # set start time
         self.start_time = start_time
+        self.stop_time = stop_time
 
         self.read_all_data()
         self.digitize_data()
