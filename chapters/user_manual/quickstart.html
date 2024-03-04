@@ -656,9 +656,9 @@ tests\test_data\cases\case_02_compound\Data\cross_section_locations.xyz
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><code>FM2PROF create MyProject
 </code></pre></div>
 </div>
-<p>This will create a new directory “MyProject”. In this directory you will find <code class="xref any docutils literal notranslate"><span class="pre">MyProject.ini</span></code>. This is a valid configuration file with all parameters set to their default values. You will also find an <a class="reference external" href="https://docs.python.org/3/library/functions.html#input" title="(in Python v3.11)"><code class="xref any docutils literal notranslate"><span class="pre">input</span></code></a> and <a class="reference external" href="https://docs.python.org/3/howto/clinic.html#term-output" title="(in Python v3.11)"><code class="xref any docutils literal notranslate"><span class="pre">output</span></code></a> directory.</p>
+<p>This will create a new directory “MyProject”. In this directory you will find <code class="xref any docutils literal notranslate"><span class="pre">MyProject.ini</span></code>. This is a valid configuration file with all parameters set to their default values. You will also find an <a class="reference external" href="https://docs.python.org/3/library/functions.html#input" title="(in Python v3.12)"><code class="xref any docutils literal notranslate"><span class="pre">input</span></code></a> and <code class="xref any docutils literal notranslate"><span class="pre">output</span></code> directory.</p>
 <h2 id="modify-the-input">Modify the input<a class="headerlink" href="#modify-the-input" title="Permalink to this headline">¶</a></h2>
-<p>For the purpose of this tutorial, move the 2D model simulation file to <a class="reference external" href="https://docs.python.org/3/library/functions.html#input" title="(in Python v3.11)"><code class="xref any docutils literal notranslate"><span class="pre">input</span></code></a>. This is not a requirement - you can refer to any location on your pc.</p>
+<p>For the purpose of this tutorial, move the 2D model simulation file to <a class="reference external" href="https://docs.python.org/3/library/functions.html#input" title="(in Python v3.12)"><code class="xref any docutils literal notranslate"><span class="pre">input</span></code></a>. This is not a requirement - you can refer to any location on your pc.</p>
 <p>Open the configuration file with your favorite text editor and change the following two settings to your input data:</p>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span><code>[input]
 2DMapOutput                   =         # Output file from FM2D model (.net file)
@@ -676,7 +676,7 @@ CrossSectionLocationFile      =           # .csv or .txt file (, as delimiter) t
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><code>FM2PROF run MyProject
 </code></pre></div>
 </div>
-<p>All <a class="reference internal" href="../technical_manual/files.html#outputfiles"><span class="std std-ref">Branch rule file</span></a> are written to the <a class="reference external" href="https://docs.python.org/3/howto/clinic.html#term-output" title="(in Python v3.11)"><code class="xref any docutils literal notranslate"><span class="pre">output</span></code></a> directory.</p>
+<p>All <a class="reference internal" href="../technical_manual/files.html#outputfiles"><span class="std std-ref">Branch rule file</span></a> are written to the <code class="xref any docutils literal notranslate"><span class="pre">output</span></code> directory.</p>
 <h2 id="inspect-the-results">Inspect the results<a class="headerlink" href="#inspect-the-results" title="Permalink to this headline">¶</a></h2>
 <p>After generating output it is important to check whether everything went well. FM2PROF provides various tools and output files to do this. Go to <a class="reference internal" href="advanced.html#diagnosis"><span class="std std-ref">Verifying FM2PROF output</span></a> and try to generate figures with <a class="reference internal" href="source.html#module-fm2prof.utils" title="fm2prof.utils (Python module)"><code class="xref any py py-mod docutils literal notranslate"><span class="pre">fm2prof.utils</span></code></a>.</p>
 
@@ -687,7 +687,7 @@ CrossSectionLocationFile      =           # .csv or .txt file (, as delimiter) t
   <small>
     
       Last update:
-      Oct 03, 2023
+      Mar 04, 2024
     
   </small>
 </div>
