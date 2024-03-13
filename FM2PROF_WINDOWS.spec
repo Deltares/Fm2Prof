@@ -42,5 +42,5 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    icon='fm2prof/icon.ico'
+    icon='docs/source/_static/favicon.ico'
 )
