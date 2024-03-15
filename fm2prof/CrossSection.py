@@ -1123,7 +1123,7 @@ class CrossSection(FM2ProfBase):
 
         # correct wet cells for plassen
         wet_not_plas_mask = reduce(
-            np.logical_and, [(wet_mask == True), (plassen_mask_time == False)]
+            np.logical_and, [(wet_mask == True), np.asarray(plassen_mask_time == False)]
         )
 
         return lake_mask, wet_not_plas_mask, plassen_depth_correction
