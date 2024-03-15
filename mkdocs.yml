@@ -1,0 +1,37 @@
+site_name: FM2PROF
+site_dir: documentation
+theme:
+  name: material
+  language: en
+  icon:
+    logo: material/bat
+  palette:
+    # Palette toggle for light mode
+    - scheme: deltares
+      toggle:
+        icon: material/brightness-7 
+        name: Switch to dark mode
+
+    # Palette toggle for dark mode
+    - scheme: slate
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+plugins:
+  - search
+  - glightbox
+  - mkdocstrings
+  - mkdocs-jupyter
+repo_url: https://github.com/Deltares/Fm2Prof
+repo_name: deltares/fm2prof
+copyright: Copyright &copy; 2024 Deltares
+nav:
+    - Home: index.md
+    - Changelog: CHANGELOG.md
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+  - attr_list
+  - md_in_html
+
