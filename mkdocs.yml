@@ -3,6 +3,11 @@ site_dir: documentation
 theme:
   name: material
   language: en
+  features:
+    - navigation.tabs
+    - navigation.tracking
+    - navigation.sections
+    - toc.integrate
   icon:
     logo: material/bat
   palette:
@@ -27,6 +32,9 @@ repo_name: deltares/fm2prof
 copyright: Copyright &copy; 2024 Deltares
 nav:
     - Home: index.md
+    - User Manual:
+      - Installation: user_manual/installation.md
+      - Quickstart: user_manual/quickstart.md
     - Changelog: CHANGELOG.md
 markdown_extensions:
   - admonition
@@ -34,4 +42,11 @@ markdown_extensions:
   - pymdownx.superfences
   - attr_list
   - md_in_html
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences
 
