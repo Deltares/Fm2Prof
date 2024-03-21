@@ -1,3 +1,5 @@
-# FM2PROF
+---
+title: Title
+template: overrides/home.html
+---
 
-A Python package to construct cross-sections and roughness field for 1D SOBEK models from D-Hydro 2D models. 

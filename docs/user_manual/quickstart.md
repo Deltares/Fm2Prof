@@ -1,18 +1,12 @@
-# Quickstart
+# Tutorial
 
-!!! note
-    In this tutorial we will use the `cli documentation`{.interpreted-text
-    role="ref"}. You can either use the executable or the Python package.
-    See `ChapterInstallation`{.interpreted-text role="ref"} to obtain either
-    of these.
 
-In this tutorial you\'ll walk through the basics of creating a 1D model
-from a 2D model with .
+In this tutorial we will walk through the basics of creating a 1D model input from a 2D model.
 
 To use , we need at least two input files:
 
--   `2DMapOutput`{.interpreted-text role="ref"}
--   `CrossSectionLocationFile`{.interpreted-text role="ref"}
+-   `2DMapOutput`
+-   `CrossSectionLocationFile`
 
 in this tutorial we will use the test data bundled with the package. You
 will find this in the source directory:
