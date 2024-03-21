@@ -277,9 +277,8 @@ class CrossSection(FM2ProfBase):
 
         # apply rolling average over the velocities
         # to smooth out extreme values
-        velocity = velocity.rolling(
-            window=10, min_periods=1, center=True, axis=1
-        ).mean()
+        velocity = velocity.T.rolling(
+            window=10, min_periods=1, center=True).mean()
 
         # Identify river lakes (plassen)
         self.set_logger_message("Identifying lakes")

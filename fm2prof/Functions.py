@@ -107,9 +107,7 @@ def classify_with_regions(
         css_2d_edges = neigh.predict(np.array([x_2d_edge, y_2d_edge]).T)
 
         # Update data in main structures
-        time_independent_data["sclass"][
-            node_mask
-        ] = css_2d_nodes  # sclass = cross-section id
+        time_independent_data.loc[node_mask, "sclass"] = css_2d_nodes  # sclass = cross-section id
 
         edge_data["sclass"][edge_mask] = css_2d_edges
 
