@@ -255,7 +255,7 @@ class FmModelData:
             "y": y,
             "area": area,
             "bedlevel": bedlevel,
-            "bedlevel_full": bedlevel_full,
+            #"bedlevel_full": bedlevel_full,
             "waterdepth": waterdepth,
             "waterlevel": waterlevel,
             "velocity": velocity,
@@ -267,7 +267,7 @@ class FmModelData:
             "edge_x": edge_x,
             "edge_y": edge_y,
             "edge_section": edge_section,
-            "area_full": area_full,
+            #"area_full": area_full,
         }
 
         return return_dict

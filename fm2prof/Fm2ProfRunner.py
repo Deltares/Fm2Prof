@@ -2,6 +2,7 @@ import datetime
 import os
 import sys
 import time
+import pickle
 import traceback
 from pathlib import Path
 from typing import Dict, Generator, List, Mapping, NoReturn, Union
@@ -133,7 +134,7 @@ class Fm2ProfRunner(FM2ProfBase):
         for line in header_text:
             self.set_logger_message(line, header=True)
 
-    def _run_inifile(self) -> None:
+    def _run_inifile(self) -> bool:
         """
         Executes main program from the configuration file. 
 
@@ -712,7 +713,7 @@ your configuration file to fix this error.""", level="error")
             )
         
         # Create cross section
-        created_css = self._get_new_cross_section(css_data=css_data)
+        created_css = self._create_new_cross_section(css_data=css_data)
 
         if created_css is None:
             self.set_logger_message(
@@ -786,7 +787,7 @@ your configuration file to fix this error.""", level="error")
 
         return cross_section
 
-    def _get_new_cross_section(self, css_data: Mapping[str, str]):
+    def _create_new_cross_section(self, css_data: Mapping[str, str]):
         """Creates a cross section with the given input param dictionary.
 
         Arguments:
@@ -802,34 +803,29 @@ your configuration file to fix this error.""", level="error")
         if not css_data:
             return None
 
-        css_data_id = css_data.get("id")
-        if not css_data_id:
+        if not css_data.get("id"):
             return None
 
-        # Get remainig data
-        css_data_length = css_data.get("length")
-        css_data_location = css_data.get("xy")
-        css_data_branch_id = css_data.get("branchid")
-        css_data_chainage = css_data.get("chainage")
-
         if (
-            css_data_length is None
-            or css_data_location is None
-            or css_data_branch_id is None
-            or css_data_chainage is None
+            css_data.get("length") is None
+            or css_data.get("xy") is None
+            or css_data.get("branchid") is None
+            or css_data.get("chainage") is None
         ):
             return None
 
+        # Get remainig data
+        css_data['fm_data'] = self.fm_model_data.get_selection(css_data.get("id"))
+
+        if True: # pickle css data
+            output_dir = self.get_inifile().get_output_directory()
+            with open(output_dir.joinpath(f"{css_data.get('id')}.pickle"), 'wb') as f:
+                pickle.dump(css_data, f)
         try:
             css = CrossSection(
                 logger=self.get_logger(),
                 inifile=self.get_inifile(),
-                name=css_data_id,
-                length=css_data_length,
-                location=css_data_location,
-                branchid=css_data_branch_id,
-                chainage=css_data_chainage,
-                fm_data=self.fm_model_data.get_selection(css_data_id),
+                data = css_data,
             )
 
         except Exception as e_info:

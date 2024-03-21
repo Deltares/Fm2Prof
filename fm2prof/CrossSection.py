@@ -3,7 +3,7 @@ Contains CrossSection class
 """
 import math
 from logging import Logger
-from typing import List
+from typing import List, Dict
 import traceback
 from functools import reduce 
 
@@ -15,7 +15,6 @@ from scipy.integrate import cumtrapz
 
 from fm2prof import Functions as FE
 from fm2prof.common import FM2ProfBase, FrictionTable
-from fm2prof.Import import FmModelData
 from fm2prof.IniFile import IniFile
 from fm2prof.MaskOutputFile import MaskOutputFile
 
@@ -118,12 +117,7 @@ class CrossSection(FM2ProfBase):
 
     def __init__(
         self,
-        name: str,
-        length: float,
-        location: tuple,
-        branchid="not defined",
-        chainage=0,
-        fm_data: FmModelData = None,
+        data: Dict = None,
         logger: Logger = None,
         inifile: IniFile = None,
     ):
@@ -141,13 +135,14 @@ class CrossSection(FM2ProfBase):
         super().__init__(logger=logger, inifile=inifile)
 
         # Cross-section meta data
-        self.name = name  # cross-section id
-        self.length = length  # 'vaklengte'
-        self.location = location  # (x,y)
-        self.branch = branchid  # name of 1D branch for cross-section
-        self.chainage = chainage  # offset from beginning of branch
+        self.name = data.get('id')  # cross-section id
+        self.length = data.get('length')  # 'vaklengte'
+        self.location = data.get('xy')  # (x,y)
+        self.branch = data.get('branchid')  # name of 1D branch for cross-section
+        self.chainage = data.get('chainage')  # offset from beginning of branch
         self.__output_mask_list = []  # initialize output mask list.
-        self._fm_data = fm_data  # dictionary with fmdata
+        self._fm_data: Dict = data.get('fm_data')  # dictionary with fmdata
+
 
         # Cross-section geometry
         self.z = []
@@ -243,7 +238,7 @@ class CrossSection(FM2ProfBase):
         :param fm_data: dict
         :return:
         """
-        fm_data = self._fm_data
+        fm_data: Dict = self._fm_data
 
         # Unpack FM data
         waterlevel = fm_data["waterlevel"].iloc[
