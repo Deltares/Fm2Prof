@@ -90,6 +90,11 @@
 	    "hint": "Options. [0] arithmetric mean, [1] Weighted average",
 	    "value": 0 
   	},
+	"ExportCSSData": {
+	    "type": "fm2prof.IniFile.ImportBoolType",
+	    "hint": "Export pickled data used during generation of cross-section for debugging.",
+	    "value": false 
+  	},
   	"ExportMapFiles": {
 	    "type": "fm2prof.IniFile.ImportBoolType",
 	    "hint": "Export detailed map output. Only use for small models or limited number of cross-sections b/c output can be huge.",

@@ -1,18 +1,14 @@
 ﻿""" Input/output """
 
 # import from standar library
-import collections
-import locale
-import sys
 from dataclasses import astuple, dataclass
-from logging import Logger
-
+from typing import List
 import numpy as np
 
 # import from package
 from fm2prof import Functions as FE
 from fm2prof.common import FM2ProfBase
-
+from fm2prof.CrossSection import CrossSection
 
 @dataclass
 class OutputFiles:
@@ -40,7 +36,7 @@ class Export1DModelData(FM2ProfBase):
     In the future, split in different classes for SOBEK, D-Hydro etc formats
     """
 
-    def export_geometry(self, cross_sections, file_path, fmt="sobek3"):
+    def export_geometry(self, cross_sections: List[CrossSection], file_path, fmt="sobek3"):
         with open(file_path, "w") as f:
             if fmt == "sobek3":
                 """SOBEK 3 style csv"""
