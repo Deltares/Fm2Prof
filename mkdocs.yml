@@ -2,7 +2,7 @@ site_name: FM2PROF
 site_dir: documentation
 theme:
   name: material
-  custom_dir: material
+  custom_dir: docs
   language: en
   features:
     - announce.dismiss
@@ -33,7 +33,7 @@ theme:
     - toc.follow
     - toc.integrate
   icon:
-    logo: material/bat
+    logo: material/selection-off
   palette:
     # Palette toggle for light mode
     - scheme: deltares
