@@ -259,6 +259,8 @@ class FmModelData:
             "waterdepth": waterdepth,
             "waterlevel": waterlevel,
             "velocity": velocity,
+            "velocity_x": vx,
+            "velocity_y": vy,
             "section": face_section,
             "chezy": chezy,
             "region": region,
