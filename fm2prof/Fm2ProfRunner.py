@@ -751,7 +751,7 @@ your configuration file to fix this error.""", level="error")
         """
 
         if cross_section is None:
-            return
+            raise Exception
 
         # Build cross-section
         self.set_logger_message("Start building geometry", "debug")
@@ -817,7 +817,7 @@ your configuration file to fix this error.""", level="error")
         # Get remainig data
         css_data['fm_data'] = self.fm_model_data.get_selection(css_data.get("id"))
 
-        if True: # pickle css data
+        if self.get_inifile().get_parameter("ExportCSSData"):
             output_dir = self.get_inifile().get_output_directory()
             with open(output_dir.joinpath(f"{css_data.get('id')}.pickle"), 'wb') as f:
                 pickle.dump(css_data, f)

@@ -2,6 +2,7 @@
 Contains CrossSection class
 """
 import math
+import pickle
 from logging import Logger
 from typing import List, Dict
 import traceback
@@ -132,6 +133,8 @@ class CrossSection(FM2ProfBase):
             branchid {str} -- [description] (default: {"not defined"})
             chainage {int} -- [description] (default: {0})
         """
+        if inifile is None:
+            inifile = IniFile()
         super().__init__(logger=logger, inifile=inifile)
 
         # Cross-section meta data
@@ -234,9 +237,6 @@ class CrossSection(FM2ProfBase):
     def build_geometry(self):
         """
         Build 1D geometrical cross-section from FM data.
-
-        :param fm_data: dict
-        :return:
         """
         fm_data: Dict = self._fm_data
 
@@ -289,6 +289,12 @@ class CrossSection(FM2ProfBase):
         self.set_logger_message("Seperating flow from storage")
         flow_mask = self._distinguish_flow_from_storage(waterdepth, velocity)
 
+        if self.get_inifile().get_parameter("ExportCSSData"): # pickle css data
+            output_dir = self.get_inifile().get_output_directory()
+            self.set_logger_message(f'pickling to {output_dir}')
+            with open(output_dir.joinpath(f"{self.name}_flowmask.pickle"), 'wb') as f:
+                pickle.dump(flow_mask, f)
+
         # Calculate area and volume as function of waterlevel & waterdepth
         self._fm_wet_area = np.nansum(area_matrix[wet_not_plas_mask], axis=0)
         self._fm_flow_area = np.nansum(area_matrix[flow_mask], axis=0)
@@ -298,15 +304,13 @@ class CrossSection(FM2ProfBase):
         waterdepth = waterdepth[waterdepth >= 0]
 
         # Correct waterdepth for deep pools (volume below deepest point in centre
-        # should not be considered to be conveyance)
+        # should not be considered)
         pools_id = [
             i[0] for i in np.argwhere(waterdepth.to_numpy()[:, 0] > centre_depth[0])
         ]
         for pool in pools_id:
             amount_deeper = waterdepth.iloc[pool, 0] - centre_depth[0]
             waterdepth.iloc[pool] -= amount_deeper
-
-        # waterdepth[waterdepth > centre_depth[0]] = centre_depth[0]
 
         # Compute 2D volume as sum of area times depth
         self._fm_total_volume = np.array(
@@ -1154,44 +1158,6 @@ class CrossSection(FM2ProfBase):
             self._css_flow_width[-i] = np.min(
                 [self._css_flow_width[-i], self._css_flow_width[-i + 1]]
             )
-
-    def _distinguish_flow_from_storage_2(self, waterdepth, velocity):
-        """
-        This method determines which cells should be considered 'flowing'. A cell is considered flowing if all following conditions are met:
-
-        - the waterdepth greater than 0
-        - the velocity is greater than :ref:`AbsoluteVelocityThreshold<parameter_absolutevelocitythreshold>`
-        - the velocity is greater than the product of the mean velocity (of all cells within the control volume) and the :ref:`RelativeVelocityThreshold<parameter_relativevelocitythreshold>`
-
-        Args:
-            waterdepth (pandas Dataframe) with cell id
-                for index and time in columns
-            velocity (pandas Dataframe() with cell id
-                for index and time in columns
-
-        Returns:
-            flow_mask (pandas Dataframe) with cell id for index and time in columns. True for flow, False for storage
-        """
-        flow_mask = (
-            (waterdepth > 0)
-            & (velocity > self.get_parameter(self.__cs_parameter_velocity_threshold))
-            & (
-                velocity
-                > self.get_parameter(self.__cs_parameter_relative_threshold)
-                * np.mean(velocity)
-            )
-        )
-
-        # shallow flows should not be used for identifying storage
-        # (cells with small velocities are uncorrectly seen as storage)
-        waterdepth_correction = (waterdepth > 0) & (
-            waterdepth < self.get_parameter(self.__cs_parameter_min_depth_storage)
-        )
-
-        # combine flow and depth mask to avoid assigning shallow flows
-        flow_mask = flow_mask | waterdepth_correction
-
-        return flow_mask
 
     def _distinguish_flow_from_storage(self, waterdepth, velocity):
         """
