@@ -118,9 +118,9 @@ class CrossSection(FM2ProfBase):
 
     def __init__(
         self,
-        data: Dict = None,
-        logger: Logger = None,
-        inifile: IniFile = None,
+        data: Dict | None = None,
+        logger: Logger | None = None,
+        inifile: IniFile | None = None,
     ):
         """
         Arguments:
@@ -133,6 +133,7 @@ class CrossSection(FM2ProfBase):
             branchid {str} -- [description] (default: {"not defined"})
             chainage {int} -- [description] (default: {0})
         """
+        # If inifile is not given, use default configuration
         if inifile is None:
             inifile = IniFile()
         super().__init__(logger=logger, inifile=inifile)
