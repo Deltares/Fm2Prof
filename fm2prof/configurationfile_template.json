@@ -126,7 +126,7 @@
 	    "type": "fm2prof.IniFile.ImportListType",
 	    "hint": "provide comma separated list of ints; e.g. 38, 39, 40. Leave empty to generate all cross-sections",
 	    "value": "" 
-  	},
+  	}
   },
 
   "output": 
