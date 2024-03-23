@@ -102,6 +102,7 @@ class CrossSection(FM2ProfBase):
 
     __cs_parameter_css_points = "MaximumPointsInProfile"
     __cs_parameter_transitionheight_sd = "SDTransitionHeight"
+    __cs_parameter_conveyance_detection_method = "ConveyanceDetectionMethod"
     __cs_parameter_velocity_threshold = "AbsoluteVelocityThreshold"
     __cs_parameter_relative_threshold = "RelativeVelocityThreshold"
     __cs_parameter_min_depth_storage = "MinimumDepthThreshold"
@@ -287,8 +288,8 @@ class CrossSection(FM2ProfBase):
         )  # plassen_mask needed for arrays in output
 
         # Masks for wet and flow cells (stroomvoeringscriteria)
-        self.set_logger_message("Seperating flow from storage")
-        flow_mask = self._distinguish_flow_from_storage(waterdepth, velocity)
+        self.set_logger_message("Separating conveyance from storage")
+        flow_mask = self._distinguish_conveyance_from_storage(waterdepth, velocity)
 
         if self.get_inifile().get_parameter("ExportCSSData"): # pickle css data
             output_dir = self.get_inifile().get_output_directory()
@@ -1160,13 +1161,11 @@ class CrossSection(FM2ProfBase):
                 [self._css_flow_width[-i], self._css_flow_width[-i + 1]]
             )
 
-    def _distinguish_flow_from_storage(self, waterdepth, velocity):
+    def _distinguish_conveyance_from_storage(self, waterdepth, velocity):
         """
-        This method determines which cells should be considered 'flowing'. A cell is considered flowing if all following conditions are met:
+        This method determines which cells contribute to conveyance and 
+        which serve as storage ('dead zones', e.g. behind a levee). 
 
-        - the waterdepth greater than 0
-        - the velocity is greater than :ref:`AbsoluteVelocityThreshold<parameter_absolutevelocitythreshold>`
-        - the velocity is greater than the product of the mean velocity (of all cells within the control volume) and the :ref:`RelativeVelocityThreshold<parameter_relativevelocitythreshold>`
 
         Args:
             waterdepth (pandas Dataframe) with cell id
@@ -1177,26 +1176,51 @@ class CrossSection(FM2ProfBase):
         Returns:
             flow_mask (pandas Dataframe) with cell id for index and time in columns. True for flow, False for storage
         """
-        flow_mask = (
-            (waterdepth > 0)
-            & (velocity > self.get_parameter(self.__cs_parameter_velocity_threshold))
-            & (
-                velocity
-                > self.get_parameter(self.__cs_parameter_relative_threshold)
-                * np.mean(velocity)
+        @staticmethod
+        def max_velocity_method(waterdepth: pd.DataFrame, velocity: pd.DataFrame) -> pd.DataFrame:
+            """
+            This method was added in version 2.3 because the mean_velocity_method
+            led to unreasonably high conveyance if the river was connected to 
+            an inland harbour. 
+            """
+            # This condition may be redundant
+            waterdepth_condition = waterdepth > 0
+            
+            # Determine maximum as the average of the top 3 flow velocities
+            maxv = velocity.T.max()
+            for i in velocity.T:
+                maxv[i] = velocity.T[i].sort_values().iloc[-3:].mean()
+            
+            relative_velocity_condition = velocity > velocity.max()*0.01
+            
+            # Flow mask determines which cells are conveyance (TRUE)
+            flow_mask = waterdepth_condition & relative_velocity_condition
+            
+            return flow_mask
+            
+        @staticmethod
+        def mean_velocity_method(waterdepth, velocity):
+            """
+            This was the default method < 2.3. This method leads to unreasonably 
+            high conveyance if the river was connected to an inland harbour. 
+            """
+            flow_mask = (
+                (waterdepth > 0)
+                & (velocity > self.get_parameter(self.__cs_parameter_velocity_threshold))
+                & (
+                    velocity
+                    > self.get_parameter(self.__cs_parameter_relative_threshold)
+                    * np.mean(velocity)
+                )
             )
-        )
 
-        # shallow flows should not be used for identifying storage
-        # (cells with small velocities are uncorrectly seen as storage)
-        waterdepth_correction = (waterdepth > 0) & (
-            waterdepth < self.get_parameter(self.__cs_parameter_min_depth_storage)
-        )
+            return flow_mask
 
-        # combine flow and depth mask to avoid assigning shallow flows
-        # flow_mask = flow_mask | waterdepth_correction
-
-        return flow_mask
+        match self.get_inifile().get_parameter(self.__cs_parameter_conveyance_detection_method):
+            case 0:
+                return mean_velocity_method(waterdepth, velocity)    
+            case 1:
+                return max_velocity_method(waterdepth, velocity)
 
     def _extend_css_below_z0(
         self,

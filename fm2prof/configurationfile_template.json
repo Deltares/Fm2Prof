@@ -35,6 +35,11 @@
 	    "hint": "Number of points which are used to generate cross-sections",
 	    "value": 20
   	},
+	"ConveyanceDetectionMethod": {
+		"type": "int",
+	    "hint": "[0] method based on mean flow velocity, [1] method based on maximum flow velocity (default)",
+	    "value": 1
+	},
   	"AbsoluteVelocityThreshold": {
 	    "type": "float",
 	    "hint": "Absolute velocity threshold in m/s. Used to determine storage",
@@ -42,7 +47,7 @@
   	},
   	"RelativeVelocityThreshold": {
 	    "type": "float",
-	    "hint": "Relative velocity threshold (percent of mean flow velocity; 0-1). Used to determine storage",
+	    "hint": "Relative velocity threshold (percentage). Used to determine storage",
 	    "value": 0.03 
   	},
   	"MinimumDepthThreshold": {
