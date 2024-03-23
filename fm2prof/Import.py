@@ -243,8 +243,6 @@ class FmModelData:
         # retrieve the full set for face_nodes and area, needed for the roughness calculation
         # face_nodes = edge_data['face_nodes'][dti['sclass'] == css_name]
         # face_nodes_full = edge_data['face_nodes']
-        area_full = dti["area"]
-        bedlevel_full = dti["bedlevel"]
         bedlevel = dti["bedlevel"][dti["sclass"] == css_name]
 
         velocity = (vx**2 + vy**2) ** 0.5
@@ -255,12 +253,9 @@ class FmModelData:
             "y": y,
             "area": area,
             "bedlevel": bedlevel,
-            #"bedlevel_full": bedlevel_full,
             "waterdepth": waterdepth,
             "waterlevel": waterlevel,
-            "velocity": velocity,
-            "velocity_x": vx,
-            "velocity_y": vy,
+            "velocity": velocity.T,
             "section": face_section,
             "chezy": chezy,
             "region": region,
@@ -269,7 +264,6 @@ class FmModelData:
             "edge_x": edge_x,
             "edge_y": edge_y,
             "edge_section": edge_section,
-            #"area_full": area_full,
         }
 
         return return_dict
