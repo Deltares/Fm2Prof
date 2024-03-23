@@ -255,7 +255,7 @@ class FmModelData:
             "bedlevel": bedlevel,
             "waterdepth": waterdepth,
             "waterlevel": waterlevel,
-            "velocity": velocity.T,
+            "velocity": velocity,
             "section": face_section,
             "chezy": chezy,
             "region": region,

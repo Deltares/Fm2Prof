@@ -272,11 +272,6 @@ class CrossSection(FM2ProfBase):
             self.location, fm_data["x"], fm_data["y"], waterdepth, waterlevel
         )
 
-        # apply rolling average over the velocities
-        # to smooth out extreme values
-        velocity = velocity.T.rolling(
-            window=10, min_periods=1, center=True).mean()
-
         # Identify river lakes (plassen)
         self.set_logger_message("Identifying lakes")
         (
@@ -1187,11 +1182,11 @@ class CrossSection(FM2ProfBase):
             waterdepth_condition = waterdepth > 0
             
             # Determine maximum as the average of the top 3 flow velocities
-            maxv = velocity.T.max()
-            for i in velocity.T:
-                maxv[i] = velocity.T[i].sort_values().iloc[-3:].mean()
+            maxv = velocity.max()
+            for i in velocity:
+                maxv[i] = velocity[i].sort_values().iloc[-3:].mean()
             
-            relative_velocity_condition = velocity > velocity.max()*0.01
+            relative_velocity_condition = velocity > maxv*self.get_parameter(self.__cs_parameter_relative_threshold)
             
             # Flow mask determines which cells are conveyance (TRUE)
             flow_mask = waterdepth_condition & relative_velocity_condition
@@ -1204,6 +1199,11 @@ class CrossSection(FM2ProfBase):
             This was the default method < 2.3. This method leads to unreasonably 
             high conveyance if the river was connected to an inland harbour. 
             """
+            # apply rolling average over the velocities
+            # to smooth out extreme values
+            velocity = velocity.rolling(
+                window=10, min_periods=1, center=True).mean()
+                
             flow_mask = (
                 (waterdepth > 0)
                 & (velocity > self.get_parameter(self.__cs_parameter_velocity_threshold))
@@ -1220,6 +1220,9 @@ class CrossSection(FM2ProfBase):
             case 0:
                 return mean_velocity_method(waterdepth, velocity)    
             case 1:
+                return max_velocity_method(waterdepth, velocity)
+            case _:
+                self.set_logger_message('Invalid conveyance method. Defaulting to [1]', 'warning')
                 return max_velocity_method(waterdepth, velocity)
 
     def _extend_css_below_z0(
