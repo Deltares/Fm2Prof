@@ -92,22 +92,15 @@ class CrossSectionHelpers(FM2ProfBase):
 
 
 class CrossSection(FM2ProfBase):
-    __cs_parameter_css_points = "MaximumPointsInProfile"
     __cs_parameter_transitionheight_sd = "SDTransitionHeight"
     __cs_parameter_conveyance_detection_method = "ConveyanceDetectionMethod"
     __cs_parameter_velocity_threshold = "AbsoluteVelocityThreshold"
     __cs_parameter_relative_threshold = "RelativeVelocityThreshold"
-    __cs_parameter_min_depth_storage = "MinimumDepthThreshold"
     __cs_parameter_plassen_timesteps = "LakeTimesteps"
-    __cs_parameter_storagemethod_wli = "ExtrapolateStorage"
-    __cs_parameter_bedlevelcriterium = "BedlevelCriterium"
-    __cs_parameter_SDstorage = "SDCorrection"
     __cs_parameter_Frictionweighing = "FrictionweighingMethod"
     __cs_parameter_sdoptimisationmethod = "sdoptimisationmethod"
     __cs_parameter_skip_maps = "SkipMaps"
-    __cs_parameter_floodplain_base_level = "SDFloodplainBase"
     __cs_parameter_minwidth = "MinimumTotalWidth"
-    __logger = None
 
     def __init__(
         self,
@@ -338,8 +331,6 @@ class CrossSection(FM2ProfBase):
             centre_level,
             centre_depth,
             waterlevel,
-            bedlevel_matrix,
-            area_matrix,
             wet_not_plas_mask.iloc[:, 0].values,
         )
 
@@ -606,7 +597,6 @@ class CrossSection(FM2ProfBase):
 
         # Properties keys
         cross_section_id_key = "cross_section_id"
-        cross_section_region_key = "region"
         is_lake_key = "is_lake"
         bedlevel_key = "bedlevel"
         section_key = "section"
@@ -710,32 +700,15 @@ class CrossSection(FM2ProfBase):
                 level="error",
             )
 
-    def interpolate_roughness_table(self, tablename, z_values):
-        """
-        Interpolates the roughness table to z values
-        """
-        table_name_list = ["main", "floodplain1"]
-
-        if tablename not in table_name_list:
-            raise KeyError("tablename not in list {}".format(table_name_list))
-
-        pass
-
     def _check_remove_duplicate_zeroes(self):
         """
         Removes duplicate zeroes in the total width
         """
-        mask = np.array([True] * len(self._css_z))
 
         # Remove multiple 0s in the total width
         index_of_first_nonzero = max(1, np.argwhere(self._css_total_width != 0)[0][0])
 
         return index_of_first_nonzero
-
-        # self._css_z = self._return_first_item_and_after_index(self._css_z, index_of_first_nonzero)
-        # self._css_flow_width = self._return_first_item_and_after_index(self._css_flow_width, index_of_first_nonzero)
-        # self._css_total_width = self._return_first_item_and_after_index(self._css_total_width, index_of_first_nonzero)
-        # self.set_logger_message(f'Removed {index_of_first_nonzero-1} duplicate zero widths', 'debug')
 
     @staticmethod
     def _return_first_item_and_after_index(listin, after_index):
@@ -918,7 +891,7 @@ class CrossSection(FM2ProfBase):
         for section in sections:
             chezy_section = chezy_fm[self._fm_data["edge_section"] == section]
             if self.get_parameter(self.__cs_parameter_Frictionweighing) == 0:
-                friction = self._friction_weighing_simple(chezy_section, section)
+                friction = self._friction_weighing_simple(chezy_section)
             elif self.get_parameter(self.__cs_parameter_Frictionweighing) == 1:
                 friction = self._friction_weighing_area(chezy_section, section)
             else:
@@ -932,7 +905,7 @@ class CrossSection(FM2ProfBase):
                 level=self._css_z_roughness, friction=friction
             )
 
-    def _friction_weighing_simple(self, link_chezy, section):
+    def _friction_weighing_simple(self, link_chezy):
         """Simple mean, no weight"""
         # Remove chezy where zero
         link_chezy = link_chezy.replace(0, np.NaN)
@@ -973,7 +946,7 @@ class CrossSection(FM2ProfBase):
         If the sum of the section widths is smaller than the flow width, the
         width is increase proportionally
         """
-        total_area = sum(self._fm_data["area"])
+        
         unassigned_area = sum(self._fm_data["area"][self._fm_data["section"] == -999])
         if unassigned_area > 0:
             self.set_logger_message(
@@ -1236,8 +1209,6 @@ class CrossSection(FM2ProfBase):
         centre_level,
         centre_depth,
         waterlevel,
-        bedlevel_matrix,
-        area_matrix,
         wet_not_plas_mask,
     ) -> None:
         """
@@ -1294,19 +1265,19 @@ class CrossSection(FM2ProfBase):
             elif self.get_parameter("extrapolatestorage"):
                 total_flow_area = np.min([total_wet_area, flow_area_at_z0])
 
-            self._css_z = CrossSection._append_to_start(
+            self._css_z = self._append_to_start(
                 self._css_z, centre_level_at_dz
             )
-            self._css_total_width = CrossSection._append_to_start(
+            self._css_total_width = self._append_to_start(
                 self._css_total_width, total_wet_area / self.length
             )
-            self._css_flow_width = CrossSection._append_to_start(
+            self._css_flow_width = self._append_to_start(
                 self._css_flow_width, total_flow_area / self.length
             )
-            self._fm_wet_area = CrossSection._append_to_start(
+            self._fm_wet_area = self._append_to_start(
                 self._fm_wet_area, total_wet_area
             )
-            self._fm_flow_area = CrossSection._append_to_start(
+            self._fm_flow_area = self._append_to_start(
                 self._fm_flow_area, total_flow_area
             )
             self._fm_flow_volume = np.insert(self._fm_flow_volume, 0, np.nan)
