@@ -1306,7 +1306,7 @@ class CrossSection(FM2ProfBase):
         """
         return np.insert(array, 0, to_add)
 
-    def _return_volume_error(self, predicted, measured, gof="rmse"):
+    def _return_volume_error(self, predicted, measured):
         """
         Returns the squared relative error
         """

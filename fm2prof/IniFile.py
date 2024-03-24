@@ -212,7 +212,6 @@ class IniFile(FM2ProfBase):
         except KeyError:
             pass
         self.set_logger_message(f"unknown key {key}", "error")
-        raise KeyError
 
     def set_input_file(self, key: str, value=None) -> None:
         """Use this method to set a input files the configuration"""
