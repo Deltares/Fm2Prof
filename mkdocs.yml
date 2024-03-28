@@ -101,4 +101,6 @@ markdown_extensions:
       check_paths: true
       base_path: [docs/snippets, "."]
   - pymdownx.superfences
-
+extra:
+  version:
+    provider: mike
