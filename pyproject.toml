@@ -36,6 +36,10 @@ mkdocs-exclude = "^1.0.2"
 mkdocs-autorefs = "^1.0.1"
 mkdocs-glightbox = "^0.3.7"
 
+
+[tool.poetry.group.docs.dependencies]
+mike = "^2.0.0"
+
 [tool.optional-dependencies]
 dev = [
 	"pytest",
