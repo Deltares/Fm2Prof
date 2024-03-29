@@ -65,5 +65,5 @@ jobs:
         with:
           args: >
             -Dsonar.organization=deltares
-            -Dsonar.projectKey=deltares_Fm2Prof
+            -Dsonar.projectKey=Deltares_Fm2Prof
             -Dsonar.python.coverage.reportPaths=coverage.xml
