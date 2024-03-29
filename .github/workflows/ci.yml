@@ -61,3 +61,9 @@ jobs:
         uses: SonarSource/sonarcloud-github-action@master
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          args: >
+            -Dsonar.organization=deltares
+            -Dsonar.projectKey=deltares_Fm2Prof
+            -Dsonar.python.coverage.reportPaths=coverage.xml
