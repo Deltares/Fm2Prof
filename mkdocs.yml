@@ -53,8 +53,8 @@ plugins:
   - glightbox
   - git-revision-date-localized:
       enable_creation_date: true
-  - git-committers:
-      repository: Deltares/Fm2Prof
+  #- git-committers:
+  #    repository: Deltares/Fm2Prof
   - mkdocstrings:
       handlers:
           python:
