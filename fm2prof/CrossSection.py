@@ -104,7 +104,7 @@ class CrossSection(FM2ProfBase):
 
     def __init__(
         self,
-        data: Dict | None = None,
+        data: Dict,
         logger: Logger | None = None,
         inifile: IniFile | None = None,
     ):
@@ -129,13 +129,22 @@ class CrossSection(FM2ProfBase):
             inifile = IniFile()
         super().__init__(logger=logger, inifile=inifile)
 
+        try:
+            assert all(key in data for key in ['id',
+                                               'length',
+                                               'xy',
+                                               'branchid',
+                                               'chainage',
+                                               'fm_data'])
+        except AssertionError:
+            raise Exception("Input data does not have all required keys")
+            
         # Cross-section meta data
         self.name = data.get('id')  # cross-section id
         self.length = data.get('length')  # 'vaklengte'
         self.location = data.get('xy')  # (x,y)
         self.branch = data.get('branchid')  # name of 1D branch for cross-section
         self.chainage = data.get('chainage')  # offset from beginning of branch
-        self.__output_mask_list = []  # initialize output mask list.
         self._fm_data: Dict = data.get('fm_data')  # dictionary with fmdata
 
 
@@ -148,7 +157,7 @@ class CrossSection(FM2ProfBase):
         self.roughness_sections = np.array([])
 
         # delta h corrections ("summerdike option")
-        self.crest_level = 0
+        self.crest_level:float = 0
         # in cross-section def. WAQ2PROF did crest - some fixed value.
         #  how to do here?
         self.floodplain_base = 0.0
@@ -162,8 +171,8 @@ class CrossSection(FM2ProfBase):
         self.extra_flow_area = 0
 
         # These attributes are used for non-reduced sets
-        self._css_z = 0
-        self._css_total_volume = 0
+        self._css_z: np.ndarray = np.array([0])
+        self._css_total_volume: np.ndarray = np.array([0])
         self._css_total_volume_corrected = None
         self._css_flow_volume = 0
         self._css_flow_volume_corrected = None
@@ -226,9 +235,22 @@ class CrossSection(FM2ProfBase):
             raise ValueError('pointtype must be "face" or "edge"')
 
     # Public functions
-    def build_geometry(self):
+    def build_geometry(self) -> None:
         """
-        Build 1D geometrical cross-section from FM data.
+        This methods builds 1D geometrical cross-section from 2D data.
+        The 2D data is set on initalisation of the `CrossSection` object. 
+        The methods modifies the following attributes 
+        
+        Attributes:
+           _fm_wet_area
+           _fm_flow_area
+           _fm_total_volume
+           _fm_total_volume
+           _css_z_roughness
+           _css_z
+           _css_total_width
+           _css_flow_width
+
         """
         fm_data: Dict = self._fm_data
 
@@ -350,10 +372,6 @@ class CrossSection(FM2ProfBase):
         # (apparently entries can be float32)
         self._css_z = np.array(self._css_z, dtype=np.dtype("float64"))
 
-        fm_data["islake"] = plassen_mask
-
-        # generate all mask points for the given cross_section
-        # self.set_mask_output_list(fm_data, plassen_mask)
 
     def check_requirements(self):
         """
@@ -1229,15 +1247,14 @@ class CrossSection(FM2ProfBase):
             - the tolerance for deciding which cell is wet is hardcoded at -1e-3
 
 
-        Returns:
-            None: This method extends the following attributes:
-                    _css_z
-                    _css_total_width
-                    _css_flow_width
-                    _fm_wet_area
-                    _fm_flow_area
-                    _fm_flow_volume
-                    _fm_total_volume
+        Attributes:
+            _css_z
+            _css_total_width
+            _css_flow_width
+            _fm_wet_area
+            _fm_flow_area
+            _fm_flow_volume
+            _fm_total_volume
         """
 
         bedlevel = self._fm_data.get("bedlevel").values

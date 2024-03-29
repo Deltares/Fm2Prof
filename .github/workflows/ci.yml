@@ -3,7 +3,6 @@ name: ci
 on: [push]
 
 jobs:
-
   CI:
     strategy:
       fail-fast: false
@@ -13,12 +12,12 @@ jobs:
         os: [windows-latest]
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
       - name: Set up Python
-        uses: actions/setup-python@v1
+        uses: actions/setup-python@v2
         with:
           python-version: ${{ matrix.python-version }}
 
@@ -48,7 +47,7 @@ jobs:
         run: poetry run pytest --cov=fm2prof --cov-report=xml tests/
 
       - name: Autoformat code if the check fails
-        if: ${{ (matrix.os == 'ubuntu-18.04') && (matrix.python-version == 3.10) }}
+        if: ${{ (matrix.os == 'ubuntu-18.04') && (matrix.python-version == 3.8) }}
         run: |
           poetry run isort .
           poetry run black .
@@ -57,3 +56,8 @@ jobs:
           git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/$GITHUB_REPOSITORY
           git checkout $GITHUB_HEAD_REF
           git commit -am "autoformat: isort & black" && git push || true
+
+      - name: SonarCloud Scan
+        uses: SonarSource/sonarcloud-github-action@master
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}

@@ -1,59 +1,59 @@
 import datetime
-import os
-import shutil
-import sys
-import unittest
-
 import numpy as np
 import pytest
 
-from fm2prof import Project
-from fm2prof.CrossSection import CrossSection as CS
-from fm2prof.Fm2ProfRunner import Fm2ProfRunner
-from fm2prof.Import import FmModelData as FMD
+
+from fm2prof.CrossSection import CrossSection 
 from fm2prof.IniFile import IniFile
+import pickle
+
 from tests.TestUtils import TestUtils
 
+css_test_dir = "cross_sections"
+
+test_cases = [dict(
+    name="waal_1_40147.826", 
+    css_z = np.array([-0.9141    , -0.2808732 ,  0.3523536 ,  0.9855804 ,  1.61880719,
+                 2.25203399,  2.88526079,  3.51848759,  4.15171439,  4.78494119,
+                 4.78494119,  4.83562453,  5.0825522 ,  5.35312778,  5.639405  ,
+                 5.94391206,  6.23998542,  6.54804721,  6.84868257,  7.13847582,
+                 7.38282862,  7.63388787,  7.89941093,  8.18003839,  8.4205877 ,
+                 8.68096833,  8.90767707,  9.14537943,  9.39478408,  9.62215027,
+                 9.81724704, 10.01426908, 10.2297726 , 10.46081785, 10.71071257,
+                 10.99499479, 11.29960472, 11.62194869, 11.95376401, 12.20920782,
+                 12.26486054, 12.27733635]),
+    css_total_volume = np.array([       0.        ,   202411.92430511,   440863.87373976,
+                714537.17597224,  1023088.46888726,  1370281.34820867,
+                1746175.98609244,  2142631.45969038,  2559469.10395432,
+                2991123.22671975,  2991123.22671975,  3028190.8376371 ,
+                3218864.47242984,  3430109.5158954 ,  3655876.28183273,
+                3898019.94718616,  4136564.29328984,  4391422.83609613,
+                4652111.1476516 ,  4914018.51771363,  5139429.93097691,
+                5372719.6548311 ,  5620726.47479325,  5884181.24648082,
+                6110863.38850093,  6359954.26342078,  6580688.49745023,
+                6813452.44399827,  7062291.71909494,  7293350.75974847,
+                7491616.26087858,  7691838.29814542,  7910841.99672851,
+                8145639.84965338,  8399593.31489642,  8693502.87558943,
+                9016339.67243312,  9360662.51019234,  9715102.4974322 ,
+                9987963.61958959, 10047410.99351798, 10060737.46221183]),
+    crest_level = 4.573300167187546,
+    extra_total_volume = 689298.2236775636)]
 
 
-class ARCHIVED_Test_generate_cross_section:
-    def test_when_no_css_data_is_given_then_expected_exception_risen(self):
+
+class Test_generate_cross_section_instance:
+   
+    def test_when_wrong_input_dict_is_given_then_expected_exception_risen(self):
         # 1. Set up test data
-        runner = Fm2ProfRunner(None)
-
-        # 2. Set expectations
-        expected_error = "No data was given to create a Cross Section"
-
-        # 3. Run test
-        with pytest.raises(Exception) as e_info:
-            runner._generate_cross_section(
-                css_data=None, input_param_dict=None, fm_model_data=None
-            )
-
-        # 4. Verify final expectations
-        error_message = str(e_info.value)
-        assert error_message == expected_error, (
-            ""
-            + "Expected exception message {},".format(expected_error)
-            + " retrieved {}".format(error_message)
-        )
-
-    def test_when_no_input_param_dict_is_given_then_expected_exception_risen(self):
-        # 1. Set up test data
-        runner = Fm2ProfRunner(None)
         test_css_name = "dummy_css"
         css_data = {"id": test_css_name}
-        # 2. Set expectations
-        expected_error = (
-            "No input parameters (from ini file)"
-            + " given for new cross section {}".format(test_css_name)
-        )
 
+        # 2. Set expectations
+        expected_error = ("Input data does not have all required keys")
+            
         # 3. Run test
         with pytest.raises(Exception) as e_info:
-            runner._generate_cross_section(
-                css_data=css_data, input_param_dict=None, fm_model_data=None
-            )
+            CrossSection(data=css_data)
 
         # 4. Verify final expectations
         error_message = str(e_info.value)
@@ -62,390 +62,102 @@ class ARCHIVED_Test_generate_cross_section:
             + "Expected exception message {},".format(expected_error)
             + " retrieved {}".format(error_message)
         )
-
-    def test_when_no_fm_model_data_is_given_then_expected_exception_risen(self):
+        
+    def test_when_correct_input_dict_is_given_CrossSection_initialises(self):
         # 1. Set up test data
-        runner = Fm2ProfRunner(None)
-        test_css_name = "dummy_name"
-        css_data = {"id": test_css_name}
-        input_param_dict = {"dummyKey": "dummyValue"}
+        tdir = TestUtils.get_local_test_data_dir(css_test_dir)
+        with open(tdir.joinpath(f"{test_cases[0].get('name')}.pickle"), 'rb') as f:
+            css_data = pickle.load(f)
 
         # 2. Set expectations
-        expected_error = "No FM data given for new cross section" + " {}".format(
-            test_css_name
-        )
-
-        # 3. Run test
-        with pytest.raises(Exception) as e_info:
-            runner._generate_cross_section(
-                css_data=css_data, input_param_dict=input_param_dict, fm_model_data=None
-            )
-
-        # 4. Verify final expectations
-        error_message = str(e_info.value)
-        assert error_message == expected_error, (
-            ""
-            + "Expected exception message {},".format(expected_error)
-            + " retrieved {}".format(error_message)
-        )
-
-    def test_when_all_parameters_are_correct_then_returns_expected_css(self):
-        # 1. Set up test data
-        runner = Fm2ProfRunner(None)
-        test_css_name = "dummy_css"
-        css_data = {"id": test_css_name}
-        input_param_dict = {"dummyKey": "dummyValue"}
-
-        css_data_length = 42
-        css_data_location = (4, 2)
-        css_data_branch_id = 420
-        css_data_chainage = 4.2
-        css_data = {
-            "id": test_css_name,
-            "length": css_data_length,
-            "xy": css_data_location,
-            "branchid": css_data_branch_id,
-            "chainage": css_data_chainage,
-        }
-        css_data_dict = {
-            "id": [test_css_name],
-            "length": [css_data_length],
-            "xy": [css_data_location],
-            "branchid": [css_data_branch_id],
-            "chainage": [css_data_chainage],
-        }
-        fmd_arg_list = (None, None, None, None, css_data_dict)
-        fm_model_data = FMD(fmd_arg_list)
-
-        # 2. Expectations
-        return_css = None
-
+        
+            
         # 3. Run test
         try:
-            return_css = runner._generate_cross_section(
-                css_data=css_data,
-                input_param_dict=input_param_dict,
-                fm_model_data=fm_model_data,
-            )
+            css = CrossSection(data=css_data)
         except Exception as e_info:
             pytest.fail(
-                "No expected exception but was risen:" + " {}".format(str(e_info))
-            )
+                f"No expected exception but was risen:" + " {e_info}")
 
         # 4. Verify final expectations
-        assert return_css is not None
-        assert (
-            return_css.name == test_css_name
-        ), "" + "Expected name {} but was {}".format(test_css_name, return_css.name)
-        assert (
-            return_css.length == css_data_length
-        ), "" + "Expected length {} but was {}".format(
-            css_data_length, return_css.length
-        )
-        assert (
-            return_css.location == css_data_location
-        ), "" + "Expected location {} but was {}".format(
-            css_data_location, return_css.location
-        )
-        assert (
-            return_css.branch == css_data_branch_id
-        ), "" + "Expected branch {} but was {}".format(
-            css_data_branch_id, return_css.branch
-        )
-        assert (
-            return_css.chainage == css_data_chainage
-        ), "" + "Expected chainage {} but was {}".format(
-            css_data_chainage, return_css.chainage
-        )
+        assert css.length == css_data.get('length')
 
-
-
-class ARCHIVED_Test_set_fm_data_to_cross_section:
-    def test_when_no_cross_section_given_then_no_exception_risen(self):
+class Test_cross_section_construction:
+    def test_build_geometry(self):
         # 1. Set up test data
-        runner = Fm2ProfRunner(None)
-        cross_section = None
-        input_param_dict = {"dummy_key": "dummy_value"}
-        fm_args = (None, None, None, None, None)
-        fm_model_data = FMD(fm_args)
-        start_time = datetime.datetime.now
+        test_case: dict = test_cases[0]
+        tdir = TestUtils.get_local_test_data_dir(css_test_dir)
+        with open(tdir.joinpath(f"{test_case.get('name')}.pickle"), 'rb') as f:
+            css_data = pickle.load(f)
 
-        # 2. Set expectations
-        assert runner is not None
-        assert input_param_dict is not None
-        assert fm_model_data is not None
-        assert start_time is not None
+        tol = 1e-6
+
+        # 2. Set expectations for 
+        css_z: np.array = test_case.get('css_z')
+        css_total_volume: np.array = test_case.get('css_total_volume')
 
         # 3. Run test
         try:
-            runner._set_fm_data_to_cross_section(
-                cross_section=cross_section,
-                input_param_dict=input_param_dict,
-                fm_model_data=fm_model_data,
-                start_time=start_time,
-            )
+            css = CrossSection(data=css_data)
+            css.build_geometry()
         except Exception as e_info:
-            pytest.fail("No expected exception but was thrown: {}".format(str(e_info)))
-
-    def test_when_no_fm_model_data_given_then_no_exception_risen(self):
-        # 1. Set up test data
-        runner = Fm2ProfRunner(None)
-        input_param_dict = {"dummy_key": "dummy_value"}
-        cross_section = CS(input_param_dict, "dummy_name", 4.2, (4, 2))
-        fm_model_data = None
-        start_time = datetime.datetime.now
-
-        # 2. Set expectations
-        assert runner is not None
-        assert input_param_dict is not None
-        assert cross_section is not None
-        assert start_time is not None
-
-        # 3. Run test
-        try:
-            runner._set_fm_data_to_cross_section(
-                cross_section=cross_section,
-                input_param_dict=input_param_dict,
-                fm_model_data=fm_model_data,
-                start_time=start_time,
-            )
-        except Exception as e_info:
-            pytest.fail("No expected exception but was thrown: {}".format(str(e_info)))
-
-    def test_when_given_invalid_parameters_then_no_exception_risen(self):
-        # 1. Set up test data
-        runner = Fm2ProfRunner(None)
-        input_param_dict = {"dummy_key": "dummy_value"}
-        cross_section = CS(input_param_dict, "dummy_name", 4.2, (4, 2))
-        fm_args = (None, None, None, None, None)
-        fm_model_data = FMD(fm_args)
-        start_time = datetime.datetime.now
-
-        # 2. Set expectations
-        assert runner is not None
-        assert input_param_dict is not None
-        assert cross_section is not None
-        assert fm_model_data is not None
-        assert start_time is not None
-
-        # 3. Run test
-        try:
-            runner._set_fm_data_to_cross_section(
-                cross_section=cross_section,
-                input_param_dict=input_param_dict,
-                fm_model_data=fm_model_data,
-                start_time=start_time,
-            )
-        except Exception as e_info:
-            pytest.fail("No expected exception but was thrown: {}".format(str(e_info)))
-
-    def test_when_given_correct_values_then_fm_data_set_to_css(self):
-        pytest.fail(
-            "To do. This test should verify fm_data is set, "
-            + "the CS is built, Delta-h corrected, "
-            + "reduced number of points, assigned roughness."
-        )
-
-
-class ARCHIVED_Test_get_new_cross_section:
-    @pytest.mark.parametrize("css_data", [(None), ({})])
-    def test_when_not_given_css_data_then_returns_none(self, css_data):
-        # 1. Set up test data
-        runner = Fm2ProfRunner(None)
-
-        # 2. Expectations
-        return_value = None
-
-        # 3. Run test
-        try:
-            return_value = runner._get_new_cross_section(
-                css_data=css_data, input_param_dict=None
-            )
-        except Exception as e_info:
-            pytest.fail("No expected exception but was risen: {}".format(str(e_info)))
+            pytest.fail(
+                f"No expected exception but was risen:" + " {e_info}")
 
         # 4. Verify final expectations
-        assert return_value is None
+        assert len(css_z) == len(css._css_z)
 
-    def test_when_css_data_id_not_found_then_returns_none(self):
+        assert all([abs(css_z[i] - css._css_z[i]) < tol for i in range(len(css_z))])
+        assert all([abs(css_total_volume[i] - css._css_total_volume[i]) < tol for i in range(len(css_total_volume))])
+        
+    def test_calculate_correction(self):
         # 1. Set up test data
-        runner = Fm2ProfRunner(None)
-        input_param_dict = {"dummyKey": "dummyValue"}
-        css_data = {"dummyKey": "dummyValue"}
+        test_case: dict = test_cases[0]
+        tdir = TestUtils.get_local_test_data_dir(css_test_dir)
+        with open(tdir.joinpath(f"{test_case.get('name')}.pickle"), 'rb') as f:
+            css_data = pickle.load(f)
 
-        # 2. Expectations
-        return_value = None
+        tol = 1e-6
+
+        # 2. Set expectations for 
+        crest_level:float = test_case.get('crest_level') # type: ignore
+        extra_total_volume: np.ndarray = test_case.get('extra_total_volume') # type: ignore
 
         # 3. Run test
         try:
-            return_value = runner._get_new_cross_section(
-                css_data=css_data, input_param_dict=input_param_dict
-            )
+            css = CrossSection(data=css_data)
+            css.build_geometry()
+            css.calculate_correction()
         except Exception as e_info:
-            pytest.fail("No expected exception but was risen: {}".format(str(e_info)))
+            pytest.fail(
+                f"No expected exception but was risen:" + " {e_info}")
 
         # 4. Verify final expectations
-        assert return_value is None
+        assert abs(crest_level - css.crest_level) < tol
+        assert abs(extra_total_volume - css.extra_total_volume) < tol
 
-    def test_when_css_data_misses_rest_of_key_values_then_returns_none(self):
+    def test_reduce_points(self):
         # 1. Set up test data
-        runner = Fm2ProfRunner(None)
-        input_param_dict = {"dummyKey": "dummyValue"}
-        css_data = {"id": []}
+        test_case: dict = test_cases[0]
+        tdir = TestUtils.get_local_test_data_dir(css_test_dir)
+        with open(tdir.joinpath(f"{test_case.get('name')}.pickle"), 'rb') as f:
+            css_data = pickle.load(f)
 
-        # 2. Expectations
-        return_value = None
+        tol = 1e-6
+
+        # 2. Set expectations for 
+        crest_level:float = test_case.get('crestlevel')
+        extra_total_volume: np.ndarray = test_case.get('extra_total_volume')
 
         # 3. Run test
         try:
-            return_value = runner._get_new_cross_section(
-                css_data=css_data, input_param_dict=input_param_dict
-            )
+            css = CrossSection(data=css_data)
+            css.build_geometry()
+            css.calculate_correction()
+            css.reduce_points(count_after=20)
         except Exception as e_info:
-            pytest.fail("No expected exception but was risen: {}".format(str(e_info)))
+            pytest.fail(
+                f"No expected exception but was risen:" + " {e_info}")
 
         # 4. Verify final expectations
-        assert return_value is None
-
-    def test_when_given_css_data_but_no_input_params_then_returns_css(self):
-        # 1. Set up test data
-        runner = Fm2ProfRunner(None)
-        test_css_name = "dummy_css"
-        input_param_dict = None
-        css_data_length = 42
-        css_data_location = (4, 2)
-        css_data_branch_id = 420
-        css_data_chainage = 4.2
-        css_data = {
-            "id": test_css_name,
-            "length": css_data_length,
-            "xy": css_data_location,
-            "branchid": css_data_branch_id,
-            "chainage": css_data_chainage,
-        }
-
-        # 2. Expectations
-        return_css = None
-
-        # 3. Run test
-        try:
-            return_css = runner._get_new_cross_section(
-                css_data=css_data, input_param_dict=input_param_dict
-            )
-        except Exception as e_info:
-            pytest.fail("No expected exception but was risen: {}".format(str(e_info)))
-
-        # 4. Verify final expectations
-        assert return_css is not None
-        assert (
-            return_css.name == test_css_name
-        ), "" + "Expected name {} but was {}".format(test_css_name, return_css.name)
-        assert (
-            return_css.length == css_data_length
-        ), "" + "Expected length {} but was {}".format(
-            css_data_length, return_css.length
-        )
-        assert (
-            return_css.location == css_data_location
-        ), "" + "Expected location {} but was {}".format(
-            css_data_location, return_css.location
-        )
-        assert (
-            return_css.branch == css_data_branch_id
-        ), "" + "Expected branch {} but was {}".format(
-            css_data_branch_id, return_css.branch
-        )
-        assert (
-            return_css.chainage == css_data_chainage
-        ), "" + "Expected chainage {} but was {}".format(
-            css_data_chainage, return_css.chainage
-        )
-
-    def test_when_given_valid_arguments_then_returns_expected_css(self):
-        # 1. Set up test data
-        runner = Fm2ProfRunner(None)
-        test_css_name = "dummy_css"
-        input_param_dict = {"dummyKey": "dummyValue"}
-        css_data_length = 42
-        css_data_location = (4, 2)
-        css_data_branch_id = 420
-        css_data_chainage = 4.2
-        css_data = {
-            "id": test_css_name,
-            "length": css_data_length,
-            "xy": css_data_location,
-            "branchid": css_data_branch_id,
-            "chainage": css_data_chainage,
-        }
-
-        # 2. Expectations
-        return_css = None
-
-        # 3. Run test
-        try:
-            return_css = runner._get_new_cross_section(
-                css_data=css_data, input_param_dict=input_param_dict
-            )
-        except Exception as e_info:
-            pytest.fail("No expected exception but was risen: {}".format(str(e_info)))
-
-        # 4. Verify final expectations
-        assert return_css is not None
-        assert (
-            return_css.name == test_css_name
-        ), "" + "Expected name {} but was {}".format(test_css_name, return_css.name)
-        assert (
-            return_css.length == css_data_length
-        ), "" + "Expected length {} but was {}".format(
-            css_data_length, return_css.length
-        )
-        assert (
-            return_css.location == css_data_location
-        ), "" + "Expected location {} but was {}".format(
-            css_data_location, return_css.location
-        )
-        assert (
-            return_css.branch == css_data_branch_id
-        ), "" + "Expected branch {} but was {}".format(
-            css_data_branch_id, return_css.branch
-        )
-        assert (
-            return_css.chainage == css_data_chainage
-        ), "" + "Expected chainage {} but was {}".format(
-            css_data_chainage, return_css.chainage
-        )
-
-
-
-
-class ARCHIVED_Test_reduce_css_points:
-    def test_when_all_parameters_are_correct_then_reduce_points(self):
-        # set up test data
-        new_number_of_css_points = 25
-        old_number_of_css_points = 30
-
-        runner = Fm2ProfRunner(None)
-        input_param_dict = {"number_of_css_points": str(new_number_of_css_points)}
-
-        css_name = "dummy_name"
-        css_length = 0
-        css_location = (0, 0)
-        test_css = CS(input_param_dict, css_name, css_length, css_location)
-
-        # initial expectation
-        assert runner is not None
-        assert test_css is not None
-        assert test_css._css_is_reduced is False
-        test_css._css_total_width = np.linspace(10, 20, old_number_of_css_points)
-        test_css._css_z = np.linspace(0, 10, old_number_of_css_points)
-        test_css._css_flow_width = np.linspace(5, 15, old_number_of_css_points)
-
-        # run
-        try:
-            runner._reduce_css_points(input_param_dict, test_css)
-        except:
-            pytest.fail("Unexpected exception while reducing css points.")
-
-        # verify the number of poi
-        # assert test_css._css_is_reduced is True
-        # pytest.fail('Test still needs work.')
+        assert len(css.z) == 20
