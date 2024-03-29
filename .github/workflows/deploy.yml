@@ -3,8 +3,6 @@ on:
  push:
    branches:
      - master
-     - feature/installer
-
 jobs:
   deploy:
     strategy:
@@ -16,12 +14,12 @@ jobs:
         include:
           - spec: FM2PROF_WINDOWS.spec
             os: windows-latest
-          - spec: FM2PROF_MACOS.spec
-            os: macos-latest
+          #- spec: FM2PROF_MACOS.spec
+          #  os: macos-latest
           - exe: FM2PROF.exe
             os: windows-latest
-          - exe: FM2PROF.app
-            os: macos-latest
+          #- exe: FM2PROF.app
+          #  os: macos-latest
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v2
