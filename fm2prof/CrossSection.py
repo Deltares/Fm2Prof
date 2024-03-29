@@ -137,7 +137,7 @@ class CrossSection(FM2ProfBase):
                                                'chainage',
                                                'fm_data'])
         except AssertionError:
-            raise Exception("Input data does not have all required keys")
+            raise KeyError("Input data does not have all required keys")
             
         # Cross-section meta data
         self.name = data.get('id')  # cross-section id
@@ -559,8 +559,6 @@ class CrossSection(FM2ProfBase):
 
         Parameters:
             count_after: number of points in cross-section after application of this function
-            method (str): asdf
-            verbose (bool): asdf
 
         """
 
@@ -619,6 +617,7 @@ class CrossSection(FM2ProfBase):
         bedlevel_key = "bedlevel"
         section_key = "section"
         region_key = "region"
+        
 
         try:
             # Normalize np arrays to list for correct access
@@ -634,7 +633,6 @@ class CrossSection(FM2ProfBase):
                 mask_properties = {
                     cross_section_id_key: self.name,
                     is_lake_key: is_lake_mask_list[i],
-                    cross_section_region_key: region_list[i],
                     bedlevel_key: bedlevel_list[i],
                     region_key: region_list[i],
                     section_key: section_list[i],
@@ -1029,14 +1027,14 @@ class CrossSection(FM2ProfBase):
     def _calc_chezy(self, depth, manning):
         return depth ** (1 / float(6)) / manning
 
-    def _identify_lakes(self, waterdepth):
+    def _identify_lakes(self, waterdepth:pd.DataFrame) -> np.ndarray:
         """
-        This algorithms determines whether a :ref:`2D cell <section_parsing_2d_data>` should
-        be marked as a :term:`Lake<Lakes>`.
+        This algorithms determines whether a 2D cell should
+        be marked as [Lake](glossary.md#Lakes).
 
         Cells are marked as lake if the following conditions are both met:
-            - the waterdepth on timestep :ref:`LakeTimeSteps <parameter_laketimesteps>` is positive
-            - the waterdepth on timestep :ref:`LakeTimeSteps <parameter_laketimesteps>` is at least 1 cm higher than the waterlevel on timestep 0.
+        - the waterdepth on timestep [LakeTimeSteps](configuration.md#exec-1--laketimesteps) is positive
+        - the waterdepth on timestep [LakeTimeSteps](configuration.md#exec-1--laketimesteps) is at least 1 cm higher than the waterlevel on timestep 0.
 
         Next, the following steps are taken
 
@@ -1044,13 +1042,13 @@ class CrossSection(FM2ProfBase):
         - A correction matrix is built that contains the 'lake water level' for each lake cell. This matrix is subtracted from the waterdepth to compute volumes.
 
 
-        Args:
-            waterdepth (pandas dataframe):
+        Parameters:
+            waterdepth: a DataFrame containing all waterdepth output in the [control volume](glossary.md#control-volume)
 
         Returns:
-            lake_mask (ndarray): mask of all cells that are a 'lake'
-            wet_not_lake_mask (ndarray): mask of all cells that are wet, but not a lake
-            lake_depth_correction (ndarray): the depth of a lake at the start of the 2D computation
+            lake_mask: mask of all cells that are a 'lake'
+            wet_not_lake_mask: mask of all cells that are wet, but not a lake
+            lake_depth_correction: the depth of a lake at the start of the 2D computation
 
         """
         # preallocate arrays
@@ -1156,7 +1154,8 @@ class CrossSection(FM2ProfBase):
         **`max_method`**
         A cell is considered flowing if the velocity magnitude is more than the average
         of the three higher flow velocities per outputmap multiplied by the 
-        [`relative velocity threshold`](configuration.md#exec-1--relativevelocitythreshold). 
+        [`relative velocity threshold`](configuration.md#exec-1--relativevelocitythreshold) OR
+        if the flow velocity meets the absolute threshold [`absolute velocity threshold`](configuration.md#exec-1--absolutevelocitythreshold)
 
         **`mean_method`**
         Not recommended. Legacy method.
@@ -1183,10 +1182,14 @@ class CrossSection(FM2ProfBase):
             for i in velocity:
                 maxv[i] = velocity[i].sort_values().iloc[-3:].mean()
             
+            # Relative to max condition
             relative_velocity_condition = velocity > maxv*self.get_parameter(self.__cs_parameter_relative_threshold)
             
+            # Absolute flow condition
+            absolute_velocity_condition =  velocity > self.get_parameter(self.__cs_parameter_velocity_threshold)
+
             # Flow mask determines which cells are conveyance (TRUE)
-            flow_mask = waterdepth_condition & relative_velocity_condition
+            flow_mask = waterdepth_condition & (relative_velocity_condition | absolute_velocity_condition)
             
             return flow_mask
             
@@ -1301,8 +1304,7 @@ class CrossSection(FM2ProfBase):
             self._fm_total_volume = np.insert(self._fm_total_volume, 0, np.nan)
 
     def _get_extra_total_area(self,
-        waterlevel, crest_level, transition_height: float, hysteresis=False
-    ):
+        waterlevel, crest_level, transition_height: float):
         """
         releases extra area dependent on waterlevel using a logistic (sigmoid) function
         """
