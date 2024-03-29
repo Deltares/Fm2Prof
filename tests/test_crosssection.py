@@ -49,7 +49,7 @@ class Test_generate_cross_section_instance:
         css_data = {"id": test_css_name}
 
         # 2. Set expectations
-        expected_error = ("Input data does not have all required keys")
+        expected_error = ("'Input data does not have all required keys'")
             
         # 3. Run test
         with pytest.raises(KeyError) as e_info:
