@@ -11,7 +11,7 @@ theme:
     - content.code.annotate
     - content.code.copy
     # - content.code.select
-    # - content.footnote.tooltips
+    - content.footnote.tooltips
     - content.tabs.link
     - content.tooltips
     # - header.autohide
@@ -48,9 +48,25 @@ theme:
         name: Switch to light mode
 plugins:
   - search
+  - markdown-exec
   - blog
   - glightbox
-  - mkdocstrings
+  - git-revision-date-localized:
+      enable_creation_date: true
+  - git-committers:
+      repository: Deltares/Fm2Prof
+  - mkdocstrings:
+      handlers:
+          python:
+            paths: [fm2prof] 
+            options:
+              show_root_heading: false
+              show_root_toc_entry: false
+              allow_inspection: true
+              show_bases: true
+              heading_level: 3
+              inherited_members: true
+              merge_init_into_class: true
   - mkdocs-jupyter
 repo_url: https://github.com/Deltares/Fm2Prof
 repo_name: deltares/fm2prof
@@ -60,13 +76,20 @@ extra_css:
 nav:
     - Home: index.md
     - User Manual:
-      - Installation: user_manual/installation.md
-      - Quickstart: user_manual/quickstart.md
+      - Installation: markdown/installation.md
+      - Quickstart: markdown/quickstart.md
+      - Configuration: markdown/configuration.md
       - Changelog: CHANGELOG.md
-    - Technical manual
-    - Developer manual
+    - Technical Manual:
+      - Methodology: markdown/conceptual_design.md
+      - Glossary: markdown/glossary.md
+      - numerical methods: markdown/numerical_methods.md
+      - Notebooks:
+        - Inspection: notebooks/cross_section_data.ipynb
+    - Contributing: markdown/contributing.md
 markdown_extensions:
   - admonition
+  - footnotes
   - attr_list
   - md_in_html
   - pymdownx.details
@@ -78,6 +101,10 @@ markdown_extensions:
       line_spans: __span
       pygments_lang_class: true
   - pymdownx.inlinehilite
-  - pymdownx.snippets
+  - pymdownx.snippets:
+      check_paths: true
+      base_path: [docs/snippets, "."]
   - pymdownx.superfences
-
+extra:
+  version:
+    provider: mike

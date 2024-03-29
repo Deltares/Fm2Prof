@@ -35,6 +35,11 @@
 	    "hint": "Number of points which are used to generate cross-sections",
 	    "value": 20
   	},
+	"ConveyanceDetectionMethod": {
+		"type": "int",
+	    "hint": "[0] method based on mean flow velocity, [1] method based on maximum flow velocity (default)",
+	    "value": 1
+	},
   	"AbsoluteVelocityThreshold": {
 	    "type": "float",
 	    "hint": "Absolute velocity threshold in m/s. Used to determine storage",
@@ -42,7 +47,7 @@
   	},
   	"RelativeVelocityThreshold": {
 	    "type": "float",
-	    "hint": "Relative velocity threshold (percent of mean flow velocity; 0-1). Used to determine storage",
+	    "hint": "Relative velocity threshold (percentage). Used to determine storage",
 	    "value": 0.03 
   	},
   	"MinimumDepthThreshold": {
@@ -90,21 +95,6 @@
 	    "hint": "Options. [0] arithmetric mean, [1] Weighted average",
 	    "value": 0 
   	},
-	"ExportCSSData": {
-	    "type": "fm2prof.IniFile.ImportBoolType",
-	    "hint": "Export pickled data used during generation of cross-section for debugging.",
-	    "value": false 
-  	},
-  	"ExportMapFiles": {
-	    "type": "fm2prof.IniFile.ImportBoolType",
-	    "hint": "Export detailed map output. Only use for small models or limited number of cross-sections b/c output can be huge.",
-	    "value": false 
-  	},
-  	"CssSelection": {
-	    "type": "fm2prof.IniFile.ImportListType",
-	    "hint": "provide comma separated list of ints; e.g. 38, 39, 40. Leave empty to generate all cross-sections",
-	    "value": "" 
-  	},
   	"SkipMaps": {
 	    "type": "int",
 	    "hint": "number of timesteps to skip at begin of 2D output. Use to skip problems related to initial conditions. ",
@@ -121,6 +111,24 @@
 	    "value": 0.5 
   	}
   },
+  "debug":{
+	"ExportCSSData": {
+	    "type": "fm2prof.IniFile.ImportBoolType",
+	    "hint": "If True, exports pickled (1) input data for cross-section object, (2) flow mask for conveyance/storage.",
+	    "value": false 
+  	},
+  	"ExportMapFiles": {
+	    "type": "fm2prof.IniFile.ImportBoolType",
+	    "hint": "Export detailed map output. Only use for small models or limited number of cross-sections b/c output can be huge.",
+	    "value": false 
+  	},
+  	"CssSelection": {
+	    "type": "fm2prof.IniFile.ImportListType",
+	    "hint": "provide comma separated list of ints; e.g. 38, 39, 40. Leave empty to generate all cross-sections",
+	    "value": "" 
+  	}
+  },
+
   "output": 
     {
     "OutputDirectory": {
