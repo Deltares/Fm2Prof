@@ -44,4 +44,4 @@ jobs:
 
       - name: Mike deploy
         run: |
-          mike deploy --push --update-aliases ${{ github.ref_name }} latest
+          poetry run mike deploy --push --update-aliases ${{ github.ref_name }} latest
