@@ -54,6 +54,7 @@ class IniFile(FM2ProfBase):
     _file: Path = None
     __input_files_key = "input"
     __input_parameters_key = "parameters"
+    __input_debug_key = "debug"
     __output_key = "output"
     __output_directory_key = "OutputDirectory"
     __ini_keys = dict(
@@ -202,15 +203,23 @@ class IniFile(FM2ProfBase):
         """
         Use this method to return a parameter value
         """
-        return self._get_from_configuration("parameters", key)
+        try:
+            return self._get_from_configuration("parameters", key)
+        except KeyError:
+            pass
+        try:
+            return self._get_from_configuration("debug", key)
+        except KeyError:
+            pass
+        self.set_logger_message(f"unknown key {key}", "error")
 
-    def set_input_file(self, key: str, value=None) -> bool:
+    def set_input_file(self, key: str, value=None) -> None:
         """Use this method to set a input files the configuration"""
         self._set_config_value("input", key, value)
 
-    def set_parameter(self, key, value) -> None:
+    def set_parameter(self, key:str, value, section="parameters") -> None:
         """Use this method to set a key/value pair to the configuration"""
-        self._set_config_value("parameters", key, value)
+        self._set_config_value(section, key, value)
 
     def _set_config_value(self, section, key, value) -> None:
         """Use this method to set a input files the configuration"""
@@ -269,6 +278,7 @@ class IniFile(FM2ProfBase):
         for parameter, content in self._configuration["sections"].get(section).items():
             if parameter.lower() == key.lower():
                 return content.get("value")
+        raise KeyError(f"key {key} not found")
 
     def _get_template_ini(self) -> Dict:
         # Open config file
@@ -315,10 +325,11 @@ class IniFile(FM2ProfBase):
                 "Unexpected error reading input files. Check config file", "error"
             )
         try:
-            self._extract_parameters(supplied_ini)
+            self._extract_parameters(supplied_ini, self.__input_parameters_key)
+            self._extract_parameters(supplied_ini, self.__input_debug_key)
         except Exception:
             self.set_logger_message(
-                "Unexpected error reading parameters. Check config file", "error"
+                "Unexpected error reading (debug) parameters. Check config file", "error"
             )
         try:
             self._extract_output_dir(supplied_ini)
@@ -327,7 +338,7 @@ class IniFile(FM2ProfBase):
                 "Unexpected error output parameters. Check config file", "error"
             )
 
-    def _extract_parameters(self, supplied_ini: Mapping[str, list]):
+    def _extract_parameters(self, supplied_ini: Mapping[str, list], section: str):
         """Extract InputParameters and convert values either integer or float from string
 
         Arguments:
@@ -337,17 +348,17 @@ class IniFile(FM2ProfBase):
             {Mapping[str, number]} -- Dictionary of mapped parameters to a either integer or float
         """
         try:
-            inputsection = supplied_ini.get(self.__input_parameters_key)
+            inputsection = supplied_ini.get(section)
         except KeyError:
             raise InvalidConfigurationFileError
 
         for key, value in inputsection.items():
             key_default, key_type = self._get_key_from_template(
-                self.__input_parameters_key, key
+                section, key
             )
             try:
                 parsed_value = key_type(value)
-                self.set_parameter(key_default, parsed_value)
+                self.set_parameter(key_default, parsed_value, section)
             except ValueError:
                 self.set_logger_message(
                     f"{key} could not be cast as {key_type}", "debug"

@@ -610,8 +610,7 @@ class VisualiseOutput(FM2ProfBase):
 
         except Exception as e:
             self.set_logger_message(
-                f"error processing: {css['id']} {str(e)}", "error", pbar=pbar
-            )
+                f"error processing: {css['id']} {str(e)}", "error")
             return None
 
         finally:
@@ -1003,8 +1002,8 @@ class PlotStyles:
 
             for ax in fig.axes:
 
-                ax.grid(b=True, which="major", linestyle="-", linewidth=1, color="k")
-                ax.grid(b=True, which="minor", linestyle="-", linewidth=0.5, color="k")
+                ax.grid(visible=True, which="major", linestyle="-", linewidth=1, color="k")
+                ax.grid(visible=True, which="minor", linestyle="-", linewidth=0.5, color="k")
 
                 for _, spine in ax.spines.items():
                     spine.set_linewidth(2)

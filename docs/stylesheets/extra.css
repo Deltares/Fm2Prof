@@ -1,7 +1,8 @@
 [data-md-color-scheme="deltares"] {
-    --md-primary-fg-color:        #0a28a3;
-    --md-primary-fg-color--light: #0EBBF0;
-    --md-primary-fg-color--dark:  #080C80;
+    --md-primary-fg-color:        #0a28a3;    
+  }
+  [data-md-color-scheme="slate"] {
+    --md-primary-fg-color:        #14151a;    
   }
 
 /* Indentation. */

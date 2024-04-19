@@ -2,9 +2,38 @@ site_name: FM2PROF
 site_dir: documentation
 theme:
   name: material
+  custom_dir: docs
   language: en
+  features:
+    - announce.dismiss
+    - content.action.edit
+    - content.action.view
+    - content.code.annotate
+    - content.code.copy
+    # - content.code.select
+    - content.footnote.tooltips
+    - content.tabs.link
+    - content.tooltips
+    # - header.autohide
+    # - navigation.expand
+    - navigation.footer
+    - navigation.indexes
+    # - navigation.instant
+    # - navigation.instant.prefetch
+    # - navigation.instant.progress
+    # - navigation.prune
+    - navigation.sections
+    - navigation.tabs
+    # - navigation.tabs.sticky
+    - navigation.top
+    - navigation.tracking
+    - search.highlight
+    - search.share
+    - search.suggest
+    - toc.follow
+    - toc.integrate
   icon:
-    logo: material/bat
+    logo: material/selection-off
   palette:
     # Palette toggle for light mode
     - scheme: deltares
@@ -19,21 +48,63 @@ theme:
         name: Switch to light mode
 plugins:
   - search
+  - markdown-exec
+  - blog
   - glightbox
-  - mkdocstrings
+  - git-revision-date-localized:
+      enable_creation_date: true
+  #- git-committers:
+  #    repository: Deltares/Fm2Prof
+  - mkdocstrings:
+      handlers:
+          python:
+            paths: [fm2prof] 
+            options:
+              show_root_heading: false
+              show_root_toc_entry: false
+              allow_inspection: true
+              show_bases: true
+              heading_level: 3
+              inherited_members: true
+              merge_init_into_class: true
   - mkdocs-jupyter
 repo_url: https://github.com/Deltares/Fm2Prof
 repo_name: deltares/fm2prof
 copyright: Copyright &copy; 2024 Deltares
+extra_css:
+  - stylesheets/extra.css
 nav:
     - Home: index.md
-    - Changelog: CHANGELOG.md
+    - User Manual:
+      - Installation: markdown/installation.md
+      - Quickstart: markdown/quickstart.md
+      - Configuration: markdown/configuration.md
+      - Changelog: CHANGELOG.md
+    - Technical Manual:
+      - Methodology: markdown/conceptual_design.md
+      - Glossary: markdown/glossary.md
+      - numerical methods: markdown/numerical_methods.md
+      - Notebooks:
+        - Inspection: notebooks/cross_section_data.ipynb
+    - Contributing: markdown/contributing.md
 markdown_extensions:
   - admonition
-  - pymdownx.details
-  - pymdownx.superfences
+  - footnotes
   - attr_list
   - md_in_html
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets:
+      check_paths: true
+      base_path: [docs/snippets, "."]
+  - pymdownx.superfences
 extra:
   version:
     provider: mike
