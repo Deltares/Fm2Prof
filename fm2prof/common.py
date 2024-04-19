@@ -62,6 +62,9 @@ class ElapsedFormatter:
 
         colorama.init()
 
+        # saves amount of errors / warnings
+        self._loglibrary: dict = {"ERROR": 0, "WARNING": 0}
+
     @property
     def pbar(self):
         return self._pbar
@@ -106,6 +109,10 @@ class ElapsedFormatter:
 
         level = record.levelname
         message = record.getMessage()
+
+        # Counter of errors, warnings
+        if level in self._loglibrary:
+            self._loglibrary[level] += 1
 
         formatted_string = (
             f"║  {color[level][0]} {level:>7} "
