@@ -24,14 +24,27 @@ This case is a simple 2D compound channel model.
 
 To start a new project:
 
-``` shell
-FM2PROF create MyProject
-```
+=== "Python"
 
-This will create a new directory \"MyProject\". In this directory you
-will find [MyProject.ini]{.title-ref}. This is a valid configuration
-file with all parameters set to their default values. You will also find
-an [input]{.title-ref} and [output]{.title-ref} directory.
+    ``` python
+    from fm2prof.IniFile import IniFile
+
+    inifile = IniFile().print_configuration()
+    ini_path = f"MyProject.ini"
+
+    with open(ini_path, "w") as f:
+        f.write(inifile)
+    
+    ```
+
+=== "CLI"
+
+    ``` bash
+    FM2PROF create MyProject
+    ```
+
+
+This will create a valid configuration file with all parameters set to their default values. 
 
 ## Modify the input
 
@@ -50,9 +63,23 @@ CrossSectionLocationFile      =           # .csv or .txt file (, as delimiter) t
 
 To be sure you used the correct data, run:
 
-``` shell
-FM2PROF check MyProject
-```
+
+=== "Python"
+
+    ``` python
+    from fm2prof import Project
+    
+    project = Project("MyProject.ini")
+    
+    ```
+
+=== "CLI"
+
+    ``` bash
+    FM2PROF check MyProject
+    ```
+
+
 
 Study the output. Errors indicate that something is wrong with your
 input. In that case, you will need to correct the configurationfile.
@@ -64,18 +91,43 @@ settings that will be used and can be altered using a config file. The
 configuration file does not need all parameters to be specified. If a
 parameter is not in the configuration file, default values will be used.
 
-To generate output, use:
+The following examples run FM2PROF, overwrite any existing results and
+produce figures of the generated cross-sections. 
 
-``` shell
-FM2PROF run MyProject
-```
+=== "Python"
 
-All `outputFiles`{.interpreted-text role="ref"} are written to the
-[output]{.title-ref} directory.
+    ``` python
+    from fm2prof import Project
+    from fm2prof.utils import VisualiseOutput
+    
+    # load project
+    project = Project("MyProject.ini")
+    
+    # overwrite = True overwrites any existing output
+    project.run(overwrite=True)
+    
+    # to visualize cross-sectino putput:
+    vis = VisualiseOutput(
+                project.get_output_directory(), 
+                logger=project.get_logger()
+            )
 
-## Inspect the results
+    for css in vis.cross_sections:
+        vis.figure_cross_section(css)
+    
+    ```
+
+=== "CLI"
+
+    ``` bash
+    FM2PROF run MyProject -o -p
+    ```
+
+
+
+All `outputFiles` are written to the `output` directory specified in the FM2PROF configuration file. 
 
 After generating output it is important to check whether everything went
-well. provides various tools and output files to do this. Go to
-`diagnosis`{.interpreted-text role="ref"} and try to generate figures
-with [fm2prof.utils]{.title-ref}.
+well. See the following links to learn more about available tools:
+
+- [Inspection cross-sections using a notebook](../../notebooks/cross_section_data)
