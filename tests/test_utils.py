@@ -1,17 +1,16 @@
-import numbers
+
 import os
-import shutil
-import sys
-import unittest
-
 import pytest
-
+from fm2prof import Project
 from fm2prof.utils import (
     DeltaresConfig,
     GenerateCrossSectionLocationFile,
     ModelOutputReader,
+    Compare1D2D
 )
 from tests.TestUtils import TestUtils
+
+from datetime import datetime 
 
 _root_output_dir = None
 
@@ -103,3 +102,48 @@ class Test_GenerateCrossSectionLocationFile:
         # 4. verify
         assert output_file.is_file()
     
+
+class Test_Compare1D2D:
+    def test_when_no_netcdf_but_csv_present_class_initialises(self):
+        # 1. Set up initial test data 
+        project_config = TestUtils.get_local_test_file('compare1d2d/rijn-j22_6-v1a2/sobek-rijn-j22.ini')
+        project = Project(project_config)
+
+        # 2. Set expectations
+
+        # 3. Run test
+        try:
+            plotter = Compare1D2D(project=project,
+                        path_1d=None,
+                        path_2d=None,
+                        routes=[['BR', "PK", "IJ"], ['BR', 'PK', 'NR', "LE"], ["BR", "WL", "BO"]],
+                        start_time=datetime(year=2000, month=1, day=5))
+        except Exception as e:
+            pytest.fail("No exception expected, but thrown: {}".format(str(e)))
+
+        # 4. Verify expectations
+        assert isinstance(plotter, Compare1D2D)
+
+    def test_statistics_to_file(self):
+
+        # 1. Set up initial test data 
+        project_config = TestUtils.get_local_test_file('compare1d2d/rijn-j22_6-v1a2/sobek-rijn-j22.ini')
+        project = Project(project_config)
+        plotter = Compare1D2D(project=project,
+                    path_1d=None,
+                    path_2d=None,
+                    routes=[['BR', "PK", "IJ"], ['BR', 'PK', 'NR', "LE"], ["BR", "WL", "BO"]],
+                    start_time=datetime(year=2000, month=1, day=5))
+        
+        # 2. Set expectations
+        # this file should exist
+        output_file = TestUtils.get_local_test_file('compare1d2d/rijn-j22_6-v1a2/output/error_statistics.csv')
+
+        # 3. Run test
+        try:
+            plotter.statistics_to_file()
+        except Exception as e:
+            pytest.fail("No exception expected, but thrown: {}".format(str(e)))
+
+        # 4. Verify expectations
+        assert output_file.is_file()

@@ -42,5 +42,5 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    icon='docs/source/_static/favicon.ico'
+    icon='docs/figures/favicon.ico'
 )
