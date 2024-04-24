@@ -44,10 +44,7 @@ To start a new project:
     ```
 
 
-This will create a new directory \"MyProject\". In this directory you
-will find [MyProject.ini]{.title-ref}. This is a valid configuration
-file with all parameters set to their default values. You will also find
-an [input]{.title-ref} and [output]{.title-ref} directory.
+This will create a valid configuration file with all parameters set to their default values. 
 
 ## Modify the input
 
@@ -101,6 +98,7 @@ produce figures of the generated cross-sections.
 
     ``` python
     from fm2prof import Project
+    from fm2prof.utils import VisualiseOutput
     
     # load project
     project = Project("MyProject.ini")
