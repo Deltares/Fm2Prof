@@ -1238,8 +1238,8 @@ class ModelOutputReader(FM2ProfBase):
 
     def __init__(self, 
                  logger=None, 
-                 start_time: datetime = None,
-                 stop_time: datetime = None):
+                 start_time: datetime | None = None,
+                 stop_time: datetime | None = None):
         super().__init__(logger=logger)
 
         self._path_out: Path = Path(".")
@@ -1249,8 +1249,8 @@ class ModelOutputReader(FM2ProfBase):
         self._data_1D_Q: pd.DataFrame = None
         self._time_offset_1d: int = 0
 
-        self._start_time: Union[datetime, type(None)] = start_time
-        self._stop_time: Union[datetime, type(None)] = stop_time
+        self._start_time: datetime | None = start_time
+        self._stop_time: datetime | None = stop_time
 
     @property
     def start_time(self) -> Union[datetime, None]:
@@ -1307,13 +1307,13 @@ class ModelOutputReader(FM2ProfBase):
                 self.file_1D_Q,
                 index_col=0,
                 parse_dates=True,
-                date_parser=self._dateparser,
+                date_format=self._time_fmt,
             )
             self._data_1D_H = pd.read_csv(
                 self.file_1D_H,
                 index_col=0,
                 parse_dates=True,
-                date_parser=self._dateparser,
+                date_format=self._time_fmt,
             )
             self.set_logger_message("Using existing flow1d csv files")
         else:
@@ -1338,13 +1338,13 @@ class ModelOutputReader(FM2ProfBase):
                 self.file_2D_Q,
                 index_col=0,
                 parse_dates=True,
-                date_parser=self._dateparser,
+                date_format=self._time_fmt,
             )
             self._data_2D_H = pd.read_csv(
                 self.file_2D_H,
                 index_col=0,
                 parse_dates=True,
-                date_parser=self._dateparser,
+                date_format=self._time_fmt,
             )
             self.set_logger_message("Using existing flow2d csv files")
         else:
@@ -1356,13 +1356,13 @@ class ModelOutputReader(FM2ProfBase):
                 self.file_2D_Q,
                 index_col=0,
                 parse_dates=True,
-                date_parser=self._dateparser,
+                date_format=self._time_fmt,
             )
             self._data_2D_H = pd.read_csv(
                 self.file_2D_H,
                 index_col=0,
                 parse_dates=True,
-                date_parser=self._dateparser,
+                date_format=self._time_fmt,
             )
 
     def get_1d2d_map(self):
@@ -1380,6 +1380,7 @@ class ModelOutputReader(FM2ProfBase):
         self.load_flow2d_data()
 
     def _dateparser(self, t):
+        #DEPRECATED
         return datetime.strptime(t, self._time_fmt)
 
     @property
@@ -1439,7 +1440,14 @@ class ModelOutputReader(FM2ProfBase):
         self._time_offset_1d = seconds
 
     def _apply_startstop_time(self, data: pd.DataFrame) -> pd.DataFrame:
-        """ Applies stop/start time to data """
+        """ 
+        Applies stop/start time to data 
+        """
+        if self.stop_time is None:
+            self.stop_time = data.index[-1]
+        if self.start_time is None:
+            self.start_time = data.index[0]
+
         if self.start_time >= self.stop_time:
             self.set_logger_message("Stop time ({self.stop_time}) should be later than start time ({self.start_time})", "error")
             raise ValueError
@@ -1604,8 +1612,8 @@ class Compare1D2D(ModelOutputReader):
     def __init__(
         self,
         project: Project,
-        path_1d: Union[Path, str],
-        path_2d: Union[Path, str],
+        path_1d: Union[Path, str] | None,
+        path_2d: Union[Path, str] | None,
         routes: List[List[str]],
         start_time: Union[None, datetime] = None,
         stop_time: Union[None, datetime] = None,
@@ -1616,11 +1624,11 @@ class Compare1D2D(ModelOutputReader):
         else:
             super().__init__()
 
-        if isinstance(path_1d, (Path, str)) & Path(path_1d).is_file():
+        if isinstance(path_1d, (Path, str)) and Path(path_1d).is_file():
             self.path_flow1d = path_1d
         else:
             self.set_logger_message(f'1D netCDF file does not exist or is not provided. Input provided: {path_1d}.', 'debug')
-        if isinstance(path_1d, (Path, str)) & Path(path_2d).is_file():
+        if isinstance(path_1d, (Path, str)) and Path(path_2d).is_file():
             self.path_flow2d = path_2d
         else:
             self.set_logger_message(f'2D netCDF file does not exist or is not provided. Input provided: {path_2d}.', 'debug')
@@ -1911,7 +1919,16 @@ class Compare1D2D(ModelOutputReader):
         ax.tick_params(axis="y", colors=self._color_error)
         ax.grid(False)
 
-    def _compute_statistics(self):
+    def _compute_statistics(self) -> pd.DataFrame:
+        """
+        Computes statistics for the difference between 1D and 2D water levels
+
+        Returns DataFrame with 
+            columns: rkm, branch, is_lmw, bias, std, mae
+            rows: observation stations
+    
+        """
+
         diff = self.data_1D_H - self.data_2D_H
         station_names = diff.columns
         rkms = self._names_to_rkms(station_names)
