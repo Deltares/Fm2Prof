@@ -89,7 +89,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#v228-2023-10-03" class="md-skip">
+        <a href="#v231-24-04-2024" class="md-skip">
           Skip to content
         </a>
       
@@ -544,6 +544,66 @@
       Table of contents
     </label>
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#v231-24-04-2024" class="md-nav__link">
+    <span class="md-ellipsis">
+      v2.3.1 (24-04-2024)
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#v230-19-04-2024" class="md-nav__link">
+    <span class="md-ellipsis">
+      v2.3.0 (19-04-2024)
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="v2.3.0 (19-04-2024)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#new-functionality" class="md-nav__link">
+    <span class="md-ellipsis">
+      New functionality
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#documentation" class="md-nav__link">
+    <span class="md-ellipsis">
+      Documentation
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#bug-fixes-chores" class="md-nav__link">
+    <span class="md-ellipsis">
+      bug fixes &amp; chores
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#bug-fixes-chores_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      bug fixes &amp; chores
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
       
         <li class="md-nav__item">
   <a href="#v228-2023-10-03" class="md-nav__link">
@@ -1159,6 +1219,37 @@
   
 
 
+<h2 id="v231-24-04-2024">v2.3.1 (24-04-2024)</h2>
+<p><strong>Bug fixes</strong>
+- Fixed a bug that threw an exception if user did not specify a stop time when using <code>utils.Compare1D2D</code> (#78)
+- Fixed bug (#81) that prevented executable from being build because of missing favico</p>
+<p><strong>Documentation</strong>
+- added python snippets to quickstart tutorial</p>
+<h2 id="v230-19-04-2024">v2.3.0 (19-04-2024)</h2>
+<h3 id="new-functionality">New functionality</h3>
+<ul>
+<li>Configuration file now has a new <code>debug</code> section with debug specific parameters. This section includes two parameters previously in the general <code>parameters</code> section (<code>ExportMapFiles</code> and <code>CssSelection</code>) and the new <code>ExportCSSData</code>. </li>
+<li>new debug option <code>ExportCSSData</code> that when enabled output data to analyse cross-section generation. </li>
+<li>new option <code>ConveyanceDetectionMethod</code> to toggle between the previous way to detect storage (0) and a the new one (1, default). </li>
+</ul>
+<h3 id="documentation">Documentation</h3>
+<ul>
+<li>documentation now includes a notebook specifying how output from <code>ExportCSSData</code> option can be used to analyse flow data</li>
+<li>docstrings of cross-section class updated to describe flow/storage separation methodology</li>
+<li>several chapters ported over from sphinx</li>
+</ul>
+<h3 id="bug-fixes-chores">bug fixes &amp; chores</h3>
+<ul>
+<li>added dedicated tests for cross-section class</li>
+<li>test coverage is now reported in Sonarcloud</li>
+<li>fixed bug that caused error while writing log</li>
+</ul>
+<h3 id="bug-fixes-chores_1">bug fixes &amp; chores</h3>
+<ul>
+<li>fixed bug in <code>utils</code> that threw an error when using matplotlib 3.7 or higher</li>
+<li>removed unused code blocks</li>
+<li>updated type hinting and code documentation of <code>CrossSection.py</code></li>
+</ul>
 <h2 id="v228-2023-10-03">v2.2.8 (2023-10-03)</h2>
 <p>This version update FM2PROF to Python 3.10 or higher. It removes unused dependencies and updates the package system <code>poetry</code> to version 1.8.2. Due to this switch, the commitizen workflow is currently not used, and the documentation system switch from sphinx to mkdocs. </p>
 <p>This is the first version to be published to <a href="https://pypi.org/project/fm2prof/2.2.8/">PyPi</a>, which means that FM2PROF can now be installed using pip</p>
