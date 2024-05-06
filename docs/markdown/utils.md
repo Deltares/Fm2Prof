@@ -1,9 +1,6 @@
-# Utilities
+# Utilities API
 
 FM2PROF includes a set of utilities to analyse its output. 
-
-## VisualiseOutput
-
 
 ## Compare1D2D
 

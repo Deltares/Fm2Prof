@@ -41,8 +41,8 @@ register_matplotlib_converters()
 
 FigureOutput = namedtuple('FigureOutput', ['fig', 'axes', 'legend'])
 
-COLORSCHEMES = {"Deltares": ["k", "#00cc96", "#0d38e0"],
-                "Koeln": ["k", "#E69F00", "#56B4E9", "#009E73", "#F0E444", "#0072B2", "#D55E00", "#CC79A7"],  # https://jfly.uni-koeln.de/color/
+COLORSCHEMES = {"Deltares": ["#000000", "#00cc96", "#0d38e0"],
+                "Koeln": ["#000000", "#E69F00", "#56B4E9", "#009E73", "#F0E444", "#0072B2", "#D55E00", "#CC79A7"],  # https://jfly.uni-koeln.de/color/
                 "PaulTolVibrant": ["#0077BB", "#33BBEE", "#009988", "#EE7733", "#CC3311", "#EE3377","#BBBBBB"]
                 }
 
@@ -1683,28 +1683,23 @@ class Compare1D2D(ModelOutputReader):
 
 
     Example usage:
+        ``` py
+        from fm2prof import Project, utils
+        project = Project(fr'tests/test_data/compare1d2d/cases/case1/fm2prof.ini')
+        plotter = utils.Compare1D2D(project=project,
+                                    start_time=datetime(year=2000, month=1, day=5))
 
-        >>> plotter = Compare1D2D()
-        >>> # Set path to data
-        >>> plotter.path_flow1d = path_to_dimr_dir
-        >>> plotter.path_flow2d = path_to_nc_file
-        >>> # Example, plot along route
-        >>> route = ['BR', "PK", "NR", "LE"]
-        >>> plotter.figure_longitudinal_time(route=route)
+        plotter.figure_at_station("NR_919.00")
 
-    Parameters
-        project: Project
+        ```
 
-        path_1d: Union[Path, str],
-        
-        path_2d: Union[Path, str],
-        
-        routes: List[List[str]],
-        
-        start_time: Union[None, datetime] = None,
-        
-        stop_time: Union[None, datetime] = None,
-
+    Parameters:
+        project: `fm2prof.Project` object.
+        path_1d: path to SOBEK dimr directory
+        path_2d: path to his nc file
+        routes: list of branch abbreviations, e.g. ['NR', 'LK']
+        start_time: start time for plotting and analytics. Use this to crop the time to prevent initalisation from affecting statistics. 
+        stop_time: stop time for plotting and analytics. 
     """
 
     _routes: List[List[str]] = None
@@ -1712,9 +1707,9 @@ class Compare1D2D(ModelOutputReader):
     def __init__(
         self,
         project: Project,
-        path_1d: Union[Path, str] | None,
-        path_2d: Union[Path, str] | None,
-        routes: List[List[str]],
+        path_1d: Union[Path, str] | None = None,
+        path_2d: Union[Path, str] | None = None,
+        routes: List[List[str]] | None = None,
         start_time: Union[None, datetime] = None,
         stop_time: Union[None, datetime] = None,
     ):
@@ -1742,7 +1737,7 @@ class Compare1D2D(ModelOutputReader):
         self._qsteps = np.arange(0, 100 * np.ceil(18000 / 100), 200)
 
         # initiate plotstyle
-        self._error_colors = ["#7e3e00", "#b25800", "#d86a00"]
+        self._error_colors = ["#7e3e00", "#FF4433", "#d86a00"]
         self._color_error = self._error_colors[1]
         self._color_scheme = COLORSCHEMES["Koeln"]
         self._plotstyle = PlotStyles.sito_2024
@@ -1941,88 +1936,105 @@ class Compare1D2D(ModelOutputReader):
                     f"{branch},{bbias:.2f}±({bstd:.2f}), {lmw_bias:.2f}±({lmw_std:.2f})\n"
                 )
 
-    def figure_at_station(self, station: str) -> None:
+    def figure_at_station(self, station: str, func:str="time", savefig:bool=True) -> FigureOutput:
         """
-        Create a figure with the results at an observation station.
+        Creates a figure with the timeseries at a single observation station.
 
-        Figures are saved to `[Compare1D2D.output_path]/figures/stations`
+        ``` py
+        
+        ```
 
-        Example output:
-
-        .. figure:: figures_utils/stations/example.png
-
-            example output figure
+        Parameters:
+            station: name of station. use `stations` method to list all station names
+            func: use `time` for a timeseries and `qh` for rating curve
+            savefig: if True, saves to png. If False, returned FigureOutput
+        
+        
 
         """
 
-        fig, axs = plt.subplots(1, 2, figsize=(12, 5))
-        error_axes = [axs[0].twinx(), axs[1].twinx()]
+        fig, ax = plt.subplots(1, figsize=(12, 5))
+        error_ax = ax.twinx()
 
         # q/h view
-        axs[0].plot(
-            self._qsteps,
-            self._data_2D_H_digitized[station],
-            "--",
-            linewidth=2,
-            label="2D",
-        )
-        axs[0].plot(
-            self._qsteps,
-            self._data_1D_H_digitized[station],
-            "-",
-            linewidth=2,
-            label="1D",
-        )
+        match func.lower():
+            case "qh":
+                ax.plot(
+                    self._qsteps,
+                    self._data_2D_H_digitized[station],
+                    "--",
+                    linewidth=2,
+                    label="2D",
+                )
+                ax.plot(
+                    self._qsteps,
+                    self._data_1D_H_digitized[station],
+                    "-",
+                    linewidth=2,
+                    label="1D",
+                )
+                ax.set_title(f"{station}\nQH-relatie")
+                ax.set_title("QH-relatie")
+                ax.set_xlabel("Afvoer [m$^3$/s]")
+                ax.set_ylabel("Waterstand [m+NAP]")
+                error_ax.plot(
+                    self._qsteps,
+                    self._data_1D_H_digitized[station] - self._data_2D_H_digitized[station],
+                    ".",
+                    color=self._color_error,
+                )
+            case "time":
+                ax.plot(self.data_2D_H[station], "--", 
+                        linewidth=2,
+                        label="2D")
+                ax.plot(self.data_1D_H[station], "-", 
+                        linewidth=2,
+                        label="1D")
+                
+                ax.set_ylabel("Waterstand [m+NAP]")
+                ax.set_title(f"{station}\nTijdreeks")
 
-        axs[0].set_title("QH-relatie")
-        axs[0].set_xlabel("afvoer [m$^3$/s]")
-        axs[0].set_ylabel("Waterstand [m+NAP]")
-        error_axes[0].plot(
-            self._qsteps,
-            self._data_1D_H_digitized[station] - self._data_2D_H_digitized[station],
-            ".",
-            color=self._color_error,
-        )
-        # time view
-        axs[1].plot(self.data_2D_H[station], "--", linewidth=2)
-        axs[1].plot(self.data_1D_H[station], "-", linewidth=2)
-        axs[1].set_title("tijdserie")
-
-        error_axes[1].plot(
-            self.data_1D_H[station] - self.data_2D_H[station],
-            ".",
-            label="1D-2D",
-            color=self._color_error,
-        )
+                error_ax.plot(
+                    self.data_1D_H[station] - self.data_2D_H[station],
+                    ".",
+                    label="1D-2D",
+                    color=self._color_error,
+                )
 
         # statistics
         stats = self._get_statistics(station)
 
         stats_labels = [
-            f"bias={stats['bias']:.2f}",
-            f"std={stats['std']:.2f}",
-            f"MAE={stats['mae']:.2f}",
+            f"bias={stats['bias']:.2f} m",
+            f"std={stats['std']:.2f} m",
+            f"MAE={stats['mae']:.2f} m",
         ]
         stats_handles = [mpatches.Patch(color="white")] * len(stats_labels)
         # Style
-        suptitle = plt.suptitle(station)
-        fig, lgd = PlotStyles.van_veen(
-            fig, use_legend=True, extra_labels=[stats_handles, stats_labels]
+        fig, lgd = self._plotstyle(
+            fig, 
+            use_legend=True, 
+            extra_labels=[stats_handles, stats_labels]
         )
 
-        for ax in error_axes:
-            self._style_error_axes(ax, ylim=[-0.5, 0.5])
+        
+        self._style_error_axes(error_ax, ylim=[-1, 1])
 
         fig.tight_layout()
-        fig.savefig(
-            self.output_path.joinpath("figures/stations").joinpath(f"{station}.png"),
-            bbox_extra_artists=[lgd, suptitle],
-            bbox_inches="tight",
-        )
-        plt.close()
+
+        if savefig:
+            fig.savefig(
+                self.output_path.joinpath("figures/stations").joinpath(f"{station}.png"),
+                bbox_extra_artists=[lgd],
+                bbox_inches="tight",
+            )
+            plt.close()
+        else:
+            return FigureOutput(fig=fig, axes=ax, legend=lgd)
 
     def _style_error_axes(self, ax, ylim: List[float] = [-0.5, 0.5]):
         ax.set_ylim(ylim)
+        ax.set_ylabel("1D-2D [m]")
         ax.spines["right"].set_edgecolor(self._color_error)
         ax.tick_params(axis="y", colors=self._color_error)
         ax.grid(False)
@@ -2241,13 +2253,13 @@ class Compare1D2D(ModelOutputReader):
 
         return lines
 
-    def _last25(self, route: List[str]) -> Dict[str, pd.Series | str]:
+    def _last25(self, route: List[str]) -> List[Dict[str, pd.Series | str]]:
         return self._stat_func(route, stat="last25")
     
-    def _max13(self, route: List[str]) -> Dict[str, pd.Series | str]:
+    def _max13(self, route: List[str]) -> List[Dict[str, pd.Series | str]]:
         return self._stat_func(route, stat="max13")
     
-    def _stat_func(self, route: List[str], stat:str="max13") -> Dict[str, pd.Series | str]:
+    def _stat_func(self, route: List[str], stat:str="max13") -> List[Dict[str, pd.Series | str]]:
         """
         Applies column-wise "last25" or "max13" on 1D and 2D data
         """
@@ -2290,25 +2302,36 @@ class Compare1D2D(ModelOutputReader):
         return st_names, st_locs
     
     def figure_longitudinal_time(self, route: List[str]) -> None:
-        raise NotImplementedError()
+        DeprecationWarning("Method figure_longitudinal_time will be removed in the future. Use figure_longitudinal(route, stat=\"time\") instead ")
+        self.figure_longitudinal(route, stat="time")
     
     def figure_longitudinal(self, 
                             route: List[str], 
                             stat: str = 'time',
-                            savefig: bool=True) -> FigureOutput | None:
+                            savefig: bool=True,
+                            label: str = '',
+                            add_to_fig: FigureOutput | None = None) -> FigureOutput | None:
         """
         Creates a figure along a `route`. Content of figure depends 
-        on `func`. Figures are saved to `[Compare1D2D.output_path]/figures/longitudinal`
+        on `stat`. Figures are saved to `[Compare1D2D.output_path]/figures/longitudinal`
 
         Example output:
 
         ![title](../figures/test_results/compare1d2d/BR-PK-IJ.png)
 
+        Parameters:
+            route: List of branches (e.g. ['NK', 'LK'])
+            stat: what type of longitudinal plot to make. Options are: 
+                - time
+                - last25
+                - max13
+            savefig: if true, figure is saved to png file. If false, `FigureOutput` 
+                     returned, which is input for `add_to_fig`
+            add_to_fig: if `FigureOutput` is provided, adds content to figure.  
         """
         # Get route and stations along route
         routename = "-".join(route)
-        station_names, station_locs, lmw_stations = self.get_route(route)
-
+        
         match stat:
             case 'time':
                 datafunc = self._time_func
@@ -2317,35 +2340,42 @@ class Compare1D2D(ModelOutputReader):
             case "max13":
                 datafunc = self._max13
 
+        # Make configurable in the future
         labelfunc = self._lmw_func
         
         # TIME FUNCTION plot line every delta_days days
         lines = datafunc(route=route)
         
-        # Plot LMW station locations
-        fig, axs = plt.subplots(2, 1, figsize=(12, 12))
-        h1d = self.get_data_along_route(data=self.data_1D_H, route=route)
-        
+        # Get figure object
+        if add_to_fig is None:
+            fig, axs = plt.subplots(2, 1, figsize=(12, 12))
+        else:
+            fig = add_to_fig.fig
+            axs = add_to_fig.axes
+    
         # Filtering which stations to plot
-        st_names, st_locs = labelfunc(station_names, station_locs)
+        if add_to_fig is None:
+            station_names, station_locs, lmw_stations = self.get_route(route)
+            st_names, st_locs = labelfunc(station_names, station_locs)
+            h1d = self.get_data_along_route(data=self.data_1D_H, route=route)
+            for st_name, st_loc in zip(st_names, st_locs):
+                for ax in axs:
+                    ax.axvline(x=st_loc, linestyle="--")
 
-        for st_name, st_loc in zip(st_names, st_locs):
-            for ax in axs:
-                ax.axvline(x=st_loc, linestyle="--")
-
-            axs[0].text(
-                st_loc,
-                h1d.min().min(),
-                st_name,
-                fontsize=12,
-                rotation=90,
-                horizontalalignment="left",
-                verticalalignment="bottom",
-            )
+                axs[0].text(
+                    st_loc,
+                    h1d.min().min(),
+                    st_name,
+                    fontsize=12,
+                    rotation=90,
+                    horizontalalignment="left",
+                    verticalalignment="bottom",
+                )
 
         for line in lines:
 
-            axs[0].plot(line.get("1D"), label=line.get("label"))
+            axs[0].plot(line.get("1D"), 
+                        label=f"{label} {line.get('label')}")
             
             axs[0].set_ylabel("Waterstand [m+NAP]")
             routestr = "-".join(route)
