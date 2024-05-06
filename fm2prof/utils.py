@@ -2,12 +2,11 @@ import ast
 import locale
 import os
 import re
-import shutil
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from enum import unique
 from logging import Logger
 from pathlib import Path
+from collections import namedtuple
 from typing import (
     Any,
     Callable,
@@ -34,13 +33,18 @@ from netCDF4 import Dataset
 from pandas.plotting import register_matplotlib_converters
 from scipy.interpolate import interp1d
 
+
 from fm2prof import Project
 from fm2prof.common import FM2ProfBase
 
 register_matplotlib_converters()
 
-COLORSCHEME = ["k", "#00cc96", "#0d38e0"]
+FigureOutput = namedtuple('FigureOutput', ['fig', 'axes', 'legend'])
 
+COLORSCHEMES = {"Deltares": ["k", "#00cc96", "#0d38e0"],
+                "Koeln": ["k", "#E69F00", "#56B4E9", "#009E73", "#F0E444", "#0072B2", "#D55E00", "#CC79A7"],  # https://jfly.uni-koeln.de/color/
+                "PaulTolVibrant": ["#0077BB", "#33BBEE", "#009988", "#EE7733", "#CC3311", "#EE3377","#BBBBBB"]
+                }
 
 class GenerateCrossSectionLocationFile(FM2ProfBase):
     """
@@ -908,6 +912,7 @@ class PlotStyles:
     myFmt = mdates.DateFormatter("%d-%b")
     monthlocator = mdates.MonthLocator(bymonthday=(1, 10, 20))
     daylocator = mdates.DayLocator(interval=5)
+    colorscheme = COLORSCHEMES["Koeln"]
 
     @staticmethod
     def set_locale(localeString: str):
@@ -960,6 +965,100 @@ class PlotStyles:
             legend.get_frame().set_boxstyle("square", pad=0)
 
     @classmethod
+    def sito_2024(
+        cls,
+        fig: Figure | None = None,
+        use_legend: bool = True,
+        extra_labels: List | None = None,
+        ax_align_legend: plt.Axes | None = None,
+    ):
+        """Stijl SITO 2024 """
+
+        def initiate():
+            # Set default locale to NL
+            # TODO: add localization options
+            PlotStyles.set_locale("nl_NL.UTF-8")
+
+            # Color style
+            mpl.rcParams["axes.prop_cycle"] = mpl.cycler(
+                color=cls.colorscheme * 3,
+                linestyle=["-"] * len(cls.colorscheme) + ["--"] * len(cls.colorscheme) + ["-."] * len(cls.colorscheme),
+            )
+
+            # Font style
+            font = {"family": "Franca, Arial", "weight": "normal", "size": 16}
+            mpl.rc("font", **font)
+            mpl.rcParams[
+                "axes.unicode_minus"
+            ] = False  # not all fonts support the unicode minus
+
+        def styleFigure(fig, use_legend, extra_labels, ax_align_legend):
+            if ax_align_legend is None:
+                ax_align_legend = fig.axes[0]
+
+            # this forces labels to be generated. Necessary to detect datetimes
+            fig.canvas.draw()
+
+            # Set styles for each axis
+            legend_title = r"toelichting"
+            handles = list()
+            labels = list()
+
+            for ax in fig.axes:
+
+                # Enable grid grid
+                ax.grid(visible=True, which="major", linestyle="--", linewidth=1.0, color="#BBBBBB")
+                ax.grid(visible=True, which="minor", linestyle="--", linewidth=1.0, color="#BBBBBB")
+
+                for _, spine in ax.spines.items():
+                    spine.set_linewidth(1)
+
+                if cls._is_timeaxis(ax.xaxis):
+                    ax.xaxis.set_major_formatter(cls.myFmt)
+                    ax.xaxis.set_major_locator(cls.monthlocator)
+                    # ax.xaxis.set_minor_locator(cls.daylocator)
+                if cls._is_timeaxis(ax.yaxis):
+                    ax.yaxis.set_major_formatter(cls.myFmt)
+                    ax.yaxis.set_major_locator(cls.monthlocator)
+                    # ax.yaxis.set_minor_locator(cls.daylocator)
+
+                #ax.set_title(ax.get_title().upper())
+                #ax.set_xlabel(ax.get_xlabel().upper())
+                #ax.set_ylabel(ax.get_ylabel().upper())
+                ax.patch.set_visible(False)
+                h, l = ax.get_legend_handles_labels()
+                handles.extend(h)
+                labels.extend(l)
+
+            if extra_labels:
+                handles.extend(extra_labels[0])
+                labels.extend(extra_labels[1])
+            fig.tight_layout()
+            if use_legend:
+                lgd = fig.legend(
+                    handles,
+                    labels,
+                    loc="upper left",
+                    bbox_to_anchor=(1.0, ax_align_legend.get_position().y1),
+                    bbox_transform=fig.transFigure,
+                    edgecolor="k",
+                    facecolor="white",
+                    framealpha=1,
+                    borderaxespad=0,
+                    title=legend_title.upper(),
+                )
+
+                return fig, lgd
+            else:
+                return fig, handles, labels
+
+        if not fig:
+            return initiate()
+        else:
+            initiate()
+            return styleFigure(fig, use_legend, extra_labels, ax_align_legend)
+
+    @classmethod
     def van_veen(
         cls,
         fig: Figure = None,
@@ -976,7 +1075,7 @@ class PlotStyles:
 
             # Color style
             mpl.rcParams["axes.prop_cycle"] = mpl.cycler(
-                color=COLORSCHEME * 3,
+                color=cls.colorscheme * 3,
                 linestyle=["-"] * 3 + ["--"] * 3 + ["-."] * 3,
                 linewidth=np.linspace(0.5, 3, 9),
             )
@@ -1573,9 +1672,10 @@ class ModelOutputReader(FM2ProfBase):
 
 class Compare1D2D(ModelOutputReader):
     """
-    Class to compare the results of a 1D and 2D model.
+    Utility to compare the results of a 1D and 2D model through 
+    visualisation and statistical post-processing. 
 
-    .. note::
+    Note:
         If 2D and 1D netCDF input files are provided, they will first be 
         converted to csv files. Once csv files are present, the original
         netCDF files are no longer used. In that case, the arguments 
@@ -1642,9 +1742,11 @@ class Compare1D2D(ModelOutputReader):
         self._qsteps = np.arange(0, 100 * np.ceil(18000 / 100), 200)
 
         # initiate plotstyle
-        PlotStyles.van_veen()
         self._error_colors = ["#7e3e00", "#b25800", "#d86a00"]
         self._color_error = self._error_colors[1]
+        self._color_scheme = COLORSCHEMES["Koeln"]
+        self._plotstyle = PlotStyles.sito_2024
+        self._plotstyle()
 
         # set start time
         self.start_time = start_time
@@ -1667,7 +1769,9 @@ class Compare1D2D(ModelOutputReader):
                 pass
 
     def eval(self):
-
+        """
+        does a bunch
+        """
         for route in tqdm.tqdm(self.routes):
             self.set_logger_message(f"Making figures for route {route}")
             self.figure_longitudinal_rating_curve(route)
@@ -1698,6 +1802,10 @@ class Compare1D2D(ModelOutputReader):
     def file_2D_H_digitized(self):
         return self.file_2D_H.parent.joinpath(f"{self.file_2D_H.stem}_digitized.csv")
 
+    @property
+    def colorscheme(self):
+        return self._colorscheme
+    
     def digitize_data(self):
         if self.file_1D_H_digitized.is_file():
             self.set_logger_message("Using existing digitized file for 1d")
@@ -2085,7 +2193,11 @@ class Compare1D2D(ModelOutputReader):
         for station in stations:
             tmp_data.append(data[station])
 
-        return pd.DataFrame(index=rkms, data=tmp_data)
+        df = pd.DataFrame(index=rkms, data=tmp_data)
+
+        # drop duplicates
+        df = df.drop_duplicates()
+        return df
 
     @staticmethod
     def _sec_to_days(seconds):
@@ -2099,24 +2211,7 @@ class Compare1D2D(ModelOutputReader):
             # False is not list, return last index
             return len(data.index) - 1
 
-    def figure_longitudinal_time(self, route: List[str]) -> None:
-        """
-        Create a figure along a route with lines at various points in time.
-        Figures are saved to `[Compare1D2D.output_path]/figures/longitudinal`
-
-        Example output:
-
-        .. figure:: figures_utils/longitudinal/example_time_series.png
-
-            example output figure
-
-        """
-        routename = "-".join(route)
-        _, _, lmw_stations = self.get_route(route)
-
-        fig, axs = plt.subplots(2, 1, figsize=(12, 12))
-
-        # plot line every delta_days days
+    def _time_func(self, route) -> Dict[str, pd.Series | str]:
         first_day = self.data_1D_H.index[0]  # + timedelta(days=delta_days) * 2
         last_day = self.data_1D_H.index[-1]
         number_of_days = (last_day - first_day).days
@@ -2125,34 +2220,14 @@ class Compare1D2D(ModelOutputReader):
         moments = [
             first_day + timedelta(days=i) for i in range(0, number_of_days, delta_days)
         ]
-
-        # Plot LMW station locations
-        h1d = self.get_data_along_route(data=self.data_1D_H, route=route)
-        prevloc = -9999
-        for lmw in lmw_stations:
-            if lmw is None:
-                continue
-            newloc = max(lmw[1], prevloc + 3)
-            prevloc = lmw[1]
-            for ax in axs:
-                ax.axvline(x=lmw[1], linestyle="--")
-            axs[0].text(
-                newloc,
-                h1d.min().min(),
-                lmw[0],
-                fontsize=12,
-                rotation=90,
-                horizontalalignment="right",
-                verticalalignment="bottom",
-            )
+        lines = []
 
         for day in moments:
-
             h1d = self.get_data_along_route_for_time(
-                data=self.data_1D_H,
-                route=route,
-                time_index=self._get_nearest_time(data=self.data_1D_H, date=day),
-            )
+                    data=self.data_1D_H,
+                    route=route,
+                    time_index=self._get_nearest_time(data=self.data_1D_H, date=day),
+                )
 
             h2d = self.get_data_along_route_for_time(
                 data=self.data_2D_H,
@@ -2160,38 +2235,146 @@ class Compare1D2D(ModelOutputReader):
                 time_index=self._get_nearest_time(data=self.data_2D_H, date=day),
             )
 
-            axs[0].plot(h1d, label=f"{day:%b-%d}")
+            lines.append({"1D": h1d, 
+                          "2D": h2d,
+                          "label": f"{day:%b-%d}"})
 
-            axs[0].set_ylabel("waterstand [m+nap]")
+        return lines
+
+    def _last25(self, route: List[str]) -> Dict[str, pd.Series | str]:
+        return self._stat_func(route, stat="last25")
+    
+    def _max13(self, route: List[str]) -> Dict[str, pd.Series | str]:
+        return self._stat_func(route, stat="max13")
+    
+    def _stat_func(self, route: List[str], stat:str="max13") -> Dict[str, pd.Series | str]:
+        """
+        Applies column-wise "last25" or "max13" on 1D and 2D data
+        """
+        def apply_stat(df, stat:str="max13"):
+            columns = df.columns
+            values = []
+            for column in columns:
+                try:
+                    af = df[column].iloc[:,0]
+                except pd.errors.IndexingError:
+                    af = df[column]
+                match stat:
+                    case "max13":
+                        values.append(af.nlargest(13).mean())
+                    case "last25":
+                        values.append(af[-25:].mean())
+            return pd.Series(index=columns, data=values)
+        
+        
+        max13_1d = apply_stat(self.get_data_along_route(self.data_1D_H, route=route).T, stat=stat)
+        max13_2d = apply_stat(self.get_data_along_route(self.data_2D_H, route=route).T, stat=stat)
+
+        return [{"1D": max13_1d, 
+                 "2D": max13_2d,
+                 "label": stat}]
+
+    def _lmw_func(self, station_names, station_locs):
+        st_names = []
+        st_locs = []
+        prev_loc = -9999
+        for name, loc in zip(station_names, station_locs):
+            if "lmw" not in name.lower(): continue
+            if abs(prev_loc - loc) < 5: 
+                self.set_logger_message(f"skipped labelling {name} because too close to previous station", "warning")
+                continue
+            st_names.append(name.split("_")[-1])
+            st_locs.append(loc)
+            prev_loc = loc
+
+        return st_names, st_locs
+    
+    def figure_longitudinal_time(self, route: List[str]) -> None:
+        raise NotImplementedError()
+    
+    def figure_longitudinal(self, 
+                            route: List[str], 
+                            stat: str = 'time',
+                            savefig: bool=True) -> FigureOutput | None:
+        """
+        Creates a figure along a `route`. Content of figure depends 
+        on `func`. Figures are saved to `[Compare1D2D.output_path]/figures/longitudinal`
+
+        Example output:
+
+        ![title](../figures/test_results/compare1d2d/BR-PK-IJ.png)
+
+        """
+        # Get route and stations along route
+        routename = "-".join(route)
+        station_names, station_locs, lmw_stations = self.get_route(route)
+
+        match stat:
+            case 'time':
+                datafunc = self._time_func
+            case "last25":
+                datafunc = self._last25
+            case "max13":
+                datafunc = self._max13
+
+        labelfunc = self._lmw_func
+        
+        # TIME FUNCTION plot line every delta_days days
+        lines = datafunc(route=route)
+        
+        # Plot LMW station locations
+        fig, axs = plt.subplots(2, 1, figsize=(12, 12))
+        h1d = self.get_data_along_route(data=self.data_1D_H, route=route)
+        
+        # Filtering which stations to plot
+        st_names, st_locs = labelfunc(station_names, station_locs)
+
+        for st_name, st_loc in zip(st_names, st_locs):
+            for ax in axs:
+                ax.axvline(x=st_loc, linestyle="--")
+
+            axs[0].text(
+                st_loc,
+                h1d.min().min(),
+                st_name,
+                fontsize=12,
+                rotation=90,
+                horizontalalignment="left",
+                verticalalignment="bottom",
+            )
+
+        for line in lines:
+
+            axs[0].plot(line.get("1D"), label=line.get("label"))
+            
+            axs[0].set_ylabel("Waterstand [m+NAP]")
             routestr = "-".join(route)
 
             axs[0].set_title(f"route: {routestr}")
 
-            axs[1].plot(h1d - h2d)
+            axs[1].plot(line.get("1D") - line.get("2D"))
             axs[1].set_ylabel("Verschil 1D-2D [m]")
-
+            
             for ax in axs:
-                ax.set_xlabel("rivierkilometers")
+                ax.set_xlabel("Rivierkilometers")
                 ax.xaxis.set_major_locator(MultipleLocator(20))
                 ax.xaxis.set_minor_locator(MultipleLocator(10))
 
-        # bias
-        diff = self.get_data_along_route(
-            data=self.data_1D_H, route=route
-        ) - self.get_data_along_route(data=self.data_2D_H, route=route)
-
-        axs[1].plot(
-            diff.mean(axis=1), "-", linewidth=4, color="#c65387", label="Gemiddeld"
-        )
+        
         axs[1].set_ylim(-1, 1)
-        fig, lgd = PlotStyles.van_veen(fig, use_legend=[False, False])
-        plt.tight_layout()
-        fig.savefig(
-            self.output_path.joinpath(f"figures/longitudinal/{routename}.png"),
-            bbox_extra_artists=[lgd],
-            bbox_inches="tight",
-        )
-        plt.close()
+        fig, lgd = self._plotstyle(fig, use_legend=[False, False])
+
+        if savefig:
+            plt.tight_layout()
+            fig.savefig(
+                self.output_path.joinpath(f"figures/longitudinal/{routename}.png"),
+                bbox_extra_artists=[lgd],
+                bbox_inches="tight",
+            )
+            plt.close()
+
+        else:
+            return FigureOutput(fig=fig, axes = axs, legend=lgd)
 
     def figure_longitudinal_rating_curve(self, route: List[str]) -> None:
         """
