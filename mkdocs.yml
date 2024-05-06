@@ -78,6 +78,7 @@ nav:
     - User Manual:
       - Installation: markdown/installation.md
       - Quickstart: markdown/quickstart.md
+      - Utilities: markdown/utils.md
       - Configuration: markdown/configuration.md
       - Changelog: CHANGELOG.md
     - Technical Manual:
