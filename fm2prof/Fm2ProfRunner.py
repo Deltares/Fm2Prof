@@ -1107,7 +1107,7 @@ class Project(Fm2ProfRunner):
         """
         self.get_inifile().set_output_directory(path)
 
-    def get_output_directory(self) -> None:
+    def get_output_directory(self) -> str:
         """
         Returns the current output directory
         """
