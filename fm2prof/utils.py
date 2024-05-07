@@ -478,7 +478,9 @@ class VisualiseOutput(FM2ProfBase):
             bbox_inches="tight",
         )
 
-    def get_cross_sections_for_branch(self, branch: str):
+    def get_cross_sections_for_branch(self, branch: str) -> Tuple[str, float, str]:
+        if branch not in self.branches:
+            raise KeyError(f"Branch {branch} not in known branches: {self.branches}")
         def split_css(name) -> Tuple[str, float, str]:
             chainage = float(name.split("_")[-1])
             branch = "_".join(name.split("_")[:-1])
