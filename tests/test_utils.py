@@ -176,8 +176,6 @@ class Test_Compare1D2D:
         # 4. Verify expectations
         assert output_file.is_file()
 
-
-
     def test_figure_longitudinal(self):
 
         # 1. Set up initial test data 
@@ -193,6 +191,27 @@ class Test_Compare1D2D:
         # 3. Run test
         try:
             plotter.figure_longitudinal(route=['BR', "PK", "IJ"], stat="last25")
+        except Exception as e:
+            pytest.fail("No exception expected, but thrown: {}".format(str(e)))
+
+        # 4. Verify expectations
+        assert output_file.is_file()
+
+    def test_figure_at_station(self):
+
+        # 1. Set up initial test data 
+        project_config = TestUtils.get_local_test_file('compare1d2d/cases/case1/fm2prof.ini')
+        project = Project(project_config)
+        plotter = Compare1D2D(project=project,
+                    start_time=datetime(year=2000, month=1, day=5))
+        
+        # 2. Set expectations
+        # this file should exist
+        output_file = TestUtils.get_local_test_file('compare1d2d/cases/case1/output/figures/stations/NR_919.00.png')
+
+        # 3. Run test
+        try:
+            plotter.figure_at_station("NR_919.00")
         except Exception as e:
             pytest.fail("No exception expected, but thrown: {}".format(str(e)))
 
