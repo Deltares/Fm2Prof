@@ -1,3 +1,40 @@
+## v2.3.1 (24-04-2024)
+
+**Bug fixes**
+- Fixed a bug that threw an exception if user did not specify a stop time when using `utils.Compare1D2D` (#78)
+- Fixed bug (#81) that prevented executable from being build because of missing favico
+
+**Documentation**
+- added python snippets to quickstart tutorial
+
+
+## v2.3.0 (19-04-2024)
+
+### New functionality
+
+- Configuration file now has a new `debug` section with debug specific parameters. This section includes two parameters previously in the general `parameters` section (`ExportMapFiles` and `CssSelection`) and the new `ExportCSSData`. 
+- new debug option `ExportCSSData` that when enabled output data to analyse cross-section generation. 
+- new option `ConveyanceDetectionMethod` to toggle between the previous way to detect storage (0) and a the new one (1, default). 
+
+### Documentation
+
+- documentation now includes a notebook specifying how output from `ExportCSSData` option can be used to analyse flow data
+- docstrings of cross-section class updated to describe flow/storage separation methodology
+- several chapters ported over from sphinx
+
+### bug fixes & chores
+- added dedicated tests for cross-section class
+- test coverage is now reported in Sonarcloud
+- fixed bug that caused error while writing log
+
+### bug fixes & chores
+
+- fixed bug in `utils` that threw an error when using matplotlib 3.7 or higher
+- removed unused code blocks
+- updated type hinting and code documentation of `CrossSection.py`
+
+
+
 ## v2.2.8 (2023-10-03)
 
 This version update FM2PROF to Python 3.10 or higher. It removes unused dependencies and updates the package system `poetry` to version 1.8.2. Due to this switch, the commitizen workflow is currently not used, and the documentation system switch from sphinx to mkdocs. 

@@ -75,17 +75,21 @@ extra_css:
   - stylesheets/extra.css
 nav:
     - Home: index.md
+    - Changelog: CHANGELOG.md
     - User Manual:
       - Installation: markdown/installation.md
       - Quickstart: markdown/quickstart.md
-      - Configuration: markdown/configuration.md
-      - Changelog: CHANGELOG.md
+      - Utilities: 
+        - markdown/utils.md
+        - notebooks/cross_section_data.ipynb
+        - notebooks/compare1d2d.ipynb
+        - notebooks/VisualiseOutput.ipynb
+      - Settings:
+        - Configuration: markdown/configuration.md
     - Technical Manual:
       - Methodology: markdown/conceptual_design.md
       - Glossary: markdown/glossary.md
       - numerical methods: markdown/numerical_methods.md
-      - Notebooks:
-        - Inspection: notebooks/cross_section_data.ipynb
     - Contributing: markdown/contributing.md
 markdown_extensions:
   - admonition
