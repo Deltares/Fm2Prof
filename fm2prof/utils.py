@@ -2,6 +2,7 @@ import ast
 import locale
 import os
 import re
+import warnings
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from logging import Logger
@@ -946,7 +947,8 @@ class PlotStyles:
             extra_labels: List | None = None,
             ax_align_legend: plt.Axes | None = None,):
         
-        DeprecationWarning("This function is deprecated and will be removed on future versions. Use PlotStyle.apply(fig, style='van_veen') instead")
+        warnings.warn("This function is deprecated and will be removed on future versions. Use PlotStyle.apply(fig, style='van_veen') instead",
+                      category=DeprecationWarning)
         cls.apply(fig=fig, style='van_veen', use_legend=use_legend, extra_labels=extra_labels, ax_align_legend=ax_align_legend)
 
 
@@ -975,7 +977,7 @@ class PlotStyles:
         
         style_guide: StyleGuide = styles.get(style)
 
-        def initiate():
+        def initiate() -> None:
             # Set default locale to NL
             # TODO: add localization options (#85)
             PlotStyles.set_locale("nl_NL.UTF-8")
@@ -995,7 +997,7 @@ class PlotStyles:
                 "axes.unicode_minus"
             ] = False  
 
-        def styleFigure(fig, use_legend, extra_labels, ax_align_legend):
+        def styleFigure(fig, use_legend, extra_labels, ax_align_legend) -> Tuple[Figure, Legend] | Tuple[Figure, List] | None:
             if ax_align_legend is None:
                 ax_align_legend = fig.axes[0]
 
@@ -1054,7 +1056,7 @@ class PlotStyles:
             return initiate()
         else:
             initiate()
-            return styleFigure(fig, use_legend, extra_labels, ax_align_legend)
+            return styleFigure(fig=fig, use_legend=use_legend, extra_labels=extra_labels, ax_align_legend=ax_align_legend)
 
 @dataclass
 class DeltaresSectionItem:
@@ -1646,7 +1648,7 @@ class Compare1D2D(ModelOutputReader):
         self._color_error = self._error_colors[1]
         self._color_scheme = COLORSCHEMES["Koeln"]
         self._plotstyle: str = style
-        PlotStyles.apply(self._plotstyle)
+        PlotStyles.apply(style=self._plotstyle)
 
         # set start time
         self.start_time = start_time
@@ -2080,7 +2082,7 @@ class Compare1D2D(ModelOutputReader):
         suptitle = plt.suptitle(title.upper())
 
         # Style figure
-        fig, lgd = PlotStyles.apply(fig, style=self.plot_style, use_legend=[True, False])
+        fig, lgd = PlotStyles.apply(fig=fig, style=self._plotstyle, use_legend=True)
         self._style_error_axes(ax_error, ylim=[-500, 500])
         fig.tight_layout()
         fig.savefig(
@@ -2207,7 +2209,9 @@ class Compare1D2D(ModelOutputReader):
         return st_names, st_locs
     
     def figure_longitudinal_time(self, route: List[str]) -> None:
-        DeprecationWarning("Method figure_longitudinal_time will be removed in the future. Use figure_longitudinal(route, stat=\"time\") instead ")
+        warnings.warn("Method figure_longitudinal_time will be removed in the future. Use figure_longitudinal(route, stat=\"time\") instead ",
+                      category=DeprecationWarning)
+        
         self.figure_longitudinal(route, stat="time")
     
     def figure_longitudinal(self, 
@@ -2297,7 +2301,7 @@ class Compare1D2D(ModelOutputReader):
 
         
         axs[1].set_ylim(-1, 1)
-        fig, lgd = PlotStyles.apply(fig=fig, style=self._plotstyle, use_legend=[False, False])
+        fig, lgd = PlotStyles.apply(fig=fig, style=self._plotstyle, use_legend=True)
 
         if savefig:
             plt.tight_layout()
@@ -2376,7 +2380,7 @@ class Compare1D2D(ModelOutputReader):
 
         # style figure
         axs[1].set_ylim(-1, 1)
-        fig, lgd = PlotStyles.apply(fig,style=self._plotstyle, use_legend=[True, False])
+        fig, lgd = PlotStyles.apply(fig,style=self._plotstyle, use_legend=True)
         plt.tight_layout()
         fig.savefig(
             self.output_path.joinpath(
@@ -2447,7 +2451,7 @@ class Compare1D2D(ModelOutputReader):
 
         cb = fig.colorbar(im, ax=ax)
         cb.set_label("waterstandsverschil [m+nap]".upper(), rotation=270, labelpad=15)
-        PlotStyles.apply(fig, style=self._plotstyle, use_legend=[False])
+        PlotStyles.apply(fig, style=self._plotstyle, use_legend=False)
         fig.tight_layout()
         fig.savefig(
             self.output_path.joinpath(f"figures/heatmaps/{routename}_timeseries.png")
@@ -2497,7 +2501,7 @@ class Compare1D2D(ModelOutputReader):
 
         cb = fig.colorbar(im, ax=ax)
         cb.set_label("waterstandsverschil [m+nap]".upper(), rotation=270, labelpad=15)
-        PlotStyles.apply(fig, style=self._plotstyle, use_legend=[False])
+        PlotStyles.apply(fig, style=self._plotstyle, use_legend=False)
         fig.tight_layout()
         fig.savefig(
             self.output_path.joinpath(f"figures/heatmaps/{routename}_rating_curve.png")

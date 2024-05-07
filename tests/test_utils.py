@@ -184,9 +184,6 @@ class Test_Compare1D2D:
         project_config = TestUtils.get_local_test_file('compare1d2d/rijn-j22_6-v1a2/sobek-rijn-j22.ini')
         project = Project(project_config)
         plotter = Compare1D2D(project=project,
-                    path_1d=None,
-                    path_2d=None,
-                    routes=[['BR', "PK", "IJ"], ['BR', 'PK', 'NR', "LE"], ["BR", "WL", "BO"]],
                     start_time=datetime(year=2000, month=1, day=5))
         
         # 2. Set expectations
