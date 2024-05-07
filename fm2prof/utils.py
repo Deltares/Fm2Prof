@@ -1990,16 +1990,16 @@ class Compare1D2D(ModelOutputReader):
         return self.statistics.loc[station]
 
     def figure_compare_discharge_at_stations(
-        self, title: str = "notitle", stations: Tuple[str, str] = None
+        self, stations: List[str], title: str = "no_title",
     ) -> None:
         """
-        Like :meth:`Compare1D2D.figure_at_station`, but compares discharge
+        Like `Compare1D2D.figure_at_station`, but compares discharge
         distribution over two stations.
 
         Example usage:
-
-            >>> Compare1D2().figure_compare_discharge_at_stations(stations=["WL_869.00", "PK_869.00"])
-
+        ``` py
+        Compare1D2().figure_compare_discharge_at_stations(stations=["WL_869.00", "PK_869.00"])
+        ```
         Figures are saved to `[Compare1D2D.output_path]/figures/discharge`
 
         Example output:
@@ -2009,7 +2009,7 @@ class Compare1D2D(ModelOutputReader):
             Example output figure
 
         """
-        fig, axs = plt.subplots(1, 2, figsize=(12, 5))
+        fig, axs = plt.subplots(2, 1, figsize=(12, 10))
 
         ax_error = axs[0].twinx()
         ax_error.set_zorder(
@@ -2018,11 +2018,12 @@ class Compare1D2D(ModelOutputReader):
 
         if len(stations) != 2:
             print("error: must define 2 stations")
+        
         linestyles_2d = ["-", "--"]
         for j, station in enumerate(stations):
 
             if station not in self.stations():
-                print(f"warning', {station} not known")
+                self.set_logger_message(f"{station} not known", 'warning')
 
             # tijdserie
             axs[0].plot(
@@ -2030,25 +2031,24 @@ class Compare1D2D(ModelOutputReader):
                 label=f"2D, {station.split('_')[0]}",
                 linewidth=2,
                 linestyle=linestyles_2d[j],
-                color="k",
             )
             axs[0].plot(
                 self.data_1D_Q[station],
                 label=f"1D, {station.split('_')[0]}",
                 linewidth=2,
                 linestyle="-",
-                color=COLORSCHEME[j + 1],
             )
 
-            ax_error.plot(
-                self._data_1D_Q[station] - self._data_2D_Q[station],
-                ".",
-                color=self._error_colors[j + 1],
-                markersize=5,
-                label=f"1D-2D ({station.split('_')[0]})",
-            )
+        ax_error.plot(
+            self._data_1D_Q[station] - self._data_2D_Q[station],
+            ".",
+            color="r",
+            markersize=5,
+            label=f"1D-2D",
+        )
 
         # discharge distribution
+        
         Q2D = self.data_2D_Q[stations]
         Q1D = self.data_1D_Q[stations]
         axs[1].plot(
@@ -2056,28 +2056,24 @@ class Compare1D2D(ModelOutputReader):
             (Q2D.iloc[:, 0] / Q2D.sum(axis=1)) * 100,
             linewidth=2,
             linestyle=linestyles_2d[0],
-            color="k",
         )
         axs[1].plot(
             Q1D.sum(axis=1),
             (Q1D.iloc[:, 0] / Q1D.sum(axis=1)) * 100,
             linewidth=2,
             linestyle="-",
-            color=COLORSCHEME[1],
         )
         axs[1].plot(
             Q2D.sum(axis=1),
             (Q2D.iloc[:, 1] / Q2D.sum(axis=1)) * 100,
             linewidth=2,
             linestyle=linestyles_2d[1],
-            color="k",
         )
         axs[1].plot(
             Q1D.sum(axis=1),
             (Q1D.iloc[:, 1] / Q1D.sum(axis=1)) * 100,
             linewidth=2,
             linestyle="-",
-            color=COLORSCHEME[2],
         )
 
         # style
