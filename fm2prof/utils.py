@@ -1948,9 +1948,9 @@ class Compare1D2D(ModelOutputReader):
         else:
             return FigureOutput(fig=fig, axes=ax, legend=lgd)
 
-    def _style_error_axes(self, ax, ylim: List[float] = [-0.5, 0.5]):
+    def _style_error_axes(self, ax, ylim: List[float] = [-0.5, 0.5], ylabel:str="1D-2D [m]"):
         ax.set_ylim(ylim)
-        ax.set_ylabel("1D-2D [m]")
+        ax.set_ylabel(ylabel)
         ax.spines["right"].set_edgecolor(self._color_error)
         ax.tick_params(axis="y", colors=self._color_error)
         ax.grid(False)
@@ -1990,8 +1990,8 @@ class Compare1D2D(ModelOutputReader):
         return self.statistics.loc[station]
 
     def figure_compare_discharge_at_stations(
-        self, stations: List[str], title: str = "no_title",
-    ) -> None:
+        self, stations: List[str], title: str = "no_title", savefig:bool=True
+    ) -> FigureOutput | None:
         """
         Like `Compare1D2D.figure_at_station`, but compares discharge
         distribution over two stations.
@@ -2055,7 +2055,7 @@ class Compare1D2D(ModelOutputReader):
             Q2D.sum(axis=1),
             (Q2D.iloc[:, 0] / Q2D.sum(axis=1)) * 100,
             linewidth=2,
-            linestyle=linestyles_2d[0],
+            linestyle='--',
         )
         axs[1].plot(
             Q1D.sum(axis=1),
@@ -2067,7 +2067,7 @@ class Compare1D2D(ModelOutputReader):
             Q2D.sum(axis=1),
             (Q2D.iloc[:, 1] / Q2D.sum(axis=1)) * 100,
             linewidth=2,
-            linestyle=linestyles_2d[1],
+            linestyle='--',
         )
         axs[1].plot(
             Q1D.sum(axis=1),
@@ -2088,14 +2088,18 @@ class Compare1D2D(ModelOutputReader):
 
         # Style figure
         fig, lgd = PlotStyles.apply(fig=fig, style=self._plotstyle, use_legend=True)
-        self._style_error_axes(ax_error, ylim=[-500, 500])
+        self._style_error_axes(ax_error, ylim=[-500, 500], ylabel="1D-2D [m$^3$/s]")
         fig.tight_layout()
-        fig.savefig(
-            self.output_path.joinpath("figures/discharge").joinpath(f"{title}.png"),
-            bbox_extra_artists=[lgd, suptitle],
-            bbox_inches="tight",
-        )
-        plt.close()
+
+        if savefig:
+            fig.savefig(
+                self.output_path.joinpath("figures/discharge").joinpath(f"{title}.png"),
+                bbox_extra_artists=[lgd, suptitle],
+                bbox_inches="tight",
+            )
+            plt.close()
+        else:
+            return FigureOutput(fig=fig, axes=axs, legend=lgd)
 
     def get_data_along_route_for_time(
         self, data: pd.DataFrame, route: List[str], time_index: int

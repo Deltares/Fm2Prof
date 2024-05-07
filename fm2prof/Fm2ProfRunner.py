@@ -40,12 +40,13 @@ class Fm2ProfRunner(FM2ProfBase):
         iniFilePath (str): path to configuration file
     """
 
-    def __init__(self, iniFilePath: str = ""):
+    def __init__(self, iniFilePath: Path | str = ""):
         """
         Initializes the project
 
-        iniFilePath (str): path to a configuration file. If not given,
-                               default values will be used.
+        Parameters:
+            iniFilePath: path to a configuration file. If not given,
+                                default values will be used.
         """
         self.fm_model_data: FmModelData = None
         self._output_files: OutputFiles = OutputFiles()
