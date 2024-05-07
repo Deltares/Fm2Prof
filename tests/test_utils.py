@@ -83,6 +83,52 @@ class Test_GenerateCrossSectionLocationFile:
     
 
 class Test_VisualiseOutput:
+    def test_when_branch_not_in_branches_raise_exception(self):
+        # 1. Set up initial test data 
+        project_config = TestUtils.get_local_test_file('cases/case_02_compound/fm2prof_config.ini')
+        project = Project(project_config)
+
+        vis = VisualiseOutput(
+                    project.get_output_directory(), logger=project.get_logger()
+                )
+        
+        # 2. Set expectations
+        error_snippet = "not in known branches:"
+        # 3. Run test
+        with pytest.raises(KeyError) as e_info:
+            vis.figure_roughness_longitudinal(branch="waal")
+
+        # 4. Verify expectations
+        error_message = str(e_info.value)
+        assert error_snippet in error_message
+        
+
+    def test_when_branch_in_branches_produce_figure(self):
+        # 1. Set up initial test data 
+        # 1. Set up initial test data 
+        project_config = TestUtils.get_local_test_file('cases/case_02_compound/fm2prof_config.ini')
+        project = Project(project_config)
+
+        vis = VisualiseOutput(
+                    project.get_output_directory(), logger=project.get_logger()
+                )
+        
+        # 2. Set expectations
+        output_dir = TestUtils.get_local_test_file('cases/case_02_compound/output/figures/roughness')
+        shutil.rmtree(output_dir)
+        os.mkdir(output_dir)
+        output_file = TestUtils.get_local_test_file('cases/case_02_compound/output/figures/roughness/roughness_longitudinal_channel1.png')
+        
+        # 3. Run test
+        try:
+            vis.figure_roughness_longitudinal(branch="channel1")
+        except Exception as e:
+            pytest.fail("No exception expected, but thrown: {}".format(str(e)))
+            
+        
+        # 4. Verify expectations
+        assert output_file.is_file()
+
     def test_when_given_output_css_figure_produced(self):
         # 1. Set up initial test data 
         project_config = TestUtils.get_local_test_file('cases/case_02_compound/fm2prof_config.ini')

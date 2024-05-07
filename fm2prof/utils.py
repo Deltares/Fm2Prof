@@ -452,6 +452,9 @@ class VisualiseOutput(FM2ProfBase):
         Assumes the following naming convention:
         [branch]_[optional:branch_order]_[chainage]
         """
+        output_dir = self.fig_dir.joinpath('roughness')
+        if not output_dir.is_dir():
+            os.mkdir(output_dir)
 
         fig, ax = plt.subplots(1, figsize=(12, 5))
 
@@ -473,7 +476,7 @@ class VisualiseOutput(FM2ProfBase):
         ax.set_title(branch)
         fig, lgd = self._SetPlotStyle(fig, use_legend=True)
         plt.savefig(
-            self.fig_dir.joinpath(f"roughness_longitudinal_{branch}.png"),
+            output_dir.joinpath(f"roughness_longitudinal_{branch}.png"),
             bbox_extra_artists=[lgd],
             bbox_inches="tight",
         )
@@ -588,7 +591,11 @@ class VisualiseOutput(FM2ProfBase):
                                  if false, returns pyplot figure object
 
         """
-        output_file = self.fig_dir.joinpath(f"{css['id']}.png")
+        output_dir = self.fig_dir.joinpath('cross_sections')
+        if not output_dir.is_dir():
+            os.mkdir(output_dir)
+        
+        output_file = output_dir.joinpath(f"{css['id']}.png")
         if output_file.is_file() & ~overwrite:
             self.set_logger_message("file already exists", "debug")
             return
@@ -647,7 +654,7 @@ class VisualiseOutput(FM2ProfBase):
             png images saved to file
         """
 
-        figdir = self.output_dir.joinpath("figures/cross_sections")
+        figdir = self.output_dir.joinpath("figures")
         if not figdir.is_dir():
             figdir.mkdir(parents=True)
         return figdir
