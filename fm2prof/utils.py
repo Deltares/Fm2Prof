@@ -953,8 +953,8 @@ class PlotStyles:
     @classmethod
     def apply(
         cls,
-        style: str = "sito2024",
         fig: Figure | None = None,
+        style: str = "sito",
         use_legend: bool = True,
         extra_labels: List | None = None,
         ax_align_legend: plt.Axes | None = None,
@@ -969,6 +969,9 @@ class PlotStyles:
                                  minor_grid = dict(visible=True, which="minor", linestyle="-", linewidth=0.5, color="k"),
                                  spine_width=2)
                         )
+        
+        if style not in styles:
+            raise KeyError(f"unknown style {style}. Options are {list(styles.keys())}")
         
         style_guide: StyleGuide = styles.get(style)
 

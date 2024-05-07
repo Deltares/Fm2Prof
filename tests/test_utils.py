@@ -1,12 +1,14 @@
 
 import os
+import shutil
 import pytest
 from fm2prof import Project
 from fm2prof.utils import (
     DeltaresConfig,
     GenerateCrossSectionLocationFile,
     ModelOutputReader,
-    Compare1D2D
+    Compare1D2D,
+    VisualiseOutput
 )
 from tests.TestUtils import TestUtils
 
@@ -102,6 +104,32 @@ class Test_GenerateCrossSectionLocationFile:
         # 4. verify
         assert output_file.is_file()
     
+
+class Test_VisualiseOutput:
+    def test_when_given_output_css_figure_produced(self):
+        # 1. Set up initial test data 
+        project_config = TestUtils.get_local_test_file('cases/case_02_compound/fm2prof_config.ini')
+        project = Project(project_config)
+        vis = VisualiseOutput(
+            project.get_output_directory(), logger=project.get_logger()
+        )
+
+        # 2. Set expectations
+        output_dir = TestUtils.get_local_test_file('cases/case_02_compound/output/figures/cross_sections')
+        shutil.rmtree(output_dir)
+        os.mkdir(output_dir)
+        output_file = TestUtils.get_local_test_file('cases/case_02_compound/output/figures/cross_sections/channel1_125.000.png')
+        
+        # 3. Run test
+        try:
+            for css in vis.cross_sections:
+                vis.figure_cross_section(css)
+        except Exception as e:
+            pytest.fail("No exception expected, but thrown: {}".format(str(e)))
+
+        # 4. Verify expectations
+        assert output_file.is_file()
+
 
 class Test_Compare1D2D:
     def test_when_no_netcdf_but_csv_present_class_initialises(self):
