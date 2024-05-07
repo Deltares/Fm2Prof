@@ -999,7 +999,7 @@ class PlotStyles:
                 "axes.unicode_minus"
             ] = False  
 
-        def styleFigure(fig, use_legend, extra_labels, ax_align_legend) -> Tuple[Figure, Legend] | Tuple[Figure, List] | None:
+        def style_figure(fig, use_legend, extra_labels, ax_align_legend) -> Tuple[Figure, Legend] | Tuple[Figure, List] | None:
             if ax_align_legend is None:
                 ax_align_legend = fig.axes[0]
 
@@ -1058,7 +1058,7 @@ class PlotStyles:
             return initiate()
         else:
             initiate()
-            return styleFigure(fig=fig, use_legend=use_legend, extra_labels=extra_labels, ax_align_legend=ax_align_legend)
+            return style_figure(fig=fig, use_legend=use_legend, extra_labels=extra_labels, ax_align_legend=ax_align_legend)
 
 @dataclass
 class DeltaresSectionItem:
