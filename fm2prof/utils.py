@@ -28,6 +28,7 @@ import numpy as np
 import pandas as pd
 import tqdm
 from matplotlib.figure import Figure
+from matplotlib.legend import Legend
 from matplotlib.ticker import AutoMinorLocator, FormatStrFormatter, MultipleLocator
 from netCDF4 import Dataset
 from pandas.plotting import register_matplotlib_converters
@@ -40,6 +41,7 @@ from fm2prof.common import FM2ProfBase
 register_matplotlib_converters()
 
 FigureOutput = namedtuple('FigureOutput', ['fig', 'axes', 'legend'])
+StyleGuide = namedtuple('StyleGuide', ['font', 'major_grid', 'minor_grid', 'spine_width'])
 
 COLORSCHEMES = {"Deltares": ["#000000", "#00cc96", "#0d38e0"],
                 "Koeln": ["#000000", "#E69F00", "#56B4E9", "#009E73", "#F0E444", "#0072B2", "#D55E00", "#CC79A7"],  # https://jfly.uni-koeln.de/color/
@@ -408,8 +410,7 @@ class VisualiseOutput(FM2ProfBase):
         self.set_logger_message(f"Using {self.fig_dir} as output directory for figures")
 
         # initiate plotstyle
-        # TODO: make configurable which style to use?
-        PlotStyles.van_veen()
+        PlotStyles.apply()
 
     @property
     def branches(self) -> Generator[List[str], None, None]:
@@ -697,7 +698,7 @@ class VisualiseOutput(FM2ProfBase):
         """todo: add preference to switch styles or
         inject own style
         """
-        return PlotStyles.van_veen(*args, **kwargs)
+        return PlotStyles.apply(*args, **kwargs)
 
     def _plot_geometry(self, css, ax, reference_geometry=None):
 
@@ -937,46 +938,43 @@ class PlotStyles:
         except IndexError:
             return False
         return False
+    
+    @classmethod
+    def van_veen(cls,
+            fig: Figure | None = None,
+            use_legend: bool = True,
+            extra_labels: List | None = None,
+            ax_align_legend: plt.Axes | None = None,):
+        
+        DeprecationWarning("This function is deprecated and will be removed on future versions. Use PlotStyle.apply(fig, style='van_veen') instead")
+        cls.apply(fig=fig, style='van_veen', use_legend=use_legend, extra_labels=extra_labels, ax_align_legend=ax_align_legend)
+
 
     @classmethod
-    def pilot_2021(cls, fig, legendbelow=False):
-        for ax in fig.axes:
-            ax.grid(False)
-            ax.spines["top"].set_visible(False)
-            ax.spines["right"].set_visible(False)
-
-            ax.xaxis.set_tick_params(width=2)
-            ax.yaxis.set_tick_params(width=2)
-            for spine in ["left", "bottom"]:
-                ax.spines[spine].set_edgecolor("#272727")
-                ax.spines[spine].set_linewidth(2)
-            if legendbelow:
-                legend = ax.legend(
-                    fancybox=True,
-                    framealpha=0.5,
-                    edgecolor="None",
-                    loc=3,
-                    ncol=3,
-                    bbox_to_anchor=(-0.02, -0.5),
-                )
-            else:
-                legend = ax.legend(fancybox=True, framealpha=0.5, edgecolor="None")
-            legend.get_frame().set_facecolor("#e5eef2")  # #e5eef2 #92b6c7
-            legend.get_frame().set_boxstyle("square", pad=0)
-
-    @classmethod
-    def sito_2024(
+    def apply(
         cls,
+        style: str = "sito2024",
         fig: Figure | None = None,
         use_legend: bool = True,
         extra_labels: List | None = None,
         ax_align_legend: plt.Axes | None = None,
-    ):
-        """Stijl SITO 2024 """
+    ) -> Tuple[Figure, Legend]:
+        
+        styles: Dict[str, StyleGuide] = dict(sito= StyleGuide(font={"family": "Franca, Arial", "weight": "normal", "size": 16},
+                                 major_grid = dict(visible=True, which="major", linestyle="--", linewidth=1.0, color="#BBBBBB"),
+                                 minor_grid = dict(visible=True, which="minor", linestyle="--", linewidth=1.0, color="#BBBBBB"),
+                                 spine_width=1),
+                      van_veen = StyleGuide(font={"family": "Bahnschrift", "weight": "normal", "size": 18},
+                                 major_grid = dict(visible=True, which="major", linestyle="-", linewidth=1, color="k"),
+                                 minor_grid = dict(visible=True, which="minor", linestyle="-", linewidth=0.5, color="k"),
+                                 spine_width=2)
+                        )
+        
+        style_guide: StyleGuide = styles.get(style)
 
         def initiate():
             # Set default locale to NL
-            # TODO: add localization options
+            # TODO: add localization options (#85)
             PlotStyles.set_locale("nl_NL.UTF-8")
 
             # Color style
@@ -986,11 +984,13 @@ class PlotStyles:
             )
 
             # Font style
-            font = {"family": "Franca, Arial", "weight": "normal", "size": 16}
+            font = style_guide.font
+
+            # not all fonts support the unicode minus, so disable this option
             mpl.rc("font", **font)
             mpl.rcParams[
                 "axes.unicode_minus"
-            ] = False  # not all fonts support the unicode minus
+            ] = False  
 
         def styleFigure(fig, use_legend, extra_labels, ax_align_legend):
             if ax_align_legend is None:
@@ -1000,31 +1000,26 @@ class PlotStyles:
             fig.canvas.draw()
 
             # Set styles for each axis
-            legend_title = r"toelichting"
+            legend_title = r"Toelichting"
             handles = list()
             labels = list()
 
             for ax in fig.axes:
 
                 # Enable grid grid
-                ax.grid(visible=True, which="major", linestyle="--", linewidth=1.0, color="#BBBBBB")
-                ax.grid(visible=True, which="minor", linestyle="--", linewidth=1.0, color="#BBBBBB")
+                ax.grid(**style_guide.major_grid)
+                ax.grid(**style_guide.minor_grid)
 
                 for _, spine in ax.spines.items():
-                    spine.set_linewidth(1)
+                    spine.set_linewidth(style_guide.spine_width)
 
                 if cls._is_timeaxis(ax.xaxis):
                     ax.xaxis.set_major_formatter(cls.myFmt)
                     ax.xaxis.set_major_locator(cls.monthlocator)
-                    # ax.xaxis.set_minor_locator(cls.daylocator)
                 if cls._is_timeaxis(ax.yaxis):
                     ax.yaxis.set_major_formatter(cls.myFmt)
                     ax.yaxis.set_major_locator(cls.monthlocator)
-                    # ax.yaxis.set_minor_locator(cls.daylocator)
 
-                #ax.set_title(ax.get_title().upper())
-                #ax.set_xlabel(ax.get_xlabel().upper())
-                #ax.set_ylabel(ax.get_ylabel().upper())
                 ax.patch.set_visible(False)
                 h, l = ax.get_legend_handles_labels()
                 handles.extend(h)
@@ -1057,101 +1052,6 @@ class PlotStyles:
         else:
             initiate()
             return styleFigure(fig, use_legend, extra_labels, ax_align_legend)
-
-    @classmethod
-    def van_veen(
-        cls,
-        fig: Figure = None,
-        use_legend: bool = True,
-        extra_labels: Union[List, type(None)] = None,
-        ax_align_legend: plt.Axes = None,
-    ):
-        """Stijl van Van Veen"""
-
-        def initiate():
-            # Set default locale to NL
-            # TODO: add localization options
-            PlotStyles.set_locale("nl_NL.UTF-8")
-
-            # Color style
-            mpl.rcParams["axes.prop_cycle"] = mpl.cycler(
-                color=cls.colorscheme * 3,
-                linestyle=["-"] * 3 + ["--"] * 3 + ["-."] * 3,
-                linewidth=np.linspace(0.5, 3, 9),
-            )
-
-            # Font style
-            font = {"family": "Bahnschrift", "weight": "normal", "size": 18}
-            mpl.rc("font", **font)
-            mpl.rcParams[
-                "axes.unicode_minus"
-            ] = False  # not all fonts support the unicode minus
-
-        def styleFigure(fig, use_legend, extra_labels, ax_align_legend):
-            if ax_align_legend is None:
-                ax_align_legend = fig.axes[0]
-
-            # this forces labels to be generated. Necessary to detect datetimes
-            fig.canvas.draw()
-
-            # Set styles for each axis
-            legend_title = r"toelichting"
-            handles = list()
-            labels = list()
-
-            for ax in fig.axes:
-
-                ax.grid(visible=True, which="major", linestyle="-", linewidth=1, color="k")
-                ax.grid(visible=True, which="minor", linestyle="-", linewidth=0.5, color="k")
-
-                for _, spine in ax.spines.items():
-                    spine.set_linewidth(2)
-
-                if cls._is_timeaxis(ax.xaxis):
-                    ax.xaxis.set_major_formatter(cls.myFmt)
-                    ax.xaxis.set_major_locator(cls.monthlocator)
-                    # ax.xaxis.set_minor_locator(cls.daylocator)
-                if cls._is_timeaxis(ax.yaxis):
-                    ax.yaxis.set_major_formatter(cls.myFmt)
-                    ax.yaxis.set_major_locator(cls.monthlocator)
-                    # ax.yaxis.set_minor_locator(cls.daylocator)
-
-                ax.set_title(ax.get_title().upper())
-                ax.set_xlabel(ax.get_xlabel().upper())
-                ax.set_ylabel(ax.get_ylabel().upper())
-                ax.patch.set_visible(False)
-                h, l = ax.get_legend_handles_labels()
-                handles.extend(h)
-                labels.extend(l)
-
-            if extra_labels:
-                handles.extend(extra_labels[0])
-                labels.extend(extra_labels[1])
-            fig.tight_layout()
-            if use_legend:
-                lgd = fig.legend(
-                    handles,
-                    labels,
-                    loc="upper left",
-                    bbox_to_anchor=(1.0, ax_align_legend.get_position().y1),
-                    bbox_transform=fig.transFigure,
-                    edgecolor="k",
-                    facecolor="white",
-                    framealpha=1,
-                    borderaxespad=0,
-                    title=legend_title.upper(),
-                )
-
-                return fig, lgd
-            else:
-                return fig, handles, labels
-
-        if not fig:
-            return initiate()
-        else:
-            initiate()
-            return styleFigure(fig, use_legend, extra_labels, ax_align_legend)
-
 
 @dataclass
 class DeltaresSectionItem:
@@ -1700,6 +1600,7 @@ class Compare1D2D(ModelOutputReader):
         routes: list of branch abbreviations, e.g. ['NR', 'LK']
         start_time: start time for plotting and analytics. Use this to crop the time to prevent initalisation from affecting statistics. 
         stop_time: stop time for plotting and analytics. 
+        style: `PlotStyles` style
     """
 
     _routes: List[List[str]] = None
@@ -1712,6 +1613,7 @@ class Compare1D2D(ModelOutputReader):
         routes: List[List[str]] | None = None,
         start_time: Union[None, datetime] = None,
         stop_time: Union[None, datetime] = None,
+        style: str = 'sito',
     ):
         if project:
             super().__init__(logger=project.get_logger(), start_time=start_time, stop_time=stop_time)
@@ -1740,8 +1642,8 @@ class Compare1D2D(ModelOutputReader):
         self._error_colors = ["#7e3e00", "#FF4433", "#d86a00"]
         self._color_error = self._error_colors[1]
         self._color_scheme = COLORSCHEMES["Koeln"]
-        self._plotstyle = PlotStyles.sito_2024
-        self._plotstyle()
+        self._plotstyle: str = style
+        PlotStyles.apply(self._plotstyle)
 
         # set start time
         self.start_time = start_time
@@ -2010,14 +1912,14 @@ class Compare1D2D(ModelOutputReader):
             f"MAE={stats['mae']:.2f} m",
         ]
         stats_handles = [mpatches.Patch(color="white")] * len(stats_labels)
-        # Style
-        fig, lgd = self._plotstyle(
-            fig, 
-            use_legend=True, 
-            extra_labels=[stats_handles, stats_labels]
-        )
-
         
+        # Style
+        fig, lgd = PlotStyles.apply(fig=fig, 
+                                    style=self._plotstyle,
+                                    use_legend=True, 
+                                    extra_labels=[stats_handles, stats_labels]
+                                )
+
         self._style_error_axes(error_ax, ylim=[-1, 1])
 
         fig.tight_layout()
@@ -2175,7 +2077,7 @@ class Compare1D2D(ModelOutputReader):
         suptitle = plt.suptitle(title.upper())
 
         # Style figure
-        fig, lgd = PlotStyles.van_veen(fig, use_legend=[True, False])
+        fig, lgd = PlotStyles.apply(fig, style=self.plot_style, use_legend=[True, False])
         self._style_error_axes(ax_error, ylim=[-500, 500])
         fig.tight_layout()
         fig.savefig(
@@ -2392,7 +2294,7 @@ class Compare1D2D(ModelOutputReader):
 
         
         axs[1].set_ylim(-1, 1)
-        fig, lgd = self._plotstyle(fig, use_legend=[False, False])
+        fig, lgd = PlotStyles.apply(fig=fig, style=self._plotstyle, use_legend=[False, False])
 
         if savefig:
             plt.tight_layout()
@@ -2456,21 +2358,6 @@ class Compare1D2D(ModelOutputReader):
         texty_previous = -999
         for discharge in discharge_steps:
             axs[0].plot(h1d[discharge], label=f"{discharge:.0f} m$^3$/s")
-            """
-            texty = h1d[discharge].values[-1]
-            texty += max(0, 1 - (texty - texty_previous))
-            texty_previous = texty
-            
-
-            axs[0].text(
-                h1d[discharge].index[-1] + 2,
-                texty,
-                f"{discharge:.0f} m$^3$/s",
-                verticalalignment="center",
-                fontsize=12,
-                bbox={"facecolor": "white", "edgecolor": "none"},
-            )
-            """
             axs[0].set_ylabel("waterstand [m+nap]")
             routestr = "-".join(route)
 
@@ -2486,7 +2373,7 @@ class Compare1D2D(ModelOutputReader):
 
         # style figure
         axs[1].set_ylim(-1, 1)
-        fig, lgd = PlotStyles.van_veen(fig, use_legend=[True, False])
+        fig, lgd = PlotStyles.apply(fig,style=self._plotstyle, use_legend=[True, False])
         plt.tight_layout()
         fig.savefig(
             self.output_path.joinpath(
@@ -2557,7 +2444,7 @@ class Compare1D2D(ModelOutputReader):
 
         cb = fig.colorbar(im, ax=ax)
         cb.set_label("waterstandsverschil [m+nap]".upper(), rotation=270, labelpad=15)
-        PlotStyles.van_veen(fig, use_legend=[False])
+        PlotStyles.apply(fig, style=self._plotstyle, use_legend=[False])
         fig.tight_layout()
         fig.savefig(
             self.output_path.joinpath(f"figures/heatmaps/{routename}_timeseries.png")
@@ -2607,7 +2494,7 @@ class Compare1D2D(ModelOutputReader):
 
         cb = fig.colorbar(im, ax=ax)
         cb.set_label("waterstandsverschil [m+nap]".upper(), rotation=270, labelpad=15)
-        PlotStyles.van_veen(fig, use_legend=[False])
+        PlotStyles.apply(fig, style=self._plotstyle, use_legend=[False])
         fig.tight_layout()
         fig.savefig(
             self.output_path.joinpath(f"figures/heatmaps/{routename}_rating_curve.png")
@@ -2933,8 +2820,8 @@ class Network1D:
         ax2.set_ylim(0, 1000)
         ax2.grid(False)
 
-        PlotStyles.van_veen()
-        fig, lgd = PlotStyles.van_veen(fig)
+        PlotStyles.apply()
+        fig, lgd = PlotStyles.apply(fig)
 
         plt.savefig(
             output_file,
@@ -3012,9 +2899,9 @@ class Network1D:
                 data_2[i][:, 0], data_1[i][:, 1] - data_2[i][:, 1], "--o", linewidth=2
             )
 
-        PlotStyles.van_veen()
+        PlotStyles.apply()
 
-        fig, lgd = PlotStyles.van_veen(fig)
+        fig, lgd = PlotStyles.apply(fig)
         for ax in axs[0]:
             ax.set_xticklabels([])
         for ax in axs[1]:
