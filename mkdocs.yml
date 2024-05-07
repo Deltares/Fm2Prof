@@ -83,6 +83,7 @@ nav:
         - markdown/utils.md
         - notebooks/cross_section_data.ipynb
         - notebooks/compare1d2d.ipynb
+        - notebooks/VisualiseOutput.ipynb
       - Settings:
         - Configuration: markdown/configuration.md
     - Technical Manual:
