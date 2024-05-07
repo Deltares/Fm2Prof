@@ -2266,7 +2266,7 @@ class Compare1D2D(ModelOutputReader):
     
         # Filtering which stations to plot
         if add_to_fig is None:
-            station_names, station_locs, lmw_stations = self.get_route(route)
+            station_names, station_locs, _ = self.get_route(route)
             st_names, st_locs = labelfunc(station_names, station_locs)
             h1d = self.get_data_along_route(data=self.data_1D_H, route=route)
             for st_name, st_loc in zip(st_names, st_locs):
