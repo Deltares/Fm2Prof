@@ -1644,8 +1644,10 @@ class Compare1D2D(ModelOutputReader):
         else:
             self.set_logger_message(f'2D netCDF file does not exist or is not provided. Input provided: {path_2d}.', 'debug')
 
+        # Defaults
         self.routes = routes
         self.statistics = None
+        self._other:'Compare1D2D' | None = None  # modified by __sub__
         self._data_1D_H: pd.DataFrame = None
         self._data_2D_H: pd.DataFrame = None
         self._data_1D_H_digitized: pd.DataFrame = None
@@ -1679,6 +1681,9 @@ class Compare1D2D(ModelOutputReader):
             except FileExistsError:
                 pass
 
+    def __sub__(self, other:'Compare1D2D'):
+        self._other = other
+
     def eval(self):
         """
         does a bunch
@@ -1693,7 +1698,7 @@ class Compare1D2D(ModelOutputReader):
         self.set_logger_message(f"Making figures for stations")
         for station in tqdm.tqdm(self.stations(), total=self._data_1D_H.shape[1]):
             self.figure_at_station(station)
-
+    
     @property
     def routes(self):
         return self._routes
@@ -1814,7 +1819,7 @@ class Compare1D2D(ModelOutputReader):
         Creates and output a file `error_statistics.csv', which is a
         comma-seperated file with the following columns:
 
-        ,bias,rkm,branch,is_lmw,std,mae
+        ,bias,rkm,branch,is_lmw,std,mae,max13,last25
 
         with for each station:
         
@@ -1827,14 +1832,10 @@ class Compare1D2D(ModelOutputReader):
 
         """
 
-        if self.statistics == None:
-            self.statistics = self._compute_statistics()
+        self.statistics = self._compute_statistics()
 
         statfile = self.output_path.joinpath(file_path).with_suffix(".csv")
         sumfile = self.output_path.joinpath(file_path + "_summary").with_suffix(".csv")
-
-        if self.statistics is None:
-            return
 
         # all statistics
         self.statistics.to_csv(statfile)
@@ -1981,6 +1982,21 @@ class Compare1D2D(ModelOutputReader):
         stats["bias"] = diff.mean()
         stats["std"] = diff.std()
         stats["mae"] = diff.abs().mean()
+        
+        stats["1D_last3"] = self._apply_stat(self.data_1D_H, stat="last3")
+        stats["1D_last25"] = self._apply_stat(self.data_1D_H, stat="last25")
+        stats["1D_max3"] = self._apply_stat(self.data_1D_H, stat="max3")
+        stats["1D_max13"] = self._apply_stat(self.data_1D_H, stat="max13")
+
+        stats["2D_last3"] = self._apply_stat(self.data_2D_H, stat="last3")
+        stats["2D_last25"] = self._apply_stat(self.data_2D_H, stat="last25")
+        stats["2D_max3"] = self._apply_stat(self.data_2D_H, stat="max3")
+        stats["2D_max13"] = self._apply_stat(self.data_2D_H, stat="max13")
+
+        stats["diff_last3"] = self._apply_stat(diff, stat="last3")
+        stats["diff_last25"] = self._apply_stat(diff, stat="last25")
+        stats["diff_max3"] = self._apply_stat(diff, stat="max3")
+        stats["diff_max13"] = self._apply_stat(diff, stat="max13")
 
         return stats
 
@@ -2168,39 +2184,41 @@ class Compare1D2D(ModelOutputReader):
                           "label": f"{day:%b-%d}"})
 
         return lines
+    
+    @staticmethod
+    def _apply_stat(df, stat:str="max13"):
+        """
+        Applies column-wise "last25" or "max13" on 1D and 2D data
+        """
+        columns = df.columns
+        values = []
+        for column in columns:
+            try:
+                af = df[column].iloc[:,0]
+            except pd.errors.IndexingError:
+                af = df[column]
+            match stat:
+                case "max3":
+                    values.append(af.nlargest(3).mean())
+                case "max13":
+                    values.append(af.nlargest(13).mean())
+                case "last3":
+                    values.append(af[-3:].mean())
+                case "last25":
+                    values.append(af[-25:].mean())
+        return pd.Series(index=columns, data=values)
 
-    def _last25(self, route: List[str]) -> List[Dict[str, pd.Series | str]]:
-        return self._stat_func(route, stat="last25")
-    
-    def _max13(self, route: List[str]) -> List[Dict[str, pd.Series | str]]:
-        return self._stat_func(route, stat="max13")
-    
     def _stat_func(self, route: List[str], stat:str="max13") -> List[Dict[str, pd.Series | str]]:
         """
         Applies column-wise "last25" or "max13" on 1D and 2D data
         """
-        def apply_stat(df, stat:str="max13"):
-            columns = df.columns
-            values = []
-            for column in columns:
-                try:
-                    af = df[column].iloc[:,0]
-                except pd.errors.IndexingError:
-                    af = df[column]
-                match stat:
-                    case "max13":
-                        values.append(af.nlargest(13).mean())
-                    case "last25":
-                        values.append(af[-25:].mean())
-            return pd.Series(index=columns, data=values)
-        
-        
-        max13_1d = apply_stat(self.get_data_along_route(self.data_1D_H, route=route).T, stat=stat)
-        max13_2d = apply_stat(self.get_data_along_route(self.data_2D_H, route=route).T, stat=stat)
+        max13_1d = self._apply_stat(self.get_data_along_route(self.data_1D_H, route=route).T, stat=stat)
+        max13_2d = self._apply_stat(self.get_data_along_route(self.data_2D_H, route=route).T, stat=stat)
 
         return [{"1D": max13_1d, 
                  "2D": max13_2d,
-                 "label": stat}]
+                 "label": stat
+                 }]
 
     def _lmw_func(self, station_names, station_locs):
         st_names = []
@@ -2250,19 +2268,19 @@ class Compare1D2D(ModelOutputReader):
         # Get route and stations along route
         routename = "-".join(route)
         
-        match stat:
-            case 'time':
-                datafunc = self._time_func
-            case "last25":
-                datafunc = self._last25
-            case "max13":
-                datafunc = self._max13
+        
 
         # Make configurable in the future
         labelfunc = self._lmw_func
         
         # TIME FUNCTION plot line every delta_days days
-        lines = datafunc(route=route)
+        match stat:
+            case 'time':
+                lines = self._time_func(route=route)
+            case y if y in ["last3", "last25", "max3", "max13"]:
+                lines = self._stat_func(stat=y, route=route)
+            case _:
+                raise KeyError(f"{stat} is unknown statistics")
         
         # Get figure object
         if add_to_fig is None:
