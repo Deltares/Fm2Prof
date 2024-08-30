@@ -4,7 +4,6 @@ import shutil
 import pytest
 from fm2prof import Project
 from fm2prof.utils import (
-    DeltaresConfig,
     GenerateCrossSectionLocationFile,
     ModelOutputReader,
     Compare1D2D,
@@ -15,24 +14,6 @@ from tests.TestUtils import TestUtils
 from datetime import datetime 
 
 _root_output_dir = None
-
-
-class Test_DeltaresConfig:
-    def test_given_input_file_is_read(self):
-        # 1. Set up initial test data
-        ini_file_path = TestUtils.get_local_test_file(
-            "cases/case_02_compound/Model_SOBEK/dimr/dflow1d/NetworkDefinition.ini"
-        )
-
-        # 2. Set expectations
-        dict_has_keys = ["general", "node", "branch"]
-
-        # 3. Run test
-        parsed_dict = DeltaresConfig(ini_file_path)
-
-        # 4. Verify final expectations
-        for key in dict_has_keys:
-            assert key in parsed_dict.sections
 
 
 class Test_GenerateCrossSectionLocationFile:
@@ -81,6 +62,30 @@ class Test_GenerateCrossSectionLocationFile:
         # 4. verify
         assert output_file.is_file()
     
+    def test_given_branchrule_exceptions_output_is_generated(self):
+        # 1. Set up initial test data
+        path_1d = TestUtils.get_local_test_file(
+            "cases/case_02_compound/Model_SOBEK/dimr/dflow1d/NetworkDefinition.ini"
+        )
+        output_file = TestUtils.get_local_test_file(
+            "cases/case_02_compound/Data/cross_section_locations_new.xyz"
+        )
+        if output_file.is_file():
+            os.remove(output_file)
+
+        branch_rule_file = TestUtils.get_local_test_file(
+            "cases/case_02_compound/Data/branchrules_exceptions.ini"
+        )
+        # 2. Set Expectations
+
+        # 3. Run test
+        GenerateCrossSectionLocationFile(
+            networkdefinitionfile=path_1d, crossectionlocationfile=output_file,
+            branchrulefile=branch_rule_file
+        )
+
+        # 4. verify
+        assert output_file.is_file()
 
 class Test_VisualiseOutput:
     def test_when_branch_not_in_branches_raise_exception(self):

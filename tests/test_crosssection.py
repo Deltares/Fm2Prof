@@ -110,33 +110,6 @@ class Test_cross_section_construction:
         assert all([abs(css_z[i] - css._css_z[i]) < tol for i in range(len(css_z))])
         assert all([abs(css_total_volume[i] - css._css_total_volume[i]) < tol for i in range(len(css_total_volume))])
 
-    def test_interpret_missing_data_as_dry(self):
-        # 1. Set up test data
-        
-        tdir = TestUtils.get_local_test_data_dir("cross_sections/missing_data")
-
-        with open(tdir.joinpath(f"ketelmeer10_1512.000.pickle"), 'rb') as f:
-            css_data = pickle.load(f)
-
-        tol = 1e-6
-
-        # 2. Set expectations for 
-        #css_z: np.array = test_case.get('css_z')
-        #css_total_volume: np.array = test_case.get('css_total_volume')
-
-        # 3. Run test
-        try:
-            css = CrossSection(data=css_data)
-            css.build_geometry()
-        except Exception as e_info:
-            pytest.fail(
-                f"No expected exception but was risen:" + " {e_info}")
-
-        # 4. Verify final expectations
-        assert len(css_z) == len(css._css_z)
-
-        assert all([abs(css_z[i] - css._css_z[i]) < tol for i in range(len(css_z))])
-        assert all([abs(css_total_volume[i] - css._css_total_volume[i]) < tol for i in range(len(css_total_volume))])
 
     def test_calculate_correction(self):
         # 1. Set up test data

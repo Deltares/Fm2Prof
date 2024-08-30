@@ -217,7 +217,7 @@ class IniFile(FM2ProfBase):
         """Use this method to set a input files the configuration"""
         self._set_config_value("input", key, value)
 
-    def set_parameter(self, key:str, value, section="parameters") -> None:
+    def set_parameter(self, key: str, value, section="parameters") -> None:
         """Use this method to set a key/value pair to the configuration"""
         self._set_config_value(section, key, value)
 
@@ -249,8 +249,11 @@ class IniFile(FM2ProfBase):
         for parameter, content in (
             self._configuration["sections"].get("parameters").items()
         ):
-            yield parameter, content.get("type"), content.get("hint"), content.get(
-                "value"
+            yield (
+                parameter,
+                content.get("type"),
+                content.get("hint"),
+                content.get("value"),
             )
 
     @staticmethod
@@ -329,7 +332,8 @@ class IniFile(FM2ProfBase):
             self._extract_parameters(supplied_ini, self.__input_debug_key)
         except Exception:
             self.set_logger_message(
-                "Unexpected error reading (debug) parameters. Check config file", "error"
+                "Unexpected error reading (debug) parameters. Check config file",
+                "error",
             )
         try:
             self._extract_output_dir(supplied_ini)
@@ -353,9 +357,7 @@ class IniFile(FM2ProfBase):
             raise InvalidConfigurationFileError
 
         for key, value in inputsection.items():
-            key_default, key_type = self._get_key_from_template(
-                section, key
-            )
+            key_default, key_type = self._get_key_from_template(section, key)
             try:
                 parsed_value = key_type(value)
                 self.set_parameter(key_default, parsed_value, section)

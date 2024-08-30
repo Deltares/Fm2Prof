@@ -1,4 +1,4 @@
-﻿""" Input/output """
+"""Input/output"""
 
 # import from standar library
 from dataclasses import astuple, dataclass
@@ -9,6 +9,7 @@ import numpy as np
 from fm2prof import Functions as FE
 from fm2prof.common import FM2ProfBase
 from fm2prof.CrossSection import CrossSection
+
 
 @dataclass
 class OutputFiles:
@@ -36,7 +37,9 @@ class Export1DModelData(FM2ProfBase):
     In the future, split in different classes for SOBEK, D-Hydro etc formats
     """
 
-    def export_geometry(self, cross_sections: List[CrossSection], file_path, fmt="sobek3"):
+    def export_geometry(
+        self, cross_sections: List[CrossSection], file_path, fmt="sobek3"
+    ):
         with open(file_path, "w") as f:
             if fmt == "sobek3":
                 """SOBEK 3 style csv"""
@@ -210,9 +213,7 @@ class Export1DModelData(FM2ProfBase):
         globalType            = 1                   
         globalValue           = 45               
 
-    """.format(
-            section
-        )
+    """.format(section)
 
         branch_sec = self._get_fm1d_branch_sec(cross_sections, section.lower())
         definition_sec = self._get_fm1d_definition_sec(cross_sections, section.lower())

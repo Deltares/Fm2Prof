@@ -28,6 +28,7 @@ pyinstaller = "^6.5.0"
 ipywidgets = "^8.1.2"
 ipympl = "^0.9.3"
 markdown-exec = {extras = ["ansi"], version = "^1.8.0"}
+ruff = "^0.6.3"
 
 [tool.poetry.group.docs.dependencies]
 mike = "^2.0.0"

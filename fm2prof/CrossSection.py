@@ -1,15 +1,15 @@
 import math
 import pickle
-from logging import Logger
-from typing import List, Dict
 import traceback
-from functools import reduce 
+from functools import reduce
+from logging import Logger
+from typing import Dict, List
 
-from tqdm import tqdm
 import numpy as np
 import pandas as pd
 import scipy.optimize as so
 from scipy.integrate import cumtrapz
+from tqdm import tqdm
 
 from fm2prof import Functions as FE
 from fm2prof.common import FM2ProfBase, FrictionTable
@@ -20,57 +20,65 @@ from .lib import polysimplify as PS
 
 pd.options.mode.chained_assignment = None  # default='warn'
 
+
 class CrossSectionHelpers(FM2ProfBase):
     """
     Collection of function(s) to help with post-processing of cross-sections.
-    Wrapped in a class to provide access to the shared logger. 
+    Wrapped in a class to provide access to the shared logger.
     """
+
     _friction_zstep = 0.1
 
     def __init__(self, logger=None, inifile=None):
         super().__init__(logger=logger, inifile=inifile)
 
-    
-    def interpolate_friction_across_cross_sections(self, cross_section_list: List['CrossSection']) -> bool:
+    def interpolate_friction_across_cross_sections(
+        self, cross_section_list: List["CrossSection"]
+    ) -> bool:
         """
         Creates a uniform matrix of z/chezy values for all cross-sections by linear interpolation.
 
         This function loops over a list of cross-sections, determines the minimim and maximum values,
-        and uses the `CrossSection.friction_tables` DataFrame to interpolate towards those values. 
+        and uses the `CrossSection.friction_tables` DataFrame to interpolate towards those values.
 
         .. warning::
             The function modifies the input!
-        
-        outputs TRUE if succesful, FALSE if not. Does not raise exception. 
+
+        outputs TRUE if succesful, FALSE if not. Does not raise exception.
 
         """
         try:
             return self._interpolate_friction_across_cross_sections(cross_section_list)
         except Exception:
-            self.set_logger_message("There was an error while making friction tables", "error")
+            self.set_logger_message(
+                "There was an error while making friction tables", "error"
+            )
             for line in traceback.format_exc().splitlines():
                 self.set_logger_message(line, "debug")
             return False
 
-    def _interpolate_friction_across_cross_sections(self, cross_section_list: List['CrossSection']) -> bool:
-        """ Private function """
+    def _interpolate_friction_across_cross_sections(
+        self, cross_section_list: List["CrossSection"]
+    ) -> bool:
+        """Private function"""
 
         # Get a list of all sections
-        all_sections: List[str] = [s for css in cross_section_list for s in css.friction_tables.keys()]
+        all_sections: List[str] = [
+            s for css in cross_section_list for s in css.friction_tables.keys()
+        ]
         sections: np.ndarray[str] = np.unique(all_sections)
-
 
         # Parameters
         zstep: float = 0.1  # Interpolate friction every 10 cm TODO: make this parameter configurable
-        
+
         for section in sections:
             minimal_z: float = 1e20  # Arbitrary large number. Will be overwritten
-            maximal_z: float = -1e20 # Arbitrary small number. Will be overwritten
-            
+            maximal_z: float = -1e20  # Arbitrary small number. Will be overwritten
+
             self.set_logger_message(f"Building friction table for {section}")
 
-            # Find min & max level 
-            
+            # Find min & max level
+
             for css in cross_section_list:
                 if section in list(css.friction_tables.keys()):
                     minimal_z = np.min(
@@ -85,7 +93,7 @@ class CrossSectionHelpers(FM2ProfBase):
                 if section in list(css.friction_tables.keys()):
                     minmaxrange = np.arange(minimal_z, maximal_z, zstep)
                     css.friction_tables.get(section).interpolate(minmaxrange)
-                
+
                 pbar.update(1)
 
         return True
@@ -108,10 +116,10 @@ class CrossSection(FM2ProfBase):
         logger: Logger | None = None,
         inifile: IniFile | None = None,
     ):
-        """   
+        """
         Use this class to derive cross-sections from fm_data (2D model results).
         See docs how to acquire fm_data and how to prepare a proper 2D model.
-        
+
         Deprecated:
             1.2: The `foo` attribute is deprecated.
 
@@ -130,23 +138,20 @@ class CrossSection(FM2ProfBase):
         super().__init__(logger=logger, inifile=inifile)
 
         try:
-            assert all(key in data for key in ['id',
-                                               'length',
-                                               'xy',
-                                               'branchid',
-                                               'chainage',
-                                               'fm_data'])
+            assert all(
+                key in data
+                for key in ["id", "length", "xy", "branchid", "chainage", "fm_data"]
+            )
         except AssertionError:
             raise KeyError("Input data does not have all required keys")
-            
-        # Cross-section meta data
-        self.name = data.get('id')  # cross-section id
-        self.length = data.get('length')  # 'vaklengte'
-        self.location = data.get('xy')  # (x,y)
-        self.branch = data.get('branchid')  # name of 1D branch for cross-section
-        self.chainage = data.get('chainage')  # offset from beginning of branch
-        self._fm_data: Dict = data.get('fm_data')  # dictionary with fmdata
 
+        # Cross-section meta data
+        self.name = data.get("id")  # cross-section id
+        self.length = data.get("length")  # 'vaklengte'
+        self.location = data.get("xy")  # (x,y)
+        self.branch = data.get("branchid")  # name of 1D branch for cross-section
+        self.chainage = data.get("chainage")  # offset from beginning of branch
+        self._fm_data: Dict = data.get("fm_data")  # dictionary with fmdata
 
         # Cross-section geometry
         self.z = []
@@ -157,7 +162,7 @@ class CrossSection(FM2ProfBase):
         self.roughness_sections = np.array([])
 
         # delta h corrections ("summerdike option")
-        self.crest_level:float = 0
+        self.crest_level: float = 0
         # in cross-section def. WAQ2PROF did crest - some fixed value.
         #  how to do here?
         self.floodplain_base = 0.0
@@ -238,9 +243,9 @@ class CrossSection(FM2ProfBase):
     def build_geometry(self) -> None:
         """
         This methods builds 1D geometrical cross-section from 2D data.
-        The 2D data is set on initalisation of the `CrossSection` object. 
-        The methods modifies the following attributes 
-        
+        The 2D data is set on initalisation of the `CrossSection` object.
+        The methods modifies the following attributes
+
         Attributes:
            _fm_wet_area
            _fm_flow_area
@@ -254,27 +259,29 @@ class CrossSection(FM2ProfBase):
         """
         fm_data: Dict = self._fm_data
 
-       # Unpack FM data
-        def get_timeseries(name:str):
+        # Unpack FM data
+        def get_timeseries(name: str):
             """
             Returns data from fm_data after applying the
             skip_maps and checking for missing numbers
             """
-            imiss = -999  # this should be equal to the missing number value from D-HYDRO
+            imiss = (
+                -999
+            )  # this should be equal to the missing number value from D-HYDRO
 
             data = fm_data[name].iloc[
                 :, self.get_parameter(self.__cs_parameter_skip_maps) :
             ]
-            # map missing value numbers to 
+            # map missing value numbers to
             if imiss in data.values:
                 self.set_logger_message(r"Missing data found in {name}", "warning")
-            data[data==imiss] = np.nan
+            data[data == imiss] = np.nan
             return data
 
         waterlevel = get_timeseries("waterlevel")
         waterdepth = get_timeseries("waterdepth")
         velocity = get_timeseries("velocity")
-        
+
         area = fm_data["area"]
         bedlevel = fm_data["bedlevel"]
 
@@ -301,18 +308,16 @@ class CrossSection(FM2ProfBase):
             plassen_mask,
             wet_not_plas_mask,
             plassen_depth_correction,
-        ) = self._identify_lakes(
-            waterdepth
-        )  # plassen_mask needed for arrays in output
+        ) = self._identify_lakes(waterdepth)  # plassen_mask needed for arrays in output
 
         # Masks for wet and flow cells (stroomvoeringscriteria)
         self.set_logger_message("Separating conveyance from storage")
         flow_mask = self._distinguish_conveyance_from_storage(waterdepth, velocity)
 
-        if self.get_inifile().get_parameter("ExportCSSData"): # pickle css data
+        if self.get_inifile().get_parameter("ExportCSSData"):  # pickle css data
             output_dir = self.get_inifile().get_output_directory()
-            self.set_logger_message(f'pickling to {output_dir}')
-            with open(output_dir.joinpath(f"{self.name}_flowmask.pickle"), 'wb') as f:
+            self.set_logger_message(f"pickling to {output_dir}")
+            with open(output_dir.joinpath(f"{self.name}_flowmask.pickle"), "wb") as f:
                 pickle.dump(flow_mask, f)
 
         # Calculate area and volume as function of waterlevel & waterdepth
@@ -382,7 +387,6 @@ class CrossSection(FM2ProfBase):
         # convert to float64 array for uniformity
         # (apparently entries can be float32)
         self._css_z = np.array(self._css_z, dtype=np.dtype("float64"))
-
 
     def check_requirements(self):
         """
@@ -566,7 +570,7 @@ class CrossSection(FM2ProfBase):
         [^1]:
             Visvalingam, M and Whyatt J D (1993) "Line Generalisation by Repeated Elimination of Points", Cartographic J., 30 (1), 46 - 51 URL: http://web.archive.org/web/20100428020453/http://www2.dcs.hull.ac.uk/CISRG/publications/DPs/DP10/DP10.html
                 Implemented vertex reduction methods:
-            
+
 
         Parameters:
             count_after: number of points in cross-section after application of this function
@@ -591,8 +595,7 @@ class CrossSection(FM2ProfBase):
                 reduced_index = simplifier.from_number_index(count_after)
             except Exception as e:
                 self.set_logger_message(
-                    "Exception thrown while using polysimplify: "
-                    + "{}".format(str(e)),
+                    "Exception thrown while using polysimplify: " + "{}".format(str(e)),
                     "error",
                 )
 
@@ -628,7 +631,6 @@ class CrossSection(FM2ProfBase):
         bedlevel_key = "bedlevel"
         section_key = "section"
         region_key = "region"
-        
 
         try:
             # Normalize np arrays to list for correct access
@@ -907,7 +909,6 @@ class CrossSection(FM2ProfBase):
         return list_points
 
     def _build_roughness_tables(self):
-
         # Find roughness tables for each section
         chezy_fm = self._fm_data.get("chezy").iloc[
             :, self.get_parameter(self.__cs_parameter_skip_maps) :
@@ -973,7 +974,7 @@ class CrossSection(FM2ProfBase):
         If the sum of the section widths is smaller than the flow width, the
         width is increase proportionally
         """
-        
+
         unassigned_area = sum(self._fm_data["area"][self._fm_data["section"] == -999])
         if unassigned_area > 0:
             self.set_logger_message(
@@ -1038,7 +1039,7 @@ class CrossSection(FM2ProfBase):
     def _calc_chezy(self, depth, manning):
         return depth ** (1 / float(6)) / manning
 
-    def _identify_lakes(self, waterdepth:pd.DataFrame) -> np.ndarray:
+    def _identify_lakes(self, waterdepth: pd.DataFrame) -> np.ndarray:
         """
         This algorithms determines whether a 2D cell should
         be marked as [Lake](glossary.md#Lakes).
@@ -1147,24 +1148,26 @@ class CrossSection(FM2ProfBase):
                 [self._css_flow_width[-i], self._css_flow_width[-i + 1]]
             )
 
-    def _distinguish_conveyance_from_storage(self, waterdepth: pd.DataFrame, velocity: pd.DataFrame) -> pd.DataFrame:
+    def _distinguish_conveyance_from_storage(
+        self, waterdepth: pd.DataFrame, velocity: pd.DataFrame
+    ) -> pd.DataFrame:
         """
-        In 1D hydrodynamic models, flow through a cross-section is resolved assuming a 
+        In 1D hydrodynamic models, flow through a cross-section is resolved assuming a
         cross-sectionally average velocity. This assumed that the entire cross-section
         is available to for conveyance. However in reality some parts of the cross-section
         do not contribute to flow. For example, sections of a river behind a levee where
-        water is stagnant contribute to storage (volume), but not flow. 
+        water is stagnant contribute to storage (volume), but not flow.
 
         SOBEK enables distinction between 'flow area' and 'storage area'. `fm2prof` implements
         methods to resolve from 2D model output which cells add to the 'flow volume' within a
-        [control volume](glossary.md#control-volume) and which to the storage volume. 
+        [control volume](glossary.md#control-volume) and which to the storage volume.
 
         `fm2prof` implements two methods. The configuration parameter [`ConveyanceDetectionMethod`](configuration.md#exec-1--conveyancedetectionmethod) is used
         to determine which method is used.
 
         **`max_method`**
         A cell is considered flowing if the velocity magnitude is more than the average
-        of the three higher flow velocities per outputmap multiplied by the 
+        of the three higher flow velocities per outputmap multiplied by the
         [`relative velocity threshold`](configuration.md#exec-1--relativevelocitythreshold) OR
         if the flow velocity meets the absolute threshold [`absolute velocity threshold`](configuration.md#exec-1--absolutevelocitythreshold)
 
@@ -1176,48 +1179,59 @@ class CrossSection(FM2ProfBase):
             velocity:  dataframe of a control volume with velocity magnitude per cel per output map
 
         Returns:
-            flow_mask: dataframe of a control volume with the flow condition per cel per output map. `True` means flowing, `False` storage. 
+            flow_mask: dataframe of a control volume with the flow condition per cel per output map. `True` means flowing, `False` storage.
         """
+
         @staticmethod
-        def max_velocity_method(waterdepth: pd.DataFrame, velocity: pd.DataFrame) -> pd.DataFrame:
+        def max_velocity_method(
+            waterdepth: pd.DataFrame, velocity: pd.DataFrame
+        ) -> pd.DataFrame:
             """
             This method was added in version 2.3 because the mean_velocity_method
-            led to unreasonably high conveyance if the river was connected to 
-            an inland harbour. 
+            led to unreasonably high conveyance if the river was connected to
+            an inland harbour.
             """
             # This condition may be redundant
             waterdepth_condition = waterdepth > 0
-            
+
             # Determine maximum as the average of the top 3 flow velocities
             maxv = velocity.max()
             for i in velocity:
                 maxv[i] = velocity[i].sort_values().iloc[-3:].mean()
-            
+
             # Relative to max condition
-            relative_velocity_condition = velocity > maxv*self.get_parameter(self.__cs_parameter_relative_threshold)
-            
+            relative_velocity_condition = velocity > maxv * self.get_parameter(
+                self.__cs_parameter_relative_threshold
+            )
+
             # Absolute flow condition
-            absolute_velocity_condition =  velocity > self.get_parameter(self.__cs_parameter_velocity_threshold)
+            absolute_velocity_condition = velocity > self.get_parameter(
+                self.__cs_parameter_velocity_threshold
+            )
 
             # Flow mask determines which cells are conveyance (TRUE)
-            flow_mask = waterdepth_condition & (relative_velocity_condition | absolute_velocity_condition)
-            
+            flow_mask = waterdepth_condition & (
+                relative_velocity_condition | absolute_velocity_condition
+            )
+
             return flow_mask
-            
+
         @staticmethod
         def mean_velocity_method(waterdepth, velocity):
             """
-            This was the default method < 2.3. This method leads to unreasonably 
-            high conveyance if the river was connected to an inland harbour. 
+            This was the default method < 2.3. This method leads to unreasonably
+            high conveyance if the river was connected to an inland harbour.
             """
             # apply rolling average over the velocities
             # to smooth out extreme values
-            velocity = velocity.rolling(
-                window=10, min_periods=1, center=True).mean()
-                
+            velocity = velocity.rolling(window=10, min_periods=1, center=True).mean()
+
             flow_mask = (
                 (waterdepth > 0)
-                & (velocity > self.get_parameter(self.__cs_parameter_velocity_threshold))
+                & (
+                    velocity
+                    > self.get_parameter(self.__cs_parameter_velocity_threshold)
+                )
                 & (
                     velocity
                     > self.get_parameter(self.__cs_parameter_relative_threshold)
@@ -1227,13 +1241,17 @@ class CrossSection(FM2ProfBase):
 
             return flow_mask
 
-        match self.get_inifile().get_parameter(self.__cs_parameter_conveyance_detection_method):
+        match self.get_inifile().get_parameter(
+            self.__cs_parameter_conveyance_detection_method
+        ):
             case 0:
-                return mean_velocity_method(waterdepth, velocity)    
+                return mean_velocity_method(waterdepth, velocity)
             case 1:
                 return max_velocity_method(waterdepth, velocity)
             case _:
-                self.set_logger_message('Invalid conveyance method. Defaulting to [1]', 'warning')
+                self.set_logger_message(
+                    "Invalid conveyance method. Defaulting to [1]", "warning"
+                )
                 return max_velocity_method(waterdepth, velocity)
 
     def _extend_css_below_z0(
@@ -1296,26 +1314,21 @@ class CrossSection(FM2ProfBase):
             elif self.get_parameter("extrapolatestorage"):
                 total_flow_area = np.min([total_wet_area, flow_area_at_z0])
 
-            self._css_z = self._append_to_start(
-                self._css_z, centre_level_at_dz
-            )
+            self._css_z = self._append_to_start(self._css_z, centre_level_at_dz)
             self._css_total_width = self._append_to_start(
                 self._css_total_width, total_wet_area / self.length
             )
             self._css_flow_width = self._append_to_start(
                 self._css_flow_width, total_flow_area / self.length
             )
-            self._fm_wet_area = self._append_to_start(
-                self._fm_wet_area, total_wet_area
-            )
+            self._fm_wet_area = self._append_to_start(self._fm_wet_area, total_wet_area)
             self._fm_flow_area = self._append_to_start(
                 self._fm_flow_area, total_flow_area
             )
             self._fm_flow_volume = np.insert(self._fm_flow_volume, 0, np.nan)
             self._fm_total_volume = np.insert(self._fm_total_volume, 0, np.nan)
 
-    def _get_extra_total_area(self,
-        waterlevel, crest_level, transition_height: float):
+    def _get_extra_total_area(self, waterlevel, crest_level, transition_height: float):
         """
         releases extra area dependent on waterlevel using a logistic (sigmoid) function
         """
