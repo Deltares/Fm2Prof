@@ -1,11 +1,9 @@
 import datetime
 import os
-import sys
-import time
 import pickle
 import traceback
 from pathlib import Path
-from typing import Dict, Generator, List, Mapping, NoReturn, Union
+from typing import Dict, Generator, List, Mapping, Union
 
 import geojson
 import numpy as np
@@ -24,8 +22,10 @@ from fm2prof.IniFile import IniFile
 from fm2prof.MaskOutputFile import MaskOutputFile
 from fm2prof.RegionPolygonFile import RegionPolygonFile, SectionPolygonFile
 
+
 class InitializationError(Exception):
     pass
+
 
 class Fm2ProfRunner(FM2ProfBase):
     __map_key = "2DMapOutput"
@@ -137,14 +137,14 @@ class Fm2ProfRunner(FM2ProfBase):
 
     def _run_inifile(self) -> bool:
         """
-        Executes main program from the configuration file. 
+        Executes main program from the configuration file.
 
         The main steps in the program are:
-        
+
         1. Initialize fm2prof
         2. Generate cross-sections
         3. Finalization
-        
+
         Arguments:
             iniFile {IniFile}
                 -- Object containing all the information
@@ -201,7 +201,7 @@ class Fm2ProfRunner(FM2ProfBase):
 
     def _initialise_fm2prof(self) -> None:
         """
-        
+
         Loads data, inifile
         """
 
@@ -246,11 +246,14 @@ class Fm2ProfRunner(FM2ProfBase):
         self.fm_model_data = FmModelData(fm2prof_fm_model_data)
 
         # Validate config file
-        success:bool = self._validate_config_after_initalization()
+        success: bool = self._validate_config_after_initalization()
         if not success:
-            self.set_logger_message("Validation of configuration file not successful. Check the log to fix errors.", "error")
+            self.set_logger_message(
+                "Validation of configuration file not successful. Check the log to fix errors.",
+                "error",
+            )
             raise InitializationError
-        
+
         # print goodbye
         ntsteps: int = self.fm_model_data.time_dependent_data.get("waterlevel").shape[1]
         nfaces: int = self.fm_model_data.time_dependent_data.get("waterlevel").shape[0]
@@ -262,31 +265,36 @@ class Fm2ProfRunner(FM2ProfBase):
             + "edges ({})".format(nedges),
             level="debug",
         )
-        
+
         return success
 
     def _validate_config_after_initalization(self) -> bool:
         """
-        Performs validation checks on config file. Returns 
-        True if all checks succesfull, False if check fails. 
+        Performs validation checks on config file. Returns
+        True if all checks succesfull, False if check fails.
         """
-        success:bool = True
+        success: bool = True
 
         self.set_logger_message("Validating settings", "Info")
 
         # Check if skipmaps is lower than maximum amount of maps
-        nsteps:int = self.fm_model_data.time_dependent_data.get("waterlevel").shape[1]
-        skipmap:int = self.get_inifile().get_parameter(self.__key_skipmaps)
+        nsteps: int = self.fm_model_data.time_dependent_data.get("waterlevel").shape[1]
+        skipmap: int = self.get_inifile().get_parameter(self.__key_skipmaps)
 
         if skipmap >= nsteps:
-            self.set_logger_message(f"""You are attempting to skip more than  available timesteps.
+            self.set_logger_message(
+                f"""You are attempting to skip more than  available timesteps.
 ({self.__key_skipmaps} = {skipmap}, available maps in output file: {nsteps}). Modify the value of {self.__key_skipmaps}
-your configuration file to fix this error.""", level="error")
+your configuration file to fix this error.""",
+                level="error",
+            )
             success = False
-        elif skipmap > nsteps/2:
-            self.set_logger_message(f"""You are skipping more than half of available timesteps.
-({self.__key_skipmaps} = {skipmap}, available maps in output file: {nsteps})""", level="warning")
-            
+        elif skipmap > nsteps / 2:
+            self.set_logger_message(
+                f"""You are skipping more than half of available timesteps.
+({self.__key_skipmaps} = {skipmap}, available maps in output file: {nsteps})""",
+                level="warning",
+            )
 
         # Check if edge/face data is available
         if "edge_faces" not in self.fm_model_data.edge_data:
@@ -300,7 +308,7 @@ your configuration file to fix this error.""", level="error")
                 )
 
         return success
-    
+
     def _finalise_fm2prof(self, cross_sections: List) -> None:
         """
         Write to output, perform checks
@@ -481,7 +489,6 @@ your configuration file to fix this error.""", level="error")
         return time_independent_data, edge_data
 
     def _classify_section_with_deltashell(self, time_independent_data, edge_data):
-
         # Determine in which section each 2D point lies
         self.set_logger_message("Assigning faces...")
         time_independent_data = self._assign_polygon_using_deltashell(
@@ -497,7 +504,6 @@ your configuration file to fix this error.""", level="error")
     def _classify_with_deltashell(
         self, time_independent_data, edge_data, cssdata, polygons, polytype="region"
     ):
-
         # Determine in which region each 2D point lies
         self.set_logger_message("Assigning faces...")
         time_independent_data = self._assign_polygon_using_deltashell(
@@ -712,7 +718,7 @@ your configuration file to fix this error.""", level="error")
             raise Exception(
                 "No FM data given for new cross section {}".format(css_name)
             )
-        
+
         # Create cross section
         created_css = self._create_new_cross_section(css_data=css_data)
 
@@ -816,17 +822,17 @@ your configuration file to fix this error.""", level="error")
             return None
 
         # Get remainig data
-        css_data['fm_data'] = self.fm_model_data.get_selection(css_data.get("id"))
+        css_data["fm_data"] = self.fm_model_data.get_selection(css_data.get("id"))
 
         if self.get_inifile().get_parameter("ExportCSSData"):
             output_dir = self.get_inifile().get_output_directory()
-            with open(output_dir.joinpath(f"{css_data.get('id')}.pickle"), 'wb') as f:
+            with open(output_dir.joinpath(f"{css_data.get('id')}.pickle"), "wb") as f:
                 pickle.dump(css_data, f)
         try:
             css = CrossSection(
                 logger=self.get_logger(),
                 inifile=self.get_inifile(),
-                data = css_data,
+                data=css_data,
             )
 
         except Exception as e_info:
@@ -1084,9 +1090,7 @@ class Project(Fm2ProfRunner):
         """
         return self.get_inifile().set_input_file(name, value)
 
-    def get_input_file(
-        self, name: str
-    ) -> Union[str,]:
+    def get_input_file(self, name: str) -> Union[str,]:
         """
         Use this method to retrieve the path to an input file
 

@@ -16,7 +16,6 @@ from fm2prof.common import FM2ProfBase
 
 
 class FMDataImporter(FM2ProfBase):
-
     dflow2d_face_keys = {
         "x": "mesh2d_face_x",
         "y": "mesh2d_face_y",
@@ -58,7 +57,6 @@ class FMDataImporter(FM2ProfBase):
 
         # Open results file for reading, within context manager to ensure garbage collection
         with Dataset(file_path, "r") as map_file:
-
             # Time-invariant variables from FM 2D at faces
             # -----------------------------------------------
             tid_face = None

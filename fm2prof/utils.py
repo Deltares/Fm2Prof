@@ -3,11 +3,11 @@ import locale
 import os
 import re
 import warnings
+from collections import namedtuple
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from logging import Logger
 from pathlib import Path
-from collections import namedtuple
 from typing import (
     Any,
     Callable,
@@ -22,7 +22,6 @@ from typing import (
 
 import matplotlib as mpl
 import matplotlib.dates as mdates
-import matplotlib.gridspec as gridspec
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
 import numpy as np
@@ -30,24 +29,44 @@ import pandas as pd
 import tqdm
 from matplotlib.figure import Figure
 from matplotlib.legend import Legend
-from matplotlib.ticker import AutoMinorLocator, FormatStrFormatter, MultipleLocator
+from matplotlib.ticker import MultipleLocator
 from netCDF4 import Dataset
 from pandas.plotting import register_matplotlib_converters
 from scipy.interpolate import interp1d
-
 
 from fm2prof import Project
 from fm2prof.common import FM2ProfBase
 
 register_matplotlib_converters()
 
-FigureOutput = namedtuple('FigureOutput', ['fig', 'axes', 'legend'])
-StyleGuide = namedtuple('StyleGuide', ['font', 'major_grid', 'minor_grid', 'spine_width'])
+FigureOutput = namedtuple("FigureOutput", ["fig", "axes", "legend"])
+StyleGuide = namedtuple(
+    "StyleGuide", ["font", "major_grid", "minor_grid", "spine_width"]
+)
 
-COLORSCHEMES = {"Deltares": ["#000000", "#00cc96", "#0d38e0"],
-                "Koeln": ["#000000", "#E69F00", "#56B4E9", "#009E73", "#F0E444", "#0072B2", "#D55E00", "#CC79A7"],  # https://jfly.uni-koeln.de/color/
-                "PaulTolVibrant": ["#0077BB", "#33BBEE", "#009988", "#EE7733", "#CC3311", "#EE3377","#BBBBBB"]
-                }
+COLORSCHEMES = {
+    "Deltares": ["#000000", "#00cc96", "#0d38e0"],
+    "Koeln": [
+        "#000000",
+        "#E69F00",
+        "#56B4E9",
+        "#009E73",
+        "#F0E444",
+        "#0072B2",
+        "#D55E00",
+        "#CC79A7",
+    ],  # https://jfly.uni-koeln.de/color/
+    "PaulTolVibrant": [
+        "#0077BB",
+        "#33BBEE",
+        "#009988",
+        "#EE7733",
+        "#CC3311",
+        "#EE3377",
+        "#BBBBBB",
+    ],
+}
+
 
 class GenerateCrossSectionLocationFile(FM2ProfBase):
     """
@@ -70,23 +89,23 @@ class GenerateCrossSectionLocationFile(FM2ProfBase):
 
         branchrulefile: OPTIONAL path to a branchrulefile
 
-    
+
 
 
     branchrulefile
     ^^^^^^^^^^^^^^
     This file may be used to exclude certain computational points from being
     used as the location of a cross-section. This is particularily useful
-    when smaller branches connect to a major branch. 
+    when smaller branches connect to a major branch.
 
     The branchrule file is a comma-seperates file with the following syntaxt:
 
     .. code-block:: shell
-    
+
         branch,rules
 
-    Here, `branch` is the name of the branch and `rules` are rules for exclusion 
-    
+    Here, `branch` is the name of the branch and `rules` are rules for exclusion
+
     Supported general rules are:
 
     - onlyFirst: only keep the first cross-section, and exclude all others
@@ -100,16 +119,16 @@ class GenerateCrossSectionLocationFile(FM2ProfBase):
 
 
     .. code-block:: shell
-    
+
         Channel1, channel_1_350.000
 
-    In this case, the computational point with name `channel_1_350.000` will 
-    not be used as the location of a cross-section. 
+    In this case, the computational point with name `channel_1_350.000` will
+    not be used as the location of a cross-section.
 
     Rules and individual exclusions can be mixed, e.g.:
 
     .. code-block:: shell
-    
+
         Channel1, ignoreLast, channel_1_350.000
 
     """
@@ -302,7 +321,16 @@ class GenerateCrossSectionLocationFile(FM2ProfBase):
 
         return x, y, cid, cdis, bid, coff
 
-    def _applyBranchRules(self, rule:str, x:float, y:float, cid:float, cdis:float, bid:str, coff:float):
+    def _applyBranchRules(
+        self,
+        rule: str,
+        x: float,
+        y: float,
+        cid: float,
+        cdis: float,
+        bid: str,
+        coff: float,
+    ):
         # bfunc: what points to pop (remove from list)
         bfunc = {
             "onlyedges": lambda x: [
@@ -313,9 +341,11 @@ class GenerateCrossSectionLocationFile(FM2ProfBase):
                 1:-1
             ],  # keep everything except 2 css on either end of the branch
             "ignorelast": lambda x: x[:-1],  # keep everything except last css on branch
-            "ignorefirst": lambda x: x[1:],  # keep everything except first css on branch
-            "onlyfirst": lambda x: [x[0]], # keep only the first css on branch
-            "onlylast": lambda x: [x[-1]] # keep only the last css on branch
+            "ignorefirst": lambda x: x[
+                1:
+            ],  # keep everything except first css on branch
+            "onlyfirst": lambda x: [x[0]],  # keep only the first css on branch
+            "onlylast": lambda x: [x[-1]],  # keep only the last css on branch
         }
         # disfunc: how to modify lengths
         disfunc = {
@@ -337,16 +367,17 @@ class GenerateCrossSectionLocationFile(FM2ProfBase):
                 "error",
             )
 
-    def _parseBranchRuleFile(self, branchrulefile: Path, delimiter: str = ",") -> Dict[str, Dict]:
+    def _parseBranchRuleFile(
+        self, branchrulefile: Path, delimiter: str = ","
+    ) -> Dict[str, Dict]:
         """
         Parses the branchrule file which is a delimited file (comma by default)
         """
         branchrules: dict = {}
         with open(branchrulefile, "r") as f:
             lines = [line.strip().split(delimiter) for line in f if len(line) > 1]
-            
+
         for line in lines:
-            
             branch: str = line[0].strip()
             rule: str = line[1].strip()
             exceptions: List = []
@@ -452,7 +483,7 @@ class VisualiseOutput(FM2ProfBase):
         Assumes the following naming convention:
         [branch]_[optional:branch_order]_[chainage]
         """
-        output_dir = self.fig_dir.joinpath('roughness')
+        output_dir = self.fig_dir.joinpath("roughness")
         if not output_dir.is_dir():
             os.mkdir(output_dir)
 
@@ -484,6 +515,7 @@ class VisualiseOutput(FM2ProfBase):
     def get_cross_sections_for_branch(self, branch: str) -> Tuple[str, float, str]:
         if branch not in self.branches:
             raise KeyError(f"Branch {branch} not in known branches: {self.branches}")
+
         def split_css(name) -> Tuple[str, float, str]:
             chainage = float(name.split("_")[-1])
             branch = "_".join(name.split("_")[:-1])
@@ -591,10 +623,10 @@ class VisualiseOutput(FM2ProfBase):
                                  if false, returns pyplot figure object
 
         """
-        output_dir = self.fig_dir.joinpath('cross_sections')
+        output_dir = self.fig_dir.joinpath("cross_sections")
         if not output_dir.is_dir():
             os.mkdir(output_dir)
-        
+
         output_file = output_dir.joinpath(f"{css['id']}.png")
         if output_file.is_file() & ~overwrite:
             self.set_logger_message("file already exists", "debug")
@@ -624,8 +656,7 @@ class VisualiseOutput(FM2ProfBase):
                 return fig
 
         except Exception as e:
-            self.set_logger_message(
-                f"error processing: {css['id']} {str(e)}", "error")
+            self.set_logger_message(f"error processing: {css['id']} {str(e)}", "error")
             return None
 
         finally:
@@ -711,7 +742,6 @@ class VisualiseOutput(FM2ProfBase):
         return PlotStyles.apply(*args, **kwargs)
 
     def _plot_geometry(self, css, ax, reference_geometry=None):
-
         # Get data
         tw = np.append([0], np.array(css["total_width"]))
         fw = np.append([0], np.array(css["flow_width"]))
@@ -948,18 +978,26 @@ class PlotStyles:
         except IndexError:
             return False
         return False
-    
-    @classmethod
-    def van_veen(cls,
-            fig: Figure | None = None,
-            use_legend: bool = True,
-            extra_labels: List | None = None,
-            ax_align_legend: plt.Axes | None = None,):
-        
-        warnings.warn("This function is deprecated and will be removed on future versions. Use PlotStyle.apply(fig, style='van_veen') instead",
-                      category=DeprecationWarning)
-        cls.apply(fig=fig, style='van_veen', use_legend=use_legend, extra_labels=extra_labels, ax_align_legend=ax_align_legend)
 
+    @classmethod
+    def van_veen(
+        cls,
+        fig: Figure | None = None,
+        use_legend: bool = True,
+        extra_labels: List | None = None,
+        ax_align_legend: plt.Axes | None = None,
+    ):
+        warnings.warn(
+            "This function is deprecated and will be removed on future versions. Use PlotStyle.apply(fig, style='van_veen') instead",
+            category=DeprecationWarning,
+        )
+        cls.apply(
+            fig=fig,
+            style="van_veen",
+            use_legend=use_legend,
+            extra_labels=extra_labels,
+            ax_align_legend=ax_align_legend,
+        )
 
     @classmethod
     def apply(
@@ -970,20 +1008,40 @@ class PlotStyles:
         extra_labels: List | None = None,
         ax_align_legend: plt.Axes | None = None,
     ) -> Tuple[Figure, Legend]:
-        
-        styles: Dict[str, StyleGuide] = dict(sito= StyleGuide(font={"family": "Franca, Arial", "weight": "normal", "size": 16},
-                                 major_grid = dict(visible=True, which="major", linestyle="--", linewidth=1.0, color="#BBBBBB"),
-                                 minor_grid = dict(visible=True, which="minor", linestyle="--", linewidth=1.0, color="#BBBBBB"),
-                                 spine_width=1),
-                      van_veen = StyleGuide(font={"family": "Bahnschrift", "weight": "normal", "size": 18},
-                                 major_grid = dict(visible=True, which="major", linestyle="-", linewidth=1, color="k"),
-                                 minor_grid = dict(visible=True, which="minor", linestyle="-", linewidth=0.5, color="k"),
-                                 spine_width=2)
-                        )
-        
+        styles: Dict[str, StyleGuide] = dict(
+            sito=StyleGuide(
+                font={"family": "Franca, Arial", "weight": "normal", "size": 16},
+                major_grid=dict(
+                    visible=True,
+                    which="major",
+                    linestyle="--",
+                    linewidth=1.0,
+                    color="#BBBBBB",
+                ),
+                minor_grid=dict(
+                    visible=True,
+                    which="minor",
+                    linestyle="--",
+                    linewidth=1.0,
+                    color="#BBBBBB",
+                ),
+                spine_width=1,
+            ),
+            van_veen=StyleGuide(
+                font={"family": "Bahnschrift", "weight": "normal", "size": 18},
+                major_grid=dict(
+                    visible=True, which="major", linestyle="-", linewidth=1, color="k"
+                ),
+                minor_grid=dict(
+                    visible=True, which="minor", linestyle="-", linewidth=0.5, color="k"
+                ),
+                spine_width=2,
+            ),
+        )
+
         if style not in styles:
             raise KeyError(f"unknown style {style}. Options are {list(styles.keys())}")
-        
+
         style_guide: StyleGuide = styles.get(style)
 
         def initiate() -> None:
@@ -994,7 +1052,9 @@ class PlotStyles:
             # Color style
             mpl.rcParams["axes.prop_cycle"] = mpl.cycler(
                 color=cls.colorscheme * 3,
-                linestyle=["-"] * len(cls.colorscheme) + ["--"] * len(cls.colorscheme) + ["-."] * len(cls.colorscheme),
+                linestyle=["-"] * len(cls.colorscheme)
+                + ["--"] * len(cls.colorscheme)
+                + ["-."] * len(cls.colorscheme),
             )
 
             # Font style
@@ -1002,11 +1062,11 @@ class PlotStyles:
 
             # not all fonts support the unicode minus, so disable this option
             mpl.rc("font", **font)
-            mpl.rcParams[
-                "axes.unicode_minus"
-            ] = False  
+            mpl.rcParams["axes.unicode_minus"] = False
 
-        def style_figure(fig, use_legend, extra_labels, ax_align_legend) -> Tuple[Figure, Legend] | Tuple[Figure, List] | None:
+        def style_figure(
+            fig, use_legend, extra_labels, ax_align_legend
+        ) -> Tuple[Figure, Legend] | Tuple[Figure, List] | None:
             if ax_align_legend is None:
                 ax_align_legend = fig.axes[0]
 
@@ -1019,7 +1079,6 @@ class PlotStyles:
             labels = list()
 
             for ax in fig.axes:
-
                 # Enable grid grid
                 ax.grid(**style_guide.major_grid)
                 ax.grid(**style_guide.minor_grid)
@@ -1065,7 +1124,13 @@ class PlotStyles:
             return initiate()
         else:
             initiate()
-            return style_figure(fig=fig, use_legend=use_legend, extra_labels=extra_labels, ax_align_legend=ax_align_legend)
+            return style_figure(
+                fig=fig,
+                use_legend=use_legend,
+                extra_labels=extra_labels,
+                ax_align_legend=ax_align_legend,
+            )
+
 
 @dataclass
 class DeltaresSectionItem:
@@ -1132,13 +1197,11 @@ class DeltaresConfig:
                     f.write("\n")
 
     def list_parameters(self, section: str, key: str):
-
         for section in self.sections[section]:
             param = section.parameters[key]
             yield [p.value for p in param]
 
     def _read_deltares_ini(self, configfile: Path):
-
         section_store = list()
 
         with open(configfile, "r") as f:
@@ -1176,7 +1239,6 @@ class DeltaresConfig:
             self._sections[section_name].append(section)
 
     def _add_key_value_to_section(self, section: DeltaresSection, line: str) -> None:
-
         # Parse key/value pair
         key = self._regex_key.search(line)[0].strip().lower()
         value = self._parse_value(self._regex_value.search(line)[0].strip())
@@ -1249,10 +1311,12 @@ class ModelOutputReader(FM2ProfBase):
 
     _time_fmt = "%Y-%m-%d %H:%M:%S"
 
-    def __init__(self, 
-                 logger=None, 
-                 start_time: datetime | None = None,
-                 stop_time: datetime | None = None):
+    def __init__(
+        self,
+        logger=None,
+        start_time: datetime | None = None,
+        stop_time: datetime | None = None,
+    ):
         super().__init__(logger=logger)
 
         self._path_out: Path = Path(".")
@@ -1393,7 +1457,7 @@ class ModelOutputReader(FM2ProfBase):
         self.load_flow2d_data()
 
     def _dateparser(self, t):
-        #DEPRECATED
+        # DEPRECATED
         return datetime.strptime(t, self._time_fmt)
 
     @property
@@ -1453,8 +1517,8 @@ class ModelOutputReader(FM2ProfBase):
         self._time_offset_1d = seconds
 
     def _apply_startstop_time(self, data: pd.DataFrame) -> pd.DataFrame:
-        """ 
-        Applies stop/start time to data 
+        """
+        Applies stop/start time to data
         """
         if self.stop_time is None:
             self.stop_time = data.index[-1]
@@ -1462,20 +1526,31 @@ class ModelOutputReader(FM2ProfBase):
             self.start_time = data.index[0]
 
         if self.start_time >= self.stop_time:
-            self.set_logger_message("Stop time ({self.stop_time}) should be later than start time ({self.start_time})", "error")
+            self.set_logger_message(
+                "Stop time ({self.stop_time}) should be later than start time ({self.start_time})",
+                "error",
+            )
             raise ValueError
         if bool(self.start_time) and (self.start_time >= data.index[-1]):
-            self.set_logger_message(f'Provided start time {self.start_time} is later than last record in data ({data.index[-1]})', 'error')
+            self.set_logger_message(
+                f"Provided start time {self.start_time} is later than last record in data ({data.index[-1]})",
+                "error",
+            )
             raise ValueError
         if bool(self.stop_time) and (self.stop_time <= data.index[0]):
-            self.set_logger_message(f'Provided stop time {self.stop_time} is earlier than first record in data ({data.index[0]})', 'error')
+            self.set_logger_message(
+                f"Provided stop time {self.stop_time} is earlier than first record in data ({data.index[0]})",
+                "error",
+            )
             raise ValueError
 
-        if (bool(self.start_time) and bool(self.stop_time)):
-            return data[(data.index >= self.start_time) & (data.index <= self.stop_time)]
-        elif (bool(self.start_time) and not bool(self.stop_time)):
+        if bool(self.start_time) and bool(self.stop_time):
+            return data[
+                (data.index >= self.start_time) & (data.index <= self.stop_time)
+            ]
+        elif bool(self.start_time) and not bool(self.stop_time):
             return data[(data.index >= self.start_time)]
-        elif (not bool(self.start_time) and bool(self.stop_time)):
+        elif not bool(self.start_time) and bool(self.stop_time):
             return data[data.index <= self.stop_time]
         else:
             return data
@@ -1496,9 +1571,7 @@ class ModelOutputReader(FM2ProfBase):
             ["2D_Q", "2D_H"],
             [self.file_2D_Q, self.file_2D_H],
         ):
-
             with Dataset(self._path_flow2d) as f:
-
                 self.set_logger_message(f"loading 2D data for {map_key}")
                 station_map = pd.read_csv(self.file_1D2D_map, index_col=0)
                 qnames = self._parse_names(f.variables[nkey][:])
@@ -1527,7 +1600,6 @@ class ModelOutputReader(FM2ProfBase):
         _file_his = self.path_flow1d
 
         with Dataset(_file_his) as f:
-
             names = self._parse_names(
                 f.variables[self._key_1D_H_name]
             )  # names are the same for Q in 1D
@@ -1586,14 +1658,14 @@ class ModelOutputReader(FM2ProfBase):
 
 class Compare1D2D(ModelOutputReader):
     """
-    Utility to compare the results of a 1D and 2D model through 
-    visualisation and statistical post-processing. 
+    Utility to compare the results of a 1D and 2D model through
+    visualisation and statistical post-processing.
 
     Note:
-        If 2D and 1D netCDF input files are provided, they will first be 
+        If 2D and 1D netCDF input files are provided, they will first be
         converted to csv files. Once csv files are present, the original
-        netCDF files are no longer used. In that case, the arguments 
-        to `path_1d` and `path_2d` should be `None`. 
+        netCDF files are no longer used. In that case, the arguments
+        to `path_1d` and `path_2d` should be `None`.
 
 
     Example usage:
@@ -1612,8 +1684,8 @@ class Compare1D2D(ModelOutputReader):
         path_1d: path to SOBEK dimr directory
         path_2d: path to his nc file
         routes: list of branch abbreviations, e.g. ['NR', 'LK']
-        start_time: start time for plotting and analytics. Use this to crop the time to prevent initalisation from affecting statistics. 
-        stop_time: stop time for plotting and analytics. 
+        start_time: start time for plotting and analytics. Use this to crop the time to prevent initalisation from affecting statistics.
+        stop_time: stop time for plotting and analytics.
         style: `PlotStyles` style
     """
 
@@ -1627,10 +1699,12 @@ class Compare1D2D(ModelOutputReader):
         routes: List[List[str]] | None = None,
         start_time: Union[None, datetime] = None,
         stop_time: Union[None, datetime] = None,
-        style: str = 'sito',
+        style: str = "sito",
     ):
         if project:
-            super().__init__(logger=project.get_logger(), start_time=start_time, stop_time=stop_time)
+            super().__init__(
+                logger=project.get_logger(), start_time=start_time, stop_time=stop_time
+            )
             self.output_path = project.get_output_directory()
         else:
             super().__init__()
@@ -1638,11 +1712,17 @@ class Compare1D2D(ModelOutputReader):
         if isinstance(path_1d, (Path, str)) and Path(path_1d).is_file():
             self.path_flow1d = path_1d
         else:
-            self.set_logger_message(f'1D netCDF file does not exist or is not provided. Input provided: {path_1d}.', 'debug')
+            self.set_logger_message(
+                f"1D netCDF file does not exist or is not provided. Input provided: {path_1d}.",
+                "debug",
+            )
         if isinstance(path_1d, (Path, str)) and Path(path_2d).is_file():
             self.path_flow2d = path_2d
         else:
-            self.set_logger_message(f'2D netCDF file does not exist or is not provided. Input provided: {path_2d}.', 'debug')
+            self.set_logger_message(
+                f"2D netCDF file does not exist or is not provided. Input provided: {path_2d}.",
+                "debug",
+            )
 
         # Defaults
         self.routes = routes
@@ -1666,7 +1746,7 @@ class Compare1D2D(ModelOutputReader):
 
         self.read_all_data()
         self.digitize_data()
-        
+
         # create output folder
         output_dirs = [
             "figures/longitudinal",
@@ -1694,7 +1774,7 @@ class Compare1D2D(ModelOutputReader):
         self.set_logger_message(f"Making figures for stations")
         for station in tqdm.tqdm(self.stations(), total=self._data_1D_H.shape[1]):
             self.figure_at_station(station)
-    
+
     @property
     def routes(self):
         return self._routes
@@ -1717,7 +1797,7 @@ class Compare1D2D(ModelOutputReader):
     @property
     def colorscheme(self):
         return self._colorscheme
-    
+
     def digitize_data(self):
         if self.file_1D_H_digitized.is_file():
             self.set_logger_message("Using existing digitized file for 1d")
@@ -1801,7 +1881,9 @@ class Compare1D2D(ModelOutputReader):
 
         # sort data
         sorted_indices = np.argsort(routekms)
-        sorted_stations = [stations[i] for i in sorted_indices if routekms[i] is not np.nan]
+        sorted_stations = [
+            stations[i] for i in sorted_indices if routekms[i] is not np.nan
+        ]
         sorted_rkms = [routekms[i] for i in sorted_indices if routekms[i] is not np.nan]
 
         # sort lmw stations
@@ -1818,11 +1900,11 @@ class Compare1D2D(ModelOutputReader):
         ,bias,rkm,branch,is_lmw,std,mae,max13,last25
 
         with for each station:
-        
+
         - bias = bias, mean error
         - rkm = river kilometer of the station
         - branch = name of 1D branch on which the station lies
-        - is_lmw = if "LMW" is in the name of station, True. 
+        - is_lmw = if "LMW" is in the name of station, True.
         - std = standard deviation of the rror
         - mae = mean absolute error of the error
 
@@ -1849,20 +1931,22 @@ class Compare1D2D(ModelOutputReader):
                     f"{branch},{bbias:.2f}±({bstd:.2f}), {lmw_bias:.2f}±({lmw_std:.2f})\n"
                 )
 
-    def figure_at_station(self, station: str, func:str="time", savefig:bool=True) -> FigureOutput:
+    def figure_at_station(
+        self, station: str, func: str = "time", savefig: bool = True
+    ) -> FigureOutput:
         """
         Creates a figure with the timeseries at a single observation station.
 
         ``` py
-        
+
         ```
 
         Parameters:
             station: name of station. use `stations` method to list all station names
             func: use `time` for a timeseries and `qh` for rating curve
             savefig: if True, saves to png. If False, returned FigureOutput
-        
-        
+
+
 
         """
 
@@ -1892,18 +1976,15 @@ class Compare1D2D(ModelOutputReader):
                 ax.set_ylabel("Waterstand [m+NAP]")
                 error_ax.plot(
                     self._qsteps,
-                    self._data_1D_H_digitized[station] - self._data_2D_H_digitized[station],
+                    self._data_1D_H_digitized[station]
+                    - self._data_2D_H_digitized[station],
                     ".",
                     color=self._color_error,
                 )
             case "time":
-                ax.plot(self.data_2D_H[station], "--", 
-                        linewidth=2,
-                        label="2D")
-                ax.plot(self.data_1D_H[station], "-", 
-                        linewidth=2,
-                        label="1D")
-                
+                ax.plot(self.data_2D_H[station], "--", linewidth=2, label="2D")
+                ax.plot(self.data_1D_H[station], "-", linewidth=2, label="1D")
+
                 ax.set_ylabel("Waterstand [m+NAP]")
                 ax.set_title(f"{station}\nTijdreeks")
 
@@ -1923,13 +2004,14 @@ class Compare1D2D(ModelOutputReader):
             f"MAE={stats['mae']:.2f} m",
         ]
         stats_handles = [mpatches.Patch(color="white")] * len(stats_labels)
-        
+
         # Style
-        fig, lgd = PlotStyles.apply(fig=fig, 
-                                    style=self._plotstyle,
-                                    use_legend=True, 
-                                    extra_labels=[stats_handles, stats_labels]
-                                )
+        fig, lgd = PlotStyles.apply(
+            fig=fig,
+            style=self._plotstyle,
+            use_legend=True,
+            extra_labels=[stats_handles, stats_labels],
+        )
 
         self._style_error_axes(error_ax, ylim=[-1, 1])
 
@@ -1937,7 +2019,9 @@ class Compare1D2D(ModelOutputReader):
 
         if savefig:
             fig.savefig(
-                self.output_path.joinpath("figures/stations").joinpath(f"{station}.png"),
+                self.output_path.joinpath("figures/stations").joinpath(
+                    f"{station}.png"
+                ),
                 bbox_extra_artists=[lgd],
                 bbox_inches="tight",
             )
@@ -1945,7 +2029,9 @@ class Compare1D2D(ModelOutputReader):
         else:
             return FigureOutput(fig=fig, axes=ax, legend=lgd)
 
-    def _style_error_axes(self, ax, ylim: List[float] = [-0.5, 0.5], ylabel:str="1D-2D [m]"):
+    def _style_error_axes(
+        self, ax, ylim: List[float] = [-0.5, 0.5], ylabel: str = "1D-2D [m]"
+    ):
         ax.set_ylim(ylim)
         ax.set_ylabel(ylabel)
         ax.spines["right"].set_edgecolor(self._color_error)
@@ -1956,10 +2042,10 @@ class Compare1D2D(ModelOutputReader):
         """
         Computes statistics for the difference between 1D and 2D water levels
 
-        Returns DataFrame with 
+        Returns DataFrame with
             columns: rkm, branch, is_lmw, bias, std, mae
             rows: observation stations
-    
+
         """
 
         diff = self.data_1D_H - self.data_2D_H
@@ -1978,7 +2064,7 @@ class Compare1D2D(ModelOutputReader):
         stats["bias"] = diff.mean()
         stats["std"] = diff.std()
         stats["mae"] = diff.abs().mean()
-        
+
         stats["1D_last3"] = self._apply_stat(self.data_1D_H, stat="last3")
         stats["1D_last25"] = self._apply_stat(self.data_1D_H, stat="last25")
         stats["1D_max3"] = self._apply_stat(self.data_1D_H, stat="max3")
@@ -2002,7 +2088,7 @@ class Compare1D2D(ModelOutputReader):
         return self.statistics.loc[station]
 
     def figure_compare_discharge_at_stations(
-        self, stations: List[str], title: str = "no_title", savefig:bool=True
+        self, stations: List[str], title: str = "no_title", savefig: bool = True
     ) -> FigureOutput | None:
         """
         Like `Compare1D2D.figure_at_station`, but compares discharge
@@ -2030,12 +2116,11 @@ class Compare1D2D(ModelOutputReader):
 
         if len(stations) != 2:
             print("error: must define 2 stations")
-        
+
         linestyles_2d = ["-", "--"]
         for j, station in enumerate(stations):
-
             if station not in self.stations():
-                self.set_logger_message(f"{station} not known", 'warning')
+                self.set_logger_message(f"{station} not known", "warning")
 
             # tijdserie
             axs[0].plot(
@@ -2060,14 +2145,14 @@ class Compare1D2D(ModelOutputReader):
         )
 
         # discharge distribution
-        
+
         Q2D = self.data_2D_Q[stations]
         Q1D = self.data_1D_Q[stations]
         axs[1].plot(
             Q2D.sum(axis=1),
             (Q2D.iloc[:, 0] / Q2D.sum(axis=1)) * 100,
             linewidth=2,
-            linestyle='--',
+            linestyle="--",
         )
         axs[1].plot(
             Q1D.sum(axis=1),
@@ -2079,7 +2164,7 @@ class Compare1D2D(ModelOutputReader):
             Q2D.sum(axis=1),
             (Q2D.iloc[:, 1] / Q2D.sum(axis=1)) * 100,
             linewidth=2,
-            linestyle='--',
+            linestyle="--",
         )
         axs[1].plot(
             Q1D.sum(axis=1),
@@ -2164,10 +2249,10 @@ class Compare1D2D(ModelOutputReader):
 
         for day in moments:
             h1d = self.get_data_along_route_for_time(
-                    data=self.data_1D_H,
-                    route=route,
-                    time_index=self._get_nearest_time(data=self.data_1D_H, date=day),
-                )
+                data=self.data_1D_H,
+                route=route,
+                time_index=self._get_nearest_time(data=self.data_1D_H, date=day),
+            )
 
             h2d = self.get_data_along_route_for_time(
                 data=self.data_2D_H,
@@ -2175,14 +2260,12 @@ class Compare1D2D(ModelOutputReader):
                 time_index=self._get_nearest_time(data=self.data_2D_H, date=day),
             )
 
-            lines.append({"1D": h1d, 
-                          "2D": h2d,
-                          "label": f"{day:%b-%d}"})
+            lines.append({"1D": h1d, "2D": h2d, "label": f"{day:%b-%d}"})
 
         return lines
-    
+
     @staticmethod
-    def _apply_stat(df, stat:str="max13"):
+    def _apply_stat(df, stat: str = "max13"):
         """
         Applies column-wise "last25" or "max13" on 1D and 2D data
         """
@@ -2190,7 +2273,7 @@ class Compare1D2D(ModelOutputReader):
         values = []
         for column in columns:
             try:
-                af = df[column].iloc[:,0]
+                af = df[column].iloc[:, 0]
             except pd.errors.IndexingError:
                 af = df[column]
             match stat:
@@ -2204,47 +2287,58 @@ class Compare1D2D(ModelOutputReader):
                     values.append(af[-25:].mean())
         return pd.Series(index=columns, data=values)
 
-    def _stat_func(self, route: List[str], stat:str="max13") -> List[Dict[str, pd.Series | str]]:
+    def _stat_func(
+        self, route: List[str], stat: str = "max13"
+    ) -> List[Dict[str, pd.Series | str]]:
         """
         Applies column-wise "last25" or "max13" on 1D and 2D data
         """
-        max13_1d = self._apply_stat(self.get_data_along_route(self.data_1D_H, route=route).T, stat=stat)
-        max13_2d = self._apply_stat(self.get_data_along_route(self.data_2D_H, route=route).T, stat=stat)
+        max13_1d = self._apply_stat(
+            self.get_data_along_route(self.data_1D_H, route=route).T, stat=stat
+        )
+        max13_2d = self._apply_stat(
+            self.get_data_along_route(self.data_2D_H, route=route).T, stat=stat
+        )
 
-        return [{"1D": max13_1d, 
-                 "2D": max13_2d,
-                 "label": stat
-                 }]
+        return [{"1D": max13_1d, "2D": max13_2d, "label": stat}]
 
     def _lmw_func(self, station_names, station_locs):
         st_names = []
         st_locs = []
         prev_loc = -9999
         for name, loc in zip(station_names, station_locs):
-            if "lmw" not in name.lower(): continue
-            if abs(prev_loc - loc) < 5: 
-                self.set_logger_message(f"skipped labelling {name} because too close to previous station", "warning")
+            if "lmw" not in name.lower():
+                continue
+            if abs(prev_loc - loc) < 5:
+                self.set_logger_message(
+                    f"skipped labelling {name} because too close to previous station",
+                    "warning",
+                )
                 continue
             st_names.append(name.split("_")[-1])
             st_locs.append(loc)
             prev_loc = loc
 
         return st_names, st_locs
-    
+
     def figure_longitudinal_time(self, route: List[str]) -> None:
-        warnings.warn("Method figure_longitudinal_time will be removed in the future. Use figure_longitudinal(route, stat=\"time\") instead ",
-                      category=DeprecationWarning)
-        
+        warnings.warn(
+            'Method figure_longitudinal_time will be removed in the future. Use figure_longitudinal(route, stat="time") instead ',
+            category=DeprecationWarning,
+        )
+
         self.figure_longitudinal(route, stat="time")
-    
-    def figure_longitudinal(self, 
-                            route: List[str], 
-                            stat: str = 'time',
-                            savefig: bool=True,
-                            label: str = '',
-                            add_to_fig: FigureOutput | None = None) -> FigureOutput | None:
+
+    def figure_longitudinal(
+        self,
+        route: List[str],
+        stat: str = "time",
+        savefig: bool = True,
+        label: str = "",
+        add_to_fig: FigureOutput | None = None,
+    ) -> FigureOutput | None:
         """
-        Creates a figure along a `route`. Content of figure depends 
+        Creates a figure along a `route`. Content of figure depends
         on `stat`. Figures are saved to `[Compare1D2D.output_path]/figures/longitudinal`
 
         Example output:
@@ -2253,38 +2347,36 @@ class Compare1D2D(ModelOutputReader):
 
         Parameters:
             route: List of branches (e.g. ['NK', 'LK'])
-            stat: what type of longitudinal plot to make. Options are: 
+            stat: what type of longitudinal plot to make. Options are:
                 - time
                 - last25
                 - max13
-            savefig: if true, figure is saved to png file. If false, `FigureOutput` 
+            savefig: if true, figure is saved to png file. If false, `FigureOutput`
                      returned, which is input for `add_to_fig`
-            add_to_fig: if `FigureOutput` is provided, adds content to figure.  
+            add_to_fig: if `FigureOutput` is provided, adds content to figure.
         """
         # Get route and stations along route
         routename = "-".join(route)
-        
-        
 
         # Make configurable in the future
         labelfunc = self._lmw_func
-        
+
         # TIME FUNCTION plot line every delta_days days
         match stat:
-            case 'time':
+            case "time":
                 lines = self._time_func(route=route)
             case y if y in ["last3", "last25", "max3", "max13"]:
                 lines = self._stat_func(stat=y, route=route)
             case _:
                 raise KeyError(f"{stat} is unknown statistics")
-        
+
         # Get figure object
         if add_to_fig is None:
             fig, axs = plt.subplots(2, 1, figsize=(12, 12))
         else:
             fig = add_to_fig.fig
             axs = add_to_fig.axes
-    
+
         # Filtering which stations to plot
         if add_to_fig is None:
             station_names, station_locs, _ = self.get_route(route)
@@ -2305,10 +2397,8 @@ class Compare1D2D(ModelOutputReader):
                 )
 
         for line in lines:
+            axs[0].plot(line.get("1D"), label=f"{label} {line.get('label')}")
 
-            axs[0].plot(line.get("1D"), 
-                        label=f"{label} {line.get('label')}")
-            
             axs[0].set_ylabel("Waterstand [m+NAP]")
             routestr = "-".join(route)
 
@@ -2316,13 +2406,12 @@ class Compare1D2D(ModelOutputReader):
 
             axs[1].plot(line.get("1D") - line.get("2D"))
             axs[1].set_ylabel("Verschil 1D-2D [m]")
-            
+
             for ax in axs:
                 ax.set_xlabel("Rivierkilometers")
                 ax.xaxis.set_major_locator(MultipleLocator(20))
                 ax.xaxis.set_minor_locator(MultipleLocator(10))
 
-        
         axs[1].set_ylim(-1, 1)
         fig, lgd = PlotStyles.apply(fig=fig, style=self._plotstyle, use_legend=True)
 
@@ -2336,7 +2425,7 @@ class Compare1D2D(ModelOutputReader):
             plt.close()
 
         else:
-            return FigureOutput(fig=fig, axes = axs, legend=lgd)
+            return FigureOutput(fig=fig, axes=axs, legend=lgd)
 
     def figure_longitudinal_rating_curve(self, route: List[str]) -> None:
         """
@@ -2361,9 +2450,11 @@ class Compare1D2D(ModelOutputReader):
 
         discharge_steps = list(self._iter_discharge_steps(h1d.T, n=8))
         if len(discharge_steps) < 1:
-            self.set_logger_message("There is too little data to plot a QH relationship", 'error')
-            return 
-        
+            self.set_logger_message(
+                "There is too little data to plot a QH relationship", "error"
+            )
+            return
+
         # Plot LMW station locations
         fig, axs = plt.subplots(2, 1, figsize=(12, 10))
         prevloc = -9999
@@ -2403,7 +2494,7 @@ class Compare1D2D(ModelOutputReader):
 
         # style figure
         axs[1].set_ylim(-1, 1)
-        fig, lgd = PlotStyles.apply(fig,style=self._plotstyle, use_legend=True)
+        fig, lgd = PlotStyles.apply(fig, style=self._plotstyle, use_legend=True)
         plt.tight_layout()
         fig.savefig(
             self.output_path.joinpath(
@@ -2557,7 +2648,6 @@ class Network1D:
         crosssectiondefinitionfile: Union[Path, str],
         crosssectionlocationfile: Union[Path, str],
     ):
-
         self._ignore_branchlist = ["ark_betuwepand", "twentekanaal"]
         self._branch_chainage_rkm: Dict[List[Tuple[float]]] = dict()
         self._regex_rkm = re.compile(r"(?<=_)(\d+.\d+)")
@@ -3130,7 +3220,6 @@ class Convert2D:
         outputfile: Union[str, Path],
         is_boundary: bool = False,
     ):
-
         bc1d = DeltaresConfig(file1d)
 
         bc2d = DeltaresConfig(file2d)

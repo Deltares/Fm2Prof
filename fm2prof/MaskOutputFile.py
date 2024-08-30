@@ -20,6 +20,7 @@ All names, logos, and references to "Deltares" are registered trademarks of
 Stichting Deltares and remain full property of Stichting Deltares at all times.
 All rights reserved.
 """
+
 import os
 
 import geojson

@@ -1,4 +1,4 @@
-﻿#! /usr/bin/env python
+#! /usr/bin/env python
 """
 This module contains functions used for the emulation/reduction of 2D models to 1D models for Delft3D FM (D-Hydro).
 
@@ -13,8 +13,7 @@ pandas (0.17.1)
 sklearn (0.15.2)
 
 Contact: K.D. Berends (koen.berends@deltares.nl, k.d.berends@utwente.nl)
-"""
-"""
+
 Copyright (C) Stichting Deltares 2019. All rights reserved.
 
 This file is part of the Fm2Prof.
@@ -36,18 +35,10 @@ All names, logos, and references to "Deltares" are registered trademarks of
 Stichting Deltares and remain full property of Stichting Deltares at all times.
 All rights reserved.
 """
-import csv
-import os
-
-# region // imports
-import netCDF4
 import numpy as np
 import pandas as pd
 from sklearn.neighbors import KNeighborsClassifier, NearestNeighbors
 
-# endregion
-
-# region // Module information
 __author__ = "Koen Berends"
 __copyright__ = "Copyright 2016, University of Twente & Deltares"
 __credits__ = ["Koen Berends"]
@@ -56,7 +47,6 @@ __version__ = "$Revision$"
 __maintainer__ = "Koen Berends"
 __email__ = "koen.berends@deltares.nl"
 __status__ = "Prototype"
-# endregion
 
 
 # region // public functions
@@ -107,7 +97,9 @@ def classify_with_regions(
         css_2d_edges = neigh.predict(np.array([x_2d_edge, y_2d_edge]).T)
 
         # Update data in main structures
-        time_independent_data.loc[node_mask, "sclass"] = css_2d_nodes  # sclass = cross-section id
+        time_independent_data.loc[node_mask, "sclass"] = (
+            css_2d_nodes  # sclass = cross-section id
+        )
 
         edge_data["sclass"][edge_mask] = css_2d_edges
 
