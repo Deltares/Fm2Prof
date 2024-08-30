@@ -1647,7 +1647,6 @@ class Compare1D2D(ModelOutputReader):
         # Defaults
         self.routes = routes
         self.statistics = None
-        self._other:'Compare1D2D' | None = None  # modified by __sub__
         self._data_1D_H: pd.DataFrame = None
         self._data_2D_H: pd.DataFrame = None
         self._data_1D_H_digitized: pd.DataFrame = None
@@ -1680,9 +1679,6 @@ class Compare1D2D(ModelOutputReader):
                 os.makedirs(self.output_path.joinpath(od))
             except FileExistsError:
                 pass
-
-    def __sub__(self, other:'Compare1D2D'):
-        self._other = other
 
     def eval(self):
         """
