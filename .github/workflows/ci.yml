@@ -67,3 +67,4 @@ jobs:
             -Dsonar.organization=deltares
             -Dsonar.projectKey=Deltares_Fm2Prof
             -Dsonar.python.coverage.reportPaths=.coverage-reports/coverage.xml
+            -Dsonar.exclusions=tests/**, docs/**
