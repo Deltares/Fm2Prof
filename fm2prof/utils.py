@@ -114,13 +114,14 @@ class GenerateCrossSectionLocationFile(FM2ProfBase):
     - ignoreFirst: exclude the first cross-section on a branch
     - ignoreLast: exclude the last cross-section on a branch
     - ignoreEdges: exclude the first and last cross-section on a branch
+    - noRule: use to not use any of the above rules
 
     Additionally, specific cross-sections can be excluded by id. For example:
 
 
     .. code-block:: shell
 
-        Channel1, channel_1_350.000
+        Channel1, noRule, channel_1_350.000
 
     In this case, the computational point with name `channel_1_350.000` will
     not be used as the location of a cross-section.
@@ -333,6 +334,7 @@ class GenerateCrossSectionLocationFile(FM2ProfBase):
     ):
         # bfunc: what points to pop (remove from list)
         bfunc = {
+            "norule": lambda x: x,
             "onlyedges": lambda x: [
                 x[0],
                 x[-1],
@@ -355,6 +357,7 @@ class GenerateCrossSectionLocationFile(FM2ProfBase):
             "ignorefirst": lambda x: [sum(x[:2]), *x[2:]],
             "onlyfirst": lambda x: [sum(x)],
             "onlylast": lambda x: [sum(x)],
+            "norule": lambda x: x,
         }
 
         try:
