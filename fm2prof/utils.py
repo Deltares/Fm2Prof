@@ -301,25 +301,19 @@ class GenerateCrossSectionLocationFile(FM2ProfBase):
                     coff,
                 ) = self._applyBranchRules("ignorelast", x, y, cid, cdis, bid, coff)
             else:
-                # pop the index
-                for l in [x, y, cid, bid, coff]:
-                    l.pop(pop_index)
-
-                # divide the length
-                next_pop = pop_index + 1
-                prev_pop = pop_index - 1
-                while next_pop in pop_indices:
-                    next_pop += 1
-                while prev_pop in pop_indices:
-                    prev_pop -= 1
-
+                # the distance of the popped value is divided over the two on aither side. 
                 cdis[pop_index - 1] += cdis[pop_index] / 2
                 cdis[pop_index + 1] += cdis[pop_index] / 2
+                
+                # then, pop the value
+                for l in [x, y, cid, cdis, bid, coff]:
+                    l.pop(pop_index)
+                
 
-        if len(x) != len(cdis):
-            for pop_index in sorted(pop_indices, reverse=True):
-                del cdis[pop_index]
-
+        #if len(x) != len(cdis):
+        #    for pop_index in sorted(pop_indices, reverse=True):
+        #        del cdis[pop_index]
+#
         return x, y, cid, cdis, bid, coff
 
     def _applyBranchRules(
