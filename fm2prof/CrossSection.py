@@ -254,16 +254,27 @@ class CrossSection(FM2ProfBase):
         """
         fm_data: Dict = self._fm_data
 
-        # Unpack FM data
-        waterlevel = fm_data["waterlevel"].iloc[
-            :, self.get_parameter(self.__cs_parameter_skip_maps) :
-        ]
-        waterdepth = fm_data["waterdepth"].iloc[
-            :, self.get_parameter(self.__cs_parameter_skip_maps) :
-        ]
-        velocity = fm_data["velocity"].iloc[
-            :, self.get_parameter(self.__cs_parameter_skip_maps) :
-        ]
+       # Unpack FM data
+        def get_timeseries(name:str):
+            """
+            Returns data from fm_data after applying the
+            skip_maps and checking for missing numbers
+            """
+            imiss = -999  # this should be equal to the missing number value from D-HYDRO
+
+            data = fm_data[name].iloc[
+                :, self.get_parameter(self.__cs_parameter_skip_maps) :
+            ]
+            # map missing value numbers to 
+            if imiss in data.values:
+                self.set_logger_message(r"Missing data found in {name}", "warning")
+            data[data==imiss] = np.nan
+            return data
+
+        waterlevel = get_timeseries("waterlevel")
+        waterdepth = get_timeseries("waterdepth")
+        velocity = get_timeseries("velocity")
+        
         area = fm_data["area"]
         bedlevel = fm_data["bedlevel"]
 
