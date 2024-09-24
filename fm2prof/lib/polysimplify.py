@@ -459,7 +459,6 @@ def fancy_parametric(k):
 
 
 if __name__ == "__main__":
-
     from time import time
 
     n = 5000

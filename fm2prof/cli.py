@@ -3,7 +3,6 @@ from typing import Optional
 
 import typer
 from tqdm import tqdm
-
 from fm2prof import Project, __version__
 from fm2prof.IniFile import IniFile
 from fm2prof.utils import Compare1D2D, VisualiseOutput
@@ -93,7 +92,7 @@ def cli(
         help="Show the application version and exit",
         callback=_display_version,
         is_eager=True,
-    )
+    ),
 ) -> None:
     typer.echo("Welcome to Fm2Prof")
     return

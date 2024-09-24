@@ -22,16 +22,12 @@ All rights reserved.
 """
 
 import json
-import logging
-import multiprocessing
-import os
 from collections import namedtuple
-from itertools import groupby
 from pathlib import Path
-from typing import Any, Callable, Iterable
+from typing import Iterable
 
 import numpy as np
-from shapely.geometry import GeometryCollection, MultiPolygon, Point, shape
+from shapely.geometry import Point, shape
 
 from fm2prof.common import FM2ProfBase
 

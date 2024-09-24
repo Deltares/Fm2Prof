@@ -3,7 +3,6 @@
 Top-level file to run fm2prof
 """
 
-
 import getopt
 
 # Import from standard library
@@ -14,8 +13,6 @@ from fm2prof import Fm2ProfRunner
 
 # Import from dependencies
 # None
-
-
 
 
 # region // Main helpers

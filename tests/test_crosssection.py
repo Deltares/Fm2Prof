@@ -109,7 +109,8 @@ class Test_cross_section_construction:
 
         assert all([abs(css_z[i] - css._css_z[i]) < tol for i in range(len(css_z))])
         assert all([abs(css_total_volume[i] - css._css_total_volume[i]) < tol for i in range(len(css_total_volume))])
-        
+
+
     def test_calculate_correction(self):
         # 1. Set up test data
         test_case: dict = test_cases[0]

@@ -3,11 +3,11 @@ import locale
 import os
 import re
 import warnings
+from collections import namedtuple
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from logging import Logger
 from pathlib import Path
-from collections import namedtuple
 from typing import (
     Any,
     Callable,
@@ -22,7 +22,6 @@ from typing import (
 
 import matplotlib as mpl
 import matplotlib.dates as mdates
-import matplotlib.gridspec as gridspec
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
 import numpy as np
@@ -30,24 +29,44 @@ import pandas as pd
 import tqdm
 from matplotlib.figure import Figure
 from matplotlib.legend import Legend
-from matplotlib.ticker import AutoMinorLocator, FormatStrFormatter, MultipleLocator
+from matplotlib.ticker import MultipleLocator
 from netCDF4 import Dataset
 from pandas.plotting import register_matplotlib_converters
 from scipy.interpolate import interp1d
-
 
 from fm2prof import Project
 from fm2prof.common import FM2ProfBase
 
 register_matplotlib_converters()
 
-FigureOutput = namedtuple('FigureOutput', ['fig', 'axes', 'legend'])
-StyleGuide = namedtuple('StyleGuide', ['font', 'major_grid', 'minor_grid', 'spine_width'])
+FigureOutput = namedtuple("FigureOutput", ["fig", "axes", "legend"])
+StyleGuide = namedtuple(
+    "StyleGuide", ["font", "major_grid", "minor_grid", "spine_width"]
+)
 
-COLORSCHEMES = {"Deltares": ["#000000", "#00cc96", "#0d38e0"],
-                "Koeln": ["#000000", "#E69F00", "#56B4E9", "#009E73", "#F0E444", "#0072B2", "#D55E00", "#CC79A7"],  # https://jfly.uni-koeln.de/color/
-                "PaulTolVibrant": ["#0077BB", "#33BBEE", "#009988", "#EE7733", "#CC3311", "#EE3377","#BBBBBB"]
-                }
+COLORSCHEMES = {
+    "Deltares": ["#000000", "#00cc96", "#0d38e0"],
+    "Koeln": [
+        "#000000",
+        "#E69F00",
+        "#56B4E9",
+        "#009E73",
+        "#F0E444",
+        "#0072B2",
+        "#D55E00",
+        "#CC79A7",
+    ],  # https://jfly.uni-koeln.de/color/
+    "PaulTolVibrant": [
+        "#0077BB",
+        "#33BBEE",
+        "#009988",
+        "#EE7733",
+        "#CC3311",
+        "#EE3377",
+        "#BBBBBB",
+    ],
+}
+
 
 class GenerateCrossSectionLocationFile(FM2ProfBase):
     """
@@ -70,23 +89,23 @@ class GenerateCrossSectionLocationFile(FM2ProfBase):
 
         branchrulefile: OPTIONAL path to a branchrulefile
 
-    
+
 
 
     branchrulefile
     ^^^^^^^^^^^^^^
     This file may be used to exclude certain computational points from being
     used as the location of a cross-section. This is particularily useful
-    when smaller branches connect to a major branch. 
+    when smaller branches connect to a major branch.
 
     The branchrule file is a comma-seperates file with the following syntaxt:
 
     .. code-block:: shell
-    
+
         branch,rules
 
-    Here, `branch` is the name of the branch and `rules` are rules for exclusion 
-    
+    Here, `branch` is the name of the branch and `rules` are rules for exclusion
+
     Supported general rules are:
 
     - onlyFirst: only keep the first cross-section, and exclude all others
@@ -95,21 +114,22 @@ class GenerateCrossSectionLocationFile(FM2ProfBase):
     - ignoreFirst: exclude the first cross-section on a branch
     - ignoreLast: exclude the last cross-section on a branch
     - ignoreEdges: exclude the first and last cross-section on a branch
+    - noRule: use to not use any of the above rules
 
     Additionally, specific cross-sections can be excluded by id. For example:
 
 
     .. code-block:: shell
-    
-        Channel1, channel_1_350.000
 
-    In this case, the computational point with name `channel_1_350.000` will 
-    not be used as the location of a cross-section. 
+        Channel1, noRule, channel_1_350.000
+
+    In this case, the computational point with name `channel_1_350.000` will
+    not be used as the location of a cross-section.
 
     Rules and individual exclusions can be mixed, e.g.:
 
     .. code-block:: shell
-    
+
         Channel1, ignoreLast, channel_1_350.000
 
     """
@@ -281,30 +301,30 @@ class GenerateCrossSectionLocationFile(FM2ProfBase):
                     coff,
                 ) = self._applyBranchRules("ignorelast", x, y, cid, cdis, bid, coff)
             else:
-                # pop the index
-                for l in [x, y, cid, bid, coff]:
-                    l.pop(pop_index)
-
-                # divide the length
-                next_pop = pop_index + 1
-                prev_pop = pop_index - 1
-                while next_pop in pop_indices:
-                    next_pop += 1
-                while prev_pop in pop_indices:
-                    prev_pop -= 1
-
+                # the distance of the popped value is divided over the two on aither side. 
                 cdis[pop_index - 1] += cdis[pop_index] / 2
                 cdis[pop_index + 1] += cdis[pop_index] / 2
-
-        if len(x) != len(cdis):
-            for pop_index in sorted(pop_indices, reverse=True):
-                del cdis[pop_index]
+                
+                # then, pop the value
+                for l in [x, y, cid, cdis, bid, coff]:
+                    l.pop(pop_index)
+                
 
         return x, y, cid, cdis, bid, coff
 
-    def _applyBranchRules(self, rule:str, x:float, y:float, cid:float, cdis:float, bid:str, coff:float):
+    def _applyBranchRules(
+        self,
+        rule: str,
+        x: float,
+        y: float,
+        cid: float,
+        cdis: float,
+        bid: str,
+        coff: float,
+    ):
         # bfunc: what points to pop (remove from list)
         bfunc = {
+            "norule": lambda x: x,
             "onlyedges": lambda x: [
                 x[0],
                 x[-1],
@@ -313,9 +333,11 @@ class GenerateCrossSectionLocationFile(FM2ProfBase):
                 1:-1
             ],  # keep everything except 2 css on either end of the branch
             "ignorelast": lambda x: x[:-1],  # keep everything except last css on branch
-            "ignorefirst": lambda x: x[1:],  # keep everything except first css on branch
-            "onlyfirst": lambda x: [x[0]], # keep only the first css on branch
-            "onlylast": lambda x: [x[-1]] # keep only the last css on branch
+            "ignorefirst": lambda x: x[
+                1:
+            ],  # keep everything except first css on branch
+            "onlyfirst": lambda x: [x[0]],  # keep only the first css on branch
+            "onlylast": lambda x: [x[-1]],  # keep only the last css on branch
         }
         # disfunc: how to modify lengths
         disfunc = {
@@ -325,6 +347,7 @@ class GenerateCrossSectionLocationFile(FM2ProfBase):
             "ignorefirst": lambda x: [sum(x[:2]), *x[2:]],
             "onlyfirst": lambda x: [sum(x)],
             "onlylast": lambda x: [sum(x)],
+            "norule": lambda x: x,
         }
 
         try:
@@ -337,16 +360,17 @@ class GenerateCrossSectionLocationFile(FM2ProfBase):
                 "error",
             )
 
-    def _parseBranchRuleFile(self, branchrulefile: Path, delimiter: str = ",") -> Dict[str, Dict]:
+    def _parseBranchRuleFile(
+        self, branchrulefile: Path, delimiter: str = ","
+    ) -> Dict[str, Dict]:
         """
         Parses the branchrule file which is a delimited file (comma by default)
         """
         branchrules: dict = {}
         with open(branchrulefile, "r") as f:
             lines = [line.strip().split(delimiter) for line in f if len(line) > 1]
-            
+
         for line in lines:
-            
             branch: str = line[0].strip()
             rule: str = line[1].strip()
             exceptions: List = []
@@ -452,7 +476,7 @@ class VisualiseOutput(FM2ProfBase):
         Assumes the following naming convention:
         [branch]_[optional:branch_order]_[chainage]
         """
-        output_dir = self.fig_dir.joinpath('roughness')
+        output_dir = self.fig_dir.joinpath("roughness")
         if not output_dir.is_dir():
             os.mkdir(output_dir)
 
@@ -484,6 +508,7 @@ class VisualiseOutput(FM2ProfBase):
     def get_cross_sections_for_branch(self, branch: str) -> Tuple[str, float, str]:
         if branch not in self.branches:
             raise KeyError(f"Branch {branch} not in known branches: {self.branches}")
+
         def split_css(name) -> Tuple[str, float, str]:
             chainage = float(name.split("_")[-1])
             branch = "_".join(name.split("_")[:-1])
@@ -591,10 +616,10 @@ class VisualiseOutput(FM2ProfBase):
                                  if false, returns pyplot figure object
 
         """
-        output_dir = self.fig_dir.joinpath('cross_sections')
+        output_dir = self.fig_dir.joinpath("cross_sections")
         if not output_dir.is_dir():
             os.mkdir(output_dir)
-        
+
         output_file = output_dir.joinpath(f"{css['id']}.png")
         if output_file.is_file() & ~overwrite:
             self.set_logger_message("file already exists", "debug")
@@ -624,8 +649,7 @@ class VisualiseOutput(FM2ProfBase):
                 return fig
 
         except Exception as e:
-            self.set_logger_message(
-                f"error processing: {css['id']} {str(e)}", "error")
+            self.set_logger_message(f"error processing: {css['id']} {str(e)}", "error")
             return None
 
         finally:
@@ -711,7 +735,6 @@ class VisualiseOutput(FM2ProfBase):
         return PlotStyles.apply(*args, **kwargs)
 
     def _plot_geometry(self, css, ax, reference_geometry=None):
-
         # Get data
         tw = np.append([0], np.array(css["total_width"]))
         fw = np.append([0], np.array(css["flow_width"]))
@@ -948,18 +971,26 @@ class PlotStyles:
         except IndexError:
             return False
         return False
-    
-    @classmethod
-    def van_veen(cls,
-            fig: Figure | None = None,
-            use_legend: bool = True,
-            extra_labels: List | None = None,
-            ax_align_legend: plt.Axes | None = None,):
-        
-        warnings.warn("This function is deprecated and will be removed on future versions. Use PlotStyle.apply(fig, style='van_veen') instead",
-                      category=DeprecationWarning)
-        cls.apply(fig=fig, style='van_veen', use_legend=use_legend, extra_labels=extra_labels, ax_align_legend=ax_align_legend)
 
+    @classmethod
+    def van_veen(
+        cls,
+        fig: Figure | None = None,
+        use_legend: bool = True,
+        extra_labels: List | None = None,
+        ax_align_legend: plt.Axes | None = None,
+    ):
+        warnings.warn(
+            "This function is deprecated and will be removed on future versions. Use PlotStyle.apply(fig, style='van_veen') instead",
+            category=DeprecationWarning,
+        )
+        cls.apply(
+            fig=fig,
+            style="van_veen",
+            use_legend=use_legend,
+            extra_labels=extra_labels,
+            ax_align_legend=ax_align_legend,
+        )
 
     @classmethod
     def apply(
@@ -970,20 +1001,40 @@ class PlotStyles:
         extra_labels: List | None = None,
         ax_align_legend: plt.Axes | None = None,
     ) -> Tuple[Figure, Legend]:
-        
-        styles: Dict[str, StyleGuide] = dict(sito= StyleGuide(font={"family": "Franca, Arial", "weight": "normal", "size": 16},
-                                 major_grid = dict(visible=True, which="major", linestyle="--", linewidth=1.0, color="#BBBBBB"),
-                                 minor_grid = dict(visible=True, which="minor", linestyle="--", linewidth=1.0, color="#BBBBBB"),
-                                 spine_width=1),
-                      van_veen = StyleGuide(font={"family": "Bahnschrift", "weight": "normal", "size": 18},
-                                 major_grid = dict(visible=True, which="major", linestyle="-", linewidth=1, color="k"),
-                                 minor_grid = dict(visible=True, which="minor", linestyle="-", linewidth=0.5, color="k"),
-                                 spine_width=2)
-                        )
-        
+        styles: Dict[str, StyleGuide] = dict(
+            sito=StyleGuide(
+                font={"family": "Franca, Arial", "weight": "normal", "size": 16},
+                major_grid=dict(
+                    visible=True,
+                    which="major",
+                    linestyle="--",
+                    linewidth=1.0,
+                    color="#BBBBBB",
+                ),
+                minor_grid=dict(
+                    visible=True,
+                    which="minor",
+                    linestyle="--",
+                    linewidth=1.0,
+                    color="#BBBBBB",
+                ),
+                spine_width=1,
+            ),
+            van_veen=StyleGuide(
+                font={"family": "Bahnschrift", "weight": "normal", "size": 18},
+                major_grid=dict(
+                    visible=True, which="major", linestyle="-", linewidth=1, color="k"
+                ),
+                minor_grid=dict(
+                    visible=True, which="minor", linestyle="-", linewidth=0.5, color="k"
+                ),
+                spine_width=2,
+            ),
+        )
+
         if style not in styles:
             raise KeyError(f"unknown style {style}. Options are {list(styles.keys())}")
-        
+
         style_guide: StyleGuide = styles.get(style)
 
         def initiate() -> None:
@@ -994,7 +1045,9 @@ class PlotStyles:
             # Color style
             mpl.rcParams["axes.prop_cycle"] = mpl.cycler(
                 color=cls.colorscheme * 3,
-                linestyle=["-"] * len(cls.colorscheme) + ["--"] * len(cls.colorscheme) + ["-."] * len(cls.colorscheme),
+                linestyle=["-"] * len(cls.colorscheme)
+                + ["--"] * len(cls.colorscheme)
+                + ["-."] * len(cls.colorscheme),
             )
 
             # Font style
@@ -1002,11 +1055,11 @@ class PlotStyles:
 
             # not all fonts support the unicode minus, so disable this option
             mpl.rc("font", **font)
-            mpl.rcParams[
-                "axes.unicode_minus"
-            ] = False  
+            mpl.rcParams["axes.unicode_minus"] = False
 
-        def style_figure(fig, use_legend, extra_labels, ax_align_legend) -> Tuple[Figure, Legend] | Tuple[Figure, List] | None:
+        def style_figure(
+            fig, use_legend, extra_labels, ax_align_legend
+        ) -> Tuple[Figure, Legend] | Tuple[Figure, List] | None:
             if ax_align_legend is None:
                 ax_align_legend = fig.axes[0]
 
@@ -1019,7 +1072,6 @@ class PlotStyles:
             labels = list()
 
             for ax in fig.axes:
-
                 # Enable grid grid
                 ax.grid(**style_guide.major_grid)
                 ax.grid(**style_guide.minor_grid)
@@ -1065,147 +1117,12 @@ class PlotStyles:
             return initiate()
         else:
             initiate()
-            return style_figure(fig=fig, use_legend=use_legend, extra_labels=extra_labels, ax_align_legend=ax_align_legend)
-
-@dataclass
-class DeltaresSectionItem:
-    value: Any
-    comment: str = ""
-
-
-@dataclass
-class DeltaresSection:
-    parameters: Dict
-    timeseries: List[List]
-
-    def __getitem__(
-        self, key: str
-    ) -> Union[List[DeltaresSectionItem], DeltaresSectionItem]:
-        """This makes the class subscriptable"""
-        if len(self.parameters[key]) == 1:
-            return self.parameters[key][0]
-        else:
-            return self.parameters[key]
-
-    def __setitem__(self, key: str, value: Union[List, Any]):
-        if isinstance(value, list):
-            self.parameters[key] = value
-        else:
-            self.parameters[key] = [value]
-
-    def get(self, key: str) -> Union[List[DeltaresSectionItem], DeltaresSectionItem]:
-        """mimicks get method of dictionary"""
-        return self.__getitem__(key)
-
-
-class DeltaresConfig:
-    """
-    Helper class to parse the "Deltares ini" style.
-    """
-
-    def __init__(self, configfile: Union[Path, str]):
-        self._sections = dict()  # list of unique keys
-        self._regex_section = re.compile(r"(?<=\[)\S+.+(?=\])")
-        self._regex_key = re.compile(r".+(?=\=)")
-        self._regex_value = re.compile(r"(?<==)([^#\n\r]+)")
-        self._regex_comment = re.compile(r"(?<=#)([^\n\r]+)")
-        self._regex_timeseries = re.compile(r"(-?\d+\.?\d*)[\t ](-?\d+\.?\d*)[\t\n ]")
-        self._read_deltares_ini(configfile)
-
-        self._fmt_kvwidth = 40
-
-    @property
-    def sections(self):
-        return self._sections
-
-    def to_file(self, outputfile: Union[Path, str]) -> None:
-        with open(outputfile, "w") as f:
-            for unique_section in self.sections:
-                for section in self.sections[unique_section]:
-                    f.write(f"[{unique_section}]\n")
-                    for unique_parameter in section.parameters:
-                        for param in section.parameters[unique_parameter]:
-                            f.write(f"\t{unique_parameter:40}=\t{param.value}\n")
-
-                    for ts in section.timeseries:
-                        f.write(f"{ts[0]} {ts[1]}\n")
-                    f.write("\n")
-
-    def list_parameters(self, section: str, key: str):
-
-        for section in self.sections[section]:
-            param = section.parameters[key]
-            yield [p.value for p in param]
-
-    def _read_deltares_ini(self, configfile: Path):
-
-        section_store = list()
-
-        with open(configfile, "r") as f:
-            for line in f:
-                if self._regex_section.search(line):
-                    # Add current section
-                    if len(section_store) > 0:
-                        self._add_section(section_name, section_store)
-                        section_store.clear()
-
-                    # Parse new section
-                    section_name = self._regex_section.search(line)[0]
-                section_store.append(line)
-
-            # add final sections
-            self._add_section(section_name, section_store)
-
-    def _add_section(self, section_name: str, section_store: list):
-        section_name = section_name.lower()
-        section = DeltaresSection(parameters={}, timeseries=[])
-
-        # Parse section
-        for line in section_store:
-            if self._regex_key.search(line):
-                self._add_key_value_to_section(section, line)
-
-            if self._regex_timeseries.search(line):
-                p = self._regex_timeseries.search(line)
-                section.timeseries.append([p[1], p[2]])
-
-        # Sections may occur multiple times, store in list
-        if section_name not in self._sections:
-            self._sections[section_name] = [section]
-        else:
-            self._sections[section_name].append(section)
-
-    def _add_key_value_to_section(self, section: DeltaresSection, line: str) -> None:
-
-        # Parse key/value pair
-        key = self._regex_key.search(line)[0].strip().lower()
-        value = self._parse_value(self._regex_value.search(line)[0].strip())
-        comment = ""
-
-        if self._regex_comment.search(line):
-            comment = self._regex_comment.search(line)[0].strip()
-
-        if key not in section.parameters:
-            section.parameters[key] = [
-                DeltaresSectionItem(value=value, comment=comment)
-            ]
-        else:
-            section.parameters[key].append(
-                DeltaresSectionItem(value=value, comment=comment)
+            return style_figure(
+                fig=fig,
+                use_legend=use_legend,
+                extra_labels=extra_labels,
+                ax_align_legend=ax_align_legend,
             )
-
-    def _parse_value(self, value: str):
-        """attempts to parse value"""
-        try:
-            return float(value)
-        except ValueError:
-            pass
-        try:
-            return list(map(float, value.split()))
-        except (ValueError, AttributeError):
-            pass
-
-        return value
 
 
 class ModelOutputReader(FM2ProfBase):
@@ -1249,10 +1166,12 @@ class ModelOutputReader(FM2ProfBase):
 
     _time_fmt = "%Y-%m-%d %H:%M:%S"
 
-    def __init__(self, 
-                 logger=None, 
-                 start_time: datetime | None = None,
-                 stop_time: datetime | None = None):
+    def __init__(
+        self,
+        logger=None,
+        start_time: datetime | None = None,
+        stop_time: datetime | None = None,
+    ):
         super().__init__(logger=logger)
 
         self._path_out: Path = Path(".")
@@ -1393,7 +1312,7 @@ class ModelOutputReader(FM2ProfBase):
         self.load_flow2d_data()
 
     def _dateparser(self, t):
-        #DEPRECATED
+        # DEPRECATED
         return datetime.strptime(t, self._time_fmt)
 
     @property
@@ -1453,8 +1372,8 @@ class ModelOutputReader(FM2ProfBase):
         self._time_offset_1d = seconds
 
     def _apply_startstop_time(self, data: pd.DataFrame) -> pd.DataFrame:
-        """ 
-        Applies stop/start time to data 
+        """
+        Applies stop/start time to data
         """
         if self.stop_time is None:
             self.stop_time = data.index[-1]
@@ -1462,20 +1381,31 @@ class ModelOutputReader(FM2ProfBase):
             self.start_time = data.index[0]
 
         if self.start_time >= self.stop_time:
-            self.set_logger_message("Stop time ({self.stop_time}) should be later than start time ({self.start_time})", "error")
+            self.set_logger_message(
+                "Stop time ({self.stop_time}) should be later than start time ({self.start_time})",
+                "error",
+            )
             raise ValueError
         if bool(self.start_time) and (self.start_time >= data.index[-1]):
-            self.set_logger_message(f'Provided start time {self.start_time} is later than last record in data ({data.index[-1]})', 'error')
+            self.set_logger_message(
+                f"Provided start time {self.start_time} is later than last record in data ({data.index[-1]})",
+                "error",
+            )
             raise ValueError
         if bool(self.stop_time) and (self.stop_time <= data.index[0]):
-            self.set_logger_message(f'Provided stop time {self.stop_time} is earlier than first record in data ({data.index[0]})', 'error')
+            self.set_logger_message(
+                f"Provided stop time {self.stop_time} is earlier than first record in data ({data.index[0]})",
+                "error",
+            )
             raise ValueError
 
-        if (bool(self.start_time) and bool(self.stop_time)):
-            return data[(data.index >= self.start_time) & (data.index <= self.stop_time)]
-        elif (bool(self.start_time) and not bool(self.stop_time)):
+        if bool(self.start_time) and bool(self.stop_time):
+            return data[
+                (data.index >= self.start_time) & (data.index <= self.stop_time)
+            ]
+        elif bool(self.start_time) and not bool(self.stop_time):
             return data[(data.index >= self.start_time)]
-        elif (not bool(self.start_time) and bool(self.stop_time)):
+        elif not bool(self.start_time) and bool(self.stop_time):
             return data[data.index <= self.stop_time]
         else:
             return data
@@ -1496,9 +1426,7 @@ class ModelOutputReader(FM2ProfBase):
             ["2D_Q", "2D_H"],
             [self.file_2D_Q, self.file_2D_H],
         ):
-
             with Dataset(self._path_flow2d) as f:
-
                 self.set_logger_message(f"loading 2D data for {map_key}")
                 station_map = pd.read_csv(self.file_1D2D_map, index_col=0)
                 qnames = self._parse_names(f.variables[nkey][:])
@@ -1527,7 +1455,6 @@ class ModelOutputReader(FM2ProfBase):
         _file_his = self.path_flow1d
 
         with Dataset(_file_his) as f:
-
             names = self._parse_names(
                 f.variables[self._key_1D_H_name]
             )  # names are the same for Q in 1D
@@ -1586,14 +1513,14 @@ class ModelOutputReader(FM2ProfBase):
 
 class Compare1D2D(ModelOutputReader):
     """
-    Utility to compare the results of a 1D and 2D model through 
-    visualisation and statistical post-processing. 
+    Utility to compare the results of a 1D and 2D model through
+    visualisation and statistical post-processing.
 
     Note:
-        If 2D and 1D netCDF input files are provided, they will first be 
+        If 2D and 1D netCDF input files are provided, they will first be
         converted to csv files. Once csv files are present, the original
-        netCDF files are no longer used. In that case, the arguments 
-        to `path_1d` and `path_2d` should be `None`. 
+        netCDF files are no longer used. In that case, the arguments
+        to `path_1d` and `path_2d` should be `None`.
 
 
     Example usage:
@@ -1612,8 +1539,8 @@ class Compare1D2D(ModelOutputReader):
         path_1d: path to SOBEK dimr directory
         path_2d: path to his nc file
         routes: list of branch abbreviations, e.g. ['NR', 'LK']
-        start_time: start time for plotting and analytics. Use this to crop the time to prevent initalisation from affecting statistics. 
-        stop_time: stop time for plotting and analytics. 
+        start_time: start time for plotting and analytics. Use this to crop the time to prevent initalisation from affecting statistics.
+        stop_time: stop time for plotting and analytics.
         style: `PlotStyles` style
     """
 
@@ -1622,15 +1549,17 @@ class Compare1D2D(ModelOutputReader):
     def __init__(
         self,
         project: Project,
-        path_1d: Union[Path, str] | None = None,
-        path_2d: Union[Path, str] | None = None,
+        path_1d: Path | str | None = None,
+        path_2d: Path | str | None = None,
         routes: List[List[str]] | None = None,
-        start_time: Union[None, datetime] = None,
-        stop_time: Union[None, datetime] = None,
-        style: str = 'sito',
+        start_time: None | datetime = None,
+        stop_time: None | datetime = None,
+        style: str = "sito",
     ):
         if project:
-            super().__init__(logger=project.get_logger(), start_time=start_time, stop_time=stop_time)
+            super().__init__(
+                logger=project.get_logger(), start_time=start_time, stop_time=stop_time
+            )
             self.output_path = project.get_output_directory()
         else:
             super().__init__()
@@ -1638,12 +1567,19 @@ class Compare1D2D(ModelOutputReader):
         if isinstance(path_1d, (Path, str)) and Path(path_1d).is_file():
             self.path_flow1d = path_1d
         else:
-            self.set_logger_message(f'1D netCDF file does not exist or is not provided. Input provided: {path_1d}.', 'debug')
+            self.set_logger_message(
+                f"1D netCDF file does not exist or is not provided. Input provided: {path_1d}.",
+                "debug",
+            )
         if isinstance(path_1d, (Path, str)) and Path(path_2d).is_file():
             self.path_flow2d = path_2d
         else:
-            self.set_logger_message(f'2D netCDF file does not exist or is not provided. Input provided: {path_2d}.', 'debug')
+            self.set_logger_message(
+                f"2D netCDF file does not exist or is not provided. Input provided: {path_2d}.",
+                "debug",
+            )
 
+        # Defaults
         self.routes = routes
         self.statistics = None
         self._data_1D_H: pd.DataFrame = None
@@ -1665,7 +1601,7 @@ class Compare1D2D(ModelOutputReader):
 
         self.read_all_data()
         self.digitize_data()
-        
+
         # create output folder
         output_dirs = [
             "figures/longitudinal",
@@ -1716,7 +1652,7 @@ class Compare1D2D(ModelOutputReader):
     @property
     def colorscheme(self):
         return self._colorscheme
-    
+
     def digitize_data(self):
         if self.file_1D_H_digitized.is_file():
             self.set_logger_message("Using existing digitized file for 1d")
@@ -1800,7 +1736,9 @@ class Compare1D2D(ModelOutputReader):
 
         # sort data
         sorted_indices = np.argsort(routekms)
-        sorted_stations = [stations[i] for i in sorted_indices if routekms[i] is not np.nan]
+        sorted_stations = [
+            stations[i] for i in sorted_indices if routekms[i] is not np.nan
+        ]
         sorted_rkms = [routekms[i] for i in sorted_indices if routekms[i] is not np.nan]
 
         # sort lmw stations
@@ -1814,27 +1752,23 @@ class Compare1D2D(ModelOutputReader):
         Creates and output a file `error_statistics.csv', which is a
         comma-seperated file with the following columns:
 
-        ,bias,rkm,branch,is_lmw,std,mae
+        ,bias,rkm,branch,is_lmw,std,mae,max13,last25
 
         with for each station:
-        
+
         - bias = bias, mean error
         - rkm = river kilometer of the station
         - branch = name of 1D branch on which the station lies
-        - is_lmw = if "LMW" is in the name of station, True. 
+        - is_lmw = if "LMW" is in the name of station, True.
         - std = standard deviation of the rror
         - mae = mean absolute error of the error
 
         """
 
-        if self.statistics == None:
-            self.statistics = self._compute_statistics()
+        self.statistics = self._compute_statistics()
 
         statfile = self.output_path.joinpath(file_path).with_suffix(".csv")
         sumfile = self.output_path.joinpath(file_path + "_summary").with_suffix(".csv")
-
-        if self.statistics is None:
-            return
 
         # all statistics
         self.statistics.to_csv(statfile)
@@ -1852,20 +1786,22 @@ class Compare1D2D(ModelOutputReader):
                     f"{branch},{bbias:.2f}±({bstd:.2f}), {lmw_bias:.2f}±({lmw_std:.2f})\n"
                 )
 
-    def figure_at_station(self, station: str, func:str="time", savefig:bool=True) -> FigureOutput:
+    def figure_at_station(
+        self, station: str, func: str = "time", savefig: bool = True
+    ) -> FigureOutput:
         """
         Creates a figure with the timeseries at a single observation station.
 
         ``` py
-        
+
         ```
 
         Parameters:
             station: name of station. use `stations` method to list all station names
             func: use `time` for a timeseries and `qh` for rating curve
             savefig: if True, saves to png. If False, returned FigureOutput
-        
-        
+
+
 
         """
 
@@ -1895,18 +1831,15 @@ class Compare1D2D(ModelOutputReader):
                 ax.set_ylabel("Waterstand [m+NAP]")
                 error_ax.plot(
                     self._qsteps,
-                    self._data_1D_H_digitized[station] - self._data_2D_H_digitized[station],
+                    self._data_1D_H_digitized[station]
+                    - self._data_2D_H_digitized[station],
                     ".",
                     color=self._color_error,
                 )
             case "time":
-                ax.plot(self.data_2D_H[station], "--", 
-                        linewidth=2,
-                        label="2D")
-                ax.plot(self.data_1D_H[station], "-", 
-                        linewidth=2,
-                        label="1D")
-                
+                ax.plot(self.data_2D_H[station], "--", linewidth=2, label="2D")
+                ax.plot(self.data_1D_H[station], "-", linewidth=2, label="1D")
+
                 ax.set_ylabel("Waterstand [m+NAP]")
                 ax.set_title(f"{station}\nTijdreeks")
 
@@ -1926,13 +1859,14 @@ class Compare1D2D(ModelOutputReader):
             f"MAE={stats['mae']:.2f} m",
         ]
         stats_handles = [mpatches.Patch(color="white")] * len(stats_labels)
-        
+
         # Style
-        fig, lgd = PlotStyles.apply(fig=fig, 
-                                    style=self._plotstyle,
-                                    use_legend=True, 
-                                    extra_labels=[stats_handles, stats_labels]
-                                )
+        fig, lgd = PlotStyles.apply(
+            fig=fig,
+            style=self._plotstyle,
+            use_legend=True,
+            extra_labels=[stats_handles, stats_labels],
+        )
 
         self._style_error_axes(error_ax, ylim=[-1, 1])
 
@@ -1940,7 +1874,9 @@ class Compare1D2D(ModelOutputReader):
 
         if savefig:
             fig.savefig(
-                self.output_path.joinpath("figures/stations").joinpath(f"{station}.png"),
+                self.output_path.joinpath("figures/stations").joinpath(
+                    f"{station}.png"
+                ),
                 bbox_extra_artists=[lgd],
                 bbox_inches="tight",
             )
@@ -1948,7 +1884,9 @@ class Compare1D2D(ModelOutputReader):
         else:
             return FigureOutput(fig=fig, axes=ax, legend=lgd)
 
-    def _style_error_axes(self, ax, ylim: List[float] = [-0.5, 0.5], ylabel:str="1D-2D [m]"):
+    def _style_error_axes(
+        self, ax, ylim: List[float] = [-0.5, 0.5], ylabel: str = "1D-2D [m]"
+    ):
         ax.set_ylim(ylim)
         ax.set_ylabel(ylabel)
         ax.spines["right"].set_edgecolor(self._color_error)
@@ -1959,10 +1897,10 @@ class Compare1D2D(ModelOutputReader):
         """
         Computes statistics for the difference between 1D and 2D water levels
 
-        Returns DataFrame with 
+        Returns DataFrame with
             columns: rkm, branch, is_lmw, bias, std, mae
             rows: observation stations
-    
+
         """
 
         diff = self.data_1D_H - self.data_2D_H
@@ -1982,6 +1920,21 @@ class Compare1D2D(ModelOutputReader):
         stats["std"] = diff.std()
         stats["mae"] = diff.abs().mean()
 
+        stats["1D_last3"] = self._apply_stat(self.data_1D_H, stat="last3")
+        stats["1D_last25"] = self._apply_stat(self.data_1D_H, stat="last25")
+        stats["1D_max3"] = self._apply_stat(self.data_1D_H, stat="max3")
+        stats["1D_max13"] = self._apply_stat(self.data_1D_H, stat="max13")
+
+        stats["2D_last3"] = self._apply_stat(self.data_2D_H, stat="last3")
+        stats["2D_last25"] = self._apply_stat(self.data_2D_H, stat="last25")
+        stats["2D_max3"] = self._apply_stat(self.data_2D_H, stat="max3")
+        stats["2D_max13"] = self._apply_stat(self.data_2D_H, stat="max13")
+
+        stats["diff_last3"] = self._apply_stat(diff, stat="last3")
+        stats["diff_last25"] = self._apply_stat(diff, stat="last25")
+        stats["diff_max3"] = self._apply_stat(diff, stat="max3")
+        stats["diff_max13"] = self._apply_stat(diff, stat="max13")
+
         return stats
 
     def _get_statistics(self, station):
@@ -1990,7 +1943,7 @@ class Compare1D2D(ModelOutputReader):
         return self.statistics.loc[station]
 
     def figure_compare_discharge_at_stations(
-        self, stations: List[str], title: str = "no_title", savefig:bool=True
+        self, stations: List[str], title: str = "no_title", savefig: bool = True
     ) -> FigureOutput | None:
         """
         Like `Compare1D2D.figure_at_station`, but compares discharge
@@ -2018,12 +1971,11 @@ class Compare1D2D(ModelOutputReader):
 
         if len(stations) != 2:
             print("error: must define 2 stations")
-        
+
         linestyles_2d = ["-", "--"]
         for j, station in enumerate(stations):
-
             if station not in self.stations():
-                self.set_logger_message(f"{station} not known", 'warning')
+                self.set_logger_message(f"{station} not known", "warning")
 
             # tijdserie
             axs[0].plot(
@@ -2048,14 +2000,14 @@ class Compare1D2D(ModelOutputReader):
         )
 
         # discharge distribution
-        
+
         Q2D = self.data_2D_Q[stations]
         Q1D = self.data_1D_Q[stations]
         axs[1].plot(
             Q2D.sum(axis=1),
             (Q2D.iloc[:, 0] / Q2D.sum(axis=1)) * 100,
             linewidth=2,
-            linestyle='--',
+            linestyle="--",
         )
         axs[1].plot(
             Q1D.sum(axis=1),
@@ -2067,7 +2019,7 @@ class Compare1D2D(ModelOutputReader):
             Q2D.sum(axis=1),
             (Q2D.iloc[:, 1] / Q2D.sum(axis=1)) * 100,
             linewidth=2,
-            linestyle='--',
+            linestyle="--",
         )
         axs[1].plot(
             Q1D.sum(axis=1),
@@ -2152,10 +2104,10 @@ class Compare1D2D(ModelOutputReader):
 
         for day in moments:
             h1d = self.get_data_along_route_for_time(
-                    data=self.data_1D_H,
-                    route=route,
-                    time_index=self._get_nearest_time(data=self.data_1D_H, date=day),
-                )
+                data=self.data_1D_H,
+                route=route,
+                time_index=self._get_nearest_time(data=self.data_1D_H, date=day),
+            )
 
             h2d = self.get_data_along_route_for_time(
                 data=self.data_2D_H,
@@ -2163,74 +2115,85 @@ class Compare1D2D(ModelOutputReader):
                 time_index=self._get_nearest_time(data=self.data_2D_H, date=day),
             )
 
-            lines.append({"1D": h1d, 
-                          "2D": h2d,
-                          "label": f"{day:%b-%d}"})
+            lines.append({"1D": h1d, "2D": h2d, "label": f"{day:%b-%d}"})
 
         return lines
 
-    def _last25(self, route: List[str]) -> List[Dict[str, pd.Series | str]]:
-        return self._stat_func(route, stat="last25")
-    
-    def _max13(self, route: List[str]) -> List[Dict[str, pd.Series | str]]:
-        return self._stat_func(route, stat="max13")
-    
-    def _stat_func(self, route: List[str], stat:str="max13") -> List[Dict[str, pd.Series | str]]:
+    @staticmethod
+    def _apply_stat(df, stat: str = "max13"):
         """
         Applies column-wise "last25" or "max13" on 1D and 2D data
         """
-        def apply_stat(df, stat:str="max13"):
-            columns = df.columns
-            values = []
-            for column in columns:
-                try:
-                    af = df[column].iloc[:,0]
-                except pd.errors.IndexingError:
-                    af = df[column]
-                match stat:
-                    case "max13":
-                        values.append(af.nlargest(13).mean())
-                    case "last25":
-                        values.append(af[-25:].mean())
-            return pd.Series(index=columns, data=values)
-        
-        
-        max13_1d = apply_stat(self.get_data_along_route(self.data_1D_H, route=route).T, stat=stat)
-        max13_2d = apply_stat(self.get_data_along_route(self.data_2D_H, route=route).T, stat=stat)
+        columns = df.columns
+        values = []
+        for column in columns:
+            try:
+                af = df[column].iloc[:, 0]
+            except pd.errors.IndexingError:
+                af = df[column]
+            match stat:
+                case "max3":
+                    values.append(af.nlargest(3).mean())
+                case "max13":
+                    values.append(af.nlargest(13).mean())
+                case "last3":
+                    values.append(af[-3:].mean())
+                case "last25":
+                    values.append(af[-25:].mean())
+        return pd.Series(index=columns, data=values)
 
-        return [{"1D": max13_1d, 
-                 "2D": max13_2d,
-                 "label": stat}]
+    def _stat_func(
+        self, route: List[str], stat: str = "max13"
+    ) -> List[Dict[str, pd.Series | str]]:
+        """
+        Applies column-wise "last25" or "max13" on 1D and 2D data
+        """
+        max13_1d = self._apply_stat(
+            self.get_data_along_route(self.data_1D_H, route=route).T, stat=stat
+        )
+        max13_2d = self._apply_stat(
+            self.get_data_along_route(self.data_2D_H, route=route).T, stat=stat
+        )
+
+        return [{"1D": max13_1d, "2D": max13_2d, "label": stat}]
 
     def _lmw_func(self, station_names, station_locs):
         st_names = []
         st_locs = []
         prev_loc = -9999
         for name, loc in zip(station_names, station_locs):
-            if "lmw" not in name.lower(): continue
-            if abs(prev_loc - loc) < 5: 
-                self.set_logger_message(f"skipped labelling {name} because too close to previous station", "warning")
+            if "lmw" not in name.lower():
+                continue
+            if abs(prev_loc - loc) < 5:
+                self.set_logger_message(
+                    f"skipped labelling {name} because too close to previous station",
+                    "warning",
+                )
                 continue
             st_names.append(name.split("_")[-1])
             st_locs.append(loc)
             prev_loc = loc
 
         return st_names, st_locs
-    
+
     def figure_longitudinal_time(self, route: List[str]) -> None:
-        warnings.warn("Method figure_longitudinal_time will be removed in the future. Use figure_longitudinal(route, stat=\"time\") instead ",
-                      category=DeprecationWarning)
-        
+        warnings.warn(
+            'Method figure_longitudinal_time will be removed in the future. Use figure_longitudinal(route, stat="time") instead ',
+            category=DeprecationWarning,
+        )
+
         self.figure_longitudinal(route, stat="time")
-    
-    def figure_longitudinal(self, 
-                            route: List[str], 
-                            stat: str = 'time',
-                            savefig: bool=True,
-                            label: str = '',
-                            add_to_fig: FigureOutput | None = None) -> FigureOutput | None:
+
+    def figure_longitudinal(
+        self,
+        route: List[str],
+        stat: str = "time",
+        savefig: bool = True,
+        label: str = "",
+        add_to_fig: FigureOutput | None = None,
+    ) -> FigureOutput | None:
         """
-        Creates a figure along a `route`. Content of figure depends 
+        Creates a figure along a `route`. Content of figure depends
         on `stat`. Figures are saved to `[Compare1D2D.output_path]/figures/longitudinal`
 
         Example output:
@@ -2239,38 +2202,36 @@ class Compare1D2D(ModelOutputReader):
 
         Parameters:
             route: List of branches (e.g. ['NK', 'LK'])
-            stat: what type of longitudinal plot to make. Options are: 
+            stat: what type of longitudinal plot to make. Options are:
                 - time
                 - last25
                 - max13
-            savefig: if true, figure is saved to png file. If false, `FigureOutput` 
+            savefig: if true, figure is saved to png file. If false, `FigureOutput`
                      returned, which is input for `add_to_fig`
-            add_to_fig: if `FigureOutput` is provided, adds content to figure.  
+            add_to_fig: if `FigureOutput` is provided, adds content to figure.
         """
         # Get route and stations along route
         routename = "-".join(route)
-        
-        match stat:
-            case 'time':
-                datafunc = self._time_func
-            case "last25":
-                datafunc = self._last25
-            case "max13":
-                datafunc = self._max13
 
         # Make configurable in the future
         labelfunc = self._lmw_func
-        
+
         # TIME FUNCTION plot line every delta_days days
-        lines = datafunc(route=route)
-        
+        match stat:
+            case "time":
+                lines = self._time_func(route=route)
+            case y if y in ["last3", "last25", "max3", "max13"]:
+                lines = self._stat_func(stat=y, route=route)
+            case _:
+                raise KeyError(f"{stat} is unknown statistics")
+
         # Get figure object
         if add_to_fig is None:
             fig, axs = plt.subplots(2, 1, figsize=(12, 12))
         else:
             fig = add_to_fig.fig
             axs = add_to_fig.axes
-    
+
         # Filtering which stations to plot
         if add_to_fig is None:
             station_names, station_locs, _ = self.get_route(route)
@@ -2291,10 +2252,8 @@ class Compare1D2D(ModelOutputReader):
                 )
 
         for line in lines:
+            axs[0].plot(line.get("1D"), label=f"{label} {line.get('label')}")
 
-            axs[0].plot(line.get("1D"), 
-                        label=f"{label} {line.get('label')}")
-            
             axs[0].set_ylabel("Waterstand [m+NAP]")
             routestr = "-".join(route)
 
@@ -2302,13 +2261,12 @@ class Compare1D2D(ModelOutputReader):
 
             axs[1].plot(line.get("1D") - line.get("2D"))
             axs[1].set_ylabel("Verschil 1D-2D [m]")
-            
+
             for ax in axs:
                 ax.set_xlabel("Rivierkilometers")
                 ax.xaxis.set_major_locator(MultipleLocator(20))
                 ax.xaxis.set_minor_locator(MultipleLocator(10))
 
-        
         axs[1].set_ylim(-1, 1)
         fig, lgd = PlotStyles.apply(fig=fig, style=self._plotstyle, use_legend=True)
 
@@ -2322,7 +2280,7 @@ class Compare1D2D(ModelOutputReader):
             plt.close()
 
         else:
-            return FigureOutput(fig=fig, axes = axs, legend=lgd)
+            return FigureOutput(fig=fig, axes=axs, legend=lgd)
 
     def figure_longitudinal_rating_curve(self, route: List[str]) -> None:
         """
@@ -2347,9 +2305,11 @@ class Compare1D2D(ModelOutputReader):
 
         discharge_steps = list(self._iter_discharge_steps(h1d.T, n=8))
         if len(discharge_steps) < 1:
-            self.set_logger_message("There is too little data to plot a QH relationship", 'error')
-            return 
-        
+            self.set_logger_message(
+                "There is too little data to plot a QH relationship", "error"
+            )
+            return
+
         # Plot LMW station locations
         fig, axs = plt.subplots(2, 1, figsize=(12, 10))
         prevloc = -9999
@@ -2389,7 +2349,7 @@ class Compare1D2D(ModelOutputReader):
 
         # style figure
         axs[1].set_ylim(-1, 1)
-        fig, lgd = PlotStyles.apply(fig,style=self._plotstyle, use_legend=True)
+        fig, lgd = PlotStyles.apply(fig, style=self._plotstyle, use_legend=True)
         plt.tight_layout()
         fig.savefig(
             self.output_path.joinpath(
@@ -2527,636 +2487,3 @@ class Compare1D2D(ModelOutputReader):
         except exception as e:
             return np.nan
 
-
-class Network1D:
-    """
-    Class to parse a 1D network. Provides functions to
-    visualise the network and compare two Network1D
-    objects.
-    """
-
-    def __init__(
-        self,
-        networkdefinitionfile: Union[Path, str],
-        observationpointfile: Union[Path, str],
-        structuresfile: Union[Path, str],
-        crosssectiondefinitionfile: Union[Path, str],
-        crosssectionlocationfile: Union[Path, str],
-    ):
-
-        self._ignore_branchlist = ["ark_betuwepand", "twentekanaal"]
-        self._branch_chainage_rkm: Dict[List[Tuple[float]]] = dict()
-        self._regex_rkm = re.compile(r"(?<=_)(\d+.\d+)")
-        self._regex_branch = re.compile(r"([a-z]+)")
-        self._network = self.parse_network(networkdefinitionfile)
-        self._observationpoints = self.parse_observationpoint(observationpointfile)
-        self._structures = self.parse_structures(structuresfile)
-        self._crosssectiondefinitions = self.parse_crosssections(
-            crosssectiondefinitionfile
-        )
-        self._crosssectionlocations = self.parse_crosssections(crosssectionlocationfile)
-
-        self._name = "Name not set"
-
-    @property
-    def name(self):
-        return self._name
-
-    @name.setter
-    def name(self, value: str):
-        if not isinstance(value, str):
-            raise TypeError("Name must be string")
-        self._name = value
-
-    @property
-    def unique_branches(self):
-        ub = list()
-        for branch in self.branches:
-            ub_id = self._regex_branch.search(branch)
-            if not ub_id:
-                continue
-            if ub_id[0] not in ub:
-                ub.append(ub_id[0])
-
-        return ub
-
-    @property
-    def branches(self) -> Generator[str, None, None]:
-        for branch in self._network.sections.get("branch"):
-            yield branch
-
-    @property
-    def nodes(self) -> Generator[str, None, None]:
-        for node in self._network.sections.get("node"):
-            yield node
-
-    @property
-    def observationpoints(self):
-        return self._observationpoints.sections.get("observationpoint")
-
-    @property
-    def crosssections(self):
-        return self._crosssectiondefinitions.sections.get("definition")
-
-    @property
-    def structures(self):
-        return self._structures.sections.get("structure")
-
-    def get_crosssection_on_branch(self, branch: str):
-        """
-        Returns a generator that yields data on
-        location and definition for each cross-section
-        on a branch.
-
-        Arguments:
-            Branch (str): name of branch
-        """
-        for css in self._crosssectionlocations.sections["crosssection"]:
-            if css.get("branchid").value == branch:
-                yield {
-                    "id": css.get("id").value,
-                    "chainage": css.get("chainage").value,
-                    "definition": self.get_crosssection_definition(css.get("id").value),
-                }
-
-    def get_crosssection_definition(self, name: str) -> DeltaresSection:
-        """
-        Returns the definition of a cross-section
-
-        Arguments
-            name: name of the cross-section as defined in the configuration files
-        """
-        for css in self._crosssectiondefinitions.sections["definition"]:
-            if css.get("id").value == name:
-                return css
-
-    def get_crosssection_rkm_on_branch(self, branch: str) -> np.ndarray:
-        """
-        Returns an array with each row a location on the branch and columns:
-
-        [river kilometre, cross-section name, cross-section chainage]
-
-        Argument:
-            branch: branchname
-        """
-        css_info = []
-        for css in self.get_crosssection_on_branch(branch):
-            chainage = css.get("chainage")
-            name = css["id"]
-            rkm = self.chainage_to_rkm(branch, chainage)
-            css_info.append((rkm, chainage, name))
-
-        return np.array(css_info)
-
-    def get_maximum_width_for_branch(self, branch: str) -> np.ndarray:
-        """
-        Returns an array with each row a location on the branch and columns:
-
-        [river kilometre, max. total width, max. flow with]
-
-        Argument:
-            branch: branchname
-        """
-        total_width = []
-        for css in self.get_crosssection_on_branch(branch):
-            tw = css.get("definition").get("totalwidths").value[-1]
-            fw = css.get("definition").get("flowwidths").value[-1]
-            rkm = self.chainage_to_rkm(branch, css.get("chainage"))
-            total_width.append((rkm, tw, fw))
-
-        return np.array(total_width)
-
-    def get_section_width_for_branch(self, branch: str) -> np.ndarray:
-        """
-        Returns an array with each row a location on the branch and in the columns
-        the coordinate and width of the 'roughness sections':
-
-        [river kilometre, main, floodplain1, floodplain2]
-
-        Argument:
-            branch: branchname
-        """
-        section_width = []
-        for css in self.get_crosssection_on_branch(branch):
-            mw = css.get("definition").get("main").value
-            f1w = css.get("definition").get("floodplain1").value
-            f2w = css.get("definition").get("floodplain2").value
-
-            rkm = self.chainage_to_rkm(branch, css.get("chainage"))
-
-            section_width.append((rkm, mw, f1w, f2w))
-        return np.array(section_width)
-
-    def get_sd_for_branch(self, branch: str) -> np.ndarray:
-        """
-        Returns an array with each row a location on the branch and in the columns
-        the coordinate and crest height of the summer dike
-
-        [river kilometre, crest height summer dike, total area behind summerdike]
-
-        Argument:
-            branch: branchname
-        """
-
-        sd = []
-        for css in self.get_crosssection_on_branch(branch):
-            cl = css.get("definition").get("sd_crest").value
-            ta = css.get("definition").get("sd_totalarea").value
-            rkm = self.chainage_to_rkm(branch, css.get("chainage"))
-            sd.append((rkm, cl, ta))
-        return np.array(sd)
-
-    def get_bedlevel_for_branch(self, branch: str):
-        bedlevel = []
-        for css in self.get_crosssection_on_branch(branch):
-            bl = min(css.get("definition").get("levels").value)
-            rkm = self.chainage_to_rkm(branch, css.get("chainage"))
-            bedlevel.append((rkm, bl))
-        return np.array(bedlevel)
-
-    def get_structures_on_branch(self, branch: str, only_compounds: bool = False):
-        compounds = list()
-        for structure in self.structures:
-            if structure.get("branchid").value == branch:
-                if structure.get("compound").value in compounds:
-                    pass
-                else:
-                    compounds.append(structure.get("compound").value)
-                    yield structure
-
-    def get_observationpoint_on_branch(self, branch: str):
-        for op in self.observationpoints:
-            if op.get("branchid").value == branch:
-                yield op
-
-    def get_outgoing_branch(self, node: str):
-        for branch in self.branches:
-            if branch.get("fromnode").value == node:
-                yield branch
-
-    def get_incoming_branch(self, node: str):
-        for branch in self.branches:
-            if branch.get("tonode").value == node:
-                yield branch
-
-    def get_branch(self, id):
-        for branch in self._network.sections.get("branch"):
-            if branch.get("id").value == id:
-                return branch
-
-    def get_branch_length(self, branch: str) -> float:
-        return self.get_branch(branch)["gridpointoffsets"].value[-1]
-
-    def parse_network(self, networkdefinitionfile):
-        data = self._read_deltares_ini(networkdefinitionfile)
-        data.sections["node"] = self._key_to_float(data.sections["node"], ["x", "y"])
-        return data
-
-    def parse_observationpoint(self, observationpointfile):
-        data = self._read_deltares_ini(observationpointfile)
-        data.sections["observationpoint"] = self._key_to_float(
-            data.sections.get("observationpoint"), ["chainage"]
-        )
-
-        for obs in data.sections["observationpoint"]:
-            rkm = self._regex_rkm.search(obs.get("id").value)
-            if rkm:
-                obs["rkm"] = float(rkm[0])
-                self._append_to_bcrkm(
-                    obs["branchid"].value, obs["chainage"].value, obs["rkm"]
-                )
-
-        return data
-
-    def parse_structures(self, structuresfile):
-        data = self._read_deltares_ini(structuresfile)
-        data.sections["structure"] = self._key_to_float(
-            data.sections.get("structure"), ["chainage"]
-        )
-        return data
-
-    def parse_crosssections(self, crosssectiondefinitionfile):
-        data = self._read_deltares_ini(crosssectiondefinitionfile)
-        return data
-
-    def chainage_to_rkm(
-        self, branch: str, chainage: Union[float, Iterable[float]]
-    ) -> Union[float, List[float]]:
-        xy = np.array(self._branch_chainage_rkm[branch])
-        f = interp1d(xy[:, 0], xy[:, 1], fill_value="extrapolate")
-        if not hasattr(chainage, "__iter__"):
-            return f(chainage)
-
-        out = []
-        for ch in chainage:
-            out.append(f(ch))
-        return out
-
-    def figure_network_along_route(
-        self, route: Tuple[str], output_file: Union[str, Path]
-    ):
-        """
-        Plots the network along a route. The
-        """
-        _color_width = "navy"
-        fig, ax = plt.subplots(1, figsize=(15, 8))
-        ax2 = ax.twinx()
-        labels = dict(
-            struct=[None, "kunstwerk"],
-            node=[None, "knoop"],
-            summerdike=[None, "zomerdijkhoogte"],
-            bed=[None, "bodemhoogte"],
-            width=[None, "Zomerbedbreedte"],
-            observationpoints=[None, "Meetstation"],
-        )
-
-        for branch in self.branches:
-            if branch.get("id").value.startswith(route):
-                branch_labels = self._plot_branch(ax=ax, ax2=ax2, branch=branch)
-                for key in labels:
-                    if branch_labels[key] is not None:
-                        labels[key][0] = branch_labels[key]
-
-        for key in labels:
-            if labels[key][0] is None:
-                break
-            labels[key][0].set_label(labels[key][1])
-
-        # style
-        ax.set_title(f"schematisatie\n{'-'.join(route)}")
-        ax.set_xlabel("rivierkilometer")
-
-        ax2.set_ylabel("Breedte [m]")
-        ax.set_ylabel("m+nap")
-        # ax.set_xlim(e._extent_rkm())\
-        ax.set_ylim(-8, 30)
-        ax2.spines["right"].set_color(_color_width)
-        ax2.yaxis.label.set_color(_color_width)
-        ax2.tick_params(axis="y", colors=_color_width)
-        ax2.set_ylim(0, 1000)
-        ax2.grid(False)
-
-        PlotStyles.apply()
-        fig, lgd = PlotStyles.apply(fig)
-
-        plt.savefig(
-            output_file,
-            bbox_extra_artists=[lgd],
-            bbox_inches="tight",
-        )
-
-    def figure_difference_with_other_network(
-        self, route: Tuple[str], network2: "Network1D", output_file: Union[str, Path]
-    ):
-        """
-        Generates difference figures between two networks
-        """
-
-        fig, axs = plt.subplots(2, 3, figsize=(15, 7))
-
-        variables = [
-            ("Bodemhoogte", 0, 1),
-            ("Breedte zomerbed", 1, 1),
-            ("Zomerdijkhoogte", 2, 1),
-            ("sd_total_volume", 2, 2),
-            ("max_flow_width", 5, 2),
-        ]
-
-        # get data
-        data_1 = None
-        data_2 = None
-        for branch in self.branches:
-            branchname = branch.get("id").value
-            if branchname.startswith(route):
-                data_1 = self._get_data_for_branch(branchname)  # bl1, tw1, cl1, l1
-                data_2 = network2._get_data_for_branch(branchname)
-
-        if (data_1 is None) or (data_2 is None):
-            raise KeyError(
-                "no corresponding branches found for route in of the networks"
-            )
-
-        # output to csv
-        output_file_csv = Path(output_file).with_suffix(".csv")
-        with open(output_file_csv, "w") as f:
-            # name, index of output from self._get_data_for_branch, index of column within that output
-
-            # write header
-            header = "css,rkm," + ",".join(
-                f"{v[0]}_{self.name},{v[0]}_{network2.name},{v[0]}_diff"
-                for v in variables
-            )
-            f.write(header + "\n")
-
-            for i in range(data_1[0].shape[0]):
-                rkm = data_1[0][i][0]
-                info = (data_1[4][i][2], data_2[4][i][2])
-                f.write(f"{info[0]},{rkm}")
-                for v, j, k in variables:
-                    f.write(
-                        f",{data_1[j][i][k]},{data_2[j][i][k]},{data_1[j][i][k]-data_2[j][i][k]}"
-                    )
-                f.write("\n")
-        # plot bedlevel
-        for i, v in enumerate(variables[:3]):
-            label = v[0]
-            (hBed,) = axs[0, i].plot(
-                data_1[i][:, 0], data_1[i][:, 1], "-k", linewidth=2, label=self.name
-            )
-            (hBed,) = axs[0, i].plot(
-                data_2[i][:, 0],
-                data_2[i][:, 1],
-                "--b",
-                linewidth=1,
-                label=network2.name,
-            )
-
-            (hdiff,) = axs[1, i].plot(
-                data_2[i][:, 0], data_1[i][:, 1] - data_2[i][:, 1], "--o", linewidth=2
-            )
-
-        PlotStyles.apply()
-
-        fig, lgd = PlotStyles.apply(fig)
-        for ax in axs[0]:
-            ax.set_xticklabels([])
-        for ax in axs[1]:
-            ax.set_ylabel("Verschil [m]")
-            ax.set_xlabel("Rivierkilometer")
-
-        suptitle_label = route[0] if len(route) == 1 else "-".join(route)
-        suptitle = fig.suptitle(suptitle_label, y=1.05)
-
-        plt.subplots_adjust(hspace=0)
-        plt.savefig(
-            output_file,
-            bbox_extra_artists=[lgd, suptitle],
-            bbox_inches="tight",
-        )
-
-    def _plot_node(self, ax, node, chainage, branchname):
-        _annotate_y = 20
-        (h,) = ax.plot(
-            self.chainage_to_rkm(branchname, chainage), _annotate_y, "ok", markersize=10
-        )
-
-        return node, h
-
-    def _plot_in_out_branches(self, ax, node, branchname):
-        _annotate_y = 20
-        arrow_out = dict(
-            horizontalalignment="center",
-            fontsize=14,
-            color="b",
-            backgroundcolor="w",
-            arrowprops=dict(
-                arrowstyle="-|>",
-                linewidth=2,
-                linestyle="-",
-                color="#0d38e0",
-                connectionstyle="arc3",
-            ),
-        )
-        arrow_in = dict(
-            horizontalalignment="center",
-            color="b",
-            fontsize=14,
-            backgroundcolor="w",
-            arrowprops=dict(
-                arrowstyle="<|-",
-                linestyle="-",
-                linewidth=2,
-                color="#0d38e0",
-                connectionstyle="arc3",
-            ),
-        )
-        for branch_in in self.get_incoming_branch(node):
-            if not branch_in.get("id").value.startswith(branchname):
-                ax.annotate(
-                    branch_in.get("id").value.upper(),
-                    xy=(self.chainage_to_rkm(branchname, 0), _annotate_y),
-                    xytext=(self.chainage_to_rkm(branchname, 0), _annotate_y + 5),
-                    **arrow_out,
-                )
-
-        for branch_in in self.get_outgoing_branch(node):
-            if not branch_in.get("id").value.startswith(branchname):
-                ax.annotate(
-                    branch_in.get("id").value.upper(),
-                    xy=(self.chainage_to_rkm(branchname, 0), _annotate_y),
-                    xytext=(self.chainage_to_rkm(branchname, 0), _annotate_y - 5),
-                    **arrow_in,
-                )
-
-    def _get_data_for_branch(self, branchname: str) -> Tuple:
-        """
-        Returns bedlevel, section_width, crest_summer_dike, length and css_info
-        in one tuple
-        """
-        bedlevel = self.get_bedlevel_for_branch(branchname)
-        section_width = self.get_section_width_for_branch(branchname)
-        max_width = self.get_maximum_width_for_branch(branchname)
-
-        length = self.get_branch_length(branchname)
-        css_info = self.get_crosssection_rkm_on_branch(branchname)
-
-        return bedlevel, section_width, crest_summer_dike, length, css_info, max_width
-
-    def _plot_branch(self, ax, ax2, branch):
-        branchname = branch.get("id").value
-        _color_width = "navy"
-        _annotate_y = 20
-        hStruct = None
-        hObs = None
-
-        bl, tw, cl, l, _, _ = self._get_data_for_branch(branchname)
-
-        # plot bedlevel
-        (hBed,) = ax.plot(bl[:, 0], bl[:, 1], "-k", linewidth=2)
-
-        # plot main section width
-        (hWidth,) = ax2.plot(tw[:, 0], tw[:, 1], "--", color=_color_width, linewidth=1)
-
-        # plot crest_level
-        mask = cl[:, 2] > 10
-        (hSD,) = ax.plot(cl[mask, 0], cl[mask, 1], "--", color="orange", linewidth=1)
-
-        # Plot branch
-        ax.plot(
-            [self.chainage_to_rkm(branchname, 0), self.chainage_to_rkm(branchname, l)],
-            [_annotate_y] * 2,
-            "-k",
-            linewidth=3,
-        )
-
-        # Plot nodes
-        node, hNode = self._plot_node(
-            ax=ax, node=branch.get("tonode").value, chainage=l, branchname=branchname
-        )
-        node, _ = self._plot_node(
-            ax=ax, node=branch.get("fromnode").value, chainage=0, branchname=branchname
-        )
-        self._plot_in_out_branches(ax=ax, node=node, branchname=branchname)
-
-        # Plot structures
-        for structure in self.get_structures_on_branch(branchname, only_compounds=True):
-            x = self.chainage_to_rkm(branchname, structure.get("chainage").value)
-            (hStruct,) = ax.plot(x, _annotate_y, "^", markersize=15, color="#b20000")
-            ax.text(
-                x,
-                _annotate_y - 1,
-                structure.get("compoundname").value.upper(),
-                color="#b20000",
-                fontsize=14,
-                rotation=-10,
-                verticalalignment="top",
-            )
-
-        # plot observationpoints
-        for observationpoint in self.get_observationpoint_on_branch(branchname):
-            if not observationpoint.get("branchid").value.startswith(branchname):
-                continue
-            oname = observationpoint.get("id").value
-            ochain = observationpoint.get("chainage").value
-            if "lmw" in oname:
-                orkm = self.chainage_to_rkm(branchname, ochain)
-
-                (hObs,) = ax.plot(
-                    orkm, _annotate_y, ".", color="#00cc96", markersize=15
-                )
-
-        return dict(
-            struct=hStruct,
-            node=hNode,
-            summerdike=hSD,
-            bed=hBed,
-            width=hWidth,
-            observationpoints=hObs,
-        )
-
-    def _append_to_bcrkm(self, branch, chainage, rkm):
-        if branch not in self._branch_chainage_rkm:
-            self._branch_chainage_rkm[branch] = list()
-        self._branch_chainage_rkm[branch].append((chainage, rkm))
-
-    def _read_deltares_ini(self, networkdefinitionfile):
-        return DeltaresConfig(networkdefinitionfile)
-
-    @staticmethod
-    def _key_to_float(data, keys: List[str]):
-        for node in data:
-            for key in keys:
-                node[key].value = float(node[key].value)
-        return data
-
-    def _extent_rkm(self):
-        rkm_min = 1e10
-        rkm_max = 1e-10
-        for branch, arr in self._branch_chainage_rkm.items():
-            if branch in self._ignore_branchlist:
-                continue
-            arr = np.array(arr)
-            rkm_min = min(rkm_min, min(arr[:, 1]))
-            rkm_max = max(rkm_max, max(arr[:, 1]))
-
-            print(f"branch {branch}: {rkm_min}, {rkm_max}")
-
-        return rkm_min, rkm_max
-
-
-class Convert2D:
-    """
-    Class to convert 2D input to 1D input
-    """
-
-    def _convert_bc(
-        self,
-        file2d: Union[str, Path],
-        file1d: Union[str, Path],
-        outputfile: Union[str, Path],
-        is_boundary: bool = False,
-    ):
-
-        bc1d = DeltaresConfig(file1d)
-
-        bc2d = DeltaresConfig(file2d)
-        if is_boundary:
-            bc1d = self._overwrite_matching(
-                bc1d, bc2d, "boundary", "forcing", truncate_2d=-5
-            )
-        else:
-            bc1d = self._overwrite_matching(
-                bc1d, bc2d, "lateraldischarge", "forcing", truncate_2d=40
-            )
-
-        bc1d.to_file(outputfile)
-
-    def _overwrite_matching(
-        self, bc1d, bc2d, sectionname_1d, sectionname_2d, truncate_2d: int = 40
-    ) -> DeltaresConfig:
-        # find matches=
-
-        names_2d = [
-            name[0][:truncate_2d]
-            for name in bc2d.list_parameters(sectionname_2d, "name")
-        ]
-        names_1d = [name[0] for name in bc1d.list_parameters(sectionname_1d, "name")]
-
-        # match 1D to 2D truncated
-        for index_1d, name_1d in enumerate(names_1d):
-            try:
-                index_2d = names_2d.index(name_1d)
-            except ValueError:
-                print(f"Warning: no match not found for {name_1d}")
-                continue
-
-            # overwrite data
-            bc1d.sections[sectionname_1d][index_1d].timeseries = bc2d.sections[
-                sectionname_2d
-            ][index_2d].timeseries
-            for key in ["function", "time-interpolation", "quantity", "unit"]:
-                bc1d.sections[sectionname_1d][index_1d].parameters[key] = bc2d.sections[
-                    sectionname_2d
-                ][index_2d].parameters[key]
-
-        return bc1d
