@@ -83,10 +83,10 @@ We use [mike](https://github.com/jimporter/mike) as a pre-processor for `mkdocs`
 for a new release, use the following line in a terminal:
 
 ``` bash
-poetry run mike deploy v2.3.0 latest -u
+poetry run mike deploy 2.3.0 latest -u
 ```
 
-This will build the documentation for a specific version (e.g. `v2.3.0`). The keyword
+This will build the documentation for a specific version (e.g. `2.3.0` for version v2.3.0). The keyword
 `latest` will set this to be the default version. The flag `-u` will overwrite any
 existing documentation for this versino. 
 
