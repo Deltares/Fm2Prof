@@ -905,23 +905,71 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Set up development environment">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#dependency-management" class="md-nav__link">
+    <span class="md-ellipsis">
+      Dependency management
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#virtual-environment-management" class="md-nav__link">
+    <span class="md-ellipsis">
+      Virtual environment management
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
-  <a href="#style-conventions" class="md-nav__link">
+  <a href="#style-documentation-conventions" class="md-nav__link">
     <span class="md-ellipsis">
-      Style conventions
+      Style &amp; documentation conventions
     </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#test-new-code" class="md-nav__link">
+  <a href="#testing" class="md-nav__link">
     <span class="md-ellipsis">
-      Test new code
+      Testing
     </span>
   </a>
+  
+    <nav class="md-nav" aria-label="Testing">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#locally-test" class="md-nav__link">
+    <span class="md-ellipsis">
+      Locally test
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#automatic-test" class="md-nav__link">
+    <span class="md-ellipsis">
+      Automatic test
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -936,20 +984,53 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#locally-build-executable" class="md-nav__link">
+  <a href="#locally-build-executable-optional" class="md-nav__link">
     <span class="md-ellipsis">
-      Locally build executable
+      Locally build executable (optional)
     </span>
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#making-a-new-release" class="md-nav__link">
+  <a href="#how-to-make-a-new-release" class="md-nav__link">
     <span class="md-ellipsis">
-      Making a new release
+      How to make a new release
     </span>
   </a>
+  
+    <nav class="md-nav" aria-label="How to make a new release">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#tag-your-version" class="md-nav__link">
+    <span class="md-ellipsis">
+      Tag your version
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#make-a-new-release" class="md-nav__link">
+    <span class="md-ellipsis">
+      Make a new release
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#update-the-documentation" class="md-nav__link">
+    <span class="md-ellipsis">
+      Update the documentation
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
         
@@ -998,27 +1079,70 @@
 
 
 <h1 id="contributing">Contributing</h1>
+<p>This is brief guide on how to contribute to the code. This guide is 
+written for Deltares developers. At the moment, we are not accepting 
+external pull requests. </p>
 <h2 id="set-up-development-environment">Set up development environment</h2>
-<h2 id="style-conventions">Style conventions</h2>
-<p>Please use <a href="https://mkdocstrings.github.io/griffe/docstrings/#google-style">Google-style docstring syntax</a></p>
-<h2 id="test-new-code">Test new code</h2>
-<p>To run tests locally, use pytest:</p>
+<h3 id="dependency-management">Dependency management</h3>
+<p>We use <a href="https://python-poetry.org/">poetry</a> to manage the package and dependencies. 
+Follow <a href="https://python-poetry.org/docs/#installation">their instructions</a> on how 
+to install poetry on your system. After that, installing all dependencies is as
+simple as </p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">poetry</span> <span class="n">install</span>
+</span></code></pre></div>
+<h3 id="virtual-environment-management">Virtual environment management</h3>
+<p>It is good practice to isolate your development environment from other python
+installations. There are various tools to do this. We recommend <code>pyenv</code> (for 
+Linux or MacOS) or <a href="https://github.com/pyenv-win/pyenv-win">pyenv-win</a> (for 
+Windows).</p>
+<h2 id="style-documentation-conventions">Style &amp; documentation conventions</h2>
+<p>We use <a href="https://github.com/astral-sh/ruff">ruff</a> for linting and code formatting. 
+Documentation is based on <a href="https://www.mkdocs.org/">mkdocs</a>] and <a href="https://mkdocstrings.github.io/#:~:text=mkdocstrings.%20Automatic%20documentation%20from%20sources,%20for">mkdocstringds</a>. Numpy, sphinx and google-style
+docstrings are supported, but when writing new code please use <a href="https://mkdocstrings.github.io/griffe/docstrings/#google-style">Google-style docstring syntax</a></p>
+<p>To support documentation for multiple versions, we use the <a href="https://github.com/jimporter/mike">mike</a> preprocessor. 
+See "How to make a new release" below on how to use mike. </p>
+<h2 id="testing">Testing</h2>
+<h3 id="locally-test">Locally test</h3>
+<p>To run tests locally, use <code>pytest</code>:</p>
 <p><code>poetry run pytest --cov=fm2prof</code></p>
 <p>To check coverage:</p>
 <p><code>poetry run pytest --cov=fm2prof</code></p>
+<h3 id="automatic-test">Automatic test</h3>
+<p>Automatic tests are run on each pull request and push. A PR cannot be merged
+unless all tests are passing. </p>
 <h2 id="deploying">Deploying</h2>
-<h3 id="locally-build-executable">Locally build executable</h3>
+<h3 id="locally-build-executable-optional">Locally build executable (optional)</h3>
 <p>To build a local version of an FM2PROF executable, run:</p>
 <p><code>poetry run pyinstaller FM2PROF_WINDOWS.spec</code></p>
-<h3 id="making-a-new-release">Making a new release</h3>
-<p>After merging a PR, make a new tag. Using version <code>v2.3.0</code> as an example;</p>
-<p><code>git tag v2.3.0</code></p>
-<p>Use Github interface to draft a new release. Attach the executable. Then, update the documentation:</p>
-<p><code>poetry run mike deploy v2.3.0 latest -u</code></p>
-<p>Checkout the documentation branch</p>
-<p><code>git checkout gh-pages</code></p>
-<p>and push changes to github</p>
-<p><code>git push</code></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Executables are no longer automatically made since fm2prof was published on pypi </p>
+</div>
+<h3 id="how-to-make-a-new-release">How to make a new release</h3>
+<p>Publishing a new release takes some steps. </p>
+<h4 id="tag-your-version">Tag your version</h4>
+<p>After merging a PR to <code>master</code>, first make a new tag. Using version <code>v2.3.0</code> as an example, 
+a tag can be made via the terminal:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>git<span class="w"> </span>tag<span class="w"> </span>v2.3.0
+</span></code></pre></div>
+<h4 id="make-a-new-release">Make a new release</h4>
+<p>Use Github interface to draft a new release using the appropriate. Document all changes since the previous version. 
+If possible, refer to Github Issues. </p>
+<h4 id="update-the-documentation">Update the documentation</h4>
+<p>We use <a href="https://github.com/jimporter/mike">mike</a> as a pre-processor for <code>mkdocs</code>. To update the documentation
+for a new release, use the following line in a terminal:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>poetry<span class="w"> </span>run<span class="w"> </span>mike<span class="w"> </span>deploy<span class="w"> </span>v2.3.0<span class="w"> </span>latest<span class="w"> </span>-u
+</span></code></pre></div>
+<p>This will build the documentation for a specific version (e.g. <code>v2.3.0</code>). The keyword
+<code>latest</code> will set this to be the default version. The flag <code>-u</code> will overwrite any
+existing documentation for this versino. </p>
+<p>Finally, you need to push the documentation to github. First, checkout the documentation branch</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>git<span class="w"> </span>checkout<span class="w"> </span>gh-pages
+</span></code></pre></div>
+<p>and then push changes to github</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>git<span class="w"> </span>push
+</span></code></pre></div>
+<p>The documentation is hosted on github pages, no other steps are necessary. </p>
 
 
 
@@ -1041,7 +1165,7 @@
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1-2.1-2M12.5 7v5.2l4 2.4-1 1L11 13V7h1.5M11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2v1.8Z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">April 24, 2024</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">September 24, 2024</span>
   </span>
 
     
