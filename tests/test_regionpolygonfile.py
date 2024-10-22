@@ -1,14 +1,12 @@
 import logging
 import os
-import sys
-import time
 import timeit
-from random import randint, seed
+from random import randint
 
 import matplotlib.pyplot as plt
 import numpy as np
 import pytest
-from shapely.geometry import Point, Polygon
+from shapely.geometry import Polygon
 
 import fm2prof.Functions as FE
 from fm2prof.RegionPolygonFile import Polygon as p_tuple
@@ -242,3 +240,22 @@ class ARCHIVED_Test_PolygonFile:
             output_dir + "\\classifier_results_points_{}.png".format(number_of_points)
         )
         plt.close()
+
+
+def test_PolygonFile_classify_points_with_property():
+    polygon_list = [
+        p_tuple(
+            geometry=Polygon([[1, 1], [5, 1], [5, 4], [1, 4], [1, 1]]),
+            properties={"name": "poly1"},
+        ),
+        p_tuple(
+            geometry=Polygon([[3, 3], [9, 3], [9, 7], [3, 7], [3, 3]]),
+            properties={"name": "poly2"},
+        ),
+    ]
+    polygon_file = PolygonFile(logging.getLogger())
+    polygon_file.polygons = polygon_list
+    xy_list = [(4, 2), (8, 6), (8, 8)]
+
+    classified_points = polygon_file.classify_points_with_property(points=xy_list)
+    assert np.array_equal(classified_points, ["poly1", "poly2", -999])
