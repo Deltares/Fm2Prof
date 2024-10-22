@@ -25,6 +25,7 @@ import json
 from collections import namedtuple
 from pathlib import Path
 from typing import Iterable
+import rtree
 
 import numpy as np
 from shapely.geometry import Point, shape
