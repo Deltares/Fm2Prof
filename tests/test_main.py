@@ -1,6 +1,8 @@
 import getopt
 import os
 import shutil
+import sys
+import unittest
 
 import pytest
 
@@ -118,11 +120,10 @@ class Test_Main:
 
         # 4. Verify final expectations
         exception_message = str(e_info.value)
-        assert exception_message == reason, (
-            ""
-            + "Expected exception message {}, retrieved {}".format(
-                reason, exception_message
-            )
+        assert (
+            exception_message == reason
+        ), "" + "Expected exception message {}, retrieved {}".format(
+            reason, exception_message
         )
 
     def ARCHIVED_test_when_giving_existent_empty_input_file_then_does_not_raise_io_exception(

@@ -1,4 +1,5 @@
 import os
+import shutil
 import pytest
 
 from fm2prof import Project
@@ -131,7 +132,6 @@ class Test_Project:
 
         # 3. Verify final expectations
         assert value is not None
-
 
 class Test_Fm2ProfRunner:
     def test_when_no_file_path_then_no_exception_is_risen(self):
