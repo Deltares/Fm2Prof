@@ -1,12 +1,10 @@
 import io
 import os
 import shutil
-import sys
-import unittest
 from pathlib import Path
 from typing import Optional
 
-import matplotlib.pyplot as plt
+
 import pytest
 
 from fm2prof.Fm2ProfRunner import Fm2ProfRunner
@@ -255,9 +253,9 @@ class Test_Run_Testcases:
         runner.run()
 
         # 4. Verify there is output generated:
-        assert os.listdir(
-            iniFile.get_output_directory()
-        ), "" + "There is no output generated for {0}".format(case_name)
+        assert os.listdir(iniFile.get_output_directory()), (
+            "" + "There is no output generated for {0}".format(case_name)
+        )
 
 
 class ARCHIVED_Test_Main_Run_IniFile:
@@ -445,9 +443,9 @@ class ARCHIVED_Test_Compare_Waal_Model:
         input_volume_file = os.path.join(fm2prof_dir, volume_file_name)
 
         # 2. Verify / create necessary folders and directories
-        assert os.path.exists(
-            input_volume_file
-        ), "" + "Input file {} could not be found".format(input_volume_file)
+        assert os.path.exists(input_volume_file), (
+            "" + "Input file {} could not be found".format(input_volume_file)
+        )
         if not os.path.exists(fm2prof_fig_dir):
             os.makedirs(fm2prof_fig_dir)
 
@@ -461,9 +459,9 @@ class ARCHIVED_Test_Compare_Waal_Model:
             )
 
         #  4. Final expectation
-        assert os.listdir(
-            fm2prof_fig_dir
-        ), "" + "There is no volume output generated for {0}".format(case_name)
+        assert os.listdir(fm2prof_fig_dir), (
+            "" + "There is no volume output generated for {0}".format(case_name)
+        )
 
 
 class Test_Compare_Idealized_Model:
@@ -556,9 +554,9 @@ class Test_Compare_Idealized_Model:
         input_geometry_file = os.path.join(fm2prof_dir, geometry_file_name)
 
         # 2. Verify / create necessary folders and directories
-        assert os.path.exists(
-            input_geometry_file
-        ), "" + "Input file {} could not be found".format(input_geometry_file)
+        assert os.path.exists(input_geometry_file), (
+            "" + "Input file {} could not be found".format(input_geometry_file)
+        )
 
         if os.path.exists(fm2prof_fig_dir):
             shutil.rmtree(fm2prof_fig_dir)
@@ -581,9 +579,9 @@ class Test_Compare_Idealized_Model:
             )
 
         #  4. Final expectation
-        assert os.listdir(
-            fm2prof_fig_dir
-        ), "" + "There is no geometry output generated for {0}".format(case_name)
+        assert os.listdir(fm2prof_fig_dir), (
+            "" + "There is no geometry output generated for {0}".format(case_name)
+        )
 
     # region for tests
     @pytest.mark.acceptance
@@ -605,9 +603,9 @@ class Test_Compare_Idealized_Model:
         input_roughness_file = os.path.join(fm2prof_dir, roughness_file_name)
 
         # 2. Verify / create necessary folders and directories
-        assert os.path.exists(
-            input_roughness_file
-        ), "" + "Input file {} could not be found".format(input_roughness_file)
+        assert os.path.exists(input_roughness_file), (
+            "" + "Input file {} could not be found".format(input_roughness_file)
+        )
         if not os.path.exists(fm2prof_fig_dir):
             os.makedirs(fm2prof_fig_dir)
 
@@ -626,9 +624,9 @@ class Test_Compare_Idealized_Model:
                 "No exception expected but was thrown " + "{}.".format(str(e_info))
             )
 
-        assert os.listdir(
-            fm2prof_fig_dir
-        ), "" + "There is no roughness output generated for {0}".format(case_name)
+        assert os.listdir(fm2prof_fig_dir), (
+            "" + "There is no roughness output generated for {0}".format(case_name)
+        )
 
     @pytest.mark.acceptance
     @pytest.mark.requires_output
@@ -651,9 +649,9 @@ class Test_Compare_Idealized_Model:
         input_volume_file = os.path.join(fm2prof_dir, volume_file_name)
 
         # 2. Verify / create necessary folders and directories
-        assert os.path.exists(
-            input_volume_file
-        ), "" + "Input file {} could not be found".format(input_volume_file)
+        assert os.path.exists(input_volume_file), (
+            "" + "Input file {} could not be found".format(input_volume_file)
+        )
         if not os.path.exists(fm2prof_fig_dir):
             os.makedirs(fm2prof_fig_dir)
 
@@ -669,9 +667,9 @@ class Test_Compare_Idealized_Model:
             )
 
         #  4. Final expectation
-        assert os.listdir(
-            fm2prof_fig_dir
-        ), "" + "There is no volume output generated for {0}".format(case_name)
+        assert os.listdir(fm2prof_fig_dir), (
+            "" + "There is no volume output generated for {0}".format(case_name)
+        )
 
     @pytest.mark.acceptance
     @pytest.mark.requireoutput

@@ -1,9 +1,6 @@
 import contextlib
 import os
-import shutil
-import sys
 from pathlib import Path
-from typing import List
 
 import pytest
 
@@ -14,7 +11,6 @@ except Exception as e_info:
 
 
 class TestUtils:
-
     _name_external = "external_test_data"
     _name_local = "test_data"
     _name_artifacts = "artifacts"

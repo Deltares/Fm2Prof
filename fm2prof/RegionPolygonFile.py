@@ -28,6 +28,7 @@ from typing import Iterable
 
 import numpy as np
 from shapely.geometry import Point, shape
+import rtree
 
 from fm2prof.common import FM2ProfBase
 
@@ -58,7 +59,7 @@ class PolygonFile(FM2ProfBase):
         for i, point in enumerate(points):
             for polygon in self.polygons:
                 if point.within(polygon.geometry):
-                    points_regions[i] = int(polygon.properties.get(property_name))
+                    points_regions[i] = polygon.properties.get(property_name)
                     break
 
         return np.array(points_regions)
@@ -165,7 +166,7 @@ class PolygonFile(FM2ProfBase):
     def _validate_extension(file_path: Path) -> None:
         if not isinstance(file_path, Path):
             return
-        if not file_path.suffix in (".json", ".geojson"):
+        if file_path.suffix not in (".json", ".geojson"):
             raise IOError(
                 "Invalid file path extension, " + "should be .json or .geojson."
             )
