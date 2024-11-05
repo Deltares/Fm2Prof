@@ -329,6 +329,8 @@ def test_PolygonFile_validate_extension():
         IOError, match="Invalid file path extension, should be .json or .geojson."
     ):
         polygon_file._validate_extension(file_path=test_fp)
+    test_fp = "test.json"
+    polygon_file._validate_extension(test_fp)
 
 
 def test_PolygonFile_check_overlap(polygon_list, mocker):
