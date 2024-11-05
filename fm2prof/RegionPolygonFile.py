@@ -24,7 +24,7 @@ All rights reserved.
 import json
 from collections import namedtuple
 from pathlib import Path
-from typing import Iterable
+from typing import Iterable, Union, List
 import rtree
 
 import numpy as np
@@ -40,7 +40,7 @@ class PolygonFile(FM2ProfBase):
 
     def __init__(self, logger):
         self.set_logger(logger)
-        self.polygons = list()
+        self._polygons = list()
         self.undefined = -999
 
     def classify_points_with_property(
@@ -59,7 +59,7 @@ class PolygonFile(FM2ProfBase):
         for i, point in enumerate(points):
             for polygon in self.polygons:
                 if point.within(polygon.geometry):
-                    points_regions[i] = int(polygon.properties.get(property_name))
+                    points_regions[i] = polygon.properties.get(property_name)
                     break
 
         return np.array(points_regions)
@@ -92,7 +92,7 @@ class PolygonFile(FM2ProfBase):
         return np.array(points_regions)
 
     def classify_points_with_property_rtree_by_polygons(
-        self, iterable_points: Iterable[list], property_name: str = "name"
+        self, points: Iterable[list], property_name: str = "name"
     ) -> list:
         """Applies RTree index to quickly classify points in polygons.
 
@@ -111,7 +111,7 @@ class PolygonFile(FM2ProfBase):
             idx.insert(p_id, polygon.geometry.bounds, polygon)
 
         point_properties_list = []
-        for point in map(Point, iterable_points):
+        for point in map(Point, points):
             point_properties_polygon = next(
                 iter(
                     self.polygons[polygon_id].properties.get(property_name)
@@ -125,7 +125,9 @@ class PolygonFile(FM2ProfBase):
         del idx
         return np.array(point_properties_list)
 
-    def __get_polygon_property(self, grouped_values: list, property_name: str) -> str:
+    def __get_polygon_property(
+        self, grouped_values: list, property_name: str
+    ) -> str:  # TODO: Can this be removed?
         """Retrieves the polygon property from the internal list of polygons.
 
         Arguments:
@@ -141,7 +143,7 @@ class PolygonFile(FM2ProfBase):
             return self.undefined
         return self.polygons[polygon_id].properties.get(property_name)
 
-    def parse_geojson_file(self, file_path):
+    def parse_geojson_file(self, file_path: Union[Path, str]) -> None:
         """Read data from geojson file"""
         PolygonFile._validate_extension(file_path)
 
@@ -163,20 +165,18 @@ class PolygonFile(FM2ProfBase):
         #    self.polygons[polygon_name] = polygon
 
     @staticmethod
-    def _validate_extension(file_path: Path) -> None:
-        if not isinstance(file_path, Path):
-            return
-        if not file_path.suffix in (".json", ".geojson"):
-            raise IOError(
-                "Invalid file path extension, " + "should be .json or .geojson."
-            )
+    def _validate_extension(file_path: Union[Path, str]) -> None:
+        if isinstance(file_path, str):
+            file_path = Path(file_path)
+        if file_path.suffix not in (".json", ".geojson"):
+            raise IOError("Invalid file path extension, should be .json or .geojson.")
 
     def _check_overlap(self):
         for polygon in self.polygons:
             for testpoly in self.polygons:
                 if polygon.properties.get("name") == testpoly.properties.get("name"):
                     # polygon will obviously overlap with itself
-                    pass
+                    continue
                 else:
                     if polygon.geometry.intersects(testpoly.geometry):
                         self.set_logger_message(
@@ -186,6 +186,23 @@ class PolygonFile(FM2ProfBase):
                             ),
                             level="warning",
                         )
+
+    @property
+    def polygons(self) -> list[Polygon]:
+        return self._polygons
+
+    @polygons.setter
+    def polygons(self, polygons_list: List[Polygon]) -> None:
+        if not all([isinstance(polygon, Polygon) for polygon in polygons_list]):
+            raise ValueError("Polygons must be of type Polygon")
+        # Check if properties contain the required 'name' property
+        names = [polygon.properties.get("name") for polygon in polygons_list]
+        if not all(names):
+            raise ValueError("Polygon properties must contain key-word 'name'")
+        # Check if 'name' property is unique, otherwise _check_overlap will produce bugs
+        if len(names) != len(set(names)):
+            raise ValueError("Property 'name' must be unique")
+        self._polygons = polygons_list
 
 
 class RegionPolygonFile(PolygonFile):

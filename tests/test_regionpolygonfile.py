@@ -2,10 +2,12 @@ import logging
 import os
 import timeit
 from random import randint
+import json
 
 import matplotlib.pyplot as plt
 import numpy as np
 import pytest
+from pytest import fixture
 from shapely.geometry import Polygon
 
 import fm2prof.Functions as FE
@@ -242,8 +244,9 @@ class ARCHIVED_Test_PolygonFile:
         plt.close()
 
 
-def test_PolygonFile_classify_points_with_property():
-    polygon_list = [
+@fixture
+def polygon_list():
+    return [
         p_tuple(
             geometry=Polygon([[1, 1], [5, 1], [5, 4], [1, 4], [1, 1]]),
             properties={"name": "poly1"},
@@ -253,9 +256,109 @@ def test_PolygonFile_classify_points_with_property():
             properties={"name": "poly2"},
         ),
     ]
+
+
+def test_PolygonFile_classify_points_with_property(polygon_list):
     polygon_file = PolygonFile(logging.getLogger())
     polygon_file.polygons = polygon_list
     xy_list = [(4, 2), (8, 6), (8, 8)]
 
     classified_points = polygon_file.classify_points_with_property(points=xy_list)
     assert np.array_equal(classified_points, ["poly1", "poly2", -999])
+
+
+def test_PolygonFile_classify_points_with_property_shapely_prep(polygon_list):
+    polygon_file = PolygonFile(logging.getLogger())
+    polygon_file.polygons = polygon_list
+    xy_list = [(4, 2), (8, 6), (8, 8)]
+    classified_points = polygon_file.classify_points_with_property_shapely_prep(
+        points=xy_list, property_name="name"
+    )
+    assert np.array_equal(classified_points, ["poly1", "poly2", -999])
+
+
+def test_PolygonFile_classify_points_with_property_rtree_by_polygons(polygon_list):
+    polygon_file = PolygonFile(logging.getLogger())
+    polygon_file.polygons = polygon_list
+    xy_list = [(4, 2), (8, 6), (8, 8)]
+    classified_points = polygon_file.classify_points_with_property_shapely_prep(
+        points=xy_list, property_name="name"
+    )
+    assert np.array_equal(classified_points, ["poly1", "poly2", -999])
+
+
+def test_PolygonFile_parse_geojson_file(tmp_path):
+    test_geojson = {
+        "type": "FeatureCollection",
+        "features": [
+            {
+                "type": "Feature",
+                "properties": {"name": "poly1"},
+                "geometry": {
+                    "type": "Polygon",
+                    "coordinates": [[[1, 1], [5, 1], [5, 4], [1, 4], [1, 1]]],
+                },
+            },
+            {
+                "type": "Feature",
+                "properties": {"name": "poly2"},
+                "geometry": {
+                    "type": "Polygon",
+                    "coordinates": [[[3, 3], [9, 3], [9, 7], [3, 7], [3, 3]]],
+                },
+            },
+        ],
+    }
+    file_path = tmp_path / "polygons.geojson"
+
+    with open(file_path, "w") as geojson_file:
+        json.dump(test_geojson, geojson_file, indent=4)
+    polygon_file = PolygonFile(logging.getLogger())
+    polygon_file.parse_geojson_file(file_path=file_path)
+    assert isinstance(polygon_file.polygons[0], p_tuple)
+    assert isinstance(polygon_file.polygons[0].geometry, Polygon)
+    assert len(polygon_file.polygons) == 2
+    assert polygon_file.polygons[1].properties.get("name") == "poly2"
+
+
+def test_PolygonFile_validate_extension():
+    polygon_file = PolygonFile(logging.getLogger())
+    test_fp = "test.sjon"
+
+    with pytest.raises(
+        IOError, match="Invalid file path extension, should be .json or .geojson."
+    ):
+        polygon_file._validate_extension(file_path=test_fp)
+
+
+def test_PolygonFile_check_overlap(polygon_list, mocker):
+    polygon_file = PolygonFile(logging.getLogger(__name__))
+    polygon_file.polygons = polygon_list
+    mocked_logger = mocker.patch.object(polygon_file, "set_logger_message")
+    polygon_file._check_overlap()
+    assert mocked_logger.called_with("poly2 overlaps poly1", level="warning")
+
+
+def test_PolygonFile_polygons_property(polygon_list):
+    polygon_file = PolygonFile(logging.getLogger())
+    with pytest.raises(ValueError, match="Polygons must be of type Polygon"):
+        polygon_file.polygons = ["test", "case"]
+
+    polygon_list.append(
+        p_tuple(
+            geometry=Polygon([[1, 1], [5, 1], [5, 4], [1, 4], [1, 1]]),
+            properties={"type": "poly1"},
+        )
+    )
+    with pytest.raises(
+        ValueError, match="Polygon properties must contain key-word 'name'"
+    ):
+        polygon_file.polygons = polygon_list
+    polygon_list[2].properties.pop("type")
+    polygon_list[2].properties["name"] = "poly1"
+    with pytest.raises(ValueError, match="Property 'name' must be unique"):
+        polygon_file.polygons = polygon_list
+
+    polygon_list.pop()
+    polygon_file.polygons = polygon_list
+    assert polygon_file.polygons == polygon_list
