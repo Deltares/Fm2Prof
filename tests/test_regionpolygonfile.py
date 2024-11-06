@@ -12,7 +12,7 @@ from shapely.geometry import Polygon
 
 import fm2prof.Functions as FE
 from fm2prof.RegionPolygonFile import Polygon as p_tuple
-from fm2prof.RegionPolygonFile import PolygonFile, SectionPolygonFile
+from fm2prof.RegionPolygonFile import PolygonFile, SectionPolygonFile, RegionPolygonFile
 from tests.TestUtils import TestUtils
 
 
@@ -258,6 +258,36 @@ def polygon_list():
     ]
 
 
+@fixture
+def test_geojson():
+    return {
+        "type": "FeatureCollection",
+        "features": [
+            {
+                "type": "Feature",
+                "properties": {"name": "poly1"},
+                "geometry": {
+                    "type": "Polygon",
+                    "coordinates": [[[1, 1], [5, 1], [5, 4], [1, 4], [1, 1]]],
+                },
+            },
+            {
+                "type": "Feature",
+                "properties": {"name": "poly2"},
+                "geometry": {
+                    "type": "Polygon",
+                    "coordinates": [[[3, 3], [9, 3], [9, 7], [3, 7], [3, 3]]],
+                },
+            },
+        ],
+    }
+
+
+def _geojson_file_writer(geojson_dict, file_path):
+    with open(file_path, "w") as geojson_file:
+        json.dump(geojson_dict, geojson_file, indent=4)
+
+
 def test_PolygonFile_classify_points_with_property(polygon_list):
     polygon_file = PolygonFile(logging.getLogger())
     polygon_file.polygons = polygon_list
@@ -287,32 +317,10 @@ def test_PolygonFile_classify_points_with_property_rtree_by_polygons(polygon_lis
     assert np.array_equal(classified_points, ["poly1", "poly2", -999])
 
 
-def test_PolygonFile_parse_geojson_file(tmp_path):
-    test_geojson = {
-        "type": "FeatureCollection",
-        "features": [
-            {
-                "type": "Feature",
-                "properties": {"name": "poly1"},
-                "geometry": {
-                    "type": "Polygon",
-                    "coordinates": [[[1, 1], [5, 1], [5, 4], [1, 4], [1, 1]]],
-                },
-            },
-            {
-                "type": "Feature",
-                "properties": {"name": "poly2"},
-                "geometry": {
-                    "type": "Polygon",
-                    "coordinates": [[[3, 3], [9, 3], [9, 7], [3, 7], [3, 3]]],
-                },
-            },
-        ],
-    }
+def test_PolygonFile_parse_geojson_file(tmp_path, test_geojson):
     file_path = tmp_path / "polygons.geojson"
 
-    with open(file_path, "w") as geojson_file:
-        json.dump(test_geojson, geojson_file, indent=4)
+    _geojson_file_writer(test_geojson, file_path)
     polygon_file = PolygonFile(logging.getLogger())
     polygon_file.parse_geojson_file(file_path=file_path)
     assert isinstance(polygon_file.polygons[0], p_tuple)
@@ -364,3 +372,53 @@ def test_PolygonFile_polygons_property(polygon_list):
     polygon_list.pop()
     polygon_file.polygons = polygon_list
     assert polygon_file.polygons == polygon_list
+
+
+def test_RegionPolygonFile(mocker, test_geojson, tmp_path):
+    file_path = tmp_path / "test.geojson"
+    _geojson_file_writer(test_geojson, file_path)
+    mock_logger = mocker.patch.object(RegionPolygonFile, "set_logger_message")
+    region_polygon_file = RegionPolygonFile(
+        region_file_path=file_path, logger=logging.getLogger(__name__)
+    )
+    assert mock_logger.call_args_list[0][0][0] == "Validating region file"
+    assert mock_logger.call_args_list[1][0][0] == "2 regions found"
+
+    xy_list = [(4, 2), (8, 6), (8, 8)]
+    classified_points = region_polygon_file.classify_points(
+        xy_list, property_name="name"
+    )
+    assert np.array_equal(classified_points, ["poly1", "poly2", -999])
+
+
+def test_SectionPolygonFile(mocker, test_geojson, tmp_path):
+    file_path = tmp_path / "test_geojson.geojson"
+    _geojson_file_writer(test_geojson, file_path)
+    mock_logger = mocker.patch.object(SectionPolygonFile, "set_logger_message")
+    with pytest.raises(AssertionError, match="Section file is not valid"):
+        SectionPolygonFile(file_path, logger=logging.getLogger())
+
+        assert (
+            mock_logger.call_args_list[1][0][0]
+            == 'Polygon poly1 has no property "section"'
+        )
+        assert (
+            mock_logger.call_args_list[2][0][0]
+            == 'Polygon poly2 has no property "section"'
+        )
+
+    test_geojson["features"][0]["properties"]["section"] = "fake section"
+    _geojson_file_writer(test_geojson, file_path)
+    with pytest.raises(AssertionError, match="Section file is not valid"):
+        SectionPolygonFile(file_path, logger=logging.getLogger())
+        assert "fake section is not a recognized section" in [
+            log_cal[0][0] for log_cal in mock_logger.call_args_list
+        ]
+    test_geojson["features"][0]["properties"]["section"] = "1"
+    test_geojson["features"][1]["properties"]["section"] = "2"
+    _geojson_file_writer(test_geojson, file_path)
+    section_polygonfile = SectionPolygonFile(file_path, logging.getLogger())
+    assert section_polygonfile.sections[0].properties["section"] == "main"
+    assert section_polygonfile.sections[1].properties["section"] == "floodplain1"
+
+    assert mock_logger.call_args_list

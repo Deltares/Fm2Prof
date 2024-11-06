@@ -21,6 +21,7 @@ Stichting Deltares and remain full property of Stichting Deltares at all times.
 All rights reserved.
 """
 
+import logging
 import json
 from collections import namedtuple
 from pathlib import Path
@@ -211,29 +212,33 @@ class RegionPolygonFile(PolygonFile):
         self.read_region_file(region_file_path)
 
     @property
-    def regions(self):
+    def regions(self) -> list[Polygon]:
         return self.polygons
 
-    def read_region_file(self, file_path):
+    def read_region_file(self, file_path) -> None:
         self.parse_geojson_file(file_path)
         self._validate_regions()
 
-    def _validate_regions(self):
-        self.set_logger_message("Validating Region file")
+    def _validate_regions(self) -> None:
+        self.set_logger_message("Validating region file", level="info")
 
         number_of_regions = len(self.regions)
 
-        self.set_logger_message("{} regions found".format(number_of_regions))
+        self.set_logger_message(
+            "{} regions found".format(number_of_regions), level="info"
+        )
 
         # Test if polygons overlap
         self._check_overlap()
 
-    def classify_points(self, points: Iterable[list]):
-        return self.classify_points_with_property(points, property_name="id")
+    def classify_points(
+        self, points: Iterable[list], property_name: str = "id"
+    ) -> list:
+        return self.classify_points_with_property(points, property_name=property_name)
 
 
 class SectionPolygonFile(PolygonFile):
-    def __init__(self, section_file_path, logger):
+    def __init__(self, section_file_path, logger: logging.Logger):
         super().__init__(logger)
         self.read_section_file(section_file_path)
         self.undefined = 1  # 1 is main
@@ -270,8 +275,11 @@ class SectionPolygonFile(PolygonFile):
                     ),
                     level="error",
                 )
-            section_key = str(section.properties.get("section")).lower()
-            if section_key not in valid_section_keys:
+
+            elif (
+                str(section.properties.get("section")).lower() not in valid_section_keys
+            ):
+                section_key = str(section.properties.get("section")).lower()
                 if section_key not in list(map_section_keys.keys()):
                     raise_exception = True
                     self.set_logger_message(
@@ -290,6 +298,5 @@ class SectionPolygonFile(PolygonFile):
         self._check_overlap()
 
         if raise_exception:
-            raise AssertionError("Section file could not validated")
-        else:
-            self.set_logger_message("Section file succesfully validated")
+            raise AssertionError("Section file is not valid")
+        self.set_logger_message("Section file succesfully validated")
