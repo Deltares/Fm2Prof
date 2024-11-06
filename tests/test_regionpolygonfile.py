@@ -311,7 +311,7 @@ def test_PolygonFile_classify_points_with_property_rtree_by_polygons(polygon_lis
     polygon_file = PolygonFile(logging.getLogger())
     polygon_file.polygons = polygon_list
     xy_list = [(4, 2), (8, 6), (8, 8)]
-    classified_points = polygon_file.classify_points_with_property_shapely_prep(
+    classified_points = polygon_file.classify_points_with_property_rtree_by_polygons(
         points=xy_list, property_name="name"
     )
     assert np.array_equal(classified_points, ["poly1", "poly2", -999])
@@ -421,4 +421,9 @@ def test_SectionPolygonFile(mocker, test_geojson, tmp_path):
     assert section_polygonfile.sections[0].properties["section"] == "main"
     assert section_polygonfile.sections[1].properties["section"] == "floodplain1"
 
-    assert mock_logger.call_args_list
+    assert mock_logger.call_args_list[-1][0][0] == "Section file succesfully validated"
+
+    classified_points = section_polygonfile.classify_points(
+        points=[(4, 2), (8, 6), (8, 8)]
+    )
+    assert np.array_equal(classified_points, ["main", "floodplain1", 1])

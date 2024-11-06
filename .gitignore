@@ -8,5 +8,5 @@
 /dist
 /build
 /documentation
-
+/tests/test_data/*
 *.log
