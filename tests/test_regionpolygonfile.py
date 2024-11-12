@@ -244,6 +244,7 @@ class ARCHIVED_Test_PolygonFile:
         plt.close()
 
 
+
 @fixture
 def polygon_list():
     return [
@@ -346,7 +347,7 @@ def test_PolygonFile_check_overlap(polygon_list, mocker):
     polygon_file.polygons = polygon_list
     mocked_logger = mocker.patch.object(polygon_file, "set_logger_message")
     polygon_file._check_overlap()
-    assert mocked_logger.called_with("poly2 overlaps poly1", level="warning")
+    mocked_logger.assert_called_with("poly2 overlaps poly1.", level="warning")
 
 
 def test_PolygonFile_polygons_property(polygon_list):
