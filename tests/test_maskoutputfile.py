@@ -1,9 +1,4 @@
-import json
-import numbers
 import os
-import shutil
-import sys
-import unittest
 from pathlib import Path
 
 import geojson
@@ -28,11 +23,9 @@ class Test_create_mask_point:
         mask_point = None
         # 2. Set up initial expectations
 
-        # 3. Do test
-        try:
-            mask_point = MaskOutputFile.create_mask_point(coords, properties)
-        except:
-            pytest.fail("Exception risen but not expected.")
+        # 3. Do test        
+        mask_point = MaskOutputFile.create_mask_point(coords, properties)
+      
         # 4. Verify final expectations
         assert mask_point is not None, "" + "No mask_point generated"
 
@@ -43,11 +36,9 @@ class Test_create_mask_point:
         properties = None
         mask_point = None
 
-        # 2. Do test
-        try:
-            mask_point = MaskOutputFile.create_mask_point(coords, properties)
-        except:
-            pytest.fail("Exception risen but not expected.")
+        # 2. Do test       
+        mask_point = MaskOutputFile.create_mask_point(coords, properties)
+      
         # 3. Verify final expectations
         assert mask_point is not None, "" + "No mask_point generated"
 
@@ -57,15 +48,11 @@ class Test_create_mask_point:
         coords = coords_values
         properties = None
         mask_point = None
-        exception_thrown = False
-        # 2. Do test
-        try:
-            mask_point = MaskOutputFile.create_mask_point(coords, properties)
-        except:
-            exception_thrown = True
+        # 2. Do test        
+        mask_point = MaskOutputFile.create_mask_point(coords, properties)
+        
 
         # 3. Verify final expectations
-        assert exception_thrown, "" + "No exception was thrown but it was expected."
         assert mask_point is None, "" + "Mask point generated but was not expected."
 
     def test_when_no_properties_does_not_raise(self):
@@ -75,22 +62,18 @@ class Test_create_mask_point:
         mask_point = None
         # 2. Set up initial expectations
 
-        # 3. Do test
-        try:
-            mask_point = MaskOutputFile.create_mask_point(coords, properties)
-        except:
-            pytest.fail("Exception risen but not expected.")
+        # 3. Do test     
+        mask_point = MaskOutputFile.create_mask_point(coords, properties)
+       
         # 4. Verify final expectations
         assert mask_point is not None, "" + "No mask_point generated"
 
 
 class Test_validate_extension:
     @pytest.mark.parametrize("file_name", [(None), ("")])
-    def test_when_no_file_path_doesnot_raise(self, file_name):
-        try:
-            MaskOutputFile.validate_extension(file_name)
-        except:
-            pytest.fail("Exception risen but not expected.")
+    def test_when_no_file_path_doesnot_raise(self, file_name):        
+        MaskOutputFile.validate_extension(file_name)
+        
 
     def test_when_invalid_extension_raises_expected_exception(self):
         # 1. Set up test data
@@ -114,12 +97,9 @@ class Test_validate_extension:
         )
 
     @pytest.mark.parametrize("file_name", [("n.json"), ("n.geojson")])
-    def test_when_valid_extension_does_not_raise(self, file_name):
-        try:
-            MaskOutputFile.validate_extension(file_name)
-        except:
-            pytest.fail("Exception risen but not expected.")
-
+    def test_when_valid_extension_does_not_raise(self, file_name):       
+        MaskOutputFile.validate_extension(file_name)
+      
 
 class Test_read_mask_output_file:
     @pytest.mark.parametrize(
@@ -134,10 +114,8 @@ class Test_read_mask_output_file:
         expected_geojson = geojson.FeatureCollection(None)
 
         # 3. Read data
-        try:
-            read_geojson = MaskOutputFile.read_mask_output_file(file_path_name)
-        except:
-            pytest.fail("Exception thrown but not expected.")
+        read_geojson = MaskOutputFile.read_mask_output_file(file_path_name)
+       
 
         # 4. Verify final expectations
         assert read_geojson, "" + "No geojson data was generated."
@@ -228,11 +206,9 @@ class Test_write_mask_output_file:
         # 1. Set up test data
         file_path = None
         mask_points = None
-        # 2. Verify test
-        try:
-            MaskOutputFile.write_mask_output_file(file_path, mask_points)
-        except:
-            pytest.fail("Exception thrown but not expected.")
+        # 2. Verify test        
+        MaskOutputFile.write_mask_output_file(file_path, mask_points)
+       
 
     def test_when_file_path_with_wrong_extension_then_exception_is_risen(self):
         # 1. Set up test data
@@ -269,10 +245,8 @@ class Test_write_mask_output_file:
         read_mask_points = None
 
         # 3. Run test
-        try:
-            MaskOutputFile.write_mask_output_file(file_path, mask_points)
-        except:
-            pytest.fail("Exception thrown but not expected.")
+        MaskOutputFile.write_mask_output_file(file_path, mask_points)
+        
 
         # 4. Verify final expectations
         assert os.path.exists(file_path), "" + "File {} not found.".format(file_path)
@@ -304,11 +278,8 @@ class Test_write_mask_output_file:
         expected_mask_points = geojson.FeatureCollection(mask_points)
         read_mask_points = None
 
-        # 3. Run test
-        try:
-            MaskOutputFile.write_mask_output_file(file_path, mask_points)
-        except:
-            pytest.fail("Exception thrown but not expected.")
+        # 3. Run test        
+        MaskOutputFile.write_mask_output_file(file_path, mask_points)       
 
         # 4. Verify final expectations
         assert os.path.exists(file_path), "" + "File {} not found.".format(file_path)

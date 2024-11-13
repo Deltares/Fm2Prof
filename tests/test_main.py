@@ -1,8 +1,6 @@
 import getopt
 import os
 import shutil
-import sys
-import unittest
 
 import pytest
 
@@ -56,7 +54,7 @@ class Test_Main:
             main.main(mainArgs)
 
         # 4. Verify expectations
-        assert pytest_wrapped_e.type == SystemExit
+        assert isinstance(pytest_wrapped_e.type, SystemExit)
         assert pytest_wrapped_e.value.code == expectedMssg
 
     def test_when_incorrect_input_args_systemexit_risen_with_expected_message(self):
@@ -74,7 +72,7 @@ class Test_Main:
             main.main(mainArgs)
 
         # 4. Verify expectations
-        assert pytest_wrapped_e.type == SystemExit
+        assert isinstance(pytest_wrapped_e.type, SystemExit)
         assert pytest_wrapped_e.value.code == expectedMssg
 
     def test_when_giving_correct_arguments_then_does_not_raise_systemexit(self):
@@ -93,16 +91,15 @@ class Test_Main:
         ]
 
         # 3. Run test
-        try:
-            with pytest.raises(SystemExit) as pytest_wrapped_e:
-                main.main(mainArgs)
-            # 4. Verify expectations (it should actually not get here)
-            assert pytest_wrapped_e.type == SystemExit
-            for reason in reasons:
-                expectedMssg = "Error: {0}".format(reason)
-                assert pytest_wrapped_e.value.code != expectedMssg
-        except:
-            pass
+        with pytest.raises(SystemExit) as pytest_wrapped_e:
+            main.main(mainArgs)
+            
+        # 4. Verify expectations (it should actually not get here)
+        assert isinstance(pytest_wrapped_e.type, SystemExit)
+        for reason in reasons:
+            expectedMssg = "Error: {0}".format(reason)
+            assert pytest_wrapped_e.value.code != expectedMssg
+       
 
     def ARCHIVED_test_when_giving_non_existent_input_file_then_raises_io_exception(
         self,
@@ -137,10 +134,7 @@ class Test_Main:
 
         # 2. Set up expectations
         assert os.path.exists(file_path)
-        reason = "The given file path {} could not be found.".format(file_path)
 
-        # 3. Run test
-        try:
-            main.main(mainArgs)
-        except:
-            pytest.fail("Unexpected exception.")
+        # 3. Run test        
+        main.main(mainArgs)
+        

@@ -1,8 +1,3 @@
-import numbers
-import os
-import shutil
-import sys
-import unittest
 from pathlib import Path
 
 import pytest
@@ -89,11 +84,9 @@ class Test_FmModelData:
             css_data,
         ]
         return_fm_model_data = None
-        # 2. Run test
-        try:
-            return_fm_model_data = FmModelData(arg_list)
-        except:
-            pytest.fail("No exception expected but was thrown")
+
+        # 2. Run test        
+        return_fm_model_data = FmModelData(arg_list)        
 
         # 4. Verify final expectations
         assert return_fm_model_data is not None
@@ -127,12 +120,9 @@ class Test_FmModelData:
         # 2. Set expectations
         expected_css_data_list = [{dummy_key: 0}, {dummy_key: 1}]
 
-        #  3. Run test
-        try:
-            return_fm_model_data = FmModelData(arg_list)
-        except:
-            pytest.fail("No exception expected but was thrown")
-
+        #  3. Run test        
+        return_fm_model_data = FmModelData(arg_list)
+        
         # 4. Verify final expectations
         assert return_fm_model_data is not None
         assert return_fm_model_data.css_data_list != css_data_dict
@@ -153,11 +143,8 @@ class Test_get_ordered_css_list:
         expected_list = [{dummy_key: 0}, {dummy_key: 1}]
 
         # 3. Run test
-        try:
-            return_list = FmModelData.get_ordered_css_list(test_dict)
-        except:
-            pytest.fail("No exception expected but was thrown")
-
+        return_list = FmModelData.get_ordered_css_list(test_dict)
+        
         # 4. Verify final expectations
         assert return_list is not None
         assert return_list == expected_list, (
@@ -170,18 +157,13 @@ class Test_get_ordered_css_list:
     def test_when_given_unexpected_value_then_returns_empty_list(self, test_dict):
         # 1. Set up test_data
         return_list = None
-        dummy_key = "dummyKey"
-        dummy_values = [0, 1]
 
         # 2. Run test
         expected_list = []
 
-        # 3. Run test
-        try:
-            return_list = FmModelData.get_ordered_css_list(test_dict)
-        except:
-            pytest.fail("No exception expected but was thrown")
-
+        # 3. Run test       
+        return_list = FmModelData.get_ordered_css_list(test_dict)
+      
         # 4. Verify final expectations
         assert return_list is not None
         assert return_list == expected_list, (

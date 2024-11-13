@@ -1,10 +1,8 @@
-import datetime
 import numpy as np
 import pytest
 
 
 from fm2prof.CrossSection import CrossSection 
-from fm2prof.IniFile import IniFile
 import pickle
 
 from tests.TestUtils import TestUtils
@@ -69,16 +67,10 @@ class Test_generate_cross_section_instance:
         with open(tdir.joinpath(f"{test_cases[0].get('name')}.pickle"), 'rb') as f:
             css_data = pickle.load(f)
 
-        # 2. Set expectations
-        
-            
-        # 3. Run test
-        try:
-            css = CrossSection(data=css_data)
-        except Exception as e_info:
-            pytest.fail(
-                f"No expected exception but was risen:" + " {e_info}")
-
+        # 2. Set expectations    
+        # 3. Run test        
+        css = CrossSection(data=css_data)
+     
         # 4. Verify final expectations
         assert css.length == css_data.get('length')
 
@@ -96,13 +88,9 @@ class Test_cross_section_construction:
         css_z: np.array = test_case.get('css_z')
         css_total_volume: np.array = test_case.get('css_total_volume')
 
-        # 3. Run test
-        try:
-            css = CrossSection(data=css_data)
-            css.build_geometry()
-        except Exception as e_info:
-            pytest.fail(
-                f"No expected exception but was risen:" + " {e_info}")
+        # 3. Run test        
+        css = CrossSection(data=css_data)
+        css.build_geometry()
 
         # 4. Verify final expectations
         assert len(css_z) == len(css._css_z)
@@ -124,14 +112,11 @@ class Test_cross_section_construction:
         crest_level:float = test_case.get('crest_level') # type: ignore
         extra_total_volume: np.ndarray = test_case.get('extra_total_volume') # type: ignore
 
-        # 3. Run test
-        try:
-            css = CrossSection(data=css_data)
-            css.build_geometry()
-            css.calculate_correction()
-        except Exception as e_info:
-            pytest.fail(
-                f"No expected exception but was risen:" + " {e_info}")
+        # 3. Run test    
+        css = CrossSection(data=css_data)
+        css.build_geometry()
+        css.calculate_correction()
+       
 
         # 4. Verify final expectations
         assert abs(crest_level - css.crest_level) < tol
@@ -144,21 +129,11 @@ class Test_cross_section_construction:
         with open(tdir.joinpath(f"{test_case.get('name')}.pickle"), 'rb') as f:
             css_data = pickle.load(f)
 
-        tol = 1e-6
-
-        # 2. Set expectations for 
-        crest_level:float = test_case.get('crestlevel')
-        extra_total_volume: np.ndarray = test_case.get('extra_total_volume')
-
-        # 3. Run test
-        try:
-            css = CrossSection(data=css_data)
-            css.build_geometry()
-            css.calculate_correction()
-            css.reduce_points(count_after=20)
-        except Exception as e_info:
-            pytest.fail(
-                f"No expected exception but was risen:" + " {e_info}")
-
-        # 4. Verify final expectations
+        # 2. Run test        
+        css = CrossSection(data=css_data)
+        css.build_geometry()
+        css.calculate_correction()
+        css.reduce_points(count_after=20)
+       
+        # 3. Verify final expectations
         assert len(css.z) == 20
