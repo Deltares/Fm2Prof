@@ -8,7 +8,7 @@ from typing import Dict, List
 import numpy as np
 import pandas as pd
 import scipy.optimize as so
-from scipy.integrate import cumtrapz
+from scipy.integrate import cumulative_trapezoid
 from tqdm import tqdm
 
 from fm2prof import Functions as FE
@@ -287,13 +287,12 @@ class CrossSection(FM2ProfBase):
 
         # Convert area to a matrix for matrix operations
         # (much more efficient than for-loops)
-        area_matrix = pd.DataFrame(index=area.index)
-        for t in waterdepth:
-            area_matrix[t] = area
+        area_matrix = pd.DataFrame({col: area for col in waterdepth.columns})
+        area_matrix.index = area.index
+        
+        bedlevel_matrix = pd.DataFrame({col: area for col in waterdepth.columns})
+        bedlevel_matrix.index = bedlevel.index
 
-        bedlevel_matrix = pd.DataFrame(index=bedlevel.index)
-        for t in waterdepth:
-            bedlevel_matrix[t] = bedlevel
 
         # Retrieve the water-depth
         # & water level nearest to the cross-section location
@@ -374,10 +373,10 @@ class CrossSection(FM2ProfBase):
 
         # Compute 1D volume as integral of width with respect to z times length
         self._css_total_volume = np.append(
-            [0], cumtrapz(self._css_total_width, self._css_z) * self.length
+            [0], cumulative_trapezoid(self._css_total_width, self._css_z) * self.length
         )
         self._css_flow_volume = np.append(
-            [0], cumtrapz(self._css_flow_width, self._css_z) * self.length
+            [0], cumulative_trapezoid(self._css_flow_width, self._css_z) * self.length
         )
 
         # If sd correction is run, these attributes will be updated.
