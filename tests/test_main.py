@@ -47,16 +47,12 @@ class Test_Main:
         mainArgs = [""]
 
         # 2. Set up expectations
-        reason = "Not all arguments were given."
-        expectedMssg = "Error: {0}".format(reason)
+        expectedMssg = "Error: Not all arguments were given."
 
         # 3. Run test
-        with pytest.raises(SystemExit) as pytest_wrapped_e:
+        with pytest.raises(SystemExit, match=expectedMssg):
             main.main(mainArgs)
 
-        # 4. Verify expectations
-        assert isinstance(pytest_wrapped_e.type, SystemExit)
-        assert pytest_wrapped_e.value.code == expectedMssg
 
     def test_when_incorrect_input_args_systemexit_raised_with_expected_message(self):
         # 1. Set up test data
