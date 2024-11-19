@@ -8,7 +8,7 @@ from typing import Dict, List
 import numpy as np
 import pandas as pd
 import scipy.optimize as so
-from scipy.integrate import cumtrapz
+from scipy.integrate import cumulative_trapezoid
 from tqdm import tqdm
 
 from fm2prof import Functions as FE
@@ -374,10 +374,10 @@ class CrossSection(FM2ProfBase):
 
         # Compute 1D volume as integral of width with respect to z times length
         self._css_total_volume = np.append(
-            [0], cumtrapz(self._css_total_width, self._css_z) * self.length
+            [0], cumulative_trapezoid(self._css_total_width, self._css_z) * self.length
         )
         self._css_flow_volume = np.append(
-            [0], cumtrapz(self._css_flow_width, self._css_z) * self.length
+            [0], cumulative_trapezoid(self._css_flow_width, self._css_z) * self.length
         )
 
         # If sd correction is run, these attributes will be updated.
