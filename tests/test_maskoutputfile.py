@@ -8,93 +8,58 @@ from fm2prof.MaskOutputFile import MaskOutputFile
 from tests.TestUtils import TestUtils
 
 
-class MaskOutputFileHelper:
-    @staticmethod
-    def get_mask_point():
-        mask_point = geojson.utils.generate_random("Point")
-        return mask_point
-
 
 class Test_create_mask_point:
-    def test_when_no_coords_does_not_raise(self):
+    def test_when_no_coords_does_raise(self):
         # 1. Set up test model
         coords = None
         properties = None
-        mask_point = None
+        
         # 2. Set up initial expectations
+        expected_error = "coords cannot be empty."
 
-        # 3. Do test        
-        mask_point = MaskOutputFile.create_mask_point(coords, properties)
+        # 3. Do test
+        with pytest.raises(ValueError, match=expected_error):        
+            MaskOutputFile.create_mask_point(coords, properties)
       
-        # 4. Verify final expectations
-        assert mask_point is not None, "" + "No mask_point generated"
+        
 
     @pytest.mark.parametrize("coords_values", [(4.2, 2.4), (4.2, 2.4, 42)])
     def test_when_valid_coords_does_not_raise(self, coords_values: tuple):
         # 1. Set up test model
         coords = coords_values
         properties = None
-        mask_point = None
 
         # 2. Do test       
         mask_point = MaskOutputFile.create_mask_point(coords, properties)
       
         # 3. Verify final expectations
-        assert mask_point is not None, "" + "No mask_point generated"
-
-    @pytest.mark.parametrize("coords_values", [(4.2)])
-    def test_when_invalid_coords_raises(self, coords_values: tuple):
-        # 1. Set up test model
-        coords = coords_values
-        properties = None
-        mask_point = None
-        # 2. Do test        
-        mask_point = MaskOutputFile.create_mask_point(coords, properties)
-        
-
-        # 3. Verify final expectations
-        assert mask_point is None, "" + "Mask point generated but was not expected."
-
-    def test_when_no_properties_does_not_raise(self):
-        # 1. Set up test model
-        coords = (4.2, 2.4)
-        properties = None
-        mask_point = None
-        # 2. Set up initial expectations
-
-        # 3. Do test     
-        mask_point = MaskOutputFile.create_mask_point(coords, properties)
-       
-        # 4. Verify final expectations
-        assert mask_point is not None, "" + "No mask_point generated"
+        assert mask_point is not None, "No mask_point generated"
 
 
-class Test_validate_extension:
-    @pytest.mark.parametrize("file_name", [(None), ("")])
-    def test_when_no_file_path_doesnot_raise(self, file_name):        
-        MaskOutputFile.validate_extension(file_name)
+
+class Test_validate_extension:    
+    def test_when_none_file_path_does_raise(self):
+        with pytest.raises(TypeError, match=f"file_path should be string or Path, not {type(None)}"):
+            MaskOutputFile.validate_extension(None)
         
 
     def test_when_invalid_extension_raises_expected_exception(self):
         # 1. Set up test data
-        file_name = "test_file.wrongextension"
-
-        # 2. Set expectations
-        expected_error = (
-            "" + "Invalid file path extension, should be .json or .geojson."
-        )
-
+        file_path = Path("test.sjon")
+            
+        # 2. Set expectations    
+        expected_IOError = "Invalid file path extension, should be .json or .geojson."
+        expectedTypeError = f"file_path should be string or Path, not {int}"
+        
         # 3. Run test
-        with pytest.raises(IOError) as e_info:
-            MaskOutputFile.validate_extension(file_name)
+        with pytest.raises(IOError, match=expected_IOError):
+            MaskOutputFile.validate_extension(str(file_path))
+        
+        with pytest.raises(TypeError, match=expectedTypeError):
+            MaskOutputFile.validate_extension(1)
 
-        # 4. Verify final expectations
-        error_message = str(e_info.value)
-        assert error_message == expected_error, (
-            ""
-            + "Expected exception message {},".format(expected_error)
-            + "retrieved {}".format(error_message)
-        )
+
 
     @pytest.mark.parametrize("file_name", [("n.json"), ("n.geojson")])
     def test_when_valid_extension_does_not_raise(self, file_name):       
@@ -102,76 +67,34 @@ class Test_validate_extension:
       
 
 class Test_read_mask_output_file:
-    @pytest.mark.parametrize(
-        "file_path_name",
-        [(None), ("invalidfile.geojson"), ("invalidfile.json"), ("invalidfile.xyz")],
-    )
-    def test_when_invalid_file_path_given_then_emtpy_geojson(self, file_path_name):
+    def test_when_invalid_file_path_given(self, tmp_path):
         # 1. Set up test data
-        read_geojson = None
+        not_existing_file = tmp_path / "test.geojson" 
 
-        # 2. Set up initial expectations
-        expected_geojson = geojson.FeatureCollection(None)
-
-        # 3. Read data
-        read_geojson = MaskOutputFile.read_mask_output_file(file_path_name)
-       
-
-        # 4. Verify final expectations
-        assert read_geojson, "" + "No geojson data was generated."
-        assert read_geojson == expected_geojson, "" + "Expected {} but got {}".format(
-            expected_geojson, read_geojson
-        )
-
-    def test_when_file_path_wrong_extension_then_raise_exception(self):
-        # 1. Set up test data
-        file_path = (
-            TestUtils.get_local_test_data_dir("maskoutputfile_test_data")
-            / "test_file.wrongextension"
-        )
-        read_geojson_data = None
-
-        # 2. Set expectations
-        assert file_path.exists(), "" + "File {} could not be found.".format(file_path)
-        expected_error = (
-            "" + "Invalid file path extension, should be .json or .geojson."
-        )
+        # 2. Set expectation       
+        expected_error = f"File path {not_existing_file} not found"
 
         # 3. Run test
-        with pytest.raises(IOError) as e_info:
-            read_geojson_data = MaskOutputFile.read_mask_output_file(str(file_path))
+        with pytest.raises(FileNotFoundError, match=expected_error):
+            MaskOutputFile.read_mask_output_file(not_existing_file)  
 
-        # 4. Verify final expectations
-        assert not read_geojson_data
-        error_message = str(e_info.value)
-        assert error_message == expected_error, (
-            ""
-            + "Expected exception message {},".format(expected_error)
-            + "retrieved {}".format(error_message)
-        )
-
-    @pytest.mark.parametrize(
-        "file_name", [("no_mask_points.geojson"), ("no_content.geojson")]
-    )
+    
     def test_when_valid_file_with_no_content_then_returns_expected_geojson(
-        self, file_name
+        self, tmp_path
     ):
         # 1. Set up test data
-        file_path: Path = (
-            TestUtils.get_local_test_data_dir("maskoutputfile_test_data") / file_name
-        )
+        file_path: Path = tmp_path / "empty.geojson"
+        with file_path.open("w") as f:
+            geojson.dump({},f)
+        
+        # 2. Set up expectations
+        expected_error = "File is empty or not a valid geojson file."
 
-        expected_geojson = geojson.FeatureCollection(None)
-        assert file_path.is_file(), "File not found at {}".format(file_path)
+        # Run test
+        with pytest.raises(IOError, match=expected_error):
+            MaskOutputFile.read_mask_output_file(file_path)
+            
 
-        # 2. Read data
-        read_geojson = MaskOutputFile.read_mask_output_file(str(file_path))
-
-        # 3. Verify final expectations
-        assert read_geojson, "No geojson data was generated."
-        assert (
-            read_geojson == expected_geojson
-        ), f"Expected {expected_geojson} but got {read_geojson}"
 
     def test_when_valid_file_with_content_then_returns_expected_geojson(self):
         # 1. Set up test data
@@ -180,118 +103,51 @@ class Test_read_mask_output_file:
             / "mask_points.geojson"
         )
 
-        # 2. Verify initial expectations
-        assert file_path.exists(), f"File not found at {file_path}"
-
         # 2. Read data
-        read_geojson = MaskOutputFile.read_mask_output_file(str(file_path))
+        read_geojson = MaskOutputFile.read_mask_output_file(file_path)
 
         # 3. Verify final expectations
-        assert read_geojson, "" + "No geojson data was generated."
-        assert read_geojson.is_valid, "" + "The geojson data is not valid."
+        assert read_geojson, "No geojson data was generated."
+        assert isinstance(read_geojson, geojson.FeatureCollection)
+        assert read_geojson.is_valid, "The geojson data is not valid."
 
 
 class Test_write_mask_output_file:
-    @pytest.fixture(scope="class")
-    def test_folder(self) -> Path:
-        """Prepares the class properties to be used in the tests."""
-        test_dir = (
-            TestUtils.get_artifacts_test_data_dir() / "Output" / "WriteMaskOutputFile"
-        )
-        if not test_dir.is_dir():
-            test_dir.mkdir(parents=True, exist_ok=True)
-        return test_dir
-
-    def test_when_no_file_path_given_then_exception_not_risen(self):
-        # 1. Set up test data
-        file_path = None
-        mask_points = None
-        # 2. Verify test        
-        MaskOutputFile.write_mask_output_file(file_path, mask_points)
-       
-
-    def test_when_file_path_with_wrong_extension_then_exception_is_risen(self):
-        # 1. Set up test data
-        file_path = "test_file.wrongextension"
-        mask_points = None
-
-        # 2. Set expectations
-        expected_error = (
-            "" + "Invalid file path extension, should be .json or .geojson."
-        )
-
-        # 3. Run test
-        with pytest.raises(IOError) as e_info:
-            MaskOutputFile.write_mask_output_file(file_path, mask_points)
-
-        # 4. Verify final expectations
-        error_message = str(e_info.value)
-        assert error_message == expected_error, (
-            ""
-            + "Expected exception message {},".format(expected_error)
-            + "retrieved {}".format(error_message)
-        )
-
     def test_when_valid_file_path_and_no_mask_point_then_writes_expectations(
-        self, test_folder: Path
+        self, tmp_path: Path
     ):
-        # 1. Set up test data
-        file_name = "no_mask_points.geojson"
-        file_path = str(test_folder / file_name)
-        mask_points = None
-
-        # 2. Set expectations
-        expected_mask_points = geojson.FeatureCollection(mask_points)
-        read_mask_points = None
+        # 1. Set up test data       
+        file_path = tmp_path / "no_mask_points.geojson"
+        
+        # 2. Set up expectations
+        error_msg = "mask_points cannot be empty"
 
         # 3. Run test
-        MaskOutputFile.write_mask_output_file(file_path, mask_points)
+        with pytest.raises(ValueError, match=error_msg):
+            MaskOutputFile.write_mask_output_file(file_path=file_path, mask_points=None)
         
 
-        # 4. Verify final expectations
-        assert os.path.exists(file_path), "" + "File {} not found.".format(file_path)
-
-        with open(file_path) as geojson_file:
-            read_mask_points = geojson.load(geojson_file)
-
-        assert read_mask_points, "" + "No mask points were read from {}".format(
-            file_path
-        )
-        assert expected_mask_points == read_mask_points, (
-            ""
-            + "Expected {} ,".format(expected_mask_points)
-            + "but got {}".format(read_mask_points)
-        )
-
     def test_when_valid_file_path_and_mask_points_then_writes_expectations(
-        self, test_folder: Path
+        self, tmp_path
     ):
-        # 1. Set up test data
-        file_name = "mask_points.geojson"
-        file_path = str(test_folder / file_name)
+        # 1. Set up test data      
+        file_path = tmp_path / "mask_points.geojson"
         mask_points = [
-            geojson.Feature(geometry=MaskOutputFileHelper.get_mask_point()),
-            geojson.Feature(geometry=MaskOutputFileHelper.get_mask_point()),
+            geojson.Feature(geometry=geojson.utils.generate_random("Point")),
+            geojson.Feature(geometry=geojson.utils.generate_random("Point")),
         ]
 
         # 2. Set expectations
         expected_mask_points = geojson.FeatureCollection(mask_points)
-        read_mask_points = None
 
         # 3. Run test        
         MaskOutputFile.write_mask_output_file(file_path, mask_points)       
 
         # 4. Verify final expectations
-        assert os.path.exists(file_path), "" + "File {} not found.".format(file_path)
+        assert file_path.exists(), f"File {file_path} not found."
 
-        with open(file_path) as geojson_file:
+        with file_path.open("r") as geojson_file:
             read_mask_points = geojson.load(geojson_file)
 
-        assert read_mask_points, "" + "No mask points were read from {}".format(
-            file_path
-        )
-        assert expected_mask_points == read_mask_points, (
-            ""
-            + "Expected {} ,".format(expected_mask_points)
-            + "but got {}".format(read_mask_points)
-        )
+        assert read_mask_points, f"No mask points were read from {file_path}"
+        assert expected_mask_points == read_mask_points, f"Expected {expected_mask_points} , but got {read_mask_points}"

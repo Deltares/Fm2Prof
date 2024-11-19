@@ -20,15 +20,15 @@ All names, logos, and references to "Deltares" are registered trademarks of
 Stichting Deltares and remain full property of Stichting Deltares at all times.
 All rights reserved.
 """
-
-import os
-
+from pathlib import Path
+from typing import Union, Optional
 import geojson
+
 
 
 class MaskOutputFile:
     @staticmethod
-    def create_mask_point(coords: geojson.coords, properties: dict):
+    def create_mask_point(coords: geojson.coords, properties: Optional[dict] = None) -> geojson.Feature:
         """Creates a Point based on the properties and coordinates given.
 
         Arguments:
@@ -36,43 +36,45 @@ class MaskOutputFile:
                 Coordinates tuple (x,y) for the mask point.
             properties {dict} -- Dictionary of properties
         """
-        output_mask = geojson.Feature(geometry=geojson.Point(coords))
+        if not coords:
+            raise ValueError("coords cannot be empty.")
+        output_mask = geojson.Feature(geometry=geojson.Point(coords))       
+        
         if properties:
             output_mask.properties = properties
         return output_mask
 
     @staticmethod
-    def validate_extension(file_path: str):
-        if not file_path:
-            # Should not be evaluated
-            return
-        if not file_path.endswith(".json") and not file_path.endswith(".geojson"):
+    def validate_extension(file_path: Union[str, Path]) -> None:
+        if not isinstance(file_path, (str, Path)):
+            err_msg = f"file_path should be string or Path, not {type(file_path)}"
+            raise TypeError(err_msg)
+        if Path(file_path).suffix not in [".json", ".geojson"]:
             raise IOError(
-                "Invalid file path extension, " + "should be .json or .geojson."
+                "Invalid file path extension, should be .json or .geojson."
             )
 
     @staticmethod
-    def read_mask_output_file(file_path: str):
+    def read_mask_output_file(file_path: Union[str, Path]) -> dict:
         """Imports a GeoJson from a given json file path.
 
         Arguments:
             file_path {str} -- Location of the json file
         """
-        geojson_data = geojson.FeatureCollection(None)
-        if not file_path or not os.path.exists(file_path):
-            return geojson_data
+        file_path = Path(file_path)
+        if not file_path.exists():
+            err_msg = f"File path {file_path} not found."
+            raise FileNotFoundError(err_msg)
 
         MaskOutputFile.validate_extension(file_path)
-        with open(file_path) as geojson_file:
-            try:
-                geojson_data = geojson.load(geojson_file)
-            except:
-                return geojson_data
-
+        with file_path.open("r") as geojson_file:            
+            geojson_data = geojson.load(geojson_file)
+        if not isinstance(geojson_data, geojson.FeatureCollection):
+            raise IOError("File is empty or not a valid geojson file.")
         return geojson_data
 
     @staticmethod
-    def write_mask_output_file(file_path: str, mask_points: list):
+    def write_mask_output_file(file_path: Union[Path, str], mask_points: list) -> None:
         """Writes a .geojson file with a Feature collection containing
         the mask_points list given as input.
 
@@ -80,8 +82,10 @@ class MaskOutputFile:
             file_path {str} -- file_path where to store the geojson.
             mask_points {list} -- List of features to output.
         """
-        if file_path:
-            MaskOutputFile.validate_extension(file_path)
-            feature_collection = geojson.FeatureCollection(mask_points)
-            with open(file_path, "w") as f:
-                geojson.dump(feature_collection, f, indent=4)
+        file_path = Path(file_path)
+        if not mask_points:
+            raise ValueError("mask_points cannot be empty.")
+        MaskOutputFile.validate_extension(file_path)
+        feature_collection = geojson.FeatureCollection(mask_points)
+        with file_path.open("w") as f:
+            geojson.dump(feature_collection, f, indent=4)
