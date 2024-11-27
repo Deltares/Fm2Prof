@@ -10,7 +10,7 @@ import os
 from logging import Logger
 from pathlib import Path
 from pydoc import locate
-from typing import AnyStr, Dict, List, Mapping, Type, Union
+from typing import AnyStr, Dict, List, Mapping, Type, Union, Generator
 
 from fm2prof.common import FM2ProfBase
 
@@ -100,9 +100,7 @@ class IniFile(FM2ProfBase):
         self._configuration = self._get_template_ini()  # What will be used
 
         if file_path is None:
-            self.set_logger_message(
-                "No ini file given, using default options", "warning"
-            )
+            self.set_logger_message("No ini file given, using default options", "warning")
             return
         else:
             file_path = Path(file_path)
@@ -112,9 +110,7 @@ class IniFile(FM2ProfBase):
             self.set_logger_message(f"Received ini file: {self._file}", "debug")
             self._read_inifile(file_path)
         elif file_path.is_dir():
-            self.set_logger_message(
-                "No ini file given, using default options", "warning"
-            )
+            self.set_logger_message("No ini file given, using default options", "warning")
             pass
         else:
             # User has supplied a file, but the file does not exist. Raise error.
@@ -161,9 +157,7 @@ class IniFile(FM2ProfBase):
             output directory (Path)
 
         """
-        op = self._configuration["sections"]["output"][self.__output_directory_key][
-            "value"
-        ]
+        op = self._configuration["sections"]["output"][self.__output_directory_key]["value"]
 
         return self.get_relative_path(op)
 
@@ -175,9 +169,9 @@ class IniFile(FM2ProfBase):
             name: name of the output-directory
         """
 
-        self._configuration["sections"]["output"][self.__output_directory_key][
-            "value"
-        ] = self._get_valid_output_dir(name)
+        self._configuration["sections"]["output"][self.__output_directory_key]["value"] = self._get_valid_output_dir(
+            name
+        )
 
         return self.get_output_directory()
 
@@ -236,19 +230,15 @@ class IniFile(FM2ProfBase):
         """
         Use this method to set the output directory within testing framework only
         """
-        self._configuration["sections"]["output"][self.__output_directory_key][
-            "value"
-        ] = value
+        self._configuration["sections"]["output"][self.__output_directory_key]["value"] = value
 
     def print_configuration(self) -> str:
         """Use this method to print a string of the configuration used"""
         return self._print_configuration(self._configuration)
 
-    def iter_parameters(self):
-        """Use this method to iterate through the names and values of all parameters"""
-        for parameter, content in (
-            self._configuration["sections"].get("parameters").items()
-        ):
+    def iter_parameters(self) -> Generator[Tuple[str], None, None]:
+        """Iterate through the names and values of all parameters."""
+        for parameter, content in self._configuration["sections"].get("parameters").items():
             yield (
                 parameter,
                 content.get("type"),
@@ -262,9 +252,7 @@ class IniFile(FM2ProfBase):
         for sectionname, section in inputdict.get("sections").items():
             f.write(f"[{sectionname}]\n")
             for key, contents in section.items():
-                f.write(
-                    f"{key:<30}= {str(contents.get('value')):<10}# {contents.get('hint')}\n"
-                )
+                f.write(f"{key:<30}= {str(contents.get('value')):<10}# {contents.get('hint')}\n")
             f.write("\n")
         return f.getvalue()
 
@@ -275,9 +263,7 @@ class IniFile(FM2ProfBase):
                 return key
         return ""
 
-    def _get_from_configuration(
-        self, section: str, key: str
-    ) -> Union[str, bool, int, float]:
+    def _get_from_configuration(self, section: str, key: str) -> Union[str, bool, int, float]:
         for parameter, content in self._configuration["sections"].get(section).items():
             if parameter.lower() == key.lower():
                 return content.get("value")
@@ -324,9 +310,7 @@ class IniFile(FM2ProfBase):
         try:
             self._extract_input_files(supplied_ini)
         except Exception as e_info:
-            self.set_logger_message(
-                "Unexpected error reading input files. Check config file", "error"
-            )
+            self.set_logger_message("Unexpected error reading input files. Check config file", "error")
         try:
             self._extract_parameters(supplied_ini, self.__input_parameters_key)
             self._extract_parameters(supplied_ini, self.__input_debug_key)
@@ -338,9 +322,7 @@ class IniFile(FM2ProfBase):
         try:
             self._extract_output_dir(supplied_ini)
         except Exception:
-            self.set_logger_message(
-                "Unexpected error output parameters. Check config file", "error"
-            )
+            self.set_logger_message("Unexpected error output parameters. Check config file", "error")
 
     def _extract_parameters(self, supplied_ini: Mapping[str, list], section: str):
         """Extract InputParameters and convert values either integer or float from string
@@ -362,9 +344,7 @@ class IniFile(FM2ProfBase):
                 parsed_value = key_type(value)
                 self.set_parameter(key_default, parsed_value, section)
             except ValueError:
-                self.set_logger_message(
-                    f"{key} could not be cast as {key_type}", "debug"
-                )
+                self.set_logger_message(f"{key} could not be cast as {key_type}", "debug")
             except KeyError:
                 pass
 
@@ -395,9 +375,7 @@ class IniFile(FM2ProfBase):
                 continue
 
             if key_default in ("2DMapOutput", "CrossSectionLocationFile"):
-                self.set_logger_message(
-                    f"Could not find input file: {key_default}", "error"
-                )
+                self.set_logger_message(f"Could not find input file: {key_default}", "error")
                 raise FileNotFoundError
             else:
                 self.set_logger_message(
@@ -434,9 +412,7 @@ class IniFile(FM2ProfBase):
             if key.lower() == self.__output_directory_key.lower():
                 self.set_output_directory(value)
             else:
-                self.set_logger_message(
-                    f"Unknown key {key} found in configuration file", "warning"
-                )
+                self.set_logger_message(f"Unknown key {key} found in configuration file", "warning")
 
     def _get_valid_output_dir(self, output_dir: str):
         """
@@ -457,9 +433,7 @@ class IniFile(FM2ProfBase):
     @property
     def _output_dir(self):
         try:
-            return self._configuration["sections"]["output"][
-                self.__output_directory_key
-            ]["value"]
+            return self._configuration["sections"]["output"][self.__output_directory_key]["value"]
         except KeyError:
             return None
 
