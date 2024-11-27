@@ -13,7 +13,7 @@ from tqdm import tqdm
 
 from fm2prof import Functions as FE
 from fm2prof.common import FM2ProfBase, FrictionTable
-from fm2prof.IniFile import IniFile
+from fm2prof.ini_file import IniFile
 from fm2prof.MaskOutputFile import MaskOutputFile
 
 from .lib import polysimplify as PS
