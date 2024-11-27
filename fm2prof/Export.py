@@ -8,7 +8,7 @@ import numpy as np
 # import from package
 from fm2prof import Functions as FE
 from fm2prof.common import FM2ProfBase
-from fm2prof.CrossSection import CrossSection
+from fm2prof.cross_section import CrossSection
 
 
 @dataclass

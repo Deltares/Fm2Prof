@@ -269,7 +269,7 @@ class IniFile(FM2ProfBase):
         return f.getvalue()
 
 
-    def iter_parameters(self) -> Generator[Tuple[str]]:
+    def iter_parameters(self) -> Generator[Tuple[str], None, None]:
         """Iterate through the names and values of all parameters."""
         for parameter, content in (
             self._configuration["sections"].get("parameters").items()
