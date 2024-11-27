@@ -10,7 +10,7 @@ import os
 from logging import Logger
 from pathlib import Path
 from pydoc import locate
-from typing import AnyStr, Dict, List, Mapping, Type, Union, Generator
+from typing import AnyStr, Dict, List, Mapping, Type, Union, Generator, Tuple
 
 from fm2prof.common import FM2ProfBase
 
