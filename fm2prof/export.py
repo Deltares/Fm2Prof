@@ -1,12 +1,12 @@
-"""Input/output"""
+"""Classes for exporting data."""
 
 # import from standar library
 from dataclasses import astuple, dataclass
 from typing import List
+
 import numpy as np
 
 # import from package
-from fm2prof import Functions as FE
 from fm2prof.common import FM2ProfBase
 from fm2prof.CrossSection import CrossSection
 
@@ -32,13 +32,12 @@ class OutputFiles:
 
 
 class Export1DModelData(FM2ProfBase):
-    """
-    This class contains all functions related to exporting to various output export.
+    """This class contains all functions related to exporting to various output export.
     In the future, split in different classes for SOBEK, D-Hydro etc formats
     """
 
     def export_geometry(
-        self, cross_sections: List[CrossSection], file_path, fmt="sobek3"
+        self, cross_sections: List[CrossSection], file_path, fmt="sobek3",
     ):
         with open(file_path, "w") as f:
             if fmt == "sobek3":
@@ -52,7 +51,7 @@ class Export1DModelData(FM2ProfBase):
                 self._write_geometry_testformat(f, cross_sections)
 
     def export_roughness(
-        self, cross_sections, file_path, fmt="sobek3", roughness_section="Main"
+        self, cross_sections, file_path, fmt="sobek3", roughness_section="Main",
     ):
         with open(file_path, "w") as f:
             if fmt == "sobek3":
@@ -67,11 +66,10 @@ class Export1DModelData(FM2ProfBase):
 
     def export_volumes(self, cross_sections, file_path):
         """Write to file the volume/waterlevel information"""
-
         with open(file_path, "w") as f:
             # Write header
             f.write(
-                "id,z,2D_total_volume,2D_flow_volume,2D_wet_area,2D_flow_area,1D_total_volume_sd,1D_total_volume,1D_flow_volume_sd,1D_flow_volume,1D_total_width,1D_flow_width\n"
+                "id,z,2D_total_volume,2D_flow_volume,2D_wet_area,2D_flow_area,1D_total_volume_sd,1D_total_volume,1D_flow_volume_sd,1D_flow_volume,1D_total_width,1D_flow_width\n",
             )
 
             for css in cross_sections:
@@ -93,8 +91,8 @@ class Export1DModelData(FM2ProfBase):
 
                     f.write(
                         "{id},{z},{tv2d},{fv2d},{wa2d},{fa2d},{tvsd1d},{tv1d},{fvsd1d},{fv1d},{tw1d},{fw1d}\n".format(
-                            **outputdata
-                        )
+                            **outputdata,
+                        ),
                     )
 
     def export_crossSectionLocations(self, cross_sections, file_path):
@@ -102,16 +100,16 @@ class Export1DModelData(FM2ProfBase):
         with open(file_path, "w") as fid:
             # Write general secton
             fid.write(
-                "[General]\nmajorVersion\t\t\t= 1\nminorversion\t\t\t= 0\nfileType\t\t\t\t= crossLoc\n\n"
+                "[General]\nmajorVersion\t\t\t= 1\nminorversion\t\t\t= 0\nfileType\t\t\t\t= crossLoc\n\n",
             )
 
             for css in cross_sections:
                 fid.write("[CrossSection]\n")
-                fid.write("\tid\t\t\t\t\t= {}\n".format(css.name))
-                fid.write("\tbranchid\t\t\t= {}\n".format(css.branch))
-                fid.write("\tchainage\t\t\t= {}\n".format(css.chainage))
+                fid.write(f"\tid\t\t\t\t\t= {css.name}\n")
+                fid.write(f"\tbranchid\t\t\t= {css.branch}\n")
+                fid.write(f"\tchainage\t\t\t= {css.chainage}\n")
                 fid.write("\tshift\t\t\t\t= 0.000\n")
-                fid.write("\tdefinition\t\t\t= {}\n\n".format(css.name))
+                fid.write(f"\tdefinition\t\t\t= {css.name}\n\n")
 
     """ test file formats """
 
@@ -121,12 +119,7 @@ class Export1DModelData(FM2ProfBase):
         for index, cross_section in enumerate(cross_sections):
             for i in range(len(cross_section.z)):
                 fid.write(
-                    "{}, {}, {}, {}\n".format(
-                        cross_section.chainage,
-                        cross_section.z[i],
-                        cross_section.total_width[i],
-                        cross_section.flow_width[i],
-                    )
+                    f"{cross_section.chainage}, {cross_section.z[i]}, {cross_section.total_width[i]}, {cross_section.flow_width[i]}\n",
                 )
 
     def _write_roughness_testformat(self, fid, cross_sections):
@@ -149,25 +142,22 @@ class Export1DModelData(FM2ProfBase):
                         break
                     if np.isnan(chezy) == False:
                         fid.write(
-                            "{}, {}, {}, {}\n".format(
-                                cross_section.chainage, roughnesstype, level, chezy
-                            )
+                            f"{cross_section.chainage}, {roughnesstype}, {level}, {chezy}\n",
                         )
 
     """ FM 1D file formats """
 
     def _write_geometry_fm1d(self, fid, cross_sections):
         """FM1D uses a configuration 'Delft' file style format"""
-
         # Write general secton
         fid.write(
-            "[General]\nmajorVersion\t\t\t= 1\nminorversion\t\t\t= 0\nfileType\t\t\t\t= crossDef\n\n"
+            "[General]\nmajorVersion\t\t\t= 1\nminorversion\t\t\t= 0\nfileType\t\t\t\t= crossDef\n\n",
         )
 
         for index, css in enumerate(cross_sections):
-            z = ["{:.4f}".format(iz) for iz in css.z]
-            fw = ["{:.4f}".format(iz) for iz in css.flow_width]
-            tw = ["{:.4f}".format(iz) for iz in css.total_width]
+            z = [f"{iz:.4f}" for iz in css.z]
+            fw = [f"{iz:.4f}" for iz in css.flow_width]
+            tw = [f"{iz:.4f}" for iz in css.total_width]
 
             # check for nan, because a channel with only one roughness value (ideal case) will not have this value
             if np.isnan(css.floodplain_base) == False:
@@ -177,43 +167,43 @@ class Export1DModelData(FM2ProfBase):
 
             fid.write("[Definition]\n")
             fid.write(
-                "\tid\t\t\t\t\t= {}\n".format(css.name)
+                f"\tid\t\t\t\t\t= {css.name}\n"
                 + "\ttype\t\t\t\t= tabulated\n"
                 + "\tthalweg\t\t\t\t= 0.000\n"
-                + "\tnumLevels\t\t\t= {}\n".format(len(z))
+                + f"\tnumLevels\t\t\t= {len(z)}\n"
                 + "\tlevels\t\t\t\t= {}\n".format(" ".join(z))
                 + "\tflowWidths\t\t\t= {}\n".format(" ".join(fw))
                 + "\ttotalWidths\t\t\t= {}\n".format(" ".join(tw))
-                + "\tsd_crest\t\t\t= {:.4f}\n".format(css.crest_level)
-                + "\tsd_flowArea\t\t\t= {}\n".format(css.extra_flow_area)
-                + "\tsd_totalArea\t\t= {:.4f}\n".format(css.extra_total_area)
-                + "\tsd_baseLevel\t\t= {}\n".format(css.floodplain_base)
+                + f"\tsd_crest\t\t\t= {css.crest_level:.4f}\n"
+                + f"\tsd_flowArea\t\t\t= {css.extra_flow_area}\n"
+                + f"\tsd_totalArea\t\t= {css.extra_total_area:.4f}\n"
+                + f"\tsd_baseLevel\t\t= {css.floodplain_base}\n"
                 + "\tmain\t\t\t\t= {:.4f}\n".format(css.section_widths["main"])
                 + "\tfloodPlain1\t\t\t= {:.4f}\n".format(
-                    css.section_widths["floodplain1"]
+                    css.section_widths["floodplain1"],
                 )
                 + "\tfloodPlain2\t\t\t= {:.4f}\n".format(
-                    css.section_widths["floodplain2"]
+                    css.section_widths["floodplain2"],
                 )
                 + "\tgroundlayerUsed\t\t= 0\n"
-                + "\tgroundLayer\t\t\t= 0.000\n\n"
+                + "\tgroundLayer\t\t\t= 0.000\n\n",
             )
 
     def _write_roughness_fm1d(self, fid, cross_sections, section):
         """"""
-        general_sec = """[General]
+        general_sec = f"""[General]
         majorVersion          = 1                   
         minorVersion          = 0                   
         fileType              = roughness        
 
     [Content]
-        sectionId             = {}                
+        sectionId             = {section}                
         flowDirection         = False               
         interpolate           = 1                   
         globalType            = 1                   
         globalValue           = 45               
 
-    """.format(section)
+    """
 
         branch_sec = self._get_fm1d_branch_sec(cross_sections, section.lower())
         definition_sec = self._get_fm1d_definition_sec(cross_sections, section.lower())
@@ -262,7 +252,7 @@ class Export1DModelData(FM2ProfBase):
                             css.branch,
                             len(css.friction_tables[section].level),
                             " ".join(
-                                map("{:.4f}".format, css.friction_tables[section].level)
+                                map("{:.4f}".format, css.friction_tables[section].level),
                             ),
                         )
                 except KeyError:
@@ -279,7 +269,7 @@ class Export1DModelData(FM2ProfBase):
 
         # write header
         fid.write(
-            "id,Name,Data_type,level,Total width,Flow width,Profile_type,branch,chainage,width main channel,width floodplain 1,width floodplain 2,width sediment transport,Use Summerdike,Crest level summerdike,Floodplain baselevel behind summerdike,Flow area behind summerdike,Total area behind summerdike,Use groundlayer,Ground layer depth\n"
+            "id,Name,Data_type,level,Total width,Flow width,Profile_type,branch,chainage,width main channel,width floodplain 1,width floodplain 2,width sediment transport,Use Summerdike,Crest level summerdike,Floodplain baselevel behind summerdike,Flow area behind summerdike,Total area behind summerdike,Use groundlayer,Ground layer depth\n",
         )
 
         for index, cross_section in enumerate(cross_sections):
@@ -301,7 +291,7 @@ class Export1DModelData(FM2ProfBase):
                         floodplain_base = str(cross_section.floodplain_base)
                     else:
                         floodplain_base = str(
-                            cross_section.crest_level
+                            cross_section.crest_level,
                         )  # virtual summer dike
 
                 fid.write(
@@ -331,7 +321,7 @@ class Export1DModelData(FM2ProfBase):
                     + ","
                     + total_area
                     + ",,,,,,"
-                    + "\n"
+                    + "\n",
                 )
 
                 # this is to avoid the unique z-value error in sobek, the added 'error' depends on the total_width, this is to make sure the order or points is correct
@@ -353,14 +343,13 @@ class Export1DModelData(FM2ProfBase):
                         + ","
                         + str(flow_width)
                         + ",,,,,,,,,,,,,,"
-                        + "\n"
+                        + "\n",
                     )
             except:
                 self.set_logger_message(
                     f"Cross-section {cross_section.name} not written to sobek format cross-section file",
                     "error",
                 )
-                pass
 
     def _write_roughness_sobek3(self, fid, cross_sections):
         # note, the chainage is currently set to the X-coordinate of the cross-section (straight channel)
@@ -368,11 +357,11 @@ class Export1DModelData(FM2ProfBase):
 
         # write header
         fid.write(
-            "Name,Chainage,RoughnessType,SectionType,Dependance,Interpolation,Pos/neg,R_pos_constant,Q_pos,R_pos_f(Q),H_pos,R_pos__f(h),R_neg_constant,Q_neg,R_neg_f(Q),H_neg,R_neg_f(h)\n"
+            "Name,Chainage,RoughnessType,SectionType,Dependance,Interpolation,Pos/neg,R_pos_constant,Q_pos,R_pos_f(Q),H_pos,R_pos__f(h),R_neg_constant,Q_neg,R_neg_f(Q),H_neg,R_neg_f(h)\n",
         )
 
         sections = np.unique(
-            [s for css in cross_sections for s in css.friction_tables.keys()]
+            [s for css in cross_sections for s in css.friction_tables.keys()],
         )
 
         for section in sections:
@@ -388,7 +377,7 @@ class Export1DModelData(FM2ProfBase):
                         table = cross_section.friction_tables[section]
                         plain = "FloodPlain2"
                     else:
-                        raise Exception("Unknown section name: {}".format(section))
+                        raise Exception(f"Unknown section name: {section}")
 
                     for level, friction in zip(table.level, table.friction):
                         fid.write(
@@ -410,5 +399,5 @@ class Export1DModelData(FM2ProfBase):
                             + ","
                             + str(friction)
                             + ",,,,,"
-                            + "\n"
+                            + "\n",
                         )
