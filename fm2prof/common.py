@@ -194,15 +194,13 @@ class FM2ProfBase:
         self.__logger.setLevel(logging.DEBUG)
 
         # create formatter
-        self.__logger.__logformatter = ElapsedFormatter() #noqa: SLF001
-        self.__logger._Filelogformatter = ElapsedFileFormatter() #noqa: SLF001
-
+        self.__logger.__logformatter = ElapsedFormatter()
+        self.__logger._Filelogformatter = ElapsedFileFormatter()
         # create console handler
         if TqdmLoggingHandler not in map(type, self.__logger.handlers):
             ch = TqdmLoggingHandler()
             ch.setLevel(logging.DEBUG)
-            ch.setFormatter(self.__logger.__logformatter) #noqa: SLF001
-            self.__logger.addHandler(ch)
+            ch.setFormatter(self.__logger.__logformatter)
 
     def get_logger(self) -> Logger:
         """Use this method to return logger object."""
@@ -234,10 +232,10 @@ class FM2ProfBase:
 
         if header:
             self.get_logformatter().set_intro(True)
-            self.get_logger()._Filelogformatter.set_intro(True) #noqa: SLF001
+            self.get_logger()._Filelogformatter.set_intro(True)
         else:
             self.get_logformatter().set_intro(False)
-            self.get_logger()._Filelogformatter.set_intro(False) #noqa: SLF001
+            self.get_logger()._Filelogformatter.set_intro(False)
 
         if level.lower() not in ["info", "debug", "warning", "error", "critical"]:
             err_msg = f"{level.lower()} is not valid logging level."
@@ -276,11 +274,11 @@ class FM2ProfBase:
 
     def get_logformatter(self) -> ElapsedFormatter:
         """Returns log formatter."""
-        return self.get_logger().__logformatter #noqa: SLF001
+        return self.get_logger().__logformatter
 
     def get_filelogformatter(self) -> ElapsedFormatter:
         """Returns file log formatter."""
-        return self.get_logger()._Filelogformatter #noqa: SLF001
+        return self.get_logger()._Filelogformatter
 
     def set_logfile(self, output_dir: str | Path, filename: str = "fm2prof.log") -> None:
         """Set log file.
@@ -295,7 +293,7 @@ class FM2ProfBase:
             raise ValueError(err_msg)
         fh = logging.FileHandler(Path(output_dir).joinpath(filename), encoding="utf-8")
         fh.setLevel(logging.DEBUG)
-        fh.setFormatter(self.get_logger()._Filelogformatter) #noqa: SLF001
+        fh.setFormatter(self.get_logger()._Filelogformatter)
         self.__logger.addHandler(fh)
 
     def set_inifile(self, inifile: IniFile = None) -> None:
