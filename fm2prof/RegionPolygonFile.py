@@ -45,7 +45,7 @@ class PolygonFile(FM2ProfBase):
         self.undefined = -999
 
     def classify_points_with_property(
-        self, points: Iterable[list], property_name: str = "name"
+        self, points: Iterable[Point], property_name: str = "name"
     ) -> np.array:
         """
         Classifies points as belonging to which region
@@ -66,7 +66,7 @@ class PolygonFile(FM2ProfBase):
         return np.array(points_regions)
 
     def classify_points_with_property_shapely_prep(
-        self, points: Iterable[list], property_name: str = "name"
+        self, points: Iterable[Point], property_name: str = "name"
     ):
         """
         Classifies points as belonging to which region
@@ -93,7 +93,7 @@ class PolygonFile(FM2ProfBase):
         return np.array(points_regions)
 
     def classify_points_with_property_rtree_by_polygons(
-        self, points: Iterable[list], property_name: str = "name"
+        self, points: Iterable[Point], property_name: str = "name"
     ) -> list:
         """Applies RTree index to quickly classify points in polygons.
 
