@@ -82,6 +82,8 @@ class MaskOutputFile:
             file_path {str} -- file_path where to store the geojson.
             mask_points {list} -- List of features to output.
         """
+        if not file_path:
+            raise ValueError("file_path is required.")
         file_path = Path(file_path)
         if not mask_points:
             raise ValueError("mask_points cannot be empty.")
