@@ -232,7 +232,7 @@ class RegionPolygonFile(PolygonFile):
         self._check_overlap()
 
     def classify_points(
-        self, points: Iterable[list], property_name: str = "id"
+        self, points: Iterable[Point], property_name: str = "id"
     ) -> list:
         return self.classify_points_with_property(points, property_name=property_name)
 
@@ -251,7 +251,7 @@ class SectionPolygonFile(PolygonFile):
         self.parse_geojson_file(file_path)
         self._validate_sections()
 
-    def classify_points(self, points: Iterable[list]):
+    def classify_points(self, points: Iterable[Point]):
         return self.classify_points_with_property(points, property_name="section")
 
     def _validate_sections(self):
