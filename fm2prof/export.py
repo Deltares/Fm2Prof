@@ -1,14 +1,20 @@
 """Classes for exporting data."""
 
+from __future__ import annotations
+
 # import from standar library
 from dataclasses import astuple, dataclass
-from typing import List
+from pathlib import Path
+from typing import TYPE_CHECKING, Iterator
 
 import numpy as np
 
 # import from package
 from fm2prof.common import FM2ProfBase
-from fm2prof.CrossSection import CrossSection
+
+if TYPE_CHECKING:
+    from io import TextIOWrapper
+    from fm2prof.CrossSection import CrossSection
 
 
 @dataclass
@@ -24,22 +30,36 @@ class OutputFiles:
     test_roughness: str = "roughness_test.csv"
     fm2prof_volume: str = "volumes.csv"
 
-    def __getitem__(self, index):
+    def __getitem__(self, index: int) -> str:
+        """Get item by index from OutputFiles dataclass."""
         return astuple(self)[index]
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator:
+        """Get iterator of OutputFiles items."""
         return iter(astuple(self))
 
 
 class Export1DModelData(FM2ProfBase):
-    """This class contains all functions related to exporting to various output export.
+    """This class contains all functions related to exporting to various outputs.
+
     In the future, split in different classes for SOBEK, D-Hydro etc formats
     """
 
     def export_geometry(
-        self, cross_sections: List[CrossSection], file_path, fmt="sobek3",
-    ):
-        with open(file_path, "w") as f:
+        self,
+        cross_sections: list[CrossSection],
+        file_path: Path | str,
+        fmt: str = "sobek3",
+    ) -> None:
+        """Export cross section geometries in different formats.
+
+        Args:
+            cross_sections (list[CrossSection]): List of cross sections.
+            file_path (Path | str): File path to write to.
+            fmt (str): Format to write to. Options are sobek3, dflow1d, and testformat.
+                        Defaults to sobek3
+        """
+        with Path(file_path).open("w") as f:
             if fmt == "sobek3":
                 """SOBEK 3 style csv"""
                 self._write_geometry_sobek3(f, cross_sections)
@@ -51,9 +71,21 @@ class Export1DModelData(FM2ProfBase):
                 self._write_geometry_testformat(f, cross_sections)
 
     def export_roughness(
-        self, cross_sections, file_path, fmt="sobek3", roughness_section="Main",
-    ):
-        with open(file_path, "w") as f:
+        self,
+        cross_sections: list[CrossSection],
+        file_path: str | Path,
+        fmt: str = "sobek3",
+        roughness_section: str = "Main",
+    ) -> None:
+        """Export roughnes in different formats.
+
+        Args:
+            cross_sections (list[CrossSection]): List of cross sections
+            file_path (str | Path): File path to write to
+            fmt (str, optional): Format to write to. Defaults to "sobek3".
+            roughness_section (str, optional): Name of roughness section. Defaults to "Main".
+        """
+        with Path(file_path).open("w") as f:
             if fmt == "sobek3":
                 """SOBEK 3 style csv"""
                 self._write_roughness_sobek3(f, cross_sections)
@@ -64,9 +96,14 @@ class Export1DModelData(FM2ProfBase):
                 """test format for system tests, only has geometry (no summerdike)"""
                 self._write_roughness_testformat(f, cross_sections)
 
-    def export_volumes(self, cross_sections, file_path):
-        """Write to file the volume/waterlevel information"""
-        with open(file_path, "w") as f:
+    def export_volumes(self, cross_sections: list[CrossSection], file_path: str | Path) -> None:
+        """Write to file the volume/waterlevel information.
+
+        Args:
+            cross_sections (list[CrossSection]): List of cross sections.
+            file_path (str | Path): File path to write to.
+        """
+        with Path(file_path).open("w") as f:
             # Write header
             f.write(
                 "id,z,2D_total_volume,2D_flow_volume,2D_wet_area,2D_flow_area,1D_total_volume_sd,1D_total_volume,1D_flow_volume_sd,1D_flow_volume,1D_total_width,1D_flow_width\n",
@@ -74,20 +111,20 @@ class Export1DModelData(FM2ProfBase):
 
             for css in cross_sections:
                 for i in range(len(css._css_z)):
-                    outputdata = dict(
-                        id=css.name,
-                        z=css._css_z[i],
-                        tv2d=css._fm_total_volume[i],
-                        fv2d=css._fm_flow_volume[i],
-                        wa2d=css._fm_wet_area[i],
-                        fa2d=css._fm_flow_area[i],
-                        tvsd1d=css._css_total_volume_corrected[i],
-                        tv1d=css._css_total_volume[i],
-                        fvsd1d=css._css_flow_volume_corrected[i],
-                        fv1d=css._css_flow_volume[i],
-                        tw1d=css._css_total_width[i],
-                        fw1d=css._css_flow_width[i],
-                    )
+                    outputdata = {
+                        "id": css.name,
+                        "z": css._css_z[i],
+                        "tv2d": css._fm_total_volume[i],
+                        "fv2d": css._fm_flow_volume[i],
+                        "wa2d": css._fm_wet_area[i],
+                        "fa2d": css._fm_flow_area[i],
+                        "tvsd1d": css._css_total_volume_corrected[i],
+                        "tv1d": css._css_total_volume[i],
+                        "fvsd1d": css._css_flow_volume_corrected[i],
+                        "fv1d": css._css_flow_volume[i],
+                        "tw1d": css._css_total_width[i],
+                        "fw1d": css._css_flow_width[i],
+                    }
 
                     f.write(
                         "{id},{z},{tv2d},{fv2d},{wa2d},{fa2d},{tvsd1d},{tv1d},{fvsd1d},{fv1d},{tw1d},{fw1d}\n".format(
@@ -95,9 +132,14 @@ class Export1DModelData(FM2ProfBase):
                         ),
                     )
 
-    def export_crossSectionLocations(self, cross_sections, file_path):
-        """DIMR format"""
-        with open(file_path, "w") as fid:
+    def export_cross_section_locations(self, cross_sections: list[CrossSection], file_path: str | Path) -> None:
+        """Export cross section locations.
+
+        Args:
+            cross_sections (list[CrossSection]): List of cross sections.
+            file_path (str | Path): file path to write to.
+        """
+        with Path(file_path).open("w") as fid:
             # Write general secton
             fid.write(
                 "[General]\nmajorVersion\t\t\t= 1\nminorversion\t\t\t= 0\nfileType\t\t\t\t= crossLoc\n\n",
@@ -113,13 +155,14 @@ class Export1DModelData(FM2ProfBase):
 
     """ test file formats """
 
-    def _write_geometry_testformat(self, fid, cross_sections):
+    def _write_geometry_testformat(self, fid: TextIOWrapper, cross_sections: list[CrossSection]) -> None:
         # write header
         fid.write("chainage,z,total width,flow width\n")
-        for index, cross_section in enumerate(cross_sections):
+        for _index, cross_section in enumerate(cross_sections):
             for i in range(len(cross_section.z)):
                 fid.write(
-                    f"{cross_section.chainage}, {cross_section.z[i]}, {cross_section.total_width[i]}, {cross_section.flow_width[i]}\n",
+                    f"{cross_section.chainage}, {cross_section.z[i]}, {cross_section.total_width[i]},"
+                    f"{cross_section.flow_width[i]}\n",
                 )
 
     def _write_roughness_testformat(self, fid, cross_sections):
