@@ -27,6 +27,8 @@ if TYPE_CHECKING:
 
 pd.options.mode.chained_assignment = None  # default='warn'
 
+NODATA = -999  # this should be equal to the missing number value from D-HYDRO
+
 
 class CrossSectionHelpers(FM2ProfBase):
     """Collection of function(s) to help with post-processing of cross-sections.
@@ -111,6 +113,8 @@ class CrossSectionHelpers(FM2ProfBase):
 
 
 class CrossSection(FM2ProfBase):
+    """Cross section class."""
+
     __cs_parameter_transitionheight_sd = "SDTransitionHeight"
     __cs_parameter_conveyance_detection_method = "ConveyanceDetectionMethod"
     __cs_parameter_velocity_threshold = "AbsoluteVelocityThreshold"
@@ -248,7 +252,7 @@ class CrossSection(FM2ProfBase):
         raise ValueError(err_msg)
 
     # Public functions
-    def build_geometry(self) -> None:
+    def build_geometry(self) -> None:  # noqa: PLR0915
         """Build 1D geometrical cross-section from 2D data.
 
         The 2D data is set on initalisation of the `CrossSection` object.
@@ -270,16 +274,14 @@ class CrossSection(FM2ProfBase):
         # Unpack FM data
         def get_timeseries(name: str) -> np.array:
             """Returns data from fm_data after applying the skip_maps and checking for missing numbers."""
-            imiss = -999  # this should be equal to the missing number value from D-HYDRO
-
             data = fm_data[name].iloc[
                 :,
                 self.get_parameter(self.__cs_parameter_skip_maps) :,
             ]
             # map missing value numbers to
-            if imiss in data.to_numpy():
+            if NODATA in data.to_numpy():
                 self.set_logger_message(r"Missing data found in {name}", "warning")
-            data[data == imiss] = np.nan
+            data[data == NODATA] = np.nan
             return data
 
         waterlevel = get_timeseries("waterlevel")
@@ -642,10 +644,6 @@ class CrossSection(FM2ProfBase):
 
                 if output_mask.is_valid:
                     self.__output_face_list.append(output_mask)
-                    # self.set_logger_message(
-                    #    'Added output mask at {} '.format(mask_coords) +
-                    #    'for Cross Section {}.'.format(self.name),
-                    #     level='debug')
                 else:
                     self.set_logger_message(
                         f"Invalid output mask at {mask_coords} "
@@ -738,7 +736,7 @@ class CrossSection(FM2ProfBase):
             self._fm_total_volume + self._fm_flow_volume,
         )
 
-    def _optimisation_func(self, opt_in: tuple[float], *args) -> np.ndarray:
+    def _optimisation_func(self, opt_in: tuple[float], *args: tuple) -> np.ndarray:
         """Objective function used in optimising a delta-h correction.
 
         for parameters:
@@ -837,7 +835,7 @@ class CrossSection(FM2ProfBase):
             )
             extra_total_volume = np.max([np.max([opt2["x"][0], 0]), extra_flow_volume])
 
-        elif self.get_parameter(self.__cs_parameter_sdoptimisationmethod) == 2:
+        elif self.get_parameter(self.__cs_parameter_sdoptimisationmethod) == 2:  # noqa: PLR2004
             self.set_logger_message(
                 "Optimising SD on both flow and total volumes",
                 level="debug",
@@ -902,7 +900,7 @@ class CrossSection(FM2ProfBase):
 
         return output.to_numpy()
 
-    def _friction_weighing_area(self, link_chezy, section):
+    def _friction_weighing_area(self, link_chezy: pd.DataFrame, section: str) -> np.ndarray:
         """Compute chezy by weighted average. Weights are determined based on area.
 
         Friction values are known at flow links, while areas are known at flow faces.
@@ -914,29 +912,26 @@ class CrossSection(FM2ProfBase):
         link_chezy = link_chezy.replace(0, np.nan)
         # efs are the two faces the edge connects to
         efs = self._fm_data["edge_faces"][self._fm_data["edge_section"] == section]
-        link_area = []
-        for ef in efs:
-            # compute the mean area for the two connecting faces
-            link_area.append(self._fm_data.get("area_full").reindex(ef).mean())
-
+        # compute the mean area for the two connecting faces
+        link_area = [self._fm_data.get("area_full").reindex(ef).mean() for ef in efs]
         # the weight of one link is defined as the sum of the linked areas
         link_weight = link_area / np.sum(link_area)
 
-        output = np.sum(link_chezy.values.T * link_weight, axis=1)
+        output = np.sum(link_chezy.to_numpy().T * link_weight, axis=1)
         output[np.isnan(output)] = 0
         return output
 
     def _compute_section_widths(self) -> None:
-        """Computes sections widths by dividing the area assigned to a section
-        by the length of the cross-section.
+        """Computes sections widths by dividing the area assigned to a section by the length of the cross-section.
 
         If the sum of the section widths is smaller than the flow width, the
         width is increase proportionally
         """
-        unassigned_area = sum(self._fm_data["area"][self._fm_data["section"] == -999])
+        unassigned_area = sum(self._fm_data["area"][self._fm_data["section"] == NODATA])
         if unassigned_area > 0:
             self.set_logger_message(
-                f"{unassigned_area} m2 was not assigned to any section in input files, and is added to the main section",
+                f"{unassigned_area} m2 was not assigned to any section in input files, and"
+                " is added to the main section",
                 "warning",
             )
 
@@ -954,13 +949,14 @@ class CrossSection(FM2ProfBase):
         self._check_section_widths_greater_than_minimum_width()
 
     def _compute_floodplain_base(self) -> None:
-        """Sets the self.floodplain_base attribute. The floodplain
-        will be set at least 0.5 meter below the crest of the
+        """Sets the self.floodplain_base attribute.
+
+        The floodplain will be set at least 0.5 meter below the crest of the
         embankment, and otherwise at the average hight of the floodplain
         """
         tolerance = self.get_inifile().get_parameter("sdfloodplainbase")
         # Mean bed level in section 2 (floodplain)
-        floodplain_mask = self._fm_data.get("section") == 2
+        floodplain_mask = self._fm_data.get("section") == 2  # noqa: PLR2004
         if floodplain_mask.sum():
             mean_floodplain_elevation = np.nanmean(
                 self._fm_data["bedlevel"][floodplain_mask],
@@ -973,8 +969,8 @@ class CrossSection(FM2ProfBase):
                 self.floodplain_base = self.crest_level - tolerance
                 self.set_logger_message(
                     f"Mean floodpl. elev. ({mean_floodplain_elevation:.2f} m)"
-                    + f"higher than crest level ({self.crest_level:.2f}) + "
-                    + f"tolerance ({tolerance} m)",
+                    f"higher than crest level ({self.crest_level:.2f}) + "
+                    f"tolerance ({tolerance} m)",
                     "warning",
                 )
             else:
@@ -989,21 +985,21 @@ class CrossSection(FM2ProfBase):
                 f"No Floodplain found, floodplain defaults to {self.crest_level - tolerance}",
             )
 
-    def _calc_chezy(self, depth, manning):
-        return depth ** (1 / float(6)) / manning
-
     def _identify_lakes(self, waterdepth: pd.DataFrame) -> np.ndarray:
-        """This algorithms determines whether a 2D cell should
-        be marked as [Lake](glossary.md#Lakes).
+        """Determine whether a 2D cell should be marked as [Lake](glossary.md#Lakes).
 
         Cells are marked as lake if the following conditions are both met:
         - the waterdepth on timestep [LakeTimeSteps](configuration.md#exec-1--laketimesteps) is positive
-        - the waterdepth on timestep [LakeTimeSteps](configuration.md#exec-1--laketimesteps) is at least 1 cm higher than the waterlevel on timestep 0.
+        - the waterdepth on timestep [LakeTimeSteps](configuration.md#exec-1--laketimesteps) is at least
+        1 cm higher than the waterlevel on timestep 0.
 
         Next, the following steps are taken
 
-        - It is determined at what timestep the waterlevel in the lake starts rising. From that point on the lake counts as regular geometry and counts toward the total volume. A cell is considered active if its waterlevel has risen by 1 mm.
-        - A correction matrix is built that contains the 'lake water level' for each lake cell. This matrix is subtracted from the waterdepth to compute volumes.
+        - It is determined at what timestep the waterlevel in the lake starts rising. From that point on the lake counts
+        as regular geometry and counts toward the total volume. A cell is considered active if its waterlevel has risen
+        by 1 mm.
+        - A correction matrix is built that contains the 'lake water level' for each lake cell. This matrix is
+        subtracted from the waterdepth to compute volumes.
 
 
         Parameters:
@@ -1022,14 +1018,14 @@ class CrossSection(FM2ProfBase):
         waterdepth_diff = np.diff(waterdepth, n=1, axis=-1)
 
         # find all wet cells
-        wet_mask = waterdepth > 0
+        wet_mask: np.ndarray = waterdepth > 0
 
         # find all lakes
         lake_mask = (waterdepth.T.iloc[self.get_parameter(self.__cs_parameter_plassen_timesteps)] > 0) & (
             np.abs(
                 waterdepth.T.iloc[self.get_parameter(self.__cs_parameter_plassen_timesteps)] - waterdepth.T.iloc[0],
             )
-            <= 0.01
+            <= 0.01  #  noqa: PLR2004 NOTE: What is this value?
         )
 
         self.plassen_mask = lake_mask
@@ -1045,26 +1041,28 @@ class CrossSection(FM2ProfBase):
         for i, diff in enumerate(waterdepth_diff.T):
             final_mask = reduce(
                 np.logical_and,
-                [(diff <= 0.001), (plassen_mask_time[i] == True)],
+                [(diff <= 0.001), (plassen_mask_time[i] == True)],  # noqa: E712, PLR2004,  NOTE what does 0.001 represent?
             )
             plassen_mask_time[i + 1, :] = final_mask
 
         plassen_mask_time = pd.DataFrame(plassen_mask_time).T
 
         # The depth of a lake is the waterdepth at t=0
-        for i, depths in enumerate(waterdepth):
+        for i, _depths in enumerate(waterdepth):
             plassen_depth_correction[lake_mask, i] = -waterdepth.T.iloc[0][lake_mask]
 
         # correct wet cells for plassen
         wet_not_plas_mask = reduce(
             np.logical_and,
-            [(wet_mask == True), np.asarray(plassen_mask_time == False)],
+            [(wet_mask == True), np.asarray(plassen_mask_time == False)],  # noqa: E712
         )
 
         return lake_mask, wet_not_plas_mask, plassen_depth_correction
 
-    def _compute_css_above_z0(self, centre_level) -> None:
-        """This method computes for each level (z) above the water level at the first 2D output (z0),
+    def _compute_css_above_z0(self, centre_level: np.ndarray) -> None:
+        """Compute total and flow width for each level (z) aboove the water level at the first 2D output(z0).
+
+        This method computes for each level (z) above the water level at the first 2D output (z0),
         the corresponding :term:`Total width` and :term:`Flow width`. This is done in the following way:
 
         1. compute the total width by dividing the wet area by the cross-section length
@@ -1072,7 +1070,8 @@ class CrossSection(FM2ProfBase):
         3. Correct the flow width such that flow width is always increasing.
 
         Args:
-            centre_level: the water level at the cross-section location (x, y), which is typically at the centre of the control volume
+            centre_level: the water level at the cross-section location (x, y), which is typically at the centre of the
+            control volume
 
         Return:
             None: this method writes to the cross-section attributes _css_z, _css_total_width and _css_flow_width
@@ -1098,7 +1097,9 @@ class CrossSection(FM2ProfBase):
         waterdepth: pd.DataFrame,
         velocity: pd.DataFrame,
     ) -> pd.DataFrame:
-        """In 1D hydrodynamic models, flow through a cross-section is resolved assuming a
+        """Distinguish conveyance from storage.
+
+        In 1D hydrodynamic models, flow through a cross-section is resolved assuming a
         cross-sectionally average velocity. This assumed that the entire cross-section
         is available to for conveyance. However in reality some parts of the cross-section
         do not contribute to flow. For example, sections of a river behind a levee where
@@ -1108,14 +1109,16 @@ class CrossSection(FM2ProfBase):
         methods to resolve from 2D model output which cells add to the 'flow volume' within a
         [control volume](glossary.md#control-volume) and which to the storage volume.
 
-        `fm2prof` implements two methods. The configuration parameter [`ConveyanceDetectionMethod`](configuration.md#exec-1--conveyancedetectionmethod) is used
+        `fm2prof` implements two methods. The configuration parameter [`ConveyanceDetectionMethod`]
+        (configuration.md#exec-1--conveyancedetectionmethod) is used
         to determine which method is used.
 
         **`max_method`**
         A cell is considered flowing if the velocity magnitude is more than the average
         of the three higher flow velocities per outputmap multiplied by the
         [`relative velocity threshold`](configuration.md#exec-1--relativevelocitythreshold) OR
-        if the flow velocity meets the absolute threshold [`absolute velocity threshold`](configuration.md#exec-1--absolutevelocitythreshold)
+        if the flow velocity meets the absolute threshold [`absolute velocity threshold`]
+        (configuration.md#exec-1--absolutevelocitythreshold)
 
         **`mean_method`**
         Not recommended. Legacy method.
@@ -1125,7 +1128,8 @@ class CrossSection(FM2ProfBase):
             velocity:  dataframe of a control volume with velocity magnitude per cel per output map
 
         Returns:
-            flow_mask: dataframe of a control volume with the flow condition per cel per output map. `True` means flowing, `False` storage.
+            flow_mask: dataframe of a control volume with the flow condition per cel per output map. `True` means
+            flowing, `False` storage.
         """
 
         @staticmethod
@@ -1133,7 +1137,9 @@ class CrossSection(FM2ProfBase):
             waterdepth: pd.DataFrame,
             velocity: pd.DataFrame,
         ) -> pd.DataFrame:
-            """This method was added in version 2.3 because the mean_velocity_method
+            """Calculate the max velocity.
+
+            This method was added in version 2.3 because the mean_velocity_method
             led to unreasonably high conveyance if the river was connected to
             an inland harbour.
             """
@@ -1156,26 +1162,24 @@ class CrossSection(FM2ProfBase):
             )
 
             # Flow mask determines which cells are conveyance (TRUE)
-            flow_mask = waterdepth_condition & (relative_velocity_condition | absolute_velocity_condition)
-
-            return flow_mask
+            return waterdepth_condition & (relative_velocity_condition | absolute_velocity_condition)
 
         @staticmethod
-        def mean_velocity_method(waterdepth, velocity):
-            """This was the default method < 2.3. This method leads to unreasonably
+        def mean_velocity_method(waterdepth: np.ndarray, velocity: np.ndarray) -> np.ndarray:
+            """Calculate mean velocity.
+
+            This was the default method < 2.3. This method leads to unreasonably
             high conveyance if the river was connected to an inland harbour.
             """
             # apply rolling average over the velocities
             # to smooth out extreme values
             velocity = velocity.rolling(window=10, min_periods=1, center=True).mean()
 
-            flow_mask = (
+            return (
                 (waterdepth > 0)
                 & (velocity > self.get_parameter(self.__cs_parameter_velocity_threshold))
                 & (velocity > self.get_parameter(self.__cs_parameter_relative_threshold) * np.mean(velocity))
             )
-
-            return flow_mask
 
         match self.get_inifile().get_parameter(
             self.__cs_parameter_conveyance_detection_method,
@@ -1193,22 +1197,26 @@ class CrossSection(FM2ProfBase):
 
     def _extend_css_below_z0(
         self,
-        centre_level,
-        centre_depth,
-        waterlevel,
-        wet_not_plas_mask,
+        centre_level: np.ndarray,
+        centre_depth: np.ndarray,
+        waterlevel: pd.DataFrame,
+        wet_not_plas_mask: np.ndarray,
     ) -> None:
-        """This methods computeS for level (z) below the water level at the first 2D output (z0) the corresponding
+        """Compute the total and flow width for the level (z) below the water level.
+
+        This methods computeS for level (z) below the water level at the first 2D output (z0) the corresponding
         :term:`Total width` and :term:`Flow width`. This is done in the following way:
 
         1. Take a number of steps (see note below) from z at t0 do the bed level at the :term:`Cross-section location`
         2. for each step, determine which cells should be counted
             - the bed level of the cell should be higher than the water level plus the tolerance (see note below)
             - the cell should not be part of a :term:`Lakes`
-        3. Since there is no information on flow velocities, we cannot determine which cells are flowing and width are storage.
-           Therefore is is decided like this
-            - If :ref:`ExtrapolateStorage <parameter_extrapolatestorage>` is True, the flow area is the minimum of the flow area at t0 (from :ref:`wl_dependent_css`)
-            - if :ref:`ExtrapolateStorage <parameter_extrapolatestorage>` is False, the flow area is equal to the total area
+        3. Since there is no information on flow velocities, we cannot determine which cells are flowing and width are
+        storage. Therefore is is decided like this
+            - If :ref:`ExtrapolateStorage <parameter_extrapolatestorage>` is True, the flow area is the minimum of the
+            flow area at t0 (from :ref:`wl_dependent_css`)
+            - if :ref:`ExtrapolateStorage <parameter_extrapolatestorage>` is False, the flow area is equal to the total
+            area
 
         .. note::
             - the number of steps between z at t0 to bed level is hard-coded at 10.
@@ -1224,12 +1232,12 @@ class CrossSection(FM2ProfBase):
             _fm_flow_volume
             _fm_total_volume
         """
-        bedlevel = self._fm_data.get("bedlevel").values
-        cell_area = self._fm_data.get("area").values
+        bedlevel = self._fm_data.get("bedlevel").to_numpy()
+        cell_area = self._fm_data.get("area").to_numpy()
         flow_area_at_z0 = self._fm_flow_area[0]
         lowest_level_of_css = centre_level[0] - centre_depth[0]  # this is in fact the bed level at centre point
         centre_level_at_t0 = centre_level[0]
-        waterlevel_at_t0 = waterlevel.values[:, 0]
+        waterlevel_at_t0 = waterlevel.to_numpy()[:, 0]
         waterdepth_at_t0 = waterlevel_at_t0 - bedlevel
         waterdepth_at_t0[np.isnan(waterdepth_at_t0)] = 0
         tolerance = -1e-3  # at last point, this is still considered wet.
@@ -1264,19 +1272,19 @@ class CrossSection(FM2ProfBase):
             self._fm_flow_volume = np.insert(self._fm_flow_volume, 0, np.nan)
             self._fm_total_volume = np.insert(self._fm_total_volume, 0, np.nan)
 
-    def _get_extra_total_area(self, waterlevel, crest_level, transition_height: float):
-        """Releases extra area dependent on waterlevel using a logistic (sigmoid) function"""
+    def _get_extra_total_area(self, waterlevel: np.ndarray, crest_level: np.ndarray, transition_height: float) -> float:
+        """Releases extra area dependent on waterlevel using a logistic (sigmoid) function."""
         delta = 0.00001  # accuracy parameter
         return 1 / (
             1 + np.e ** (np.log(delta) / (transition_height) * (waterlevel - (crest_level + 0.5 * transition_height)))
         )
 
-    def _append_to_start(self, array, to_add):
-        """Adds ``to add`` to beginning of array"""
+    def _append_to_start(self, array: np.ndarray, to_add: float | np.ndarray) -> np.ndarray:
+        """Adds ``to add`` to beginning of array."""
         return np.insert(array, 0, to_add)
 
-    def _return_volume_error(self, predicted, measured):
-        """Returns the squared relative error"""
+    def _return_volume_error(self, predicted: np.ndarray, measured: np.ndarray) -> np.ndarray:
+        """Returns the squared relative error."""
         non_nan_mask = ~np.isnan(predicted) & ~np.isnan(measured)
         predicted = predicted[non_nan_mask]
         measured = measured[non_nan_mask]
@@ -1287,15 +1295,17 @@ class CrossSection(FM2ProfBase):
         return np.sum(error**2)
 
     @staticmethod
-    def _check_monotonicity(arr, method=2):
-        """For given input array, create mask such that when applied to the array,
-        all values are monotonically rising
+    def _check_monotonicity(arr: np.ndarray, method: int = 2) -> np.ndarray:
+        """For given input array, create mask such that when applied to the array.
+
+        All values are monotonically rising.
 
         method 1: remove values were z is falling from array
         method 2: sort array such that z is always rising (default)
 
         Arguments:
             arr: 1d numpy array
+            method: int
 
         Return:
             mask such that arr[mask] is monotonically rising
@@ -1305,17 +1315,16 @@ class CrossSection(FM2ProfBase):
             for i in range(1, len(arr)):
                 # Last index that had rising value
                 j = np.argwhere(mask)[-1][0]
-                if arr[i] > arr[j]:
-                    mask = np.append(mask, True)
-                else:
-                    mask = np.append(mask, False)
+                mask = np.append(mask, True) if arr[i] > arr[j] else np.append(mask, False)
 
             return mask
-        if method == 2:
+        if method == 2:  # noqa: PLR2004
             return np.argsort(arr)
+        err_msg = f"method argument, {method}, not understood. Choose between 1 or 2."
+        raise ValueError(err_msg)
 
-    def _check_total_width_greater_than_flow_width(self):
-        """If total width is smaller than flow width, set flow width to total width"""
+    def _check_total_width_greater_than_flow_width(self) -> None:
+        """If total width is smaller than flow width, set flow width to total width."""
         mask = self._css_flow_width > self._css_total_width
         self._css_flow_width[mask] = self._css_total_width[mask]
         self.set_logger_message(
@@ -1323,9 +1332,9 @@ class CrossSection(FM2ProfBase):
             "debug",
         )
 
-    def _check_section_widths_greater_than_flow_width(self):
+    def _check_section_widths_greater_than_flow_width(self) -> None:
         total_section_width = 0
-        for key, width in self.section_widths.items():
+        for width in self.section_widths.values():
             total_section_width += width
 
         dif = self.flow_width[-1] - total_section_width
@@ -1337,9 +1346,7 @@ class CrossSection(FM2ProfBase):
             )
 
     def _check_section_widths_greater_than_minimum_width(self) -> bool:
-        """Main section width must be greater than minimum profile width, or
-        it is ignored by SOBEK 3
-        """
+        """Main section width must be greater than minimum profile width, or it is ignored by SOBEK 3."""
         dif = self.section_widths["main"] - self._css_flow_width[0]
 
         # cm accuracy, and at least 10 cm difference
@@ -1359,5 +1366,6 @@ class CrossSection(FM2ProfBase):
             return True
         return False
 
-    def get_parameter(self, key: str):
+    def get_parameter(self, key: str) -> str | bool | int | float | None:
+        """Retrieve parameter from ini file."""
         return self.get_inifile().get_parameter(key)
