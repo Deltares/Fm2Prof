@@ -196,13 +196,19 @@ class FM2ProfBase:
         # create formatter
         self.__logger.__logformatter = ElapsedFormatter()
         self.__logger._Filelogformatter = ElapsedFileFormatter()
+<<<<<<< HEAD
 
+=======
+>>>>>>> cac223f... moved ruff rule SLF001 to ignore
         # create console handler
         if TqdmLoggingHandler not in map(type, self.__logger.handlers):
             ch = TqdmLoggingHandler()
             ch.setLevel(logging.DEBUG)
             ch.setFormatter(self.__logger.__logformatter)
+<<<<<<< HEAD
             self.__logger.addHandler(ch)
+=======
+>>>>>>> cac223f... moved ruff rule SLF001 to ignore
 
     def get_logger(self) -> Logger:
         """Use this method to return logger object"""
@@ -275,11 +281,19 @@ class FM2ProfBase:
         self.pbar = None
 
     def get_logformatter(self) -> ElapsedFormatter:
+<<<<<<< HEAD
         """Returns formatter"""
         return self.get_logger().__logformatter
 
     def get_filelogformatter(self) -> ElapsedFormatter:
         """Returns formatter"""
+=======
+        """Returns log formatter."""
+        return self.get_logger().__logformatter
+
+    def get_filelogformatter(self) -> ElapsedFormatter:
+        """Returns file log formatter."""
+>>>>>>> cac223f... moved ruff rule SLF001 to ignore
         return self.get_logger()._Filelogformatter
 
     def set_logfile(self, output_dir: str, filename: str = "fm2prof.log") -> None:
