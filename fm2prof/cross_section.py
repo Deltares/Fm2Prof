@@ -724,7 +724,7 @@ class CrossSection(FM2ProfBase):
         width_array[width_array < minwidth] = minwidth
         return width_array
 
-    def _combined_optimisation_func(self, opt_in:tuple[float]):
+    def _combined_optimisation_func(self, opt_in:tuple[float]) -> np.ndarray:
         """Cost function, combines total volume error and flow volume error."""
         (crest_level, extra_total_volume, extra_flow_volume) = opt_in
         transition_height = self.get_parameter(self.__cs_parameter_transitionheight_sd)
