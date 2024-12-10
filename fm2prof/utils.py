@@ -621,7 +621,7 @@ class VisualiseOutput(FM2ProfBase):
             os.mkdir(output_dir)
 
         output_file = output_dir.joinpath(f"{css['id']}.png")
-        if output_file.is_file() & ~overwrite:
+        if output_file.is_file() and not overwrite:
             self.set_logger_message("file already exists", "debug")
             return
         try:

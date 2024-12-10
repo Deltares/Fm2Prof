@@ -21,10 +21,12 @@ Stichting Deltares and remain full property of Stichting Deltares at all times.
 All rights reserved.
 """
 
+import logging
 import json
 from collections import namedtuple
 from pathlib import Path
-from typing import Iterable
+from typing import Iterable, Union, List
+import rtree
 
 import numpy as np
 from shapely.geometry import Point, shape
@@ -39,11 +41,11 @@ class PolygonFile(FM2ProfBase):
 
     def __init__(self, logger):
         self.set_logger(logger)
-        self.polygons = list()
+        self._polygons = list()
         self.undefined = -999
 
     def classify_points_with_property(
-        self, points: Iterable[list], property_name: str = "name"
+        self, points: Iterable[Point], property_name: str = "name"
     ) -> np.array:
         """
         Classifies points as belonging to which region
@@ -58,13 +60,13 @@ class PolygonFile(FM2ProfBase):
         for i, point in enumerate(points):
             for polygon in self.polygons:
                 if point.within(polygon.geometry):
-                    points_regions[i] = int(polygon.properties.get(property_name))
+                    points_regions[i] = polygon.properties.get(property_name)
                     break
 
         return np.array(points_regions)
 
     def classify_points_with_property_shapely_prep(
-        self, points: Iterable[list], property_name: str = "name"
+        self, points: Iterable[Point], property_name: str = "name"
     ):
         """
         Classifies points as belonging to which region
@@ -91,7 +93,7 @@ class PolygonFile(FM2ProfBase):
         return np.array(points_regions)
 
     def classify_points_with_property_rtree_by_polygons(
-        self, iterable_points: Iterable[list], property_name: str = "name"
+        self, points: Iterable[Point], property_name: str = "name"
     ) -> list:
         """Applies RTree index to quickly classify points in polygons.
 
@@ -110,7 +112,7 @@ class PolygonFile(FM2ProfBase):
             idx.insert(p_id, polygon.geometry.bounds, polygon)
 
         point_properties_list = []
-        for point in map(Point, iterable_points):
+        for point in map(Point, points):
             point_properties_polygon = next(
                 iter(
                     self.polygons[polygon_id].properties.get(property_name)
@@ -124,7 +126,9 @@ class PolygonFile(FM2ProfBase):
         del idx
         return np.array(point_properties_list)
 
-    def __get_polygon_property(self, grouped_values: list, property_name: str) -> str:
+    def __get_polygon_property(
+        self, grouped_values: list, property_name: str
+    ) -> str:  # TODO: Can this be removed?
         """Retrieves the polygon property from the internal list of polygons.
 
         Arguments:
@@ -140,7 +144,7 @@ class PolygonFile(FM2ProfBase):
             return self.undefined
         return self.polygons[polygon_id].properties.get(property_name)
 
-    def parse_geojson_file(self, file_path):
+    def parse_geojson_file(self, file_path: Union[Path, str]) -> None:
         """Read data from geojson file"""
         PolygonFile._validate_extension(file_path)
 
@@ -162,20 +166,18 @@ class PolygonFile(FM2ProfBase):
         #    self.polygons[polygon_name] = polygon
 
     @staticmethod
-    def _validate_extension(file_path: Path) -> None:
-        if not isinstance(file_path, Path):
-            return
-        if not file_path.suffix in (".json", ".geojson"):
-            raise IOError(
-                "Invalid file path extension, " + "should be .json or .geojson."
-            )
+    def _validate_extension(file_path: Union[Path, str]) -> None:
+        if isinstance(file_path, str):
+            file_path = Path(file_path)
+        if file_path.suffix not in (".json", ".geojson"):
+            raise IOError("Invalid file path extension, should be .json or .geojson.")
 
     def _check_overlap(self):
         for polygon in self.polygons:
             for testpoly in self.polygons:
                 if polygon.properties.get("name") == testpoly.properties.get("name"):
                     # polygon will obviously overlap with itself
-                    pass
+                    continue
                 else:
                     if polygon.geometry.intersects(testpoly.geometry):
                         self.set_logger_message(
@@ -186,6 +188,23 @@ class PolygonFile(FM2ProfBase):
                             level="warning",
                         )
 
+    @property
+    def polygons(self) -> list[Polygon]:
+        return self._polygons
+
+    @polygons.setter
+    def polygons(self, polygons_list: List[Polygon]) -> None:
+        if not all([isinstance(polygon, Polygon) for polygon in polygons_list]):
+            raise ValueError("Polygons must be of type Polygon")
+        # Check if properties contain the required 'name' property
+        names = [polygon.properties.get("name") for polygon in polygons_list]
+        if not all(names):
+            raise ValueError("Polygon properties must contain key-word 'name'")
+        # Check if 'name' property is unique, otherwise _check_overlap will produce bugs
+        if len(names) != len(set(names)):
+            raise ValueError("Property 'name' must be unique")
+        self._polygons = polygons_list
+
 
 class RegionPolygonFile(PolygonFile):
     def __init__(self, region_file_path, logger):
@@ -193,29 +212,33 @@ class RegionPolygonFile(PolygonFile):
         self.read_region_file(region_file_path)
 
     @property
-    def regions(self):
+    def regions(self) -> list[Polygon]:
         return self.polygons
 
-    def read_region_file(self, file_path):
+    def read_region_file(self, file_path) -> None:
         self.parse_geojson_file(file_path)
         self._validate_regions()
 
-    def _validate_regions(self):
-        self.set_logger_message("Validating Region file")
+    def _validate_regions(self) -> None:
+        self.set_logger_message("Validating region file", level="info")
 
         number_of_regions = len(self.regions)
 
-        self.set_logger_message("{} regions found".format(number_of_regions))
+        self.set_logger_message(
+            "{} regions found".format(number_of_regions), level="info"
+        )
 
         # Test if polygons overlap
         self._check_overlap()
 
-    def classify_points(self, points: Iterable[list]):
-        return self.classify_points_with_property(points, property_name="id")
+    def classify_points(
+        self, points: Iterable[Point], property_name: str = "id"
+    ) -> list:
+        return self.classify_points_with_property(points, property_name=property_name)
 
 
 class SectionPolygonFile(PolygonFile):
-    def __init__(self, section_file_path, logger):
+    def __init__(self, section_file_path, logger: logging.Logger):
         super().__init__(logger)
         self.read_section_file(section_file_path)
         self.undefined = 1  # 1 is main
@@ -228,7 +251,7 @@ class SectionPolygonFile(PolygonFile):
         self.parse_geojson_file(file_path)
         self._validate_sections()
 
-    def classify_points(self, points: Iterable[list]):
+    def classify_points(self, points: Iterable[Point]):
         return self.classify_points_with_property(points, property_name="section")
 
     def _validate_sections(self):
@@ -252,8 +275,11 @@ class SectionPolygonFile(PolygonFile):
                     ),
                     level="error",
                 )
-            section_key = str(section.properties.get("section")).lower()
-            if section_key not in valid_section_keys:
+
+            elif (
+                str(section.properties.get("section")).lower() not in valid_section_keys
+            ):
+                section_key = str(section.properties.get("section")).lower()
                 if section_key not in list(map_section_keys.keys()):
                     raise_exception = True
                     self.set_logger_message(
@@ -272,6 +298,5 @@ class SectionPolygonFile(PolygonFile):
         self._check_overlap()
 
         if raise_exception:
-            raise AssertionError("Section file could not validated")
-        else:
-            self.set_logger_message("Section file succesfully validated")
+            raise AssertionError("Section file is not valid")
+        self.set_logger_message("Section file succesfully validated")

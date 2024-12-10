@@ -8,6 +8,5 @@
 /dist
 /build
 /documentation
-
 *.log
 .coverage

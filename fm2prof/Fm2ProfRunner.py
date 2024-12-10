@@ -10,6 +10,7 @@ import numpy as np
 import tqdm
 from geojson import Feature, FeatureCollection, Polygon
 from netCDF4 import Dataset
+import pandas as pd
 from scipy.spatial import ConvexHull
 
 from fm2prof import Functions as FE
@@ -95,7 +96,7 @@ class Fm2ProfRunner(FM2ProfBase):
             return
 
         # Check for already existing output
-        if self._output_exists() & ~overwrite:
+        if self._output_exists() and not overwrite:
             self.set_logger_message(
                 "Output already exists. Use overwrite option if you want to re-run the program",
                 "warning",
@@ -567,10 +568,13 @@ your configuration file to fix this error.""",
             splitpoint = split_candidates[np.nanargmin(variance_list)]
 
             # High chezy values are assigned to section number '1' (Main channel)
-            data[key][end_values > splitpoint] = 1
-
             # Low chezy values are assigned to section number '2' (Flood plain)
-            data[key][end_values <= splitpoint] = 2
+            if isinstance(data, pd.DataFrame):
+                data.loc[end_values > splitpoint, key] = 1
+                data.loc[end_values <= splitpoint, key] = 2
+            else:            
+                data[key][end_values > splitpoint] = 1           
+                data[key][end_values <= splitpoint] = 2
         return data
 
     def _get_region_map_file(self, polytype):
