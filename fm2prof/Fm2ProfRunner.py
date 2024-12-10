@@ -13,7 +13,7 @@ from netCDF4 import Dataset
 import pandas as pd
 from scipy.spatial import ConvexHull
 
-from fm2prof import Functions as FE
+from fm2prof import functions as funcs
 from fm2prof import __version__
 from fm2prof.common import FM2ProfBase
 from fm2prof.CrossSection import CrossSection, CrossSectionHelpers
@@ -64,15 +64,11 @@ class Fm2ProfRunner(FM2ProfBase):
             return
 
         if not self.get_inifile().has_output_directory:
-            self.set_logger_message(
-                "Output directory must be set in configuration file", "error"
-            )
+            self.set_logger_message("Output directory must be set in configuration file", "error")
             return
 
         # Add a log file
-        self.set_logfile(
-            output_dir=self.get_inifile().get_output_directory(), filename="fm2prof.log"
-        )
+        self.set_logfile(output_dir=self.get_inifile().get_output_directory(), filename="fm2prof.log")
 
         self.finish_log_task()
         # print header to log
@@ -90,9 +86,7 @@ class Fm2ProfRunner(FM2ProfBase):
         """
 
         if self.get_inifile() is None:
-            self.set_logger_message(
-                "No ini file was specified: the run cannot go further.", "Warning"
-            )
+            self.set_logger_message("No ini file was specified: the run cannot go further.", "Warning")
             return
 
         # Check for already existing output
@@ -159,9 +153,7 @@ class Fm2ProfRunner(FM2ProfBase):
         except InitializationError:
             return False
         except:
-            self.set_logger_message(
-                "Unexpected exception during initialisation", "error"
-            )
+            self.set_logger_message("Unexpected exception during initialisation", "error")
             for line in traceback.format_exc().splitlines():
                 self.set_logger_message(line, "debug")
             return False
@@ -193,9 +185,7 @@ class Fm2ProfRunner(FM2ProfBase):
         try:
             self._print_log_report()
         except:
-            self.set_logger_message(
-                "Unexpected exception during printing of log report", "error"
-            )
+            self.set_logger_message("Unexpected exception during printing of log report", "error")
         self.finish_log_task()
 
         return True
@@ -228,22 +218,16 @@ class Fm2ProfRunner(FM2ProfBase):
 
         # Check if mandatory input exists
         if not Path(map_file).is_file():
-            self.set_logger_message(
-                f"File for {self.__map_key} not found at {map_file}", "error"
-            )
+            self.set_logger_message(f"File for {self.__map_key} not found at {map_file}", "error")
             raiseFileNotFoundError = True
         if not Path(css_file).is_file():
-            self.set_logger_message(
-                f"File for {self.__css_key} not found at {css_file}", "error"
-            )
+            self.set_logger_message(f"File for {self.__css_key} not found at {css_file}", "error")
             raiseFileNotFoundError = True
         if raiseFileNotFoundError:
             raise InitializationError
 
         # Read FM model data
-        fm2prof_fm_model_data = self._set_fm_model_data(
-            map_file, css_file, regions, sections
-        )
+        fm2prof_fm_model_data = self._set_fm_model_data(map_file, css_file, regions, sections)
         self.fm_model_data = FmModelData(fm2prof_fm_model_data)
 
         # Validate config file
@@ -261,9 +245,7 @@ class Fm2ProfRunner(FM2ProfBase):
         nedges: int = self.fm_model_data.edge_data.get("x").shape[0]
         self.set_logger_message("finished reading FM and cross-sectional data data")
         self.set_logger_message(
-            "Number of: timesteps ({}), ".format(ntsteps)
-            + "faces ({}), ".format(nfaces)
-            + "edges ({})".format(nedges),
+            "Number of: timesteps ({}), ".format(ntsteps) + "faces ({}), ".format(nfaces) + "edges ({})".format(nedges),
             level="debug",
         )
 
@@ -348,12 +330,7 @@ your configuration file to fix this error.""",
         output = {"type": "FeatureCollection"}
         css_hulls = list()
         for css in cross_sections:
-            pointlist = np.array(
-                [
-                    point["geometry"]["coordinates"]
-                    for point in css.get_point_list("face")
-                ]
-            )
+            pointlist = np.array([point["geometry"]["coordinates"] for point in css.get_point_list("face")])
             # construct envelope
             try:
                 hull = ConvexHull(pointlist)
@@ -407,9 +384,7 @@ your configuration file to fix this error.""",
             self.set_logger_message(
                 "All 2D points assigned to the same region and classifying points to cross-sections"
             )
-            time_independent_data, edge_data = FE.classify_without_regions(
-                cssdata, time_independent_data, edge_data
-            )
+            time_independent_data, edge_data = funcs.classify_without_regions(cssdata, time_independent_data, edge_data)
         elif ini_file.get_parameter("classificationmethod") == 1:
             self.set_logger_message(
                 "Assigning 2D points to regions using DeltaShell and classifying points to cross-sections"
@@ -428,25 +403,17 @@ your configuration file to fix this error.""",
         # Classify sections for roughness tables
         if (ini_file.get_parameter("classificationmethod") == 0) or (sections is None):
             self.set_logger_message("Assigning point to sections without polygons")
-            edge_data = self._classify_roughness_sections_by_variance(
-                edge_data, time_dependent_data["chezy_edge"]
-            )
+            edge_data = self._classify_roughness_sections_by_variance(edge_data, time_dependent_data["chezy_edge"])
             time_independent_data = self._classify_roughness_sections_by_variance(
                 time_independent_data, time_dependent_data["chezy_mean"]
             )
         elif ini_file.get_parameter("classificationmethod") == 1:
             self.set_logger_message("Assigning 2D points to sections using DeltaShell")
-            time_independent_data, edge_data = self._classify_section_with_deltashell(
-                time_independent_data, edge_data
-            )
+            time_independent_data, edge_data = self._classify_section_with_deltashell(time_independent_data, edge_data)
         else:
-            self.set_logger_message(
-                "Assigning 2D points to sections using Built-In method"
-            )
-            edge_data = FE.classify_roughness_sections_by_polygon(
-                sections, edge_data, self.get_logger()
-            )
-            time_independent_data = FE.classify_roughness_sections_by_polygon(
+            self.set_logger_message("Assigning 2D points to sections using Built-In method")
+            edge_data = funcs.classify_roughness_sections_by_polygon(sections, edge_data, self.get_logger())
+            time_independent_data = funcs.classify_roughness_sections_by_polygon(
                 sections, time_independent_data, self.get_logger()
             )
 
@@ -458,9 +425,7 @@ your configuration file to fix this error.""",
             cssdata,
         )
 
-    def _classify_with_builtin_methods(
-        self, time_independent_data, edge_data, cssdata, polygons
-    ):
+    def _classify_with_builtin_methods(self, time_independent_data, edge_data, cssdata, polygons):
         # Determine in which region each cross-section lies
         css_regions = polygons.classify_points(cssdata["xy"])
 
@@ -475,16 +440,16 @@ your configuration file to fix this error.""",
 
         time_independent_data["region"] = regions.classify_points(xy_tuples_2d)
 
-        xy_tuples_2d = [
-            (edge_data.get("x")[i], edge_data.get("y")[i])
-            for i in range(len(edge_data.get("x")))
-        ]
+        xy_tuples_2d = [(edge_data.get("x")[i], edge_data.get("y")[i]) for i in range(len(edge_data.get("x")))]
 
         edge_data["region"] = polygons.classify_points(xy_tuples_2d)
 
         # Do Nearest neighbour cross-section for each region
-        time_independent_data, edge_data = FE.classify_with_regions(
-            regions, cssdata, time_independent_data, edge_data, css_regions
+        time_independent_data, edge_data = funcs.classify_with_regions(
+            cssdata,
+            time_independent_data,
+            edge_data,
+            css_regions,
         )
 
         return time_independent_data, edge_data
@@ -496,34 +461,29 @@ your configuration file to fix this error.""",
             time_independent_data, dtype="face", polytype="section"
         )
         self.set_logger_message("Assigning edges...")
-        edge_data = self._assign_polygon_using_deltashell(
-            edge_data, dtype="edge", polytype="section"
-        )
+        edge_data = self._assign_polygon_using_deltashell(edge_data, dtype="edge", polytype="section")
 
         return time_independent_data, edge_data
 
-    def _classify_with_deltashell(
-        self, time_independent_data, edge_data, cssdata, polygons, polytype="region"
-    ):
+    def _classify_with_deltashell(self, time_independent_data, edge_data, cssdata, polygons, polytype="region"):
         # Determine in which region each 2D point lies
         self.set_logger_message("Assigning faces...")
         time_independent_data = self._assign_polygon_using_deltashell(
             time_independent_data, dtype="face", polytype=polytype
         )
         self.set_logger_message("Assigning edges...")
-        edge_data = self._assign_polygon_using_deltashell(
-            edge_data, dtype="edge", polytype=polytype
-        )
+        edge_data = self._assign_polygon_using_deltashell(edge_data, dtype="edge", polytype=polytype)
 
-        self.set_logger_message(
-            "Assigning cross-sections using nearest neighbour within regions..."
-        )
+        self.set_logger_message("Assigning cross-sections using nearest neighbour within regions...")
         # Determine in which region each cross-section lies
         css_regions = polygons.classify_points(cssdata["xy"])
 
         # Do Nearest neighbour cross-section for each region
-        time_independent_data, edge_data = FE.classify_with_regions(
-            polygons, cssdata, time_independent_data, edge_data, css_regions
+        time_independent_data, edge_data = funcs.classify_with_regions(
+            cssdata,
+            time_independent_data,
+            edge_data,
+            css_regions,
         )
 
         return time_independent_data, edge_data
@@ -550,9 +510,7 @@ your configuration file to fix this error.""",
         # Find split point (chezy value) by variance minimisation
         variance_list = list()
         split_candidates = np.arange(min(end_values), max(end_values), 1)
-        if (
-            len(split_candidates) < 2
-        ):  # this means that all end values are very close together, so do not split
+        if len(split_candidates) < 2:  # this means that all end values are very close together, so do not split
             data[key][:] = 1
         else:
             for split in split_candidates:
@@ -572,8 +530,8 @@ your configuration file to fix this error.""",
             if isinstance(data, pd.DataFrame):
                 data.loc[end_values > splitpoint, key] = 1
                 data.loc[end_values <= splitpoint, key] = 2
-            else:            
-                data[key][end_values > splitpoint] = 1           
+            else:
+                data[key][end_values > splitpoint] = 1
                 data[key][end_values <= splitpoint] = 2
         return data
 
@@ -584,9 +542,7 @@ your configuration file to fix this error.""",
         modified_file_path = f"{filepath}_{polytype.upper()}BATHY{ext}"
         return modified_file_path
 
-    def _assign_polygon_using_deltashell(
-        self, data, dtype: str = "face", polytype: str = "region"
-    ):
+    def _assign_polygon_using_deltashell(self, data, dtype: str = "face", polytype: str = "region"):
         """Assign all 2D points using DeltaShell method"""
 
         # NOTE
@@ -618,18 +574,10 @@ your configuration file to fix this error.""",
             cross_sections {list} -- List of Cross Sections.
         """
         for pointtype in ["face", "edge"]:
-            output_file_path = os.path.join(
-                output_dir, "{}_output.geojson".format(pointtype)
-            )
+            output_file_path = os.path.join(output_dir, "{}_output.geojson".format(pointtype))
             try:
-                node_points = [
-                    node_point
-                    for cs in cross_sections
-                    for node_point in cs.get_point_list(pointtype)
-                ]
-                self.set_logger_message(
-                    "Collected points, dumping to file", level="debug"
-                )
+                node_points = [node_point for cs in cross_sections for node_point in cs.get_point_list(pointtype)]
+                self.set_logger_message("Collected points, dumping to file", level="debug")
                 MaskOutputFile.write_mask_output_file(output_file_path, node_points)
                 self.set_logger_message("Done", level="debug")
             except Exception as e_info:
@@ -668,12 +616,8 @@ your configuration file to fix this error.""",
         # Generate cross-sections one by one
         pbar = tqdm.tqdm(total=len(selected_list))
         for i, css_data in enumerate(selected_list):
-            self.start_new_log_task(
-                f"{css_data.get('id')}  ({i}/{len(selected_list)})", pbar=pbar
-            )
-            generated_cross_section = self._generate_cross_section(
-                css_data, self.fm_model_data
-            )
+            self.start_new_log_task(f"{css_data.get('id')}  ({i}/{len(selected_list)})", pbar=pbar)
+            generated_cross_section = self._generate_cross_section(css_data, self.fm_model_data)
             if generated_cross_section is not None:
                 cross_sections.append(generated_cross_section)
             pbar.update(1)
@@ -689,9 +633,7 @@ your configuration file to fix this error.""",
             cssSelection = np.array(cssSelection)
         return cssSelection
 
-    def _generate_cross_section(
-        self, css_data: Dict, fm_model_data: FmModelData
-    ) -> CrossSection:
+    def _generate_cross_section(self, css_data: Dict, fm_model_data: FmModelData) -> CrossSection:
         """Generates a cross section and configures its values based
         on the input parameter dictionary
 
@@ -719,17 +661,13 @@ your configuration file to fix this error.""",
             css_name = "new_cross_section"
 
         if fm_model_data is None:
-            raise Exception(
-                "No FM data given for new cross section {}".format(css_name)
-            )
+            raise Exception("No FM data given for new cross section {}".format(css_name))
 
         # Create cross section
         created_css = self._create_new_cross_section(css_data=css_data)
 
         if created_css is None:
-            self.set_logger_message(
-                f"No Cross-section could be generated for {css_name}", "error"
-            )
+            self.set_logger_message(f"No Cross-section could be generated for {css_name}", "error")
             return None
         if created_css.get_number_of_faces() < 10:
             self.set_logger_message(
@@ -750,9 +688,7 @@ your configuration file to fix this error.""",
             self.finish_log_task()
         return created_css
 
-    def _build_cross_section_geometry(
-        self, cross_section: CrossSection
-    ) -> CrossSection:
+    def _build_cross_section_geometry(self, cross_section: CrossSection) -> CrossSection:
         """
         This method manages the options of building the cross-section geometry
 
@@ -773,9 +709,7 @@ your configuration file to fix this error.""",
             self.set_logger_message("Starting correction", "debug")
             cross_section = self._perform_2D_volume_correction(cross_section)
         else:
-            self.set_logger_message(
-                "SD Correction not enable in configuration file, skipping", "info"
-            )
+            self.set_logger_message("SD Correction not enable in configuration file, skipping", "info")
 
         # Perform sanity check on cross-section
         cross_section.check_requirements()
@@ -785,9 +719,7 @@ your configuration file to fix this error.""",
 
         return cross_section
 
-    def _build_cross_section_roughness(
-        self, cross_section: CrossSection
-    ) -> CrossSection:
+    def _build_cross_section_roughness(self, cross_section: CrossSection) -> CrossSection:
         """
         Build the roughness tables
         """
@@ -841,8 +773,7 @@ your configuration file to fix this error.""",
 
         except Exception as e_info:
             self.set_logger_message(
-                "Exception thrown while creating cross-section "
-                + "{}, message: {}".format(css_data_id, str(e_info)),
+                "Exception thrown while creating cross-section " + "{}, message: {}".format(css_data_id, str(e_info)),
                 "error",
             )
             return None
@@ -867,12 +798,8 @@ your configuration file to fix this error.""",
         OutputExporter = Export1DModelData(logger=self.get_logger())
 
         # File paths
-        css_location_ini_file = output_dir.joinpath(
-            self._output_files.dimr_css_locations
-        )
-        css_definitions_ini_file = output_dir.joinpath(
-            self._output_files.dimr_css_definitions
-        )
+        css_location_ini_file = output_dir.joinpath(self._output_files.dimr_css_locations)
+        css_definitions_ini_file = output_dir.joinpath(self._output_files.dimr_css_definitions)
 
         # Legacy file formats
         csv_geometry_file = output_dir.joinpath(self._output_files.sobek3_geometry)
@@ -886,19 +813,13 @@ your configuration file to fix this error.""",
         # export fm1D format
         try:
             # Export locations
-            OutputExporter.export_crossSectionLocations(
-                cross_sections, file_path=css_location_ini_file
-            )
+            OutputExporter.export_crossSectionLocations(cross_sections, file_path=css_location_ini_file)
 
             # Export definitions
-            OutputExporter.export_geometry(
-                cross_sections, file_path=css_definitions_ini_file, fmt="dflow1d"
-            )
+            OutputExporter.export_geometry(cross_sections, file_path=css_definitions_ini_file, fmt="dflow1d")
 
             # Export roughness
-            sections = np.unique(
-                [s for css in cross_sections for s in css.friction_tables.keys()]
-            )
+            sections = np.unique([s for css in cross_sections for s in css.friction_tables.keys()])
             sectionFileKeyDict = {
                 "main": [self._output_files.dimr_roughness_main, "Main"],
                 "floodplain1": [
@@ -911,9 +832,7 @@ your configuration file to fix this error.""",
                 ],
             }
             for section in sections:
-                csv_roughness_ini_file = output_dir.joinpath(
-                    sectionFileKeyDict[section][0]
-                )
+                csv_roughness_ini_file = output_dir.joinpath(sectionFileKeyDict[section][0])
                 OutputExporter.export_roughness(
                     cross_sections,
                     file_path=csv_roughness_ini_file,
@@ -932,14 +851,10 @@ your configuration file to fix this error.""",
         # Eport SOBEK 3 format
         try:
             # Cross-sections
-            OutputExporter.export_geometry(
-                cross_sections, file_path=csv_geometry_file, fmt="sobek3"
-            )
+            OutputExporter.export_geometry(cross_sections, file_path=csv_geometry_file, fmt="sobek3")
 
             # Roughness
-            OutputExporter.export_roughness(
-                cross_sections, file_path=csv_roughness_file, fmt="sobek3"
-            )
+            OutputExporter.export_roughness(cross_sections, file_path=csv_roughness_file, fmt="sobek3")
         except Exception as e_info:
             self.set_logger_message(
                 "An error was produced while exporting files to SOBEK format,"
@@ -950,9 +865,7 @@ your configuration file to fix this error.""",
 
         # Other files:
         try:
-            OutputExporter.export_geometry(
-                cross_sections, file_path=csv_geometry_test_file, fmt="testformat"
-            )
+            OutputExporter.export_geometry(cross_sections, file_path=csv_geometry_test_file, fmt="testformat")
 
             OutputExporter.export_volumes(cross_sections, file_path=csv_volumes_file)
         except Exception as e_info:
@@ -975,17 +888,14 @@ your configuration file to fix this error.""",
             cross_section (CrossSection): modified
         """
 
-        maximum_number_of_css_points = self.get_inifile().get_parameter(
-            "MaximumPointsInProfile"
-        )
+        maximum_number_of_css_points = self.get_inifile().get_parameter("MaximumPointsInProfile")
 
         try:
             cross_section.reduce_points(count_after=maximum_number_of_css_points)
         except Exception as e_error:
             e_message = str(e_error)
             self.set_logger_message(
-                "Exception thrown while trying to reduce the css points. "
-                + "{}".format(e_message),
+                "Exception thrown while trying to reduce the css points. " + "{}".format(e_message),
                 "error",
             )
 
@@ -1022,9 +932,7 @@ your configuration file to fix this error.""",
         except Exception as e_error:
             e_message = str(e_error)
             self.set_logger_message(
-                "Exception thrown "
-                + "while trying to calculate the correction. "
-                + "{}".format(e_message),
+                "Exception thrown " + "while trying to calculate the correction. " + "{}".format(e_message),
                 "error",
             )
         return css
@@ -1039,12 +947,7 @@ your configuration file to fix this error.""",
         Checks whether output exists
         """
         for output_file in self._output_files:
-            if (
-                self.get_inifile()
-                .get_output_directory()
-                .joinpath(output_file)
-                .is_file()
-            ):
+            if self.get_inifile().get_output_directory().joinpath(output_file).is_file():
                 return True
         else:
             return False
