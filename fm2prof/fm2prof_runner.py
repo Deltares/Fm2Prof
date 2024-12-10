@@ -435,7 +435,6 @@ your configuration file to fix this error.""",
 
         # Do Nearest neighbour cross-section for each region
         time_independent_data, edge_data = funcs.classify_with_regions(
-            regions,
             cssdata,
             time_independent_data,
             edge_data,
@@ -485,7 +484,6 @@ your configuration file to fix this error.""",
 
         # Do Nearest neighbour cross-section for each region
         time_independent_data, edge_data = funcs.classify_with_regions(
-            polygons,
             cssdata,
             time_independent_data,
             edge_data,
@@ -533,8 +531,8 @@ your configuration file to fix this error.""",
             if isinstance(data, pd.DataFrame):
                 data.loc[end_values > splitpoint, key] = 1
                 data.loc[end_values <= splitpoint, key] = 2
-            else:            
-                data[key][end_values > splitpoint] = 1           
+            else:
+                data[key][end_values > splitpoint] = 1
                 data[key][end_values <= splitpoint] = 2
         return data
 
