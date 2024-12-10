@@ -17,18 +17,17 @@ class InvalidConfigurationFileError(Exception):
     """Raised when config file is not up to snot."""
 
 
-
 class ImportBoolType:
     """Custom type to parse booleans."""
 
-    def __new__(cls, value: str) -> bool: #noqa: D102
+    def __new__(cls, value: str) -> bool:  # noqa: D102
         return value.lower().strip() == "true"
 
 
 class ImportListType:
     """Custom type to parse list of comma separated ints."""
 
-    def __new__(cls, value:str) -> list:  #noqa: D102
+    def __new__(cls, value: str) -> list:  # noqa: D102
         return list(map(int, value.strip("[]").split(",")))
 
 
@@ -50,14 +49,14 @@ class IniFile(FM2ProfBase):
     __output_key = "output"
     __output_directory_key = "OutputDirectory"
     __ini_keys = {
-        "map_file":"2dmapoutput",
-        "css_file":"crosssectionlocationfile",
-        "region_file":"regionpolygonfile",
-        "section_file":"sectionpolygonfile",
-        "export_mapfiles":"exportmapfiles",
-        "css_selection" : "cssselection",
+        "map_file": "2dmapoutput",
+        "css_file": "crosssectionlocationfile",
+        "region_file": "regionpolygonfile",
+        "section_file": "sectionpolygonfile",
+        "export_mapfiles": "exportmapfiles",
+        "css_selection": "cssselection",
         "classificationmethod": "classificationmethod",
-        "sdfloodplainbase":"sdfloodplainbase",
+        "sdfloodplainbase": "sdfloodplainbase",
         "sdstorage": "sdstorage",
         "transitionheight_sd": "transitionheight_sd",
         "number_of_css_points": "number_of_css_points",
@@ -96,7 +95,8 @@ class IniFile(FM2ProfBase):
 
         if file_path is None:
             self.set_logger_message(
-                "No ini file given, using default options", "warning",
+                "No ini file given, using default options",
+                "warning",
             )
             return
         file_path = Path(file_path)
@@ -107,7 +107,8 @@ class IniFile(FM2ProfBase):
             self._read_inifile(file_path)
         elif file_path.is_dir():
             self.set_logger_message(
-                "No ini file given, using default options", "warning",
+                "No ini file given, using default options",
+                "warning",
             )
         else:
             # User has supplied a file, but the file does not exist. Raise error.
@@ -138,8 +139,7 @@ class IniFile(FM2ProfBase):
                 self.get_output_directory().mkdir(parents=True)
             except OSError:
                 self.set_logger_message(
-                    f"The output directory {self.get_output_directory()}, "
-                    "could not be found neither created.",
+                    f"The output directory {self.get_output_directory()}, " "could not be found neither created.",
                     "warning",
                 )
                 return False
@@ -153,9 +153,7 @@ class IniFile(FM2ProfBase):
             output directory (Path)
 
         """
-        op = self._configuration["sections"]["output"][self.__output_directory_key][
-            "value"
-        ]
+        op = self._configuration["sections"]["output"][self.__output_directory_key]["value"]
 
         return self.get_relative_path(op)
 
@@ -166,9 +164,9 @@ class IniFile(FM2ProfBase):
             name (Union[Path, str]): name of the output directory
 
         """
-        self._configuration["sections"]["output"][self.__output_directory_key][
-            "value"
-        ] = self._get_valid_output_dir(name)
+        self._configuration["sections"]["output"][self.__output_directory_key]["value"] = self._get_valid_output_dir(
+            name
+        )
 
         return self.get_output_directory()
 
@@ -184,7 +182,6 @@ class IniFile(FM2ProfBase):
         if dirtype == "absolute":
             return Path.cwd().joinpath(self._file_dir)
         return self._file_dir
-
 
     def get_relative_path(self, path: str) -> Path:
         """Get relative path of the ini root.
@@ -228,8 +225,7 @@ class IniFile(FM2ProfBase):
         self.set_logger_message(f"unknown key {key}", "error")
         return None
 
-
-    def _set_config_value(self, section: str, key: str, value: Any) -> None: #noqa: ANN401
+    def _set_config_value(self, section: str, key: str, value: Any) -> None:  # noqa: ANN401
         """Use this method to set a input files the configuration.
 
         Args:
@@ -252,9 +248,7 @@ class IniFile(FM2ProfBase):
         Args:
             value (Union[str, Path]): output directory
         """
-        self._configuration["sections"]["output"][self.__output_directory_key][
-            "value"
-        ] = value
+        self._configuration["sections"]["output"][self.__output_directory_key]["value"] = value
 
     def print_configuration(self) -> str:
         """Print the configuration as a string."""
@@ -268,12 +262,9 @@ class IniFile(FM2ProfBase):
             f.write("\n")
         return f.getvalue()
 
-
     def iter_parameters(self) -> Generator[Tuple[str], None, None]:
         """Iterate through the names and values of all parameters."""
-        for parameter, content in (
-            self._configuration["sections"].get("parameters").items()
-        ):
+        for parameter, content in self._configuration["sections"].get("parameters").items():
             yield (
                 parameter,
                 content.get("type"),
@@ -289,7 +280,9 @@ class IniFile(FM2ProfBase):
         return ""
 
     def _get_from_configuration(
-        self, section: str, key: str,
+        self,
+        section: str,
+        key: str,
     ) -> Union[str, bool, int, float]:
         for parameter, content in self._configuration["sections"].get(section).items():
             if parameter.lower() == key.lower():
@@ -302,7 +295,6 @@ class IniFile(FM2ProfBase):
         path, _ = os.path.split(inspect.getabsfile(IniFile))
         with Path(path).joinpath("configurationfile_template.json").open("r") as f:
             return json.load(f)
-
 
     def _read_inifile(self, file_path: str) -> None:
         """Reads the inifile and extract all its parameters for later usage.
@@ -337,7 +329,8 @@ class IniFile(FM2ProfBase):
             self._extract_input_files(supplied_ini)
         except Exception:
             self.set_logger_message(
-                "Unexpected error reading input files. Check config file", "error",
+                "Unexpected error reading input files. Check config file",
+                "error",
             )
         try:
             self._extract_parameters(supplied_ini, self.__input_parameters_key)
@@ -351,7 +344,8 @@ class IniFile(FM2ProfBase):
             self._extract_output_dir(supplied_ini)
         except Exception:
             self.set_logger_message(
-                "Unexpected error output parameters. Check config file", "error",
+                "Unexpected error output parameters. Check config file",
+                "error",
             )
 
     def _extract_parameters(self, supplied_ini: Mapping[str, list], section: str) -> None:
@@ -373,7 +367,8 @@ class IniFile(FM2ProfBase):
                 self._set_config_value("parameters", key_default, parsed_value)
             except ValueError:
                 self.set_logger_message(
-                    f"{key} could not be cast as {key_type}", "debug",
+                    f"{key} could not be cast as {key_type}",
+                    "debug",
                 )
             except KeyError:
                 pass
@@ -397,13 +392,14 @@ class IniFile(FM2ProfBase):
             input_file_path = self._file_dir.joinpath(input_file)
 
             if input_file_path.is_file():
-                self._set_config_value("input",key_default, input_file_path)
+                self._set_config_value("input", key_default, input_file_path)
                 continue
 
             if key_default in ("2DMapOutput", "CrossSectionLocationFile"):
-                err_msg =  f"Could not find input file: {key_default}"
-                self.set_logger_message( err_msg
-                    , "error",
+                err_msg = f"Could not find input file: {key_default}"
+                self.set_logger_message(
+                    err_msg,
+                    "error",
                 )
                 raise FileNotFoundError(err_msg)
             self.set_logger_message(
@@ -420,7 +416,6 @@ class IniFile(FM2ProfBase):
         # If not returned by now, key must be unknown
         self.set_logger_message(f"{key} is not a known key", "warning")
         return [None, KeyError]
-
 
     def _extract_output_dir(self, supplied_ini: Mapping[str, list]) -> None:
         """Extract and validates output directory.
@@ -439,7 +434,8 @@ class IniFile(FM2ProfBase):
                 self.set_output_directory(value)
             else:
                 self.set_logger_message(
-                    f"Unknown key {key} found in configuration file", "warning",
+                    f"Unknown key {key} found in configuration file",
+                    "warning",
                 )
 
     def _get_valid_output_dir(self, output_dir: str) -> Path:
@@ -460,9 +456,7 @@ class IniFile(FM2ProfBase):
     @property
     def _output_dir(self) -> Union[str, None]:
         try:
-            return self._configuration["sections"]["output"][
-                self.__output_directory_key
-            ]["value"]
+            return self._configuration["sections"]["output"][self.__output_directory_key]["value"]
         except KeyError:
             return None
 

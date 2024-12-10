@@ -1,6 +1,4 @@
 import os
-import shutil
-import pytest
 
 from fm2prof import Project
 from fm2prof.Fm2ProfRunner import Fm2ProfRunner
@@ -22,12 +20,9 @@ class Test_Project:
         project = None
         value = None
 
-        # 2. Run test
-        try:
-            project = Project()
-            value = project.get_parameter("LakeTimeSteps")
-        except Exception as e:
-            pytest.fail("No exception expected, but thrown: {}".format(str(e)))
+        # 2. Run test        
+        project = Project()
+        value = project.get_parameter("LakeTimeSteps")       
 
         # 3. Verify final expectations
         assert project is not None
@@ -37,13 +32,10 @@ class Test_Project:
         # 1. Set up initial test dat
         project = None
         value = None
-        # 2. Run test
-        try:
-            project = Project()
-            value = project.get_parameter("IDoNoTExist")
-        except Exception as e:
-            pytest.fail("No exception expected, but thrown: {}".format(str(e)))
-
+        # 2. Run test        
+        project = Project()
+        value = project.get_parameter("IDoNoTExist")
+        
         # 3. Verify final expectations
         assert project is not None
         assert value is None
@@ -52,12 +44,10 @@ class Test_Project:
         # 1. Set up initial test dat
         project = None
         value = None
-        # 2. Run test
-        try:
-            project = Project()
-            value = project.get_input_file("CrossSectionLocationFile")
-        except Exception as e:
-            pytest.fail("No exception expected, but thrown: {}".format(str(e)))
+
+        # 2. Run test        
+        project = Project()
+        value = project.get_input_file("CrossSectionLocationFile")   
 
         # 3. Verify final expectations
         assert project is not None
@@ -67,12 +57,10 @@ class Test_Project:
         # 1. Set up initial test dat
         project = None
         value = None
-        # 2. Run test
-        try:
-            project = Project()
-            value = project.get_output_directory()
-        except Exception as e:
-            pytest.fail("No exception expected, but thrown: {}".format(str(e)))
+
+        # 2. Run test       
+        project = Project()
+        value = project.get_output_directory()       
 
         # 3. Verify final expectations
         assert project is not None
@@ -82,12 +70,10 @@ class Test_Project:
         # 1. Set up initial test dat
         project = None
         value = 150
-        # 2. Run test
-        try:
-            project = Project()
-            project.set_parameter("LakeTimeSteps", value)
-        except Exception as e:
-            pytest.fail("No exception expected, but thrown: {}".format(str(e)))
+
+        # 2. Run test        
+        project = Project()
+        project.set_parameter("LakeTimeSteps", value)        
 
         # 3. Verify final expectations
         assert project.get_parameter("LakeTimeSteps") == value
@@ -96,12 +82,9 @@ class Test_Project:
         # 1. Set up initial test dat
         project = None
         value = "RandomString"
-        # 2. Run test
-        try:
-            project = Project()
-            project.set_input_file("CrossSectionLocationFile", value)
-        except Exception as e:
-            pytest.fail("No exception expected, but thrown: {}".format(str(e)))
+        # 2. Run test        
+        project = Project()
+        project.set_input_file("CrossSectionLocationFile", value)       
 
         # 3. Verify final expectations
         assert project.get_input_file("CrossSectionLocationFile") == value
@@ -110,26 +93,18 @@ class Test_Project:
         # 1. Set up initial test dat
         project = None
         value = "test/subdir"
-        # 2. Run test
-        try:
-            project = Project()
-            project.set_output_directory(value)
-        except Exception as e:
-            pytest.fail("No exception expected, but thrown: {}".format(str(e)))
-
-        # 3. Verify final expectations
-
+        # 2. Run test        
+        project = Project()
+        project.set_output_directory(value)
+        
     def test_print_configuration(self):
         # 1. Set up initial test dat
         project = None
         value = None
-        # 2. Run test
-        try:
-            project = Project()
-            value = project.print_configuration()
-        except Exception as e:
-            pytest.fail("No exception expected, but thrown: {}".format(str(e)))
-
+        # 2. Run test       
+        project = Project()
+        value = project.print_configuration()
+       
         # 3. Verify final expectations
         assert value is not None
 
@@ -139,10 +114,8 @@ class Test_Fm2ProfRunner:
         runner = None
 
         # 2. Run test
-        try:
-            runner = Fm2ProfRunner()
-        except Exception as e:
-            pytest.fail("No exception expected, but thrown: {}".format(str(e)))
+        runner = Fm2ProfRunner()
+      
 
         # 3. Verify final expectations
         assert runner is not None
@@ -160,11 +133,8 @@ class Test_Fm2ProfRunner:
             ini_file_path
         )
 
-        # 3. Run test
-        try:
-            runner = Fm2ProfRunner(ini_file_path)
-        except Exception as e:
-            pytest.fail("No exception expected, but thrown: {}".format(str(e)))
+        # 3. Run test      
+        runner = Fm2ProfRunner(ini_file_path)       
 
         # 4. Verify final expectations
         assert runner is not None

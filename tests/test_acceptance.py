@@ -1,12 +1,9 @@
 import io
 import os
 import shutil
-import sys
-import unittest
 from pathlib import Path
 from typing import Optional
 
-import matplotlib.pyplot as plt
 import pytest
 
 from fm2prof.Fm2ProfRunner import Fm2ProfRunner
@@ -374,21 +371,17 @@ class ARCHIVED_Test_Compare_Waal_Model:
         fm_dir = str(waal_test_folder / "Model_FM")
         fm2prof_dir = _get_test_case_output_dir(_waal_case)
 
-        result_figures = []
 
         # 2. Try to compare.
-        try:
-            waal_comparer = CompareWaalModel()
-            output_1d, _ = waal_comparer._run_waal_1d_model(
-                case_name=_waal_case,
-                results_dir=fm2prof_dir,
-                sobek_dir=sobek_dir,
-                fm_dir=fm_dir,
-            )
-        except Exception as e_info:
-            pytest.fail(
-                "No exception expected but was thrown " + "{}.".format(str(e_info))
-            )
+        
+        waal_comparer = CompareWaalModel()
+        output_1d, _ = waal_comparer._run_waal_1d_model(
+            case_name=_waal_case,
+            results_dir=fm2prof_dir,
+            sobek_dir=sobek_dir,
+            fm_dir=fm_dir,
+        )
+        
 
         # 3. Verify final expectations
         assert output_1d
@@ -406,18 +399,14 @@ class ARCHIVED_Test_Compare_Waal_Model:
         result_figures = []
 
         # 2. Try to compare.
-        try:
-            waal_comparer = CompareWaalModel()
-            result_figures = waal_comparer._compare_waal(
-                case_name=_waal_case,
-                results_dir=fm2prof_dir,
-                sobek_dir=sobek_dir,
-                fm_dir=fm_dir,
-            )
-        except Exception as e_info:
-            pytest.fail(
-                "No exception expected but was thrown " + "{}.".format(str(e_info))
-            )
+        
+        waal_comparer = CompareWaalModel()
+        result_figures = waal_comparer._compare_waal(
+            case_name=_waal_case,
+            results_dir=fm2prof_dir,
+            sobek_dir=sobek_dir,
+            fm_dir=fm_dir,
+        )
 
         # 3. Verify final expectations
         assert result_figures
@@ -451,14 +440,10 @@ class ARCHIVED_Test_Compare_Waal_Model:
         if not os.path.exists(fm2prof_fig_dir):
             os.makedirs(fm2prof_fig_dir)
 
-        #  3. Run
-        try:
-            waal_comparer = CompareWaalModel()
-            waal_comparer._compare_volume(case_name, input_volume_file, fm2prof_fig_dir)
-        except Exception as e_info:
-            pytest.fail(
-                "No exception expected but was thrown " + "{}.".format(str(e_info))
-            )
+        #  3. Run        
+        waal_comparer = CompareWaalModel()
+        waal_comparer._compare_volume(case_name, input_volume_file, fm2prof_fig_dir)
+    
 
         #  4. Final expectation
         assert os.listdir(
@@ -570,16 +555,12 @@ class Test_Compare_Idealized_Model:
         if not tzw_values or tzw_values is None:
             pytest.fail("Test failed, no values retrieved for {}".format(case_name))
 
-        try:
-            generic_comparer = CompareIdealizedModel()
-            generic_comparer._compare_css(
-                case_name, tzw_values, input_geometry_file, fm2prof_fig_dir
-            )
-        except Exception as e_info:
-            pytest.fail(
-                "No exception expected but was thrown " + "{}.".format(str(e_info))
-            )
-
+        
+        generic_comparer = CompareIdealizedModel()
+        generic_comparer._compare_css(
+            case_name, tzw_values, input_geometry_file, fm2prof_fig_dir
+        )
+       
         #  4. Final expectation
         assert os.listdir(
             fm2prof_fig_dir
@@ -616,15 +597,11 @@ class Test_Compare_Idealized_Model:
         if not tzw_values or tzw_values is None:
             pytest.fail("Test failed, no values retrieved for {}".format(case_name))
 
-        try:
-            generic_comparer = CompareIdealizedModel()
-            generic_comparer._compare_roughness(
-                case_name, tzw_values, input_roughness_file, fm2prof_fig_dir
-            )
-        except Exception as e_info:
-            pytest.fail(
-                "No exception expected but was thrown " + "{}.".format(str(e_info))
-            )
+        generic_comparer = CompareIdealizedModel()
+        generic_comparer._compare_roughness(
+            case_name, tzw_values, input_roughness_file, fm2prof_fig_dir
+        )
+       
 
         assert os.listdir(
             fm2prof_fig_dir
@@ -658,16 +635,12 @@ class Test_Compare_Idealized_Model:
             os.makedirs(fm2prof_fig_dir)
 
         #  3. Run
-        try:
-            generic_comparer = CompareIdealizedModel()
-            generic_comparer._compare_volume(
-                case_name, input_volume_file, fm2prof_fig_dir
-            )
-        except Exception as e_info:
-            pytest.fail(
-                "No exception expected but was thrown " + "{}.".format(str(e_info))
-            )
-
+        
+        generic_comparer = CompareIdealizedModel()
+        generic_comparer._compare_volume(
+            case_name, input_volume_file, fm2prof_fig_dir
+        )
+        
         #  4. Final expectation
         assert os.listdir(
             fm2prof_fig_dir
@@ -685,10 +658,6 @@ class Test_Compare_Idealized_Model:
         """
         # 1. Get all necessary output / input directories
         reference_geometry = self.__case_tzw_dict.get(case_name)
-        reference_roughness = (
-            None  # CompareHelper.get_analytical_roughness_for_case(case_name)
-        )
-        reference__volume = []
         fm2prof_dir = _get_test_case_output_dir(case_name)
 
         # 2. Verify / create necessary folders and directories
@@ -756,13 +725,10 @@ class ARCHIVED_Test_WaalPerformance:
         assert os.path.exists(css_file), "" + "CrossSection (test) file was not found"
 
         # 3. Run test.
-        try:
-            runner = Fm2ProfRunner(iniFilePath=None)
-            runner.run_inifile(iniFile=test_ini_file)
-        except Exception as e_error:
-            # if os.path.exists(root_output_dir):
-            #     shutil.rmtree(root_output_dir)
-            pytest.fail("No exception expected but was thrown {}.".format(str(e_error)))
+        
+        runner = Fm2ProfRunner(iniFilePath=None)
+        runner.run_inifile(iniFile=test_ini_file)
+    
 
         # 4. Verify final expectations.
         pass

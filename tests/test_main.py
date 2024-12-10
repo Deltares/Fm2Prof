@@ -1,8 +1,7 @@
 import getopt
 import os
 import shutil
-import sys
-import unittest
+import re
 
 import pytest
 
@@ -43,23 +42,19 @@ class Test_Main:
         if os.path.exists(outputtestdir):
             os.rmdir(outputtestdir)
 
-    def test_when_incorrect_args_then_systemexit_risen_with_expected_message(self):
+    def test_when_incorrect_args_then_systemexit_raised_with_expected_message(self):
         # 1. Set up test data
         mainArgs = [""]
 
         # 2. Set up expectations
-        reason = "Not all arguments were given."
-        expectedMssg = "Error: {0}".format(reason)
+        expectedMssg = "Error: Not all arguments were given."
 
         # 3. Run test
-        with pytest.raises(SystemExit) as pytest_wrapped_e:
+        with pytest.raises(SystemExit, match=expectedMssg):
             main.main(mainArgs)
 
-        # 4. Verify expectations
-        assert pytest_wrapped_e.type == SystemExit
-        assert pytest_wrapped_e.value.code == expectedMssg
 
-    def test_when_incorrect_input_args_systemexit_risen_with_expected_message(self):
+    def test_when_incorrect_input_args_systemexit_raised_with_expected_message(self):
         # 1. Set up test data
         mainArgs = ["-o", "test1"]
         opts, args = getopt.getopt(mainArgs, "hi:o:", ["ifile=", "ofile="])
@@ -70,13 +65,10 @@ class Test_Main:
         expectedMssg = "Error: {0}".format(reason)
 
         # 3. Run test
-        with pytest.raises(SystemExit) as pytest_wrapped_e:
+        with pytest.raises(SystemExit, match=re.escape(expectedMssg)):
             main.main(mainArgs)
 
-        # 4. Verify expectations
-        assert pytest_wrapped_e.type == SystemExit
-        assert pytest_wrapped_e.value.code == expectedMssg
-
+       
     def test_when_giving_correct_arguments_then_does_not_raise_systemexit(self):
         # 1. Set up test data
         test_dir = "output_test_main_unit"
@@ -84,63 +76,9 @@ class Test_Main:
         mainArgs = ["-i", "test1", "-i", "test2", "--i", "test3", "--o", outputtestdir]
         opts, args = getopt.getopt(mainArgs, "hi:o:", ["ifile=", "ofile="])
 
-        # 2. Set up expectations
-        reasons = [
-            "Not all arguments were given.",
-            "The first three arguments should be input files.\n"
-            + " Given: {}\n{}\n{}\n".format(opts[0], opts[1], opts[2]),
-            "The last argument should be the output directory.",
-        ]
-
-        # 3. Run test
-        try:
-            with pytest.raises(SystemExit) as pytest_wrapped_e:
-                main.main(mainArgs)
-            # 4. Verify expectations (it should actually not get here)
-            assert pytest_wrapped_e.type == SystemExit
-            for reason in reasons:
-                expectedMssg = "Error: {0}".format(reason)
-                assert pytest_wrapped_e.value.code != expectedMssg
-        except:
-            pass
-
-    def ARCHIVED_test_when_giving_non_existent_input_file_then_raises_io_exception(
-        self,
-    ):
-        # 1. Set up test data
-        file_path = "test1"
-        mainArgs = ["-i", file_path]
-
-        # 2. Set up expectations
-        reason = "The given file path {} could not be found.".format(file_path)
-
-        # 3. Run test
-        with pytest.raises(IOError) as e_info:
+        # 2. Run test
+        with pytest.raises(SystemExit, match="Not all arguments were given."):
             main.main(mainArgs)
+        
+       
 
-        # 4. Verify final expectations
-        exception_message = str(e_info.value)
-        assert (
-            exception_message == reason
-        ), "" + "Expected exception message {}, retrieved {}".format(
-            reason, exception_message
-        )
-
-    def ARCHIVED_test_when_giving_existent_empty_input_file_then_does_not_raise_io_exception(
-        self,
-    ):
-        # 1. Set up test data
-        test_dir = TestUtils.get_local_test_data_dir("main_test_data")
-        file_name = "test_ini_file.ini"
-        file_path = os.path.join(test_dir, file_name)
-        mainArgs = ["-i", file_path]
-
-        # 2. Set up expectations
-        assert os.path.exists(file_path)
-        reason = "The given file path {} could not be found.".format(file_path)
-
-        # 3. Run test
-        try:
-            main.main(mainArgs)
-        except:
-            pytest.fail("Unexpected exception.")

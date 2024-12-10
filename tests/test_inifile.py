@@ -1,14 +1,8 @@
-import numbers
-import os
-import shutil
-import sys
-import unittest
 from pathlib import Path
 
 import pytest
 
 from fm2prof.IniFile import IniFile
-from tests.TestUtils import TestUtils
 
 _root_output_dir = None
 
@@ -25,10 +19,8 @@ class Test_IniFile:
         iniFilePath = ""
 
         # 2. Run test
-        try:
-            IniFile(iniFilePath)
-        except:
-            pytest.fail("No exception expected.")
+        IniFile(iniFilePath)
+    
 
     def test_when_non_existent_file_path_then_io_exception_is_risen(self):
         # 1. Set up initial test data
@@ -58,12 +50,8 @@ class Test_IniFile:
         iniFile = IniFile(ini_file_path)
         new_output_dir = None
 
-        # 2. Run test
-        try:
-            new_output_dir = iniFile.set_output_directory(output_dir)
-        except:
-            err_mssg = "Test failed while trying to get new valid output dir."
-            pytest.fail(err_mssg)
+        # 2. Run test       
+        new_output_dir = iniFile.set_output_directory(output_dir)       
 
         # 3. Verify final expectations
         assert Path(expected_value) == new_output_dir.relative_to(Path().cwd())
