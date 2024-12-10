@@ -287,13 +287,12 @@ class CrossSection(FM2ProfBase):
 
         # Convert area to a matrix for matrix operations
         # (much more efficient than for-loops)
-        area_matrix = pd.DataFrame(index=area.index)
-        for t in waterdepth:
-            area_matrix[t] = area
+        area_matrix = pd.DataFrame({col: area for col in waterdepth.columns})
+        area_matrix.index = area.index
+        
+        bedlevel_matrix = pd.DataFrame({col: area for col in waterdepth.columns})
+        bedlevel_matrix.index = bedlevel.index
 
-        bedlevel_matrix = pd.DataFrame(index=bedlevel.index)
-        for t in waterdepth:
-            bedlevel_matrix[t] = bedlevel
 
         # Retrieve the water-depth
         # & water level nearest to the cross-section location
