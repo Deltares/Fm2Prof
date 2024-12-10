@@ -14,11 +14,14 @@ from fm2prof.common import FM2ProfBase
 
 if TYPE_CHECKING:
     from io import TextIOWrapper
+
     from fm2prof.cross_section import CrossSection
 
 
 @dataclass
 class OutputFiles:
+    """Class for grouping output files."""
+
     dimr_css_locations: str = "CrossSectionLocations.ini"
     dimr_css_definitions: str = "CrossSectionDefinitions.ini"
     dimr_roughness_main: str = "roughness-Main.ini"
@@ -153,7 +156,6 @@ class Export1DModelData(FM2ProfBase):
                 fid.write("\tshift\t\t\t\t= 0.000\n")
                 fid.write(f"\tdefinition\t\t\t= {css.name}\n\n")
 
-
     """ test file formats """
 
     def _write_geometry_testformat(self, fid: TextIOWrapper, cross_sections: list[CrossSection]) -> None:
@@ -166,12 +168,12 @@ class Export1DModelData(FM2ProfBase):
                     f"{cross_section.flow_width[i]}\n",
                 )
 
-    def _write_roughness_testformat(self, fid, cross_sections):
+    def _write_roughness_testformat(self, fid: TextIOWrapper, cross_sections: list[CrossSection]) -> None:
         # write header
         fid.write("chainage,type,waterlevel,chezy roughness\n")
 
         for roughnesstype in ("alluvial", "nonalluvial"):
-            for index, cross_section in enumerate(cross_sections):
+            for cross_section in cross_sections:
                 waterlevels = cross_section.alluvial_friction_table[0]
 
                 if roughnesstype == "alluvial":
@@ -184,36 +186,30 @@ class Export1DModelData(FM2ProfBase):
                         chezy = table[1][index]
                     except IndexError:
                         break
-                    if np.isnan(chezy) == False:
+                    if not np.isnan(chezy):
                         fid.write(
                             f"{cross_section.chainage}, {roughnesstype}, {level}, {chezy}\n",
                         )
 
     """ FM 1D file formats """
 
-    def _write_geometry_fm1d(self, fid, cross_sections):
-        """FM1D uses a configuration 'Delft' file style format"""
+    def _write_geometry_fm1d(self, fid: TextIOWrapper, cross_sections: list[CrossSection]) -> None:
+        """FM1D uses a configuration 'Delft' file style format."""
         # Write general secton
         fid.write(
             "[General]\nmajorVersion\t\t\t= 1\nminorversion\t\t\t= 0\nfileType\t\t\t\t= crossDef\n\n",
         )
 
-        for index, css in enumerate(cross_sections):
+        for css in cross_sections:
             z = [f"{iz:.4f}" for iz in css.z]
             fw = [f"{iz:.4f}" for iz in css.flow_width]
             tw = [f"{iz:.4f}" for iz in css.total_width]
 
-            # check for nan, because a channel with only one roughness value (ideal case) will not have this value
-            if np.isnan(css.floodplain_base) == False:
-                floodplain_base = str(css.floodplain_base)
-            else:
-                floodplain_base = str(css.crest_level)
-
             fid.write("[Definition]\n")
             fid.write(
-                f"\tid\t\t\t\t\t= {css.name}\n"
-                + "\ttype\t\t\t\t= tabulated\n"
-                + "\tthalweg\t\t\t\t= 0.000\n"
+                f"\tid\t\t\t\t\t= {css.name}\n"  # noqa: ISC003
+                "\ttype\t\t\t\t= tabulated\n"
+                "\tthalweg\t\t\t\t= 0.000\n"
                 + f"\tnumLevels\t\t\t= {len(z)}\n"
                 + "\tlevels\t\t\t\t= {}\n".format(" ".join(z))
                 + "\tflowWidths\t\t\t= {}\n".format(" ".join(fw))
@@ -233,19 +229,18 @@ class Export1DModelData(FM2ProfBase):
                 + "\tgroundLayer\t\t\t= 0.000\n\n",
             )
 
-    def _write_roughness_fm1d(self, fid, cross_sections, section):
-        """"""
+    def _write_roughness_fm1d(self, fid: TextIOWrapper, cross_sections: list[CrossSection], section: str) -> None:
         general_sec = f"""[General]
-        majorVersion          = 1                   
-        minorVersion          = 0                   
-        fileType              = roughness        
+        majorVersion          = 1
+        minorVersion          = 0
+        fileType              = roughness
 
     [Content]
-        sectionId             = {section}                
-        flowDirection         = False               
-        interpolate           = 1                   
-        globalType            = 1                   
-        globalValue           = 45               
+        sectionId             = {section}
+        flowDirection         = False
+        interpolate           = 1
+        globalType            = 1
+        globalValue           = 45
 
     """
 
@@ -255,15 +250,15 @@ class Export1DModelData(FM2ProfBase):
         fid.write(branch_sec)
         fid.write(definition_sec)
 
-    def _get_fm1d_definition_sec(self, cross_sections, section):
+    def _get_fm1d_definition_sec(self, cross_sections: list[CrossSection], section: str) -> str:
         def_sec = ""
 
         for css in cross_sections:
-            try:
+            if section in css.friction_tables:
                 table = css.friction_tables[section]
                 def_sec += """[Definition]
-        branchId              = {}               
-        chainage              = {}               
+        branchId              = {}
+        chainage              = {}
         values                = {}
 
     """.format(
@@ -271,55 +266,47 @@ class Export1DModelData(FM2ProfBase):
                     css.chainage,
                     " ".join(map("{:.4}".format, table.friction)),
                 )
-            except KeyError:
-                # this section does not exist in this cross-section
-                pass
-
         return def_sec
 
-    def _get_fm1d_branch_sec(self, cross_sections, section):
+    def _get_fm1d_branch_sec(self, cross_sections: list[CrossSection], section: str) -> str:
         branch_sec = ""
         branch_list = []
         for css in cross_sections:
-            if section in css.friction_tables:
-                try:
-                    if css.branch not in branch_list:
-                        branch_list.append(css.branch)
-                        branch_sec += """[BranchProperties]
-        branchId              = {}               
-        roughnessType         = 1                   
-        functionType          = 2                   
-        numLevels             = {}                   
+            if section in css.friction_tables and css.branch not in branch_list:
+                branch_list.append(css.branch)
+                branch_sec += """[BranchProperties]
+        branchId              = {}
+        roughnessType         = 1
+        functionType          = 2
+        numLevels             = {}
         levels                = {}
-        
 """.format(
-                            css.branch,
-                            len(css.friction_tables[section].level),
-                            " ".join(
-                                map("{:.4f}".format, css.friction_tables[section].level),
-                            ),
-                        )
-                except KeyError:
-                    # section not in this croess-section
-                    pass
+                    css.branch,
+                    len(css.friction_tables[section].level),
+                    " ".join(
+                        map("{:.4f}".format, css.friction_tables[section].level),
+                    ),
+                )
+
         return branch_sec
 
     """ SOBEK 3 file formats """
 
-    def _write_geometry_sobek3(self, fid, cross_sections):
+    def _write_geometry_sobek3(self, fid: TextIOWrapper, cross_sections: list[CrossSection]) -> None:
         # write meta
         # note, the chainage is currently set to the X-coordinate of the cross-section (straight channel)
         # note, the channel naming strategy must be discussed, currently set to 'Channel' for all cross-sections
 
         # write header
         fid.write(
-            "id,Name,Data_type,level,Total width,Flow width,Profile_type,branch,chainage,width main channel,width floodplain 1,width floodplain 2,width sediment transport,Use Summerdike,Crest level summerdike,Floodplain baselevel behind summerdike,Flow area behind summerdike,Total area behind summerdike,Use groundlayer,Ground layer depth\n",
+            "id,Name,Data_type,level,Total width,Flow width,Profile_type,branch,chainage,width main channel,width"
+            "floodplain 1,width floodplain 2,width sediment transport,Use Summerdike,Crest level summerdike,Floodplain"
+            "baselevel behind summerdike,Flow area behind summerdike,Total area behind summerdike,Use groundlayer,"
+            "Ground layer depth\n",
         )
 
-        for index, cross_section in enumerate(cross_sections):
+        for cross_section in cross_sections:
             try:
-                total_width = cross_section.total_width[-1]
-
                 b_summerdike = "0"
                 crest_level = ""
                 floodplain_base = ""
@@ -330,8 +317,9 @@ class Export1DModelData(FM2ProfBase):
                     crest_level = str(cross_section.crest_level)
                     total_area = str(cross_section.extra_total_area)
 
-                    # check for nan, because a channel with only one roughness value (ideal case) will not have this value
-                    if np.isnan(cross_section.floodplain_base) == False:
+                    # check for nan, because a channel with only one roughness value (ideal case) will not
+                    # have this value
+                    if not np.isnan(cross_section.floodplain_base):
                         floodplain_base = str(cross_section.floodplain_base)
                     else:
                         floodplain_base = str(
@@ -368,7 +356,8 @@ class Export1DModelData(FM2ProfBase):
                     + "\n",
                 )
 
-                # this is to avoid the unique z-value error in sobek, the added 'error' depends on the total_width, this is to make sure the order or points is correct
+                # this is to avoid the unique z-value error in sobek, the added 'error' depends on the total_width,
+                # this is to make sure the order or points is correct
                 z_format = "{:.8f}"
                 increment = np.array(range(1, cross_section.z.size + 1)) * 1e-5
                 z_value = cross_section.z + increment
@@ -395,7 +384,7 @@ class Export1DModelData(FM2ProfBase):
                     "error",
                 )
 
-    def _write_roughness_sobek3(self, fid, cross_sections):
+    def _write_roughness_sobek3(self, fid: TextIOWrapper, cross_sections: list[CrossSection]) -> None:
         # note, the chainage is currently set to the X-coordinate of the cross-section (straight channel)
         # note, the channel naming strategy must be discussed, currently set to 'Channel' for all cross-sections
 
@@ -405,11 +394,11 @@ class Export1DModelData(FM2ProfBase):
         )
 
         sections = np.unique(
-            [s for css in cross_sections for s in css.friction_tables.keys()],
+            [s for css in cross_sections for s in css.friction_tables],
         )
 
         for section in sections:
-            for index, cross_section in enumerate(cross_sections):
+            for cross_section in cross_sections:
                 if section in list(cross_section.friction_tables.keys()):
                     if section == "main":
                         table = cross_section.friction_tables[section]
@@ -421,7 +410,8 @@ class Export1DModelData(FM2ProfBase):
                         table = cross_section.friction_tables[section]
                         plain = "FloodPlain2"
                     else:
-                        raise Exception(f"Unknown section name: {section}")
+                        err_msg = f"Unknown section name: {section}"
+                        raise ValueError(err_msg)
 
                     for level, friction in zip(table.level, table.friction):
                         fid.write(
