@@ -101,7 +101,7 @@ class IniFile(FM2ProfBase):
 
         if file_path is None:
             self.set_logger_message(
-                f"No ini file given, using default options", "warning"
+                "No ini file given, using default options", "warning"
             )
             return
         else:
@@ -113,7 +113,7 @@ class IniFile(FM2ProfBase):
             self._read_inifile(file_path)
         elif file_path.is_dir():
             self.set_logger_message(
-                f"No ini file given, using default options", "warning"
+                "No ini file given, using default options", "warning"
             )
             pass
         else:
@@ -122,7 +122,7 @@ class IniFile(FM2ProfBase):
 
     @property
     def _file_dir(self) -> Path:
-        if not self._file is None:
+        if self._file is not None:
             return self._file.parent
         return Path().cwd()
 

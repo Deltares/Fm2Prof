@@ -1,8 +1,4 @@
-import numbers
 import os
-import shutil
-import sys
-import unittest
 
 import numpy as np
 import pytest
@@ -47,15 +43,9 @@ class ARCHIVED_Test_read_css_xyz:
         )
 
         # 3. Run test
-        try:
-            result_input_data = Func._read_css_xyz(file_path)
-        except:
-            pytest.fail(
-                "No exception expected but test failed \
-                while reading file {}.".format(
-                    file_path
-                )
-            )
+        
+        result_input_data = Func._read_css_xyz(file_path)
+       
 
         # 4. Verify final expectations
         for expected_input_key in expected_input_data:
