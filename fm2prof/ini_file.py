@@ -198,16 +198,16 @@ class IniFile(FM2ProfBase):
         """
         return self.get_ini_root().joinpath(path)
 
-    def get_input_file(self, file_name: str) -> Path:
+    def get_input_file(self, file_name: str) -> str:
         """Use this method to retrieve the path to an input file.
 
         Args:
-            file_name (str): _description_
+            file_name (str): name of input file.
 
         Returns:
-            AnyStr: _description_
+            str: string of path to input file
         """
-        return Path(self._get_from_configuration("input", file_name))
+        return self._get_from_configuration("input", file_name)
 
     def get_parameter(self, key: str) -> str | bool | int | float | None:
         """Use this method to return a parameter value.
