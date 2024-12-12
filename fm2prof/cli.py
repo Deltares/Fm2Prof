@@ -21,7 +21,7 @@ def _display_version(value: bool) -> None:  # noqa:FBT001
 
 @app.command("create")
 def cli_create_new_project(projectname: str) -> None:
-    """Creates a new project configuration from scratch, then exit."""
+    """Create a new project configuration from scratch, then exit."""
     inifile = IniFile().print_configuration()
     ini_path = Path(f"{projectname}.ini")
 
@@ -58,7 +58,7 @@ def cli_load_project(
     projectname: str,
     *,
     overwrite: bool = typer.Option(
-        False,
+        False,  # noqa: FBT003
         "--overwrite",
         "-o",
         help="Overwrite if output already exists",
@@ -70,7 +70,7 @@ def cli_load_project(
         help="Post-process the results, generates figures",
     ),
 ) -> None:
-    """Loads and runs a project."""
+    """Load and run a project."""
     cf = Path(projectname).with_suffix(".ini")
     project = Project(cf)
     project.run(overwrite=overwrite)
