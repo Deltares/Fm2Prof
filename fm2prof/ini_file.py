@@ -1,16 +1,20 @@
 """Module contains the IniFile class, which handles the main configuration file."""
 
+from __future__ import annotations
+
 import configparser
 import inspect
 import io
 import json
 import os
-from logging import Logger
 from pathlib import Path
 from pydoc import locate
-from typing import Any, Dict, Generator, List, Mapping, Tuple, Type, Union
+from typing import TYPE_CHECKING, Any, Generator, Mapping
 
 from fm2prof.common import FM2ProfBase
+
+if TYPE_CHECKING:
+    from logging import Logger
 
 
 class InvalidConfigurationFileError(Exception):
@@ -67,7 +71,7 @@ class IniFile(FM2ProfBase):
     _input_file_paths = None
     _input_parameters = None
 
-    def __init__(self, file_path: Union[Path, str] = ".", logger: Union[Logger, None] = None) -> None:
+    def __init__(self, file_path: Path | str = ".", logger: Logger | None = None) -> None:
         """Initialize the object Ini File.
 
         File should contain the path locations of all
@@ -157,15 +161,15 @@ class IniFile(FM2ProfBase):
 
         return self.get_relative_path(op)
 
-    def set_output_directory(self, name: Union[Path, str]) -> None:
+    def set_output_directory(self, name: Path | str) -> None:
         """Use this method to set the output directory.
 
         Args:
-            name (Union[Path, str]): name of the output directory
+            name (Path | str): name of the output directory
 
         """
         self._configuration["sections"]["output"][self.__output_directory_key]["value"] = self._get_valid_output_dir(
-            name
+            name,
         )
 
         return self.get_output_directory()
@@ -205,14 +209,14 @@ class IniFile(FM2ProfBase):
         """
         return Path(self._get_from_configuration("input", file_name))
 
-    def get_parameter(self, key: str) -> Union[str, bool, int, float, None]:
+    def get_parameter(self, key: str) -> str | bool | int | float | None:
         """Use this method to return a parameter value.
 
         Args:
             key (str): name of parameter.
 
         Returns:
-            Union[str, bool, int, float]: parameter value.
+            Union (str | bool | int | float | None): parameter value.
         """
         try:
             return self._get_from_configuration("parameters", key)
@@ -224,6 +228,14 @@ class IniFile(FM2ProfBase):
             pass
         self.set_logger_message(f"unknown key {key}", "error")
         return None
+
+    def set_input_file(self, key: str, value: str | Path | None = None) -> None:
+        """Use this method to set a input files the configuration."""
+        self._set_config_value("input", key, value)
+
+    def set_parameter(self, key: str, value: str | float, section: str = "parameters") -> None:
+        """Use this method to set a key/value pair to the configuration."""
+        self._set_config_value(section, key, value)
 
     def _set_config_value(self, section: str, key: str, value: Any) -> None:  # noqa: ANN401
         """Use this method to set a input files the configuration.
@@ -242,7 +254,7 @@ class IniFile(FM2ProfBase):
         self.set_logger_message(f"Unknown {section}. Available keys: {list(keys)}")
         return False
 
-    def _set_output_directory_no_validation(self, value: Union[str, Path]) -> None:
+    def _set_output_directory_no_validation(self, value: str | Path) -> None:
         """Set the output directory within testing framework only.
 
         Args:
@@ -262,7 +274,7 @@ class IniFile(FM2ProfBase):
             f.write("\n")
         return f.getvalue()
 
-    def iter_parameters(self) -> Generator[Tuple[str]]:
+    def iter_parameters(self) -> Generator[tuple[str], None, None]:
         """Iterate through the names and values of all parameters."""
         for parameter, content in self._configuration["sections"].get("parameters").items():
             yield (
@@ -283,14 +295,14 @@ class IniFile(FM2ProfBase):
         self,
         section: str,
         key: str,
-    ) -> Union[str, bool, int, float]:
+    ) -> str | bool | int | float:
         for parameter, content in self._configuration["sections"].get(section).items():
             if parameter.lower() == key.lower():
                 return content.get("value")
         err_msg = f"key {key} not found"
         raise KeyError(err_msg)
 
-    def _get_template_ini(self) -> Dict:
+    def _get_template_ini(self) -> dict:
         # Open config file
         path, _ = os.path.split(inspect.getabsfile(IniFile))
         with Path(path).joinpath("configurationfile_template.json").open("r") as f:
@@ -407,7 +419,7 @@ class IniFile(FM2ProfBase):
                 "warning",
             )
 
-    def _get_key_from_template(self, section: str, key: str) -> List[Union[str, Type]]:
+    def _get_key_from_template(self, section: str, key: str) -> list[str, type]:
         """Return list of lower case keys from default configuration files."""
         sectiondict = self._ini_template.get("sections").get(section)
         for entry in sectiondict:
@@ -454,14 +466,14 @@ class IniFile(FM2ProfBase):
         return output_dir
 
     @property
-    def _output_dir(self) -> Union[str, None]:
+    def _output_dir(self) -> str | None:
         try:
             return self._configuration["sections"]["output"][self.__output_directory_key]["value"]
         except KeyError:
             return None
 
     @staticmethod
-    def _get_inifile_params(file_path: str) -> Dict:
+    def _get_inifile_params(file_path: str) -> dict:
         """Extracts the parameters from an ini file.
 
         Args:
