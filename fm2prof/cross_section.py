@@ -57,10 +57,13 @@ class CrossSectionHelpers(FM2ProfBase):
 
 
         Args:
+        ----
             cross_section_list (List[CrossSection]): _description_
 
         Returns:
+        -------
             bool: TRUE if succesful, FALSE if not. Does not raise exception.
+
         """
         try:
             return self._interpolate_friction_across_cross_sections(cross_section_list)
@@ -135,16 +138,12 @@ class CrossSection(FM2ProfBase):
 
         See docs how to acquire fm_data and how to prepare a proper 2D model.
 
-        Deprecated:
-            1.2: The `foo` attribute is deprecated.
 
-        >>> example co
-        hello!
-
-        Parameters:
-            data: contains stuff
-            logger: ala
-            inifile: woow
+        Args:
+        ----
+            data (dict): dict with data
+            logger (Logger): logger to log to.
+            inifile (IniFile): IniFile instance.
 
         """
         # If inifile is not given, use default configuration
@@ -258,7 +257,8 @@ class CrossSection(FM2ProfBase):
         The 2D data is set on initalisation of the `CrossSection` object.
         The methods modifies the following attributes
 
-        Attributes:
+        Attributes
+        ----------
            _fm_wet_area
            _fm_flow_area
            _fm_total_volume
@@ -273,7 +273,7 @@ class CrossSection(FM2ProfBase):
 
         # Unpack FM data
         def get_timeseries(name: str) -> np.array:
-            """Returns data from fm_data after applying the skip_maps and checking for missing numbers."""
+            """Return data from fm_data after applying the skip_maps and checking for missing numbers."""
             data = fm_data[name].iloc[
                 :,
                 self.get_parameter(self.__cs_parameter_skip_maps) :,
@@ -392,7 +392,7 @@ class CrossSection(FM2ProfBase):
         self._css_z = np.array(self._css_z, dtype=np.dtype("float64"))
 
     def check_requirements(self) -> None:
-        """Performs check on cross-section such that it hold up to requirements."""
+        """Perform check on cross-section such that it hold up to requirements."""
         # Remove multiple zeroes in the bottom of the cross-section
         self._css_index_of_first_nonzero = self._check_remove_duplicate_zeroes()
         self._css_total_width = self._check_remove_zero_widths(self._css_total_width)
@@ -572,8 +572,9 @@ class CrossSection(FM2ProfBase):
                 Implemented vertex reduction methods:
 
 
-        Parameters:
-            count_after: number of points in cross-section after application of this function
+        Args:
+        ----
+            count_after (int): number of points in cross-section after application of this function
 
         """
         n_before_reduction = self.get_number_of_vertices()
@@ -607,7 +608,7 @@ class CrossSection(FM2ProfBase):
         self._css_is_reduced = True
 
     def set_face_output_list(self) -> None:
-        """Generates a list of output mask points based on their values in the mask."""
+        """Generate a list of output mask points based on their values in the mask."""
         fm_data = self._fm_data
 
         # Properties keys
@@ -658,7 +659,7 @@ class CrossSection(FM2ProfBase):
             )
 
     def set_edge_output_list(self) -> None:
-        """Generates a list of output mask points based on their values in the mask.
+        """Generate a list of output mask points based on their values in the mask.
 
         writes to self.__output_mask_list
         """
@@ -702,7 +703,7 @@ class CrossSection(FM2ProfBase):
             )
 
     def _check_remove_duplicate_zeroes(self) -> int | float:
-        """Removes duplicate zeroes in the total width."""
+        """Remove duplicate zeroes in the total width."""
         # Remove multiple 0s in the total width
         return max(1, np.argwhere(self._css_total_width != 0)[0][0])
 
@@ -711,7 +712,10 @@ class CrossSection(FM2ProfBase):
         return np.append(listin[0], listin[after_index:].tolist())
 
     def _check_remove_zero_widths(self, width_array: np.array) -> np.array:
-        """A zero width may lead to numerical instability."""
+        """Remove zero width values.
+
+        A zero width may lead to numerical instability.
+        """
         minwidth = self.get_parameter(self.__cs_parameter_minwidth)
         width_array[width_array < minwidth] = minwidth
         return width_array
@@ -771,8 +775,10 @@ class CrossSection(FM2ProfBase):
     ) -> dict:
         """Optimised the crest level and volumes.
 
-        Returns:
+        Returns
+        -------
             Dictionary with optimised values, final cost and optimisation message
+
         """
         # Default option
         sdoptimisationmethod = self.get_parameter(
@@ -893,7 +899,7 @@ class CrossSection(FM2ProfBase):
             )
 
     def _friction_weighing_simple(self, link_chezy: np.ndarray) -> np.ndarray:
-        """Simple mean, no weight."""
+        """Calculate mean of chezy values."""
         # Remove chezy where zero
         link_chezy = link_chezy.replace(0, np.nan)
         output = link_chezy.mean(axis=0).replace(np.nan, 0)
@@ -922,7 +928,7 @@ class CrossSection(FM2ProfBase):
         return output
 
     def _compute_section_widths(self) -> None:
-        """Computes sections widths by dividing the area assigned to a section by the length of the cross-section.
+        """Compute sections widths by dividing the area assigned to a section by the length of the cross-section.
 
         If the sum of the section widths is smaller than the flow width, the
         width is increase proportionally
@@ -949,7 +955,7 @@ class CrossSection(FM2ProfBase):
         self._check_section_widths_greater_than_minimum_width()
 
     def _compute_floodplain_base(self) -> None:
-        """Sets the self.floodplain_base attribute.
+        """Set the self.floodplain_base attribute.
 
         The floodplain will be set at least 0.5 meter below the crest of the
         embankment, and otherwise at the average hight of the floodplain
@@ -1002,10 +1008,13 @@ class CrossSection(FM2ProfBase):
         subtracted from the waterdepth to compute volumes.
 
 
-        Parameters:
-            waterdepth: a DataFrame containing all waterdepth output in the [control volume](glossary.md#control-volume)
+        Args:
+        ----
+            waterdepth (pd.DataFrame): a DataFrame containing all waterdepth output in the [control volume]
+            (glossary.md#control-volume)
 
         Returns:
+        -------
             lake_mask: mask of all cells that are a 'lake'
             wet_not_lake_mask: mask of all cells that are wet, but not a lake
             lake_depth_correction: the depth of a lake at the start of the 2D computation
@@ -1070,11 +1079,14 @@ class CrossSection(FM2ProfBase):
         3. Correct the flow width such that flow width is always increasing.
 
         Args:
+        ----
             centre_level: the water level at the cross-section location (x, y), which is typically at the centre of the
             control volume
 
         Return:
+        ------
             None: this method writes to the cross-section attributes _css_z, _css_total_width and _css_flow_width
+
         """
         # Set the level
         self._css_z = centre_level
@@ -1123,13 +1135,16 @@ class CrossSection(FM2ProfBase):
         **`mean_method`**
         Not recommended. Legacy method.
 
-        Parameters:
-            waterdepth: dataframe of a control volume with waterdepths per cel per output map
-            velocity:  dataframe of a control volume with velocity magnitude per cel per output map
+        Args:
+        ----
+            waterdepth (pd.DataFrame): dataframe of a control volume with waterdepths per cel per output map
+            velocity (pd.DataFrame):  dataframe of a control volume with velocity magnitude per cel per output map
 
         Returns:
+        -------
             flow_mask: dataframe of a control volume with the flow condition per cel per output map. `True` means
             flowing, `False` storage.
+
         """
 
         @staticmethod
@@ -1223,7 +1238,8 @@ class CrossSection(FM2ProfBase):
             - the tolerance for deciding which cell is wet is hardcoded at -1e-3
 
 
-        Attributes:
+        Attributes
+        ----------
             _css_z
             _css_total_width
             _css_flow_width
@@ -1231,6 +1247,7 @@ class CrossSection(FM2ProfBase):
             _fm_flow_area
             _fm_flow_volume
             _fm_total_volume
+
         """
         bedlevel = self._fm_data.get("bedlevel").to_numpy()
         cell_area = self._fm_data.get("area").to_numpy()
@@ -1280,11 +1297,11 @@ class CrossSection(FM2ProfBase):
         )
 
     def _append_to_start(self, array: np.ndarray, to_add: float | np.ndarray) -> np.ndarray:
-        """Adds ``to add`` to beginning of array."""
+        """Add ``to add`` to beginning of array."""
         return np.insert(array, 0, to_add)
 
     def _return_volume_error(self, predicted: np.ndarray, measured: np.ndarray) -> np.ndarray:
-        """Returns the squared relative error."""
+        """Calculate the squared relative error."""
         non_nan_mask = ~np.isnan(predicted) & ~np.isnan(measured)
         predicted = predicted[non_nan_mask]
         measured = measured[non_nan_mask]
@@ -1304,11 +1321,14 @@ class CrossSection(FM2ProfBase):
         method 2: sort array such that z is always rising (default)
 
         Arguments:
+        ---------
             arr: 1d numpy array
             method: int
 
         Return:
+        ------
             mask such that arr[mask] is monotonically rising
+
         """
         if method == 1:
             mask = np.array([True])
@@ -1346,7 +1366,10 @@ class CrossSection(FM2ProfBase):
             )
 
     def _check_section_widths_greater_than_minimum_width(self) -> bool:
-        """Main section width must be greater than minimum profile width, or it is ignored by SOBEK 3."""
+        """Check section widths that are greater than the minimum width.
+
+        Main section width must be greater than minimum profile width, or it is ignored by SOBEK 3.
+        """
         dif = self.section_widths["main"] - self._css_flow_width[0]
 
         # cm accuracy, and at least 10 cm difference
