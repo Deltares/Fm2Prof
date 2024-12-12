@@ -6,14 +6,14 @@ import datetime
 import pickle
 import traceback
 from pathlib import Path
-from typing import TYPE_CHECKING, Generator
+from typing import Generator
 
 import geojson
 import numpy as np
+import pandas as pd
 import tqdm
 from geojson import Feature, FeatureCollection, Polygon
 from netCDF4 import Dataset
-import pandas as pd
 from scipy.spatial import ConvexHull
 
 from fm2prof import __version__
@@ -25,9 +25,6 @@ from fm2prof.Import import FMDataImporter, FmModelData, ImportInputFiles
 from fm2prof.IniFile import IniFile
 from fm2prof.MaskOutputFile import MaskOutputFile
 from fm2prof.RegionPolygonFile import RegionPolygonFile, SectionPolygonFile
-
-if TYPE_CHECKING:
-    import pandas as pd
 
 
 class InitializationError(Exception):
@@ -43,10 +40,12 @@ class Fm2ProfRunner(FM2ProfBase):
     __key_skipmaps = "SkipMaps"
 
     def __init__(self, ini_file_path: Path | str = "") -> None:
-        """Initializes the project.
+        """Initialize the project.
 
         Args:
+        ----
             ini_file_path (Path | str): path to configuration file.
+
         """
         self.fm_model_data: FmModelData = None
         self._output_files: OutputFiles = OutputFiles()
@@ -77,10 +76,12 @@ class Fm2ProfRunner(FM2ProfBase):
         self.set_logger_message(self.get_inifile().print_configuration(), header=True)
 
     def run(self, *, overwrite: bool = False) -> None:
-        """Executes FM2PROF routines.
+        """Execute FM2PROF routines.
 
         Args:
+        ----
             overwrite (bool): if True, overwrites existing output. If False, exits if output detected.
+
         """
         if self.get_inifile() is None:
             self.set_logger_message("No ini file was specified: the run cannot go further.", "Warning")
@@ -106,7 +107,9 @@ class Fm2ProfRunner(FM2ProfBase):
         """Use this method to load a configuration file from path.
 
         Args:
+        ----
             ini_file_path (str): path to configuration file
+
         """
         ini_file_object = IniFile(ini_file_path, logger=self.get_logger())
         self.set_inifile(ini_file_object)
@@ -127,7 +130,7 @@ class Fm2ProfRunner(FM2ProfBase):
             self.set_logger_message(line, header=True)
 
     def _run_inifile(self) -> bool:
-        """Executes main program from the configuration file.
+        """Execute main program from the configuration file.
 
         The main steps in the program are:
 
@@ -181,7 +184,7 @@ class Fm2ProfRunner(FM2ProfBase):
         return True
 
     def _initialise_fm2prof(self) -> None:
-        """Loads data, inifile."""
+        """Load data, inifile."""
         ini_file: IniFile = self.get_inifile()
         raise_file_not_found: bool = False
 
@@ -237,7 +240,7 @@ class Fm2ProfRunner(FM2ProfBase):
         return success
 
     def _validate_config_after_initalization(self) -> bool:
-        """Performs validation checks on config file.
+        """Perform validation checks on config file.
 
         Returns True if all checks succesfull, False if check fails.
         """
@@ -539,7 +542,7 @@ your configuration file to fix this error.""",
         return data
 
     def _get_region_map_file(self, polytype: str) -> str:
-        """Returns the path to a NC file with region ifnormation in the bathymetry data."""
+        """Return the path to a NC file with region ifnormation in the bathymetry data."""
         map_file_path = Path(self.get_inifile().get_input_file("2DMapOutput"))
         return f"{map_file_path.parent / map_file_path.stem}_{polytype.upper()}BATHY{map_file_path.suffix}"
 
@@ -572,11 +575,13 @@ your configuration file to fix this error.""",
         return data
 
     def _generate_geojson_output(self, output_dir: str, cross_sections: list) -> None:
-        """Generates geojson file based on cross sections.
+        """Generate geojson file based on cross sections.
 
         Args:
+        ----
             output_dir (str): Output directory path.
             cross_sections (list): List of Cross Sections.
+
         """
         for pointtype in ["face", "edge"]:
             output_file_path = Path(output_dir) / f"{pointtype}_output.geojson"
@@ -592,10 +597,12 @@ your configuration file to fix this error.""",
                 )
 
     def _generate_cross_section_list(self) -> list[CrossSection]:
-        """Generates cross sections based on the given fm_model_data.
+        """Generate cross sections based on the given fm_model_data.
 
-        Returns:
+        Returns
+        -------
             (list): List of generated cross sections
+
         """
         cross_sections = []
         if not self.fm_model_data:
@@ -621,26 +628,30 @@ your configuration file to fix this error.""",
         return cross_sections
 
     def _get_css_range(self, number_of_css: int) -> np.array:
-        """Parses the CssSelection keyword from the inifile."""
+        """Parse the CssSelection keyword from the inifile."""
         css_selection = self.get_inifile().get_parameter("CssSelection")
         return np.arange(0, number_of_css) if not css_selection else np.array(css_selection)
 
     def _generate_cross_section(self, css_data: dict, fm_model_data: FmModelData) -> CrossSection:
-        """Generates a cross section and configures its values based.
+        """Generate a cross section and configures its values based.
 
         on the input parameter dictionary
 
         Args:
+        ----
             css_data (dict): Dictionary of data for the current cross section.
             fm_model_data (FmModelData): Data to assign to the new cross section
 
         Raises:
+        ------
             Exception: If no css_data is given.
             Exception: If no input_param_dict is given.
             Exception: If no fm_model_data is given.
 
         Returns:
+        -------
             (CrossSection): New Cross Section
+
         """
         if css_data is None:
             err_msg = "No data was given to create a Cross Section"
@@ -680,10 +691,12 @@ your configuration file to fix this error.""",
         return created_css
 
     def _build_cross_section_geometry(self, cross_section: CrossSection) -> CrossSection:
-        """This method manages the options of building the cross-section geometry.
+        """Manage the options of building the cross-section geometry.
 
         Args:
+        ----
             cross_section (CrossSection): Given Cross Section.
+
         """
         if cross_section is None:
             err_msg = "Cross section cannot be none."
@@ -716,13 +729,16 @@ your configuration file to fix this error.""",
         return cross_section
 
     def _create_new_cross_section(self, css_data: dict) -> CrossSection | None:
-        """Creates a cross section with the given input param dictionary.
+        """Create a cross section with the given input param dictionary.
 
-        Arguments:
+        Args:
+        ----
             css_data (dict): FM Model data for cross section.
 
         Returns:
+        -------
             (CrossSection): New cross section object.
+
         """
         # Get id data and id index
         if not css_data:
@@ -763,11 +779,13 @@ your configuration file to fix this error.""",
         return css
 
     def _write_output(self, cross_sections: list, output_dir: Path) -> None:
-        """Exports all cross sections to the necessary file formats.
+        """Export all cross sections to the necessary file formats.
 
         Args:
+        ----
             cross_sections (list): List of created cross sections
             output_dir (str): target directory where to export all the cross sections
+
         """
         if not cross_sections or not output_dir.exists():
             return
@@ -854,13 +872,16 @@ your configuration file to fix this error.""",
         self.set_logger_message("Exported output files, FM2PROF finished")
 
     def _reduce_css_points(self, cross_section: CrossSection) -> CrossSection:
-        """Returns a valid value for the number of css points read from ini file.
+        """Return a valid value for the number of css points read from ini file.
 
-        Parameters:
+        Parameters
+        ----------
             cross_section (CrossSection)
 
-        Returns:
+        Returns
+        -------
             cross_section (CrossSection): modified
+
         """
         maximum_number_of_css_points = self.get_inifile().get_parameter("MaximumPointsInProfile")
 
@@ -876,13 +897,16 @@ your configuration file to fix this error.""",
         return cross_section
 
     def _get_time_stamp_seconds(self, start_time: datetime) -> float:
-        """Returns a time stamp with the time difference.
+        """Return a time stamp with the time difference.
 
         Args:
+        ----
             start_time (datetime): Initial date time
 
         Returns:
+        -------
             (float): difference of time between start and now in seconds
+
         """
         time_now = datetime.datetime.now()
         time_difference = time_now - start_time
@@ -917,7 +941,7 @@ your configuration file to fix this error.""",
         self.set_logger_message(f"Errors: {ll.get('ERROR')}")
 
     def _output_exists(self) -> bool:
-        """Checks whether output exists."""
+        """Check whether output exists."""
         for output_file in self._output_files:
             if self.get_inifile().get_output_directory().joinpath(output_file).is_file():
                 return True
@@ -937,10 +961,12 @@ class Project(Fm2ProfRunner):
         """Use this method to set the value of a parameter.
 
         Args:
+        ----
             name (str): name of the parameter (case insensitive).
 
             value (str | float): value of the parameter.
             An error will be given if the value has the wrong type (e.g. string if int was expected).
+
         """
         self.get_inifile().set_parameter(name, value)
 
@@ -948,10 +974,13 @@ class Project(Fm2ProfRunner):
         """Use this method to get the value of a parameter.
 
         Args:
+        ----
             name (str): name of the parameter (case insensitive)
 
         Returns:
+        -------
             (str | float): The current value of the parameter
+
         """
         return self.get_inifile().get_parameter(name)
 
@@ -959,9 +988,11 @@ class Project(Fm2ProfRunner):
         """Use this method to set the path to an input file.
 
         Args:
+        ----
             name: name of the input file in the configuration (case insensitive).
 
             value: path to the inputfile
+
         """
         return self.get_inifile().set_input_file(name, value)
 
@@ -969,7 +1000,9 @@ class Project(Fm2ProfRunner):
         """Use this method to retrieve the path to an input file.
 
         Args:
+        ----
             name (str): case-insensitive key of the input file (e.g.'2dmapoutput')
+
         """
         return self.get_inifile().get_input_file(name)
 
@@ -981,12 +1014,14 @@ class Project(Fm2ProfRunner):
             if it does not already exists!
 
         Args:
+        ----
             path (path | str): path to the output path
+
         """
         self.get_inifile().set_output_directory(path)
 
     def get_output_directory(self) -> str:
-        """Returns the current output directory."""
+        """Return the current output directory."""
         return self.get_inifile().get_output_directory()
 
     def print_configuration(self) -> str:
@@ -997,8 +1032,10 @@ class Project(Fm2ProfRunner):
             >> with open('EmptyProject.ini', 'w') as f:
             >>     f.write(project.print_configuration())
 
-        Returns:
+        Returns
+        -------
             (str): string representation of the configuration
+
         """
         return self.get_inifile().print_configuration()
 
@@ -1006,8 +1043,10 @@ class Project(Fm2ProfRunner):
     def output_files(self) -> Generator[Path, None, None]:
         """Get a generator object with the output files.
 
-        Yields:
+        Yields
+        ------
             Generator[Path, None, None]: generator of output files.
+
         """
         for of in self._output_files:
             yield self.get_output_directory().joinpath(of)
