@@ -934,7 +934,7 @@ your configuration file to fix this error.""",
         # export fm1D format
         try:
             # Export locations
-            OutputExporter.export_crossSectionLocations(
+            OutputExporter.export_cross_section_locations(
                 cross_sections,
                 file_path=css_location_ini_file,
             )
