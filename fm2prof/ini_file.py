@@ -48,7 +48,7 @@ class IniFile(FM2ProfBase):
     __input_debug_key = "debug"
     __output_key = "output"
     __output_directory_key = "OutputDirectory"
-    __ini_keys = {
+    __ini_keys = {  # noqa:RUF012
         "map_file": "2dmapoutput",
         "css_file": "crosssectionlocationfile",
         "region_file": "regionpolygonfile",
@@ -139,7 +139,7 @@ class IniFile(FM2ProfBase):
                 self.get_output_directory().mkdir(parents=True)
             except OSError:
                 self.set_logger_message(
-                    f"The output directory {self.get_output_directory()}, " "could not be found neither created.",
+                    f"The output directory {self.get_output_directory()}, could not be found neither created.",
                     "warning",
                 )
                 return False
