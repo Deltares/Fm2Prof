@@ -14,12 +14,8 @@ from fm2prof.common import FM2ProfBase
 
 if TYPE_CHECKING:
     from io import TextIOWrapper
-<<<<<<< HEAD
-    from fm2prof.CrossSection import CrossSection
-=======
 
-    from fm2prof.cross_section import CrossSection
->>>>>>> c7657a2... updated export.py to ruff standard
+    from fm2prof.CrossSection import CrossSection
 
 
 @dataclass
@@ -47,7 +43,7 @@ class OutputFiles:
 
 
 class Export1DModelData(FM2ProfBase):
-    """This class contains all functions related to exporting to various outputs.
+    """Contains all functions related to exporting to various outputs.
 
     In the future, split in different classes for SOBEK, D-Hydro etc formats
     """
@@ -61,10 +57,12 @@ class Export1DModelData(FM2ProfBase):
         """Export cross section geometries in different formats.
 
         Args:
+        ----
             cross_sections (list[CrossSection]): List of cross sections.
             file_path (Path | str): File path to write to.
             fmt (str): Format to write to. Options are sobek3, dflow1d, and testformat.
                         Defaults to sobek3
+
         """
         with Path(file_path).open("w") as f:
             if fmt == "sobek3":
@@ -87,10 +85,12 @@ class Export1DModelData(FM2ProfBase):
         """Export roughnes in different formats.
 
         Args:
+        ----
             cross_sections (list[CrossSection]): List of cross sections
             file_path (str | Path): File path to write to
             fmt (str, optional): Format to write to. Defaults to "sobek3".
             roughness_section (str, optional): Name of roughness section. Defaults to "Main".
+
         """
         with Path(file_path).open("w") as f:
             if fmt == "sobek3":
@@ -107,8 +107,10 @@ class Export1DModelData(FM2ProfBase):
         """Write to file the volume/waterlevel information.
 
         Args:
+        ----
             cross_sections (list[CrossSection]): List of cross sections.
             file_path (str | Path): File path to write to.
+
         """
         with Path(file_path).open("w") as f:
             # Write header
@@ -143,8 +145,10 @@ class Export1DModelData(FM2ProfBase):
         """Export cross section locations.
 
         Args:
+        ----
             cross_sections (list[CrossSection]): List of cross sections.
             file_path (str | Path): file path to write to.
+
         """
         with Path(file_path).open("w") as fid:
             # Write general secton
