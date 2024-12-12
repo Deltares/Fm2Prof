@@ -1,4 +1,5 @@
 """Base classes and data containers."""
+
 from __future__ import annotations
 
 import logging
@@ -19,17 +20,18 @@ from colorama import Back, Fore, Style
 
 # Import from package
 if TYPE_CHECKING:
-    from fm2prof.ini_file import IniFile
-
-
+    from fm2prof.IniFile import IniFile
 
 
 class TqdmLoggingHandler(logging.StreamHandler):
     """Logging handler for tqdm package."""
+
     def __init__(self) -> None:
+        """Instantiate a TqdmLoggingHandler."""
         super().__init__()
 
-    def emit(self, record: LogRecord):
+    def emit(self, record: LogRecord) -> None:
+        """Write progressbar to logstream."""
         try:
             msg = self.format(record)
             if self.formatter.pbar:
@@ -44,9 +46,12 @@ class TqdmLoggingHandler(logging.StreamHandler):
 
 
 class ElapsedFormatter:
+    """ElapsedFormatter class."""
+
     __new_iteration = 1
 
-    def __init__(self):
+    def __init__(self) -> None:
+        """Instantiate an ElapsedFormatter object."""
         self.start_time = datetime.now()
         self.number_of_iterations: int = 1
         self.current_iteration: int = 0
@@ -118,7 +123,6 @@ class ElapsedFormatter:
             f"{self._resetStyle}{color[level][1]}{self._resetStyle} T+ {elapsed_seconds:.2f}s {message}"
         )
 
-
     def __reset(self) -> None:
         self.start_time = time()
 
@@ -144,7 +148,7 @@ class ElapsedFormatter:
             raise ValueError(err_msg)
         self.number_of_iterations = n
 
-    def set_intro(self,*, flag: bool = True) -> None:
+    def set_intro(self, *, flag: bool = True) -> None:
         """Indicate intro section for formatter."""
         self._intro = flag
 
@@ -156,7 +160,10 @@ class ElapsedFormatter:
 
 
 class ElapsedFileFormatter(ElapsedFormatter):
-    def __init__(self):
+    """Elapsed file formatter class."""
+
+    def __init__(self) -> None:
+        """Instantiate an ElapsedFileFormatter object."""
         super().__init__()
         self._resetStyle = ""
         self._colors = {
@@ -182,7 +189,15 @@ class FM2ProfBase:
     __copyright__ = "Copyright 2016-2020, University of Twente & Deltares"
     __license__ = "LPGL"
 
-    def __init__(self, logger: Logger | None = None, inifile: IniFile | None= None):
+    def __init__(self, logger: Logger | None = None, inifile: IniFile | None = None) -> None:
+        """Instatiate a FM2ProfBase object.
+
+        Args:
+        ----
+            logger (Logger | None, optional): Logger . Defaults to None.
+            inifile (IniFile | None, optional): IniFile instance. Defaults to None.
+
+        """
         if logger:
             self.set_logger(logger)
         if inifile:
@@ -194,14 +209,14 @@ class FM2ProfBase:
         self.__logger.setLevel(logging.DEBUG)
 
         # create formatter
-        self.__logger.__logformatter = ElapsedFormatter() #noqa: SLF001
-        self.__logger._Filelogformatter = ElapsedFileFormatter() #noqa: SLF001
+        self.__logger.__logformatter = ElapsedFormatter()  # noqa: SLF001
+        self.__logger._Filelogformatter = ElapsedFileFormatter()  # noqa: SLF001
 
         # create console handler
         if TqdmLoggingHandler not in map(type, self.__logger.handlers):
             ch = TqdmLoggingHandler()
             ch.setLevel(logging.DEBUG)
-            ch.setFormatter(self.__logger.__logformatter) #noqa: SLF001
+            ch.setFormatter(self.__logger.__logformatter)  # noqa: SLF001
             self.__logger.addHandler(ch)
 
     def get_logger(self) -> Logger:
@@ -212,7 +227,9 @@ class FM2ProfBase:
         """Use to set logger.
 
         Args:
+        ----
             logger (Logger): Logger instance
+
         """
         if not isinstance(logger, Logger):
             err_msg = "logger should be instance of Logger class"
@@ -220,24 +237,30 @@ class FM2ProfBase:
         self.__logger = logger
 
     def set_logger_message(
-        self, err_mssg: str = "", level: str = "info", *, header: bool = False,
+        self,
+        err_mssg: str = "",
+        level: str = "info",
+        *,
+        header: bool = False,
     ) -> None:
-        """Sets message to logger if this is set.
+        """Set message to logger if this is set.
 
         Args:
+        ----
             err_mssg (str, optional): Error message to log. Defaults to "".
             level (str, optional): Log level. Defaults to "info".
             header (bool, optional): Set error message as header. Defaults to False.
+
         """
         if not self.__logger:
             return
 
         if header:
             self.get_logformatter().set_intro(True)
-            self.get_logger()._Filelogformatter.set_intro(True) #noqa: SLF001
+            self.get_logger()._Filelogformatter.set_intro(True)  # noqa: SLF001
         else:
             self.get_logformatter().set_intro(False)
-            self.get_logger()._Filelogformatter.set_intro(False) #noqa: SLF001
+            self.get_logger()._Filelogformatter.set_intro(False)  # noqa: SLF001
 
         if level.lower() not in ["info", "debug", "warning", "error", "critical"]:
             err_msg = f"{level.lower()} is not valid logging level."
@@ -255,7 +278,9 @@ class FM2ProfBase:
             self.__logger.critical(err_mssg)
 
     def start_new_log_task(
-        self, task_name: str = "NOT DEFINED", pbar: tqdm.tqdm = None,
+        self,
+        task_name: str = "NOT DEFINED",
+        pbar: tqdm.tqdm = None,
     ) -> None:
         """Use this method to start a new task. Will reset the internal clock.
 
@@ -275,19 +300,21 @@ class FM2ProfBase:
         self.pbar = None
 
     def get_logformatter(self) -> ElapsedFormatter:
-        """Returns log formatter."""
-        return self.get_logger().__logformatter #noqa: SLF001
+        """Return log formatter."""
+        return self.get_logger().__logformatter  # noqa: SLF001
 
     def get_filelogformatter(self) -> ElapsedFormatter:
-        """Returns file log formatter."""
-        return self.get_logger()._Filelogformatter #noqa: SLF001
+        """Return  file log formatter."""
+        return self.get_logger()._Filelogformatter  # noqa: SLF001
 
     def set_logfile(self, output_dir: str | Path, filename: str = "fm2prof.log") -> None:
         """Set log file.
 
         Args:
+        ----
             output_dir (str): _description_
             filename (str, optional): _description_. Defaults to "fm2prof.log".
+
         """
         # create file handler
         if not output_dir:
@@ -295,7 +322,7 @@ class FM2ProfBase:
             raise ValueError(err_msg)
         fh = logging.FileHandler(Path(output_dir).joinpath(filename), encoding="utf-8")
         fh.setLevel(logging.DEBUG)
-        fh.setFormatter(self.get_logger()._Filelogformatter) #noqa: SLF001
+        fh.setFormatter(self.get_logger()._Filelogformatter)  # noqa: SLF001
         self.__logger.addHandler(fh)
 
     def set_inifile(self, inifile: IniFile = None) -> None:
@@ -303,8 +330,10 @@ class FM2ProfBase:
 
         For loading from file, use ``load_inifile`` instead
 
-        Parameters:
+        Args:
+        ----
             inifile (IniFile): inifile object. Obtain using e.g. ``get_inifile``.
+
         """
         self.__iniFile = inifile
 
@@ -317,11 +346,17 @@ class FrictionTable:
     """Container for friction table."""
 
     def __init__(self, level: np.ndarray, friction: np.ndarray) -> None:
+        """Instantiate a FrictionTable object."""
         if self._validate_input(level, friction):
             self.level = level
             self.friction = friction
 
     def interpolate(self, new_z: np.ndarray) -> None:
+        """Interpolate friction.
+
+        Args:
+            new_z (np.ndarray): _description_
+        """
         self.friction = np.interp(new_z, self.level, self.friction)
         self.level = new_z
 
