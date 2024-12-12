@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""This module contains functions used for the emulation/reduction of 2D models to 1D models for Delft3D FM (D-Hydro).
+"""Contains functions used for the emulation/reduction of 2D models to 1D models for Delft3D FM (D-Hydro).
 
 Dependencies
 ------------------
@@ -45,6 +45,7 @@ from sklearn.neighbors import KNeighborsClassifier, NearestNeighbors
 if TYPE_CHECKING:
     from logging import Logger
 
+    from fm2prof.CrossSection import CrossSection
     from fm2prof.RegionPolygonFile import SectionPolygonFile
 
 __author__ = "Koen Berends"
@@ -65,7 +66,7 @@ def classify_roughness_sections_by_polygon(
     data: dict | pd.DataFrame,
     logger: Logger,
 ) -> pd.DataFrame | dict:
-    """Assigns edges to a roughness section based on polygon data."""
+    """Assign edges to a roughness section based on polygon data."""
     logger.debug("....gathering points")
     points = [(data["x"][i], data["y"][i]) for i in range(len(data["x"]))]
     logger.debug("....classifying points")
@@ -84,7 +85,7 @@ def classify_with_regions(
     edge_data: dict,
     css_regions: list,
 ) -> tuple[pd.DataFrame, dict]:
-    """Assigns cross-section id's based on region polygons.
+    """Assign cross-section id's based on region polygons.
 
     Within a region, assignment will be done by k nearest neighbour
     """
@@ -177,16 +178,19 @@ def empirical_ppf(
     *,
     single_value: bool = False,
 ) -> list | np.ndarray:
-    """Constructs empirical cdf, then draws quantile by linear interpolation.
+    """Construct empirical cdf, then draws quantile by linear interpolation.
 
     Args:
+    ----
         qs (np.array): array of quantiles
         p (np.array): array of random inputs
         val (np.ndarray | None, optional): array or list of values. Defaults to None.
         single_value (bool, optional): boolean for indicating single value. Defaults to False.
 
     Returns:
+    -------
         list | np.ndarray
+
     """
     if val is None:
         p, val = get_empirical_cdf(p)
@@ -195,14 +199,17 @@ def empirical_ppf(
 
 
 def get_empirical_cdf(sample: list, *, ignore_nan: bool = True) -> tuple[np.array, np.array]:
-    """Returns an experimental/empirical cdf from data.
+    """Return an experimental/empirical cdf from data.
 
     Args:
+    ----
         sample (list): list of sample values
         ignore_nan (bool, optional): Defaults to True.
 
     Returns:
+    -------
         tuple[np.array, np.array]: tuple containg arrays of values (x) and cumulative probability (y)
+
     """
     sample = np.array(sample)
     if ignore_nan:
@@ -228,7 +235,11 @@ def _get_class_tree(xy: np.ndarray, c: np.ndarray) -> KNeighborsClassifier:
     return neigh
 
 
-def _interpolate_roughness_css(cross_section, alluvial_range, nonalluvial_range) -> None:
+def _interpolate_roughness_css(
+    cross_section: CrossSection,
+    alluvial_range: np.ndarray,
+    nonalluvial_range: np.ndarray,
+) -> None:
     # change nan's to zeros
     chezy_alluvial = np.nan_to_num(cross_section.alluvial_friction_table[1])
     chezy_nonalluvial = np.nan_to_num(cross_section.nonalluvial_friction_table[1])
