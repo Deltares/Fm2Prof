@@ -143,7 +143,7 @@ class ElapsedFormatter:
 
     def set_number_of_iterations(self, n: int) -> None:
         """Set numbber of iterations."""
-        if n > 0:
+        if n < 0:
             err_msg = "Total number of iterations should be higher than zero"
             raise ValueError(err_msg)
         self.number_of_iterations = n
