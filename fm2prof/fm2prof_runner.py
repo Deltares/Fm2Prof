@@ -16,8 +16,8 @@ from geojson import Feature, FeatureCollection, Polygon
 from netCDF4 import Dataset
 from scipy.spatial import ConvexHull
 
+from fm2prof import Functions as funcs
 from fm2prof import __version__
-from fm2prof import functions as funcs
 from fm2prof.common import FM2ProfBase
 from fm2prof.CrossSection import CrossSection, CrossSectionHelpers
 from fm2prof.Export import Export1DModelData, OutputFiles
@@ -771,7 +771,7 @@ your configuration file to fix this error.""",
 
         except Exception as e_info:
             self.set_logger_message(
-                "Exception thrown while creating cross-section " + f"{css_data.get("id")}, message: {e_info!s}",
+                "Exception thrown while creating cross-section " + f"{css_data.get('id')}, message: {e_info!s}",
                 "error",
             )
             return None
