@@ -148,7 +148,7 @@ class ElapsedFormatter:
             raise ValueError(err_msg)
         self.number_of_iterations = n
 
-    def set_intro(self, *, flag: bool = True) -> None:
+    def set_intro(self, flag: bool = True) -> None:  # noqa: FBT001, FBT002
         """Indicate intro section for formatter."""
         self._intro = flag
 
