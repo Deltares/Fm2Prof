@@ -1,4 +1,5 @@
-"""
+"""Module for handling mask output file.
+
 Copyright (C) Stichting Deltares 2019. All rights reserved.
 
 This file is part of the Fm2Prof.
@@ -20,74 +21,84 @@ All names, logos, and references to "Deltares" are registered trademarks of
 Stichting Deltares and remain full property of Stichting Deltares at all times.
 All rights reserved.
 """
+
+from __future__ import annotations
+
 from pathlib import Path
-from typing import Union, Optional
+
 import geojson
 
 
+def create_mask_point(coords: geojson.coords, properties: dict | None = None) -> geojson.Feature:
+    """Create a Point based on the properties and coordinates given.
 
-class MaskOutputFile:
-    @staticmethod
-    def create_mask_point(coords: geojson.coords, properties: Optional[dict] = None) -> geojson.Feature:
-        """Creates a Point based on the properties and coordinates given.
+    Args:
+        coords (geojson.coords): Coordinates tuple (x,y) for the mask point.
+        properties (dict): Dictionary of properties
 
-        Arguments:
-            coords {geojson.coords} --
-                Coordinates tuple (x,y) for the mask point.
-            properties {dict} -- Dictionary of properties
-        """
-        if not coords:
-            raise ValueError("coords cannot be empty.")
-        output_mask = geojson.Feature(geometry=geojson.Point(coords))       
-        
-        if properties:
-            output_mask.properties = properties
-        return output_mask
+    """
+    if not coords:
+        err_msg = "coords cannot be empty."
+        raise ValueError(err_msg)
+    output_mask = geojson.Feature(geometry=geojson.Point(coords))
 
-    @staticmethod
-    def validate_extension(file_path: Union[str, Path]) -> None:
-        if not isinstance(file_path, (str, Path)):
-            err_msg = f"file_path should be string or Path, not {type(file_path)}"
-            raise TypeError(err_msg)
-        if Path(file_path).suffix not in [".json", ".geojson"]:
-            raise IOError(
-                "Invalid file path extension, should be .json or .geojson."
-            )
+    if properties:
+        output_mask.properties = properties
+    return output_mask
 
-    @staticmethod
-    def read_mask_output_file(file_path: Union[str, Path]) -> dict:
-        """Imports a GeoJson from a given json file path.
 
-        Arguments:
-            file_path {str} -- Location of the json file
-        """
-        file_path = Path(file_path)
-        if not file_path.exists():
-            err_msg = f"File path {file_path} not found."
-            raise FileNotFoundError(err_msg)
+def validate_extension(file_path: str | Path) -> None:
+    """Validate extension of mask output file.
 
-        MaskOutputFile.validate_extension(file_path)
-        with file_path.open("r") as geojson_file:            
-            geojson_data = geojson.load(geojson_file)
-        if not isinstance(geojson_data, geojson.FeatureCollection):
-            raise IOError("File is empty or not a valid geojson file.")
-        return geojson_data
+    Args:
+        file_path (Union[str, Path]): path to output file.
 
-    @staticmethod
-    def write_mask_output_file(file_path: Union[Path, str], mask_points: list) -> None:
-        """Writes a .geojson file with a Feature collection containing
-        the mask_points list given as input.
+    """
+    if not isinstance(file_path, (str, Path)):
+        err_msg = f"file_path should be string or Path, not {type(file_path)}"
+        raise TypeError(err_msg)
+    if Path(file_path).suffix not in [".json", ".geojson"]:
+        err_msg = "Invalid file path extension, should be .json or .geojson."
+        raise OSError(err_msg)
 
-        Arguments:
-            file_path {str} -- file_path where to store the geojson.
-            mask_points {list} -- List of features to output.
-        """
-        if not file_path:
-            raise ValueError("file_path is required.")
-        file_path = Path(file_path)
-        if not mask_points:
-            raise ValueError("mask_points cannot be empty.")
-        MaskOutputFile.validate_extension(file_path)
-        feature_collection = geojson.FeatureCollection(mask_points)
-        with file_path.open("w") as f:
-            geojson.dump(feature_collection, f, indent=4)
+
+def read_mask_output_file(file_path: str | Path) -> dict:
+    """Import a GeoJson from a given json file path.
+
+    Args:
+        file_path (str | Path): Location of the json file
+
+    """
+    file_path = Path(file_path)
+    if not file_path.exists():
+        err_msg = f"File path {file_path} not found."
+        raise FileNotFoundError(err_msg)
+
+    validate_extension(file_path)
+    with file_path.open("r") as geojson_file:
+        geojson_data = geojson.load(geojson_file)
+    if not isinstance(geojson_data, geojson.FeatureCollection):
+        err_msg = "File is empty or not a valid geojson file."
+        raise OSError(err_msg)
+    return geojson_data
+
+
+def write_mask_output_file(file_path: Path | str, mask_points: list) -> None:
+    """Write a geojson file with a Feature collection containing the mask_points list given as input.
+
+    Arguments:
+        file_path (str): file_path where to store the geojson.
+        mask_points (list): List of features to output.
+
+    """
+    if not file_path:
+        err_msg = "file_path is required."
+        raise ValueError(err_msg)
+    file_path = Path(file_path)
+    if not mask_points:
+        err_msg = "mask_points cannot be empty."
+        raise ValueError(err_msg)
+    validate_extension(file_path)
+    feature_collection = geojson.FeatureCollection(mask_points)
+    with file_path.open("w") as f:
+        geojson.dump(feature_collection, f, indent=4)
