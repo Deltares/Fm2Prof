@@ -4,12 +4,11 @@ from __future__ import annotations
 
 import ast
 import locale
-import os
 import warnings
 from collections import namedtuple
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import TYPE_CHECKING, Callable, Dict, Generator, List, Tuple, Union
+from typing import TYPE_CHECKING, Any, Callable, Generator
 
 import matplotlib as mpl
 import matplotlib.dates as mdates
@@ -155,7 +154,7 @@ class GenerateCrossSectionLocationFile(FM2ProfBase):
 
         self._networkdeffile_to_input(network_definition_file, crossection_location_file, branchrule_file)
 
-    def _parse_network_definition_file(self, network_definition_file: Path, branchrules: dict | None = None) -> dict:
+    def _parse_network_definition_file(self, network_definition_file: Path, branchrules: dict | None = None) -> dict:  # noqa: C901, PLR0912
         """Parse network definition file.
 
         Output:
@@ -731,11 +730,11 @@ class VisualiseOutput(FM2ProfBase):
         """
         return PlotStyles.apply(*args, **kwargs)
 
-    def _plot_geometry(self, css: dict, ax: Axes, reference_geometry=None):
+    def _plot_geometry(self, css: dict, ax: Axes, reference_geometry: list | None = None) -> None:
         # Get data
         tw = np.append([0], np.array(css["total_width"]))
         fw = np.append([0], np.array(css["flow_width"]))
-        l = np.append(css["levels"][0], np.array(css["levels"]))
+        levels = np.append(css["levels"][0], np.array(css["levels"]))
         mainsectionwidth = css["mainsectionwidth"]
         fp1sectionwidth = css["fp1sectionwidth"]
 
@@ -745,14 +744,14 @@ class VisualiseOutput(FM2ProfBase):
 
         # Plot cross-section geometry
         for side in [-1, 1]:
-            h = ax.fill_betweenx(l, side * fw / 2, side * tw / 2, color="#44B1D5AA", hatch="////")
-            ax.plot(side * tw / 2, l, "-k")
-            ax.plot(side * fw / 2, l, "--k")
+            h = ax.fill_betweenx(levels, side * fw / 2, side * tw / 2, color="#44B1D5AA", hatch="////")
+            ax.plot(side * tw / 2, levels, "-k")
+            ax.plot(side * fw / 2, levels, "--k")
 
         # Plot roughness section width
         ax.plot(
             [-0.5 * mainsectionwidth, 0.5 * mainsectionwidth],
-            [min(l) - 0.25] * 2,
+            [min(levels) - 0.25] * 2,
             "-",
             linewidth=2,
             color="red",
@@ -763,7 +762,7 @@ class VisualiseOutput(FM2ProfBase):
                 -0.5 * (mainsectionwidth + fp1sectionwidth),
                 0.5 * (mainsectionwidth + fp1sectionwidth),
             ],
-            [min(l) - 0.25] * 2,
+            [min(levels) - 0.25] * 2,
             "--",
             color="red",
             label="Floodplain section",
@@ -772,7 +771,7 @@ class VisualiseOutput(FM2ProfBase):
         # Plot water level indepentent line
         ax.plot(
             tw - 0.5 * max(tw),
-            [z_waterlevel_independent] * len(l),
+            [z_waterlevel_independent] * len(levels),
             linestyle="--",
             color="m",
             label="Lowest water level in 2D",
@@ -804,7 +803,7 @@ class VisualiseOutput(FM2ProfBase):
             label=sd_info.get("label"),
         )
 
-    def _plot_volume(self, css, ax):
+    def _plot_volume(self, css: dict, ax: Axes) -> None:
         # Get data
         vd = self.getVolumeInfoForCss(css["id"])
         z_waterlevel_independent = self._get_lowest_water_level_in_2D(css)
@@ -949,7 +948,7 @@ class PlotStyles:
             raise locale.Error(err_msg) from err
 
     @staticmethod
-    def _is_timeaxis(axis) -> bool:
+    def _is_timeaxis(axis: Axes) -> bool:
         try:
             label_string = axis.get_ticklabels()[0].get_text().replace("−", "-")
             # if label_string is empty (e.g. because of twin_axis, return false)
@@ -966,12 +965,15 @@ class PlotStyles:
     def van_veen(
         cls,
         fig: Figure | None = None,
+        *,
         use_legend: bool = True,
-        extra_labels: List | None = None,
+        extra_labels: list | None = None,
         ax_align_legend: plt.Axes | None = None,
-    ):
-        warnings.warn(
-            "This function is deprecated and will be removed on future versions. Use PlotStyle.apply(fig, style='van_veen') instead",
+    ) -> None:
+        """Apply van veen plotstyle."""
+        warnings.warn(  # noqa: B028
+            "This function is deprecated and will be removed on future versions."
+            "Use PlotStyle.apply(fig, style='van_veen') instead",
             category=DeprecationWarning,
         )
         cls.apply(
@@ -987,132 +989,143 @@ class PlotStyles:
         cls,
         fig: Figure | None = None,
         style: str = "sito",
-        use_legend: bool = True,
-        extra_labels: List | None = None,
+        extra_labels: list | None = None,
         ax_align_legend: plt.Axes | None = None,
-    ) -> Tuple[Figure, Legend]:
-        styles: Dict[str, StyleGuide] = dict(
-            sito=StyleGuide(
+        *,
+        use_legend: bool = True,
+    ) -> tuple[Figure, Legend]:
+        """Apply style to figure."""
+        styles: dict[str, StyleGuide] = {
+            "sito": StyleGuide(
                 font={"family": "Franca, Arial", "weight": "normal", "size": 16},
-                major_grid=dict(
-                    visible=True,
-                    which="major",
-                    linestyle="--",
-                    linewidth=1.0,
-                    color="#BBBBBB",
-                ),
-                minor_grid=dict(
-                    visible=True,
-                    which="minor",
-                    linestyle="--",
-                    linewidth=1.0,
-                    color="#BBBBBB",
-                ),
+                major_grid={
+                    "visible": True,
+                    "which": "major",
+                    "linestyle": "--",
+                    "linewidth": 1.0,
+                    "color": "#BBBBBB",
+                },
+                minor_grid={
+                    "visible": True,
+                    "which": "minor",
+                    "linestyle": "--",
+                    "linewidth": 1.0,
+                    "color": "#BBBBBB",
+                },
                 spine_width=1,
             ),
-            van_veen=StyleGuide(
+            "van_veen": StyleGuide(
                 font={"family": "Bahnschrift", "weight": "normal", "size": 18},
-                major_grid=dict(visible=True, which="major", linestyle="-", linewidth=1, color="k"),
-                minor_grid=dict(visible=True, which="minor", linestyle="-", linewidth=0.5, color="k"),
+                major_grid={"visible": True, "which": "major", "linestyle": "-", "linewidth": 1, "color": "k"},
+                minor_grid={"visible": True, "which": "minor", "linestyle": "-", "linewidth": 0.5, "color": "k"},
                 spine_width=2,
             ),
-        )
+        }
 
         if style not in styles:
-            raise KeyError(f"unknown style {style}. Options are {list(styles.keys())}")
+            err_msg = f"unknown style {style}. Options are {list(styles.keys())}"
+            raise KeyError(err_msg)
 
         style_guide: StyleGuide = styles.get(style)
 
-        def initiate() -> None:
-            # Set default locale to NL
-            # TODO: add localization options (#85)
-            PlotStyles.set_locale("nl_NL.UTF-8")
-
-            # Color style
-            mpl.rcParams["axes.prop_cycle"] = mpl.cycler(
-                color=cls.colorscheme * 3,
-                linestyle=["-"] * len(cls.colorscheme) + ["--"] * len(cls.colorscheme) + ["-."] * len(cls.colorscheme),
-            )
-
-            # Font style
-            font = style_guide.font
-
-            # not all fonts support the unicode minus, so disable this option
-            mpl.rc("font", **font)
-            mpl.rcParams["axes.unicode_minus"] = False
-
-        def style_figure(
-            fig,
-            use_legend,
-            extra_labels,
-            ax_align_legend,
-        ) -> Tuple[Figure, Legend] | Tuple[Figure, List] | None:
-            if ax_align_legend is None:
-                ax_align_legend = fig.axes[0]
-
-            # this forces labels to be generated. Necessary to detect datetimes
-            fig.canvas.draw()
-
-            # Set styles for each axis
-            legend_title = r"Toelichting"
-            handles = list()
-            labels = list()
-
-            for ax in fig.axes:
-                # Enable grid grid
-                ax.grid(**style_guide.major_grid)
-                ax.grid(**style_guide.minor_grid)
-
-                for _, spine in ax.spines.items():
-                    spine.set_linewidth(style_guide.spine_width)
-
-                if cls._is_timeaxis(ax.xaxis):
-                    ax.xaxis.set_major_formatter(cls.myFmt)
-                    ax.xaxis.set_major_locator(cls.monthlocator)
-                if cls._is_timeaxis(ax.yaxis):
-                    ax.yaxis.set_major_formatter(cls.myFmt)
-                    ax.yaxis.set_major_locator(cls.monthlocator)
-
-                ax.patch.set_visible(False)
-                h, l = ax.get_legend_handles_labels()
-                handles.extend(h)
-                labels.extend(l)
-
-            if extra_labels:
-                handles.extend(extra_labels[0])
-                labels.extend(extra_labels[1])
-            fig.tight_layout()
-            if use_legend:
-                lgd = fig.legend(
-                    handles,
-                    labels,
-                    loc="upper left",
-                    bbox_to_anchor=(1.0, ax_align_legend.get_position().y1),
-                    bbox_transform=fig.transFigure,
-                    edgecolor="k",
-                    facecolor="white",
-                    framealpha=1,
-                    borderaxespad=0,
-                    title=legend_title.upper(),
-                )
-
-                return fig, lgd
-            return fig, handles, labels
-
         if not fig:
-            return initiate()
-        initiate()
-        return style_figure(
+            return cls._initiate(style_guide)
+        cls._initiate(style_guide)
+
+        return cls._style_figure(
+            style_guide=style_guide,
             fig=fig,
             use_legend=use_legend,
             extra_labels=extra_labels,
             ax_align_legend=ax_align_legend,
         )
 
+    @classmethod
+    def _initiate(cls, style_guide: StyleGuide) -> None:
+        # Set default locale to NL
+        # TODO: add localization options (#85)
+        PlotStyles.set_locale("nl_NL.UTF-8")
+
+        # Color style
+        mpl.rcParams["axes.prop_cycle"] = mpl.cycler(
+            color=cls.colorscheme * 3,
+            linestyle=["-"] * len(cls.colorscheme) + ["--"] * len(cls.colorscheme) + ["-."] * len(cls.colorscheme),
+        )
+
+        # Font style
+        font = style_guide.font
+
+        # not all fonts support the unicode minus, so disable this option
+        mpl.rc("font", **font)
+        mpl.rcParams["axes.unicode_minus"] = False
+
+    @classmethod
+    def _style_figure(
+        cls,
+        style_guide: StyleGuide,
+        fig: Figure | None,
+        extra_labels: list | None,
+        ax_align_legend: Axes | None,
+        *,
+        use_legend: bool,
+    ) -> tuple[Figure, Legend] | tuple[Figure, list] | None:
+        if ax_align_legend is None:
+            ax_align_legend = fig.axes[0]
+
+        # this forces labels to be generated. Necessary to detect datetimes
+        fig.canvas.draw()
+
+        # Set styles for each axis
+        legend_title = r"Toelichting"
+        handles = []
+        labels = []
+
+        for ax in fig.axes:
+            # Enable grid grid
+            ax.grid(**style_guide.major_grid)
+            ax.grid(**style_guide.minor_grid)
+
+            for spine in ax.spines.values():
+                spine.set_linewidth(style_guide.spine_width)
+
+            if cls._is_timeaxis(ax.xaxis):
+                ax.xaxis.set_major_formatter(cls.myFmt)
+                ax.xaxis.set_major_locator(cls.monthlocator)
+            if cls._is_timeaxis(ax.yaxis):
+                ax.yaxis.set_major_formatter(cls.myFmt)
+                ax.yaxis.set_major_locator(cls.monthlocator)
+
+            ax.patch.set_visible(False)
+            h, lab = ax.get_legend_handles_labels()
+            handles.extend(h)
+            labels.extend(lab)
+
+        if extra_labels:
+            handles.extend(extra_labels[0])
+            labels.extend(extra_labels[1])
+        fig.tight_layout()
+        if use_legend:
+            lgd = fig.legend(
+                handles,
+                labels,
+                loc="upper left",
+                bbox_to_anchor=(1.0, ax_align_legend.get_position().y1),
+                bbox_transform=fig.transFigure,
+                edgecolor="k",
+                facecolor="white",
+                framealpha=1,
+                borderaxespad=0,
+                title=legend_title.upper(),
+            )
+
+            return fig, lgd
+        return fig, handles, labels
+
 
 class ModelOutputReader(FM2ProfBase):
-    """This class provides methods to post-process 1D and 2D data,
-    by writing csv files of output locations (observation stations)
+    """Provide methods to post-process 1D and 2D data.
+
+    The data is prost-processed by writing csv files of output locations (observation stations)
     that are both in 1D and 2D. It produces two csv files that
     are input for :meth:`fm2prof.utils.ModelOutputPlotter`
 
@@ -1135,97 +1148,111 @@ class ModelOutputReader(FM2ProfBase):
     __fileOutName_F2D_Q = "2D_Q.csv"
     __fileOutName_F2D_H = "2D_H.csv"
 
-    _key_1D_Q_name = "observation_id"
-    _key_1D_Q = "water_discharge"
-    _key_1D_time = "time"
-    _key_1D_H_name = "observation_id"
-    _key_1D_H = "water_level"
+    _key_1d_q_name = "observation_id"
+    _key_1d_q = "water_discharge"
+    _key_1d_time = "time"
+    _key_1d_h_name = "observation_id"
+    _key_1d_h = "water_level"
 
-    _key_2D_Q_name = "cross_section_name"
-    _key_2D_Q = "cross_section_discharge"
-    _key_2D_time = "time"
-    _key_2D_H_name = "station_name"
-    _key_2D_H = "waterlevel"
+    _key_2d_q_name = "cross_section_name"
+    _key_2d_q = "cross_section_discharge"
+    _key_2d_time = "time"
+    _key_2d_h_name = "station_name"
+    _key_2d_h = "waterlevel"
     __fileOutName_1D2DMap = "map_1d_2d.csv"
 
     _time_fmt = "%Y-%m-%d %H:%M:%S"
 
     def __init__(
         self,
-        logger=None,
+        logger: Logger | None = None,
         start_time: datetime | None = None,
         stop_time: datetime | None = None,
-    ):
+    ) -> None:
+        """Instantiate a ModelOutputReader object.
+
+        Args:
+            logger (Logger | None, optional): logger. Defaults to None.
+            start_time (datetime | None, optional): start time. Defaults to None.
+            stop_time (datetime | None, optional): stop time. Defaults to None.
+
+        """
         super().__init__(logger=logger)
 
         self._path_out: Path = Path()
         self._path_flow1d: Path = Path()
         self._path_flow2d: Path = Path()
 
-        self._data_1D_Q: pd.DataFrame = None
+        self._data_1d_q: pd.DataFrame = None
         self._time_offset_1d: int = 0
 
         self._start_time: datetime | None = start_time
         self._stop_time: datetime | None = stop_time
 
     @property
-    def start_time(self) -> Union[datetime, None]:
-        """If defined, used to mask data"""
+    def start_time(self) -> datetime | None:
+        """If defined, used to mask data."""
         return self._start_time
 
     @start_time.setter
-    def start_time(self, input_time: datetime):
+    def start_time(self, input_time: datetime) -> None:
         if isinstance(input_time, datetime):
             self._start_time = input_time
 
     @property
-    def stop_time(self) -> Union[datetime, None]:
-        """If defined, used to mask data"""
+    def stop_time(self) -> datetime | None:
+        """If defined, used to mask data."""
         return self._stop_time
 
     @stop_time.setter
-    def stop_time(self, input_time: datetime):
+    def stop_time(self, input_time: datetime) -> None:
         if isinstance(input_time, datetime):
             self._stop_time = input_time
 
     @property
-    def path_flow1d(self):
+    def path_flow1d(self) -> Path:
+        """Return path to flow 1D file."""
         return self._path_flow1d
 
     @path_flow1d.setter
-    def path_flow1d(self, path: Union[Path, str]):
+    def path_flow1d(self, path: Path | str) -> None:
         # Verify path is dir
-        assert Path(path).is_file()
+        if not Path(path).is_file():
+            err_msg = f"Given path, {path}, is not a file."
+            raise ValueError(err_msg)
         # set attribute
         self._path_flow1d = Path(path)
 
     @property
-    def path_flow2d(self):
+    def path_flow2d(self) -> Path:
+        """Return path to flow 2D file."""
         return self._path_flow2d
 
     @path_flow2d.setter
-    def path_flow2d(self, path: Union[Path, str]):
+    def path_flow2d(self, path: Path | str) -> None:
         # Verify path is file
-        assert Path(path).is_file()
+        if not Path(path).is_file():
+            err_msg = f"Given path, {path}, is not a file."
+            raise ValueError(err_msg)
         # set attribute
         self._path_flow2d = Path(path)
 
-    def load_flow1d_data(self):
-        """Loads 'observations.nc' and outputs to csv file
+    def load_flow1d_data(self) -> None:
+        """Load 'observations.nc' and outputs to csv file.
 
         .. note::
             Path to the 1D model must first be set by using
             >>> ModelOutputReader.path_flow1d = path_to_dir_that_contains_dimr_xml
         """
-        if self.file_1D_Q.is_file() & self.file_1D_H.is_file():
-            self._data_1D_Q = pd.read_csv(
-                self.file_1D_Q,
+        if self.file_1d_q.is_file() & self.file_1d_h.is_file():
+            self._data_1d_q = pd.read_csv(
+                self.file_1d_q,
                 index_col=0,
                 parse_dates=True,
                 date_format=self._time_fmt,
             )
-            self._data_1D_H = pd.read_csv(
-                self.file_1D_H,
+            self._data_1d_h = pd.read_csv(
+                self.file_1d_h,
                 index_col=0,
                 parse_dates=True,
                 date_format=self._time_fmt,
@@ -1233,29 +1260,31 @@ class ModelOutputReader(FM2ProfBase):
             self.set_logger_message("Using existing flow1d csv files")
         else:
             self.set_logger_message("Importing from NetCDF")
-            self._data_1D_H, self._data_1D_Q = self._import_1Dobservations()
+            self._data_1d_h, self._data_1d_q = self._import_1d_observations()
             self.set_logger_message("Writing to CSV (waterlevels)")
-            self._data_1D_H.to_csv(self.file_1D_H)
+            self._data_1d_h.to_csv(self.file_1d_h)
             self.set_logger_message("Writing to CSV (discharge)")
-            self._data_1D_Q.to_csv(self.file_1D_Q)
+            self._data_1d_q.to_csv(self.file_1d_q)
 
-    def load_flow2d_data(self):
-        """Loads 2D output file (netCDF, must contain observation point results),
+    def load_flow2d_data(self) -> None:
+        """Load 2D output file.
+
+        netCDF, must contain observation point results,
         matches to 1D result, output to csv
 
         .. note::
             Path to the 2D model output
             >>> ModelOutputReader.path_flow2d = path_to_netcdf_file
         """
-        if self.file_2D_Q.is_file() & self.file_2D_H.is_file():
-            self._data_2D_Q = pd.read_csv(
-                self.file_2D_Q,
+        if self.file_2d_q.is_file() & self.file_2d_h.is_file():
+            self._data_2d_q = pd.read_csv(
+                self.file_2d_q,
                 index_col=0,
                 parse_dates=True,
                 date_format=self._time_fmt,
             )
-            self._data_2D_H = pd.read_csv(
-                self.file_2D_H,
+            self._data_2d_h = pd.read_csv(
+                self.file_2d_h,
                 index_col=0,
                 parse_dates=True,
                 date_format=self._time_fmt,
@@ -1263,120 +1292,138 @@ class ModelOutputReader(FM2ProfBase):
             self.set_logger_message("Using existing flow2d csv files")
         else:
             # write to file
-            self._import_2Dobservations()
+            self._import_2d_observations()
 
             # then load
-            self._data_2D_Q = pd.read_csv(
-                self.file_2D_Q,
+            self._data_2d_q = pd.read_csv(
+                self.file_2d_q,
                 index_col=0,
                 parse_dates=True,
                 date_format=self._time_fmt,
             )
-            self._data_2D_H = pd.read_csv(
-                self.file_2D_H,
+            self._data_2d_h = pd.read_csv(
+                self.file_2d_h,
                 index_col=0,
                 parse_dates=True,
                 date_format=self._time_fmt,
             )
 
-    def get_1d2d_map(self):
-        """Writes a map between stations in 1D and stations in 2D. Matches based on identical characters in first nine slots"""
+    def get_1d2d_map(self) -> None:
+        """Write a map between stations in 1D and stations in 2D.
+
+        Matches based on identical characters in first nine slots
+        """
         if self.file_1D2D_map.is_file():
             self.set_logger_message("using existing 1d-2d map")
             return
         self._get_1d2d_map()
 
     def read_all_data(self) -> None:
-        """ """
+        """Read all data."""
         self.load_flow1d_data()
         self.get_1d2d_map()
         self.load_flow2d_data()
 
-    def _dateparser(self, t):
+    def _dateparser(self, t: str) -> datetime:
         # DEPRECATED
         return datetime.strptime(t, self._time_fmt)
 
     @property
     def output_path(self) -> Path:
+        """Return output path."""
         return self._path_out
 
     @output_path.setter
-    def output_path(self, new_path: Union[Path, str]):
+    def output_path(self, new_path: Path | str) -> None:
         newpath = Path(new_path)
         if newpath.is_dir():
             self._path_out = newpath
         else:
-            raise ValueError(f"{new_path} is not a directory")
+            err_msg = f"{new_path} is not a directory"
+            raise ValueError(err_msg)
 
     @property
-    def file_1D_Q(self):
+    def file_1d_q(self) -> Path:
+        """Return path to 1D water discharge file."""
         return self.output_path.joinpath(self.__fileOutName_F1D_Q)
 
     @property
-    def file_1D_H(self):
+    def file_1d_h(self) -> Path:
+        """Return path to 1D water level file."""
         return self.output_path.joinpath(self.__fileOutName_F1D_H)
 
     @property
-    def file_2D_Q(self):
+    def file_2d_q(self) -> Path:
+        """Return path to 2D discharge file."""
         return self.output_path.joinpath(self.__fileOutName_F2D_Q)
 
     @property
-    def file_2D_H(self):
+    def file_2d_h(self) -> Path:
+        """Return path to 2D water level."""
         return self.output_path.joinpath(self.__fileOutName_F2D_H)
 
     @property
-    def file_1D2D_map(self):
+    def file_1d2d_map(self) -> Path:
+        """Return path to 1D2D map file."""
         return self.output_path.joinpath(self.__fileOutName_1D2DMap)
 
     @property
-    def data_1D_H(self):
-        return self._apply_startstop_time(self._data_1D_H)
+    def data_1d_h(self) -> pd.DataFrame:
+        """Apply start stop time to 1D water level data."""
+        return self._apply_startstop_time(self._data_1d_h)
 
     @property
-    def data_2D_H(self):
-        return self._apply_startstop_time(self._data_2D_H)
+    def data_2d_h(self) -> pd.DataFrame:
+        """Apply start stop time to 2D water level data."""
+        return self._apply_startstop_time(self._data_2d_h)
 
     @property
-    def data_1D_Q(self):
-        return self._apply_startstop_time(self._data_1D_Q)
+    def data_1d_q(self) -> pd.DataFrame:
+        """Apply start stop time to 1D discharge data."""
+        return self._apply_startstop_time(self._data_1d_q)
 
     @property
-    def data_2D_Q(self):
-        return self._apply_startstop_time(self._data_2D_Q)
+    def data_2d_q(self) -> pd.DataFrame:
+        """Apply start stop time to 2D discharge data."""
+        return self._apply_startstop_time(self._data_2d_q)
 
     @property
-    def time_offset_1d(self):
+    def time_offset_1d(self) -> int:
+        """Return time offset for 1D data."""
         return self._time_offset_1d
 
     @time_offset_1d.setter
-    def time_offset_1d(self, seconds: int = 0):
+    def time_offset_1d(self, seconds: int = 0) -> None:
         self._time_offset_1d = seconds
 
     def _apply_startstop_time(self, data: pd.DataFrame) -> pd.DataFrame:
-        """Applies stop/start time to data"""
+        """Apply stop/start time to data."""
         if self.stop_time is None:
             self.stop_time = data.index[-1]
         if self.start_time is None:
             self.start_time = data.index[0]
 
         if self.start_time >= self.stop_time:
+            err_msg = "Stop time ({self.stop_time}) should be later than start time ({self.start_time})"
             self.set_logger_message(
-                "Stop time ({self.stop_time}) should be later than start time ({self.start_time})",
+                err_msg,
                 "error",
             )
-            raise ValueError
+            raise ValueError(err_msg)
         if bool(self.start_time) and (self.start_time >= data.index[-1]):
+            err_msg = f"Provided start time {self.start_time} is later than last record in data ({data.index[-1]})"
             self.set_logger_message(
-                f"Provided start time {self.start_time} is later than last record in data ({data.index[-1]})",
+                err_msg,
                 "error",
             )
-            raise ValueError
+            raise ValueError(err_msg)
         if bool(self.stop_time) and (self.stop_time <= data.index[0]):
+            err_msg = f"Provided stop time {self.stop_time} is earlier than first record in data ({data.index[0]})"
             self.set_logger_message(
-                f"Provided stop time {self.stop_time} is earlier than first record in data ({data.index[0]})",
+                err_msg,
                 "error",
             )
-            raise ValueError
+            raise ValueError(err_msg)
 
         if bool(self.start_time) and bool(self.stop_time):
             return data[(data.index >= self.start_time) & (data.index <= self.stop_time)]
@@ -1387,17 +1434,17 @@ class ModelOutputReader(FM2ProfBase):
         return data
 
     @staticmethod
-    def _parse_names(nclist, encoding="utf-8"):
-        """Parses the bytestring list of names in netcdf"""
+    def _parse_names(nclist: list[str], encoding: str = "utf-8") -> list[str]:
+        """Parse the bytestring list of names in netcdf."""
         return ["".join([bstr.decode(encoding) for bstr in ncrow]).strip() for ncrow in nclist]
 
-    def _import_2Dobservations(self) -> None:
-        print("Reading 2D data")
+    def _import_2d_observations(self) -> None:
+        self.set_logger_message("Reading 2D data")
         for nkey, dkey, map_key, fname in zip(
-            [self._key_2D_Q_name, self._key_2D_H_name],
-            [self._key_2D_Q, self._key_2D_H],
+            [self._key_2d_q_name, self._key_2d_h_name],
+            [self._key_2d_q, self._key_2d_h],
             ["2D_Q", "2D_H"],
-            [self.file_2D_Q, self.file_2D_H],
+            [self.file_2d_q, self.file_2d_h],
         ):
             with Dataset(self._path_flow2d) as f:
                 self.set_logger_message(f"loading 2D data for {map_key}")
@@ -1406,41 +1453,44 @@ class ModelOutputReader(FM2ProfBase):
                 qdata = f.variables[dkey][:]
 
                 time = self._parse_time(f.variables["time"])
-                df = pd.DataFrame(columns=station_map.index, index=time)
+                station_map_df = pd.DataFrame(columns=station_map.index, index=time)
                 self.set_logger_message("Matching 1D and 2D data")
-                for index, station in tqdm.tqdm(station_map.iterrows(), total=len(station_map.index)):
+                for _, station in tqdm.tqdm(station_map.iterrows(), total=len(station_map.index)):
                     # Get index of the current station, or skip if ValueError
                     try:
                         si = qnames.index(station[map_key])
                     except ValueError:
                         continue
 
-                    df[station.name] = qdata[:, si]
+                    station_map_df[station.name] = qdata[:, si]
 
-                df.to_csv(f"{fname}")
+                station_map_df.to_csv(f"{fname}")
 
-    def _import_1Dobservations(self) -> pd.DataFrame:
-        """time_offset: offset in seconds"""
+    def _import_1d_observations(self) -> tuple[pd.DataFrame, pd.DataFrame]:
+        """Import 1D observations.
+
+        time_offset: offset in seconds.
+        """
         _file_his = self.path_flow1d
 
         with Dataset(_file_his) as f:
-            names = self._parse_names(f.variables[self._key_1D_H_name])  # names are the same for Q in 1D
+            names = self._parse_names(f.variables[self._key_1d_h_name])  # names are the same for Q in 1D
 
-            time = self._parse_time(f.variables[self._key_1D_time])
-            data = f.variables[self._key_1D_H][:]
-            dfH = pd.DataFrame(columns=names, index=time, data=data)
+            time = self._parse_time(f.variables[self._key_1d_time])
+            data = f.variables[self._key_1d_h][:]
+            df_h = pd.DataFrame(columns=names, index=time, data=data)
 
-            data = f.variables[self._key_1D_Q][:]
-            dfQ = pd.DataFrame(columns=names, index=time, data=data)
+            data = f.variables[self._key_1d_q][:]
+            df_q = pd.DataFrame(columns=names, index=time, data=data)
 
             # apply index shift
-            dfH.index = dfH.index + timedelta(seconds=self.time_offset_1d)
-            dfQ.index = dfQ.index + timedelta(seconds=self.time_offset_1d)
+            df_h.index = df_h.index + timedelta(seconds=self.time_offset_1d)
+            df_q.index = df_q.index + timedelta(seconds=self.time_offset_1d)
 
-            return dfH, dfQ
+            return df_h, df_q
 
-    def _parse_time(self, timevector: pd.DataFrame):
-        """Seconds"""
+    def _parse_time(self, timevector: pd.DataFrame) -> list[datetime]:
+        """Parse time from seconds."""
         unit = timevector.units.replace("seconds since ", "").strip()
 
         try:
@@ -1452,21 +1502,21 @@ class ModelOutputReader(FM2ProfBase):
 
         return [start_time + timedelta(seconds=i) for i in timevector[:]]
 
-    def _parse_1D_stations(self) -> Generator[str, None, None]:
-        """Reads the names of observations stations from 1D model"""
-        return list(self._data_1D_H.columns)
+    def _parse_1d_stations(self) -> list[str]:
+        """Read the names of observations stations from 1D model."""
+        return list(self._data_1d_h.columns)
 
-    def _get_1d2d_map(self):
+    def _get_1d2d_map(self) -> None:
         _file_his = self.path_flow2d
 
         with Dataset(_file_his) as f:
-            qnames = self._parse_names(f.variables[self._key_2D_Q_name][:])
-            hnames = self._parse_names(f.variables[self._key_2D_H_name][:])
+            qnames = self._parse_names(f.variables[self._key_2d_q_name][:])
+            hnames = self._parse_names(f.variables[self._key_2d_h_name][:])
 
             # get matching names based on first nine characters
-            with open(self.file_1D2D_map, "w") as fw:
+            with self.file_1d2d_map.open("w") as fw:
                 fw.write("1D,2D_H,2D_Q\n")
-                for n in tqdm.tqdm(list(self._parse_1D_stations())):
+                for n in tqdm.tqdm(list(self._parse_1d_stations())):
                     try:
                         qn = next(x for x in qnames if x.startswith(n[:9]))
                     except StopIteration:
@@ -1479,8 +1529,7 @@ class ModelOutputReader(FM2ProfBase):
 
 
 class Compare1D2D(ModelOutputReader):
-    """Utility to compare the results of a 1D and 2D model through
-    visualisation and statistical post-processing.
+    """Utility to compare the results of a 1D and 2D model through visualisation and statistical post-processing.
 
     Note:
         If 2D and 1D netCDF input files are provided, they will first be
@@ -1506,24 +1555,26 @@ class Compare1D2D(ModelOutputReader):
         path_1d: path to SOBEK dimr directory
         path_2d: path to his nc file
         routes: list of branch abbreviations, e.g. ['NR', 'LK']
-        start_time: start time for plotting and analytics. Use this to crop the time to prevent initalisation from affecting statistics.
+        start_time: start time for plotting and analytics. Use this to crop the time to prevent initalisation from
+        affecting statistics.
         stop_time: stop time for plotting and analytics.
         style: `PlotStyles` style
 
     """
 
-    _routes: List[List[str]] = None
+    _routes: list[list[str]] = None
 
-    def __init__(
+    def __init__(  # noqa: PLR0913
         self,
         project: Project,
         path_1d: Path | str | None = None,
         path_2d: Path | str | None = None,
-        routes: List[List[str]] | None = None,
+        routes: list[list[str]] | None = None,
         start_time: None | datetime = None,
         stop_time: None | datetime = None,
         style: str = "sito",
-    ):
+    ) -> None:
+        """Instantiate a Compare1D2D object."""
         if project:
             super().__init__(logger=project.get_logger(), start_time=start_time, stop_time=stop_time)
             self.output_path = project.get_output_directory()
@@ -1548,10 +1599,10 @@ class Compare1D2D(ModelOutputReader):
         # Defaults
         self.routes = routes
         self.statistics = None
-        self._data_1D_H: pd.DataFrame = None
-        self._data_2D_H: pd.DataFrame = None
-        self._data_1D_H_digitized: pd.DataFrame = None
-        self._data_2D_H_digitized: pd.DataFrame = None
+        self._data_1d_h: pd.DataFrame = None
+        self._data_2d_h: pd.DataFrame = None
+        self._data_1d_h_digitized: pd.DataFrame = None
+        self._data_2d_h_digitized: pd.DataFrame = None
         self._qsteps = np.arange(0, 100 * np.ceil(18000 / 100), 200)
 
         # initiate plotstyle
@@ -1576,13 +1627,10 @@ class Compare1D2D(ModelOutputReader):
             "figures/stations",
         ]
         for od in output_dirs:
-            try:
-                os.makedirs(self.output_path.joinpath(od))
-            except FileExistsError:
-                pass
+            self.output_path.joinpath(od).mkdir(parents=True, exist_ok=True)
 
-    def eval(self):
-        """Does a bunch"""
+    def eval(self) -> None:
+        """Create multiple figures."""
         for route in tqdm.tqdm(self.routes):
             self.set_logger_message(f"Making figures for route {route}")
             self.figure_longitudinal_rating_curve(route)
@@ -1595,70 +1643,77 @@ class Compare1D2D(ModelOutputReader):
             self.figure_at_station(station)
 
     @property
-    def routes(self):
+    def routes(self) -> list[list[str]]:
+        """Return routes."""
         return self._routes
 
     @routes.setter
-    def routes(self, routes):
+    def routes(self, routes: list[list[str]] | str) -> None:
         if isinstance(routes, list):
             self._routes = routes
         if isinstance(routes, str):
             self._routes = ast.literal_eval(routes)
 
     @property
-    def file_1D_H_digitized(self):
-        return self.file_1D_H.parent.joinpath(f"{self.file_1D_H.stem}_digitized.csv")
+    def file_1d_h_digitized(self) -> Path:
+        """Return 1D water level digitized file path."""
+        return self.file_1d_h.parent.joinpath(f"{self.file_1d_h.stem}_digitized.csv")
 
     @property
-    def file_2D_H_digitized(self):
-        return self.file_2D_H.parent.joinpath(f"{self.file_2D_H.stem}_digitized.csv")
+    def file_2d_h_digitized(self) -> Path:
+        """Return 2D water level digitized file path."""
+        return self.file_2d_h.parent.joinpath(f"{self.file_2d_h.stem}_digitized.csv")
 
     @property
-    def colorscheme(self):
+    def colorscheme(self) -> str:
+        """Color scheme."""
         return self._colorscheme
 
-    def digitize_data(self):
-        if self.file_1D_H_digitized.is_file():
+    def digitize_data(self) -> None:
+        """Compute the average for a given bin for 1D and 2D water level data.
+
+        Use to make Q-H graphs instead of T-H graph
+        """
+        if self.file_1d_h_digitized.is_file():
             self.set_logger_message("Using existing digitized file for 1d")
-            self._data_1D_H_digitized = pd.read_csv(self.file_1D_H_digitized, index_col=0)
+            self._data_1d_h_digitized = pd.read_csv(self.file_1d_h_digitized, index_col=0)
         else:
-            self._data_1D_H_digitized = self._digitize_data(self._data_1D_H, self._data_1D_Q, self._qsteps)
-            self._data_1D_H_digitized.to_csv(self.file_1D_H_digitized)
-        if self.file_2D_H_digitized.is_file():
+            self._data_1d_h_digitized = self._digitize_data(self._data_1d_h, self._data_1d_q, self._qsteps)
+            self._data_1d_h_digitized.to_csv(self.file_1d_h_digitized)
+        if self.file_2d_h_digitized.is_file():
             self.set_logger_message("Using existing digitized file for 2d")
-            self._data_2D_H_digitized = pd.read_csv(self.file_2D_H_digitized, index_col=0)
+            self._data_2d_h_digitized = pd.read_csv(self.file_2d_h_digitized, index_col=0)
         else:
-            self._data_2D_H_digitized = self._digitize_data(self._data_2D_H, self._data_2D_Q, self._qsteps)
-            self._data_2D_H_digitized.to_csv(self.file_2D_H_digitized)
+            self._data_2d_h_digitized = self._digitize_data(self._data_2d_h, self._data_2d_q, self._qsteps)
+            self._data_2d_h_digitized.to_csv(self.file_2d_h_digitized)
 
     def stations(self) -> Generator[str, None, None]:
-        for station in self._data_1D_H.columns:
-            yield station
+        """Yield station names."""
+        yield from self._data_1D_H.columns
 
     @staticmethod
-    def _digitize_data(hdata, qdata, bins) -> pd.DataFrame:
-        """Computes the average for a given bin. Use to make Q-H graphs instead of T-H graph"""
+    def _digitize_data(hdata: pd.DateFrame, qdata: pd.DataFrame, bins: np.ndarray) -> pd.DataFrame:
+        """Compute the average for a given bin.
+
+        Use to make Q-H graphs instead of T-H graph
+        """
         stations = hdata.columns
 
-        C = list()
-        rkms = list()
+        c = []
         for i, station in enumerate(stations):
-            # rkms.append(float(station.split('_')[1]))
             d = np.digitize(qdata[station], bins)
-            C.append([np.nanmean(hdata[station][d == i]) for i, _ in enumerate(bins)])
+            c.append([np.nanmean(hdata[station][d == i]) for i, _ in enumerate(bins)])
+        c = np.array(c)  # [sort]
+        return pd.DataFrame(columns=stations, index=bins, data=c.T)
 
-        # sort = np.argsort(rkms)
-        C = np.array(C)  # [sort]
-        return pd.DataFrame(columns=stations, index=bins, data=C.T)
+    def _names_to_rkms(self, station_names: list[str]) -> list[float]:
+        return [self._catch_e(lambda i=i: float(i.split("_")[1]), (IndexError, ValueError)) for i in station_names]
 
-    def _names_to_rkms(self, station_names: List[str]) -> List[float]:
-        return [self._catch_e(lambda: float(i.split("_")[1]), (IndexError, ValueError)) for i in station_names]
+    def _names_to_branches(self, station_names: list[str]) -> list[str]:
+        return [self._catch_e(lambda i=i: i.split("_")[0], IndexError) for i in station_names]
 
-    def _names_to_branches(self, station_names: List[str]) -> List[str]:
-        return [self._catch_e(lambda: i.split("_")[0], IndexError) for i in station_names]
-
-    def get_route(self, route: List[str]) -> Tuple[List[str], List[float], List[Tuple[str, float]]]:
-        """Returns a sorted list of stations along a route, with rkms"""
+    def get_route(self, route: list[str]) -> tuple[list[str], list[float], list[tuple[str, float]]]:
+        """Return a sorted list of stations along a route, with rkms."""
         station_names = self._data_2D_H.columns
 
         # Parse names
@@ -1666,9 +1721,9 @@ class Compare1D2D(ModelOutputReader):
         branches = self._names_to_branches(station_names)
 
         # select along route
-        routekms = list()
-        stations = list()
-        lmw_stations = list()
+        routekms = []
+        stations = []
+        lmw_stations = []
 
         for stop in route:
             indices = [i for i, b in enumerate(branches) if b == stop]
@@ -1686,8 +1741,9 @@ class Compare1D2D(ModelOutputReader):
         return sorted_stations, sorted_rkms, lmw_stations
 
     def statistics_to_file(self, file_path: str = "error_statistics") -> None:
-        """Creates and output a file `error_statistics.csv', which is a
-        comma-seperated file with the following columns:
+        """Calculate statistics and write them to file.
+
+        The output file is a comma-seperated file with the following columns:
 
         ,bias,rkm,branch,is_lmw,std,mae,max13,last25
 
@@ -1712,7 +1768,7 @@ class Compare1D2D(ModelOutputReader):
 
         # summary of statistics
         s = self.statistics
-        with open(sumfile, "w") as f:
+        with sumfile.open("w") as f:
             for branch in s.branch.unique():
                 bbias = s.bias[s.branch == branch].mean()
                 bstd = s["std"][s.branch == branch].mean()
@@ -1720,20 +1776,16 @@ class Compare1D2D(ModelOutputReader):
                 lmw_std = s["std"][(s.branch == branch) & s.is_lmw].mean()
                 f.write(f"{branch},{bbias:.2f}±({bstd:.2f}), {lmw_bias:.2f}±({lmw_std:.2f})\n")
 
-    def figure_at_station(self, station: str, func: str = "time", savefig: bool = True) -> FigureOutput:
-        """Creates a figure with the timeseries at a single observation station.
+    def figure_at_station(self, station: str, func: str = "time", *, savefig: bool = True) -> FigureOutput | None:
+        """Create a figure with the timeseries at a single observation station.
 
-        ``` py
+        Args:
+            station (str): name of station. use `stations` method to list all station names
+            func (str, optional):  use `time` for a timeseries and `qh` for rating curve
+            savefig (bool, optional):if True, saves to png. If False, returned FigureOutput. Defaults to True.
 
-        ```
-
-        Parameters
-        ----------
-            station: name of station. use `stations` method to list all station names
-            func: use `time` for a timeseries and `qh` for rating curve
-            savefig: if True, saves to png. If False, returned FigureOutput
-
-
+        Returns:
+            FigureOutput | None: FigureOutput object or None if savefig is set to True.
 
         """
         fig, ax = plt.subplots(1, figsize=(12, 5))
@@ -1744,14 +1796,14 @@ class Compare1D2D(ModelOutputReader):
             case "qh":
                 ax.plot(
                     self._qsteps,
-                    self._data_2D_H_digitized[station],
+                    self._data_2d_h_digitized[station],
                     "--",
                     linewidth=2,
                     label="2D",
                 )
                 ax.plot(
                     self._qsteps,
-                    self._data_1D_H_digitized[station],
+                    self._data_1d_h_digitized[station],
                     "-",
                     linewidth=2,
                     label="1D",
@@ -1762,19 +1814,19 @@ class Compare1D2D(ModelOutputReader):
                 ax.set_ylabel("Waterstand [m+NAP]")
                 error_ax.plot(
                     self._qsteps,
-                    self._data_1D_H_digitized[station] - self._data_2D_H_digitized[station],
+                    self._data_1d_h_digitized[station] - self._data_2d_h_digitized[station],
                     ".",
                     color=self._color_error,
                 )
             case "time":
-                ax.plot(self.data_2D_H[station], "--", linewidth=2, label="2D")
-                ax.plot(self.data_1D_H[station], "-", linewidth=2, label="1D")
+                ax.plot(self.data_2d_h[station], "--", linewidth=2, label="2D")
+                ax.plot(self.data_1d_h[station], "-", linewidth=2, label="1D")
 
                 ax.set_ylabel("Waterstand [m+NAP]")
                 ax.set_title(f"{station}\nTijdreeks")
 
                 error_ax.plot(
-                    self.data_1D_H[station] - self.data_2D_H[station],
+                    self.data_1d_h[station] - self.data_2d_h[station],
                     ".",
                     label="1D-2D",
                     color=self._color_error,
@@ -1809,25 +1861,26 @@ class Compare1D2D(ModelOutputReader):
                 bbox_inches="tight",
             )
             plt.close()
-        else:
-            return FigureOutput(fig=fig, axes=ax, legend=lgd)
+            return None
 
-    def _style_error_axes(self, ax, ylim: List[float] = [-0.5, 0.5], ylabel: str = "1D-2D [m]"):
+        return FigureOutput(fig=fig, axes=ax, legend=lgd)
+
+    def _style_error_axes(self, ax: Axes, ylim: list[float] = (-0.5, 0.5), ylabel: str = "1D-2D [m]") -> None:
         ax.set_ylim(ylim)
         ax.set_ylabel(ylabel)
         ax.spines["right"].set_edgecolor(self._color_error)
         ax.tick_params(axis="y", colors=self._color_error)
-        ax.grid(False)
+        ax.grid(visible=False)
 
     def _compute_statistics(self) -> pd.DataFrame:
-        """Computes statistics for the difference between 1D and 2D water levels
+        """Compute statistics for the difference between 1D and 2D water levels.
 
         Returns DataFrame with
             columns: rkm, branch, is_lmw, bias, std, mae
             rows: observation stations
 
         """
-        diff = self.data_1D_H - self.data_2D_H
+        diff = self.data_1d_h - self.data_2d_h
         station_names = diff.columns
         rkms = self._names_to_rkms(station_names)
         branches = self._names_to_branches(station_names)
@@ -1835,22 +1888,22 @@ class Compare1D2D(ModelOutputReader):
         stats = pd.DataFrame(data=diff.mean(), columns=["bias"])
         stats["rkm"] = rkms
         stats["branch"] = branches
-        stats["is_lmw"] = [True if "lmw" in name.lower() else False for name in station_names]
+        stats["is_lmw"] = ["lmw" in name.lower() for name in station_names]
 
         # stats
         stats["bias"] = diff.mean()
         stats["std"] = diff.std()
         stats["mae"] = diff.abs().mean()
 
-        stats["1D_last3"] = self._apply_stat(self.data_1D_H, stat="last3")
-        stats["1D_last25"] = self._apply_stat(self.data_1D_H, stat="last25")
-        stats["1D_max3"] = self._apply_stat(self.data_1D_H, stat="max3")
-        stats["1D_max13"] = self._apply_stat(self.data_1D_H, stat="max13")
+        stats["1D_last3"] = self._apply_stat(self.data_1d_h, stat="last3")
+        stats["1D_last25"] = self._apply_stat(self.data_1d_h, stat="last25")
+        stats["1D_max3"] = self._apply_stat(self.data_1d_h, stat="max3")
+        stats["1D_max13"] = self._apply_stat(self.data_1d_h, stat="max13")
 
-        stats["2D_last3"] = self._apply_stat(self.data_2D_H, stat="last3")
-        stats["2D_last25"] = self._apply_stat(self.data_2D_H, stat="last25")
-        stats["2D_max3"] = self._apply_stat(self.data_2D_H, stat="max3")
-        stats["2D_max13"] = self._apply_stat(self.data_2D_H, stat="max13")
+        stats["2D_last3"] = self._apply_stat(self.data_2d_h, stat="last3")
+        stats["2D_last25"] = self._apply_stat(self.data_2d_h, stat="last25")
+        stats["2D_max3"] = self._apply_stat(self.data_2d_h, stat="max3")
+        stats["2D_max13"] = self._apply_stat(self.data_2d_h, stat="max13")
 
         stats["diff_last3"] = self._apply_stat(diff, stat="last3")
         stats["diff_last25"] = self._apply_stat(diff, stat="last25")
@@ -1859,19 +1912,21 @@ class Compare1D2D(ModelOutputReader):
 
         return stats
 
-    def _get_statistics(self, station):
+    def _get_statistics(self, station: str) -> pd.Series | pd.DataFrame:
         if self.statistics is None:
             self.statistics = self._compute_statistics()
         return self.statistics.loc[station]
 
     def figure_compare_discharge_at_stations(
         self,
-        stations: List[str],
+        stations: list[str],
         title: str = "no_title",
+        *,
         savefig: bool = True,
     ) -> FigureOutput | None:
-        """Like `Compare1D2D.figure_at_station`, but compares discharge
-        distribution over two stations.
+        """Comparea discharge distribution over two stations.
+
+        Like `Compare1D2D.figure_at_station`.
 
         Example usage:
         ``` py
@@ -1891,8 +1946,9 @@ class Compare1D2D(ModelOutputReader):
         ax_error = axs[0].twinx()
         ax_error.set_zorder(axs[0].get_zorder() - 1)  # default zorder is 0 for ax1 and ax2
 
-        if len(stations) != 2:
-            print("error: must define 2 stations")
+        if len(stations) != 2:  # noqa: PLR2004
+            err_msg = "Must define 2 stations"
+            raise ValueError(err_msg)
 
         linestyles_2d = ["-", "--"]
         for j, station in enumerate(stations):
@@ -1923,29 +1979,29 @@ class Compare1D2D(ModelOutputReader):
 
         # discharge distribution
 
-        Q2D = self.data_2D_Q[stations]
-        Q1D = self.data_1D_Q[stations]
+        q_2d = self.data_2D_Q[stations]
+        q_1d = self.data_1D_Q[stations]
         axs[1].plot(
-            Q2D.sum(axis=1),
-            (Q2D.iloc[:, 0] / Q2D.sum(axis=1)) * 100,
+            q_2d.sum(axis=1),
+            (q_2d.iloc[:, 0] / q_2d.sum(axis=1)) * 100,
             linewidth=2,
             linestyle="--",
         )
         axs[1].plot(
-            Q1D.sum(axis=1),
-            (Q1D.iloc[:, 0] / Q1D.sum(axis=1)) * 100,
+            q_1d.sum(axis=1),
+            (q_1d.iloc[:, 0] / q_1d.sum(axis=1)) * 100,
             linewidth=2,
             linestyle="-",
         )
         axs[1].plot(
-            Q2D.sum(axis=1),
-            (Q2D.iloc[:, 1] / Q2D.sum(axis=1)) * 100,
+            q_2d.sum(axis=1),
+            (q_2d.iloc[:, 1] / q_2d.sum(axis=1)) * 100,
             linewidth=2,
             linestyle="--",
         )
         axs[1].plot(
-            Q1D.sum(axis=1),
-            (Q1D.iloc[:, 1] / Q1D.sum(axis=1)) * 100,
+            q_1d.sum(axis=1),
+            (q_1d.iloc[:, 1] / q_1d.sum(axis=1)) * 100,
             linewidth=2,
             linestyle="-",
         )
@@ -1972,44 +2028,60 @@ class Compare1D2D(ModelOutputReader):
                 bbox_inches="tight",
             )
             plt.close()
-        else:
-            return FigureOutput(fig=fig, axes=axs, legend=lgd)
+        return FigureOutput(fig=fig, axes=axs, legend=lgd)
 
-    def get_data_along_route_for_time(self, data: pd.DataFrame, route: List[str], time_index: int) -> pd.Series:
+    def get_data_along_route_for_time(self, data: pd.DataFrame, route: list[str], time_index: int) -> pd.Series:
+        """Get data along route for a given time index.
+
+        Args:
+            data (pd.DataFrame): Dataframe with data
+            route (list[str]): list of route
+            time_index (int): time index
+
+        Returns:
+            pd.Series: Series containing route data
+
+        """
         stations, rkms, _ = self.get_route(route)
 
-        tmp_data = list()
-        for station in stations:
-            tmp_data.append(data[station].iloc[time_index])
-
+        tmp_data = []
+        tmp_data = [data[station].iloc[time_index] for station in stations]
         return pd.Series(index=rkms, data=tmp_data)
 
-    def get_data_along_route(self, data: pd.DataFrame, route: List[str]) -> pd.DataFrame:
+    def get_data_along_route(self, data: pd.DataFrame, route: list[str]) -> pd.DataFrame:
+        """Get data along route.
+
+        Args:
+            data (pd.DataFrame): DataFrame with data
+            route (list[str]): list with route data
+
+        Returns:
+            pd.DataFrame: data
+
+        """
         stations, rkms, _ = self.get_route(route)
 
-        tmp_data = list()
-        for station in stations:
-            tmp_data.append(data[station])
+        tmp_data = []
+        tmp_data = [data[station] for station in stations]
 
-        df = pd.DataFrame(index=rkms, data=tmp_data)
+        route_data_df = pd.DataFrame(index=rkms, data=tmp_data)
 
         # drop duplicates
-        df = df.drop_duplicates()
-        return df
+        return route_data_df.drop_duplicates()
 
     @staticmethod
-    def _sec_to_days(seconds):
+    def _sec_to_days(seconds: float) -> float:
         return seconds / (3600 * 24)
 
     @staticmethod
-    def _get_nearest_time(data: pd.DataFrame, date: datetime = None) -> int:
+    def _get_nearest_time(data: pd.DataFrame, date: datetime | None = None) -> int:
         try:
             return list(data.index < date).index(False)
         except ValueError:
             # False is not list, return last index
             return len(data.index) - 1
 
-    def _time_func(self, route) -> Dict[str, pd.Series | str]:
+    def _time_func(self, route: list[str]) -> dict[str, pd.Series | str]:
         first_day = self.data_1D_H.index[0]  # + timedelta(days=delta_days) * 2
         last_day = self.data_1D_H.index[-1]
         number_of_days = (last_day - first_day).days
@@ -2036,8 +2108,8 @@ class Compare1D2D(ModelOutputReader):
         return lines
 
     @staticmethod
-    def _apply_stat(df, stat: str = "max13"):
-        """Applies column-wise "last25" or "max13" on 1D and 2D data"""
+    def _apply_stat(df: pd.DataFrame, stat: str = "max13") -> pd.Series:
+        """Apply column-wise "last25" or "max13" on 1D and 2D data."""
         columns = df.columns
         values = []
         for column in columns:
@@ -2056,21 +2128,21 @@ class Compare1D2D(ModelOutputReader):
                     values.append(af[-25:].mean())
         return pd.Series(index=columns, data=values)
 
-    def _stat_func(self, route: List[str], stat: str = "max13") -> List[Dict[str, pd.Series | str]]:
-        """Applies column-wise "last25" or "max13" on 1D and 2D data"""
+    def _stat_func(self, route: list[str], stat: str = "max13") -> list[dict[str, pd.Series | str]]:
+        """Apply column-wise "last25" or "max13" on 1D and 2D data."""
         max13_1d = self._apply_stat(self.get_data_along_route(self.data_1D_H, route=route).T, stat=stat)
         max13_2d = self._apply_stat(self.get_data_along_route(self.data_2D_H, route=route).T, stat=stat)
 
         return [{"1D": max13_1d, "2D": max13_2d, "label": stat}]
 
-    def _lmw_func(self, station_names, station_locs):
+    def _lmw_func(self, station_names: list[str], station_locs: list[int]) -> tuple[list, list]:
         st_names = []
         st_locs = []
         prev_loc = -9999
         for name, loc in zip(station_names, station_locs):
             if "lmw" not in name.lower():
                 continue
-            if abs(prev_loc - loc) < 5:
+            if abs(prev_loc - loc) < 5:  # noqa: PLR2004
                 self.set_logger_message(
                     f"skipped labelling {name} because too close to previous station",
                     "warning",
@@ -2082,9 +2154,11 @@ class Compare1D2D(ModelOutputReader):
 
         return st_names, st_locs
 
-    def figure_longitudinal_time(self, route: List[str]) -> None:
-        warnings.warn(
-            'Method figure_longitudinal_time will be removed in the future. Use figure_longitudinal(route, stat="time") instead ',
+    def figure_longitudinal_time(self, route: list[str]) -> None:
+        """Create a figure along a `route`."""
+        warnings.warn(  # noqa: B028
+            'Method figure_longitudinal_time will be removed in the future. Use figure_longitudinal(route, stat="time")'
+            "instead",
             category=DeprecationWarning,
         )
 
@@ -2092,29 +2166,36 @@ class Compare1D2D(ModelOutputReader):
 
     def figure_longitudinal(
         self,
-        route: List[str],
+        route: list[str],
         stat: str = "time",
-        savefig: bool = True,
         label: str = "",
         add_to_fig: FigureOutput | None = None,
+        *,
+        savefig: bool = True,
     ) -> FigureOutput | None:
-        """Creates a figure along a `route`. Content of figure depends
-        on `stat`. Figures are saved to `[Compare1D2D.output_path]/figures/longitudinal`
+        """Create a figure along a `route`.
+
+        Content of figure depends on `stat`. Figures are saved to `[Compare1D2D.output_path]/figures/longitudinal`
 
         Example output:
 
         ![title](../figures/test_results/compare1d2d/BR-PK-IJ.png)
 
-        Parameters
-        ----------
-            route: List of branches (e.g. ['NK', 'LK'])
-            stat: what type of longitudinal plot to make. Options are:
-                - time
-                - last25
-                - max13
-            savefig: if true, figure is saved to png file. If false, `FigureOutput`
-                     returned, which is input for `add_to_fig`
-            add_to_fig: if `FigureOutput` is provided, adds content to figure.
+
+        Args:
+            route (list[str]): List of branches (e.g. ['NK', 'LK'])
+            stat (str, optional): What type of longitudinal plot to make (options: "time", "last3", "last25", "max3",
+            "max13"). Defaults to "time".
+            label (str, optional): Label of figure. Defaults to "".
+            add_to_fig (FigureOutput | None, optional):if `FigureOutput` is provided, adds content to figure.
+                Defaults to None.
+            savefig (bool, optional): if true, figure is saved to png file. If false, `FigureOutput`
+                     returned, which is input for `add_to_fig`. Defaults to True.
+
+
+
+        Returns:
+            FigureOutput | None: FigureOutput object or None
 
         """
         # Get route and stations along route
@@ -2130,7 +2211,8 @@ class Compare1D2D(ModelOutputReader):
             case y if y in ["last3", "last25", "max3", "max13"]:
                 lines = self._stat_func(stat=y, route=route)
             case _:
-                raise KeyError(f"{stat} is unknown statistics")
+                err_msg = f"{stat} is unknown statistics"
+                raise KeyError(err_msg)
 
         # Get figure object
         if add_to_fig is None:
@@ -2186,11 +2268,11 @@ class Compare1D2D(ModelOutputReader):
             )
             plt.close()
 
-        else:
-            return FigureOutput(fig=fig, axes=axs, legend=lgd)
+        return FigureOutput(fig=fig, axes=axs, legend=lgd)
 
-    def figure_longitudinal_rating_curve(self, route: List[str]) -> None:
+    def figure_longitudinal_rating_curve(self, route: list[str]) -> None:
         """Create a figure along a route with lines at various dicharges.
+
         To to this, rating curves are generated at each point by digitizing
         the model output.
 
@@ -2235,7 +2317,6 @@ class Compare1D2D(ModelOutputReader):
             )
 
         # Plot betrekkingslijnen
-        texty_previous = -999
         for discharge in discharge_steps:
             axs[0].plot(h1d[discharge], label=f"{discharge:.0f} m$^3$/s")
             axs[0].set_ylabel("waterstand [m+nap]")
@@ -2264,8 +2345,8 @@ class Compare1D2D(ModelOutputReader):
         )
         plt.close()
 
-    def _iter_discharge_steps(self, data: pd.DataFrame, n: int = 5) -> List[float]:
-        """Choose discharge steps based on increase in water level downstream"""
+    def _iter_discharge_steps(self, data: pd.DataFrame, n: int = 5) -> Generator[float, None, None]:
+        """Choose discharge steps based on increase in water level downstream."""
         station = data[data.columns[-1]]
 
         wl_range = station.max() - station[station.index > 0].min()
@@ -2280,9 +2361,10 @@ class Compare1D2D(ModelOutputReader):
             q_at_t_previous = q_at_t
             yield q_at_t
 
-    def heatmap_time(self, route: List[str]) -> None:
-        """Create a 2D heatmap along a route. The horizontal axis uses
-        timemarks to match the 1D and 2D models
+    def heatmap_time(self, route: list[str]) -> None:
+        """Create a 2D heatmap along a route.
+
+        The horizontal axis uses timemarks to match the 1D and 2D models
 
         Figures are saved to `[Compare1D2D.output_path]/figures/heatmap`
 
@@ -2323,9 +2405,10 @@ class Compare1D2D(ModelOutputReader):
         fig.savefig(self.output_path.joinpath(f"figures/heatmaps/{routename}_timeseries.png"))
         plt.close()
 
-    def heatmap_rating_curve(self, route: List[str]) -> None:
-        """Create a 2D heatmap along a route. The horizontal axis uses
-        the digitized rating curves to match the two models
+    def heatmap_rating_curve(self, route: list[str]) -> None:
+        """Create a 2D heatmap along a route.
+
+        The horizontal axis uses the digitized rating curves to match the two models
 
         Figures are saved to `[Compare1D2D.output_path]/figures/heatmap`
 
@@ -2368,8 +2451,8 @@ class Compare1D2D(ModelOutputReader):
         plt.close()
 
     @staticmethod
-    def _catch_e(func: Callable, exception: Union[Exception, Tuple[Exception]], *args, **kwargs):
-        """Catch exception in function call. useful for list comprehensions"""
+    def _catch_e(func: Callable, exception: Exception | tuple[Exception], *args: tuple, **kwargs: dict) -> Any | float:  # noqa: ANN401
+        """Catch exception in function call. useful for list comprehensions."""
         try:
             return func(*args, **kwargs)
         except exception:
