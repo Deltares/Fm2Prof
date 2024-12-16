@@ -152,7 +152,7 @@ class GenerateCrossSectionLocationFile(FM2ProfBase):
             err_msg = "Network difinition file not found"
             raise FileNotFoundError(err_msg)
 
-        self._network_definition_file_to_input(network_definition_file, crossection_location_file, branchrule_file)
+        self._networkdeffile_to_input(network_definition_file, crossection_location_file, branchrule_file)
 
     def _parse_network_definition_file(self, network_definition_file: Path, branchrules: dict | None = None) -> dict:  # noqa: C901, PLR0912
         """Parse network definition file.
@@ -453,7 +453,7 @@ class VisualiseOutput(FM2ProfBase):
         >>> for css in visualiser.cross_sections:
         >>>     visualiser.make_figure(css)
         """
-        csslist = self._read_css_def_file()
+        csslist = self._readCSSDefFile()
         yield from csslist
 
     def figure_roughness_longitudinal(self, branch: str) -> None:
@@ -473,7 +473,7 @@ class VisualiseOutput(FM2ProfBase):
         minmax = []
         for cross_section in css:
             chainage.append(cross_section[1])
-            roughness = self.get_roughness_info_for_css(cross_section[0])[1]
+            roughness = self.getRoughnessInfoForCss(cross_section[0])[1]
             minmax.append([min(roughness), max(roughness)])
 
         chainage = np.array(chainage) * 1e-3
@@ -483,7 +483,7 @@ class VisualiseOutput(FM2ProfBase):
         ax.set_ylabel("Ruwheid (Chezy)")
         ax.set_xlabel("Afstand [km]")
         ax.set_title(branch)
-        fig, lgd = self._set_plot_style(fig, use_legend=True)
+        fig, lgd = self._SetPlotStyle(fig, use_legend=True)
         plt.savefig(
             output_dir.joinpath(f"roughness_longitudinal_{branch}.png"),
             bbox_extra_artists=[lgd],
@@ -537,15 +537,15 @@ class VisualiseOutput(FM2ProfBase):
         with self.files[rtype].open("r") as f:
             cssbranch, csschainage = self._parse_cssname(cssname)
             for line in f:
-                if line.strip().lower() == "[branchproperties]" and self._get_value_from_line(f).lower() == cssbranch:
+                if line.strip().lower() == "[branchproperties]" and self._getValueFromLine(f).lower() == cssbranch:
                     [f.readline() for i in range(3)]
-                    levels = list(map(float, self._get_value_from_line(f).split()))
+                    levels = list(map(float, self._getValueFromLine(f).split()))
                 if (
                     line.strip().lower() == "[definition]"
-                    and self._get_value_from_line(f).lower() == cssbranch
-                    and float(self._get_value_from_line(f).lower()) == csschainage
+                    and self._getValueFromLine(f).lower() == cssbranch
+                    and float(self._getValueFromLine(f).lower()) == csschainage
                 ):
-                    values = list(map(float, self._get_value_from_line(f).split()))
+                    values = list(map(float, self._getValueFromLine(f).split()))
         return levels, values
 
     def get_volume_info_for_css(self, cssname: str) -> dict:
@@ -631,7 +631,7 @@ class VisualiseOutput(FM2ProfBase):
             self._plot_volume(css, axs[1])
             self._plot_roughness(css, axs[2], reference_roughness)
 
-            fig, lgd = self._set_plot_style(fig)
+            fig, lgd = self._SetPlotStyle(fig)
 
             if save_to_file:
                 plt.savefig(
@@ -696,15 +696,15 @@ class VisualiseOutput(FM2ProfBase):
                 if line.lower().strip() == "[definition]":
                     css_id = f.readline().strip().split("=")[1]
                     [f.readline() for i in range(3)]
-                    css_levels = list(map(float, self._get_value_from_line(f).split()))
-                    css_fwidth = list(map(float, self._get_value_from_line(f).split()))
-                    css_twidth = list(map(float, self._get_value_from_line(f).split()))
-                    css_sdcrest = float(self._get_value_from_line(f))
-                    css_sdflow = float(self._get_value_from_line(f))
-                    css_sdtotal = float(self._get_value_from_line(f))
-                    css_sdbaselevel = float(self._get_value_from_line(f))
-                    css_mainsectionwidth = float(self._get_value_from_line(f))
-                    css_fp1sectionwidth = float(self._get_value_from_line(f))
+                    css_levels = list(map(float, self._getValueFromLine(f).split()))
+                    css_fwidth = list(map(float, self._getValueFromLine(f).split()))
+                    css_twidth = list(map(float, self._getValueFromLine(f).split()))
+                    css_sdcrest = float(self._getValueFromLine(f))
+                    css_sdflow = float(self._getValueFromLine(f))
+                    css_sdtotal = float(self._getValueFromLine(f))
+                    css_sdbaselevel = float(self._getValueFromLine(f))
+                    css_mainsectionwidth = float(self._getValueFromLine(f))
+                    css_fp1sectionwidth = float(self._getValueFromLine(f))
 
                     css = {
                         "id": css_id.strip(),
@@ -740,7 +740,7 @@ class VisualiseOutput(FM2ProfBase):
 
         # Get the water level where water level independent computation takes over
         # this is the lowest level where there is 2D information on volumes
-        z_waterlevel_independent = self._get_lowest_water_level_in_2d(css)
+        z_waterlevel_independent = self._get_lowest_water_level_in_2D(css)
 
         # Plot cross-section geometry
         for side in [-1, 1]:
@@ -805,8 +805,8 @@ class VisualiseOutput(FM2ProfBase):
 
     def _plot_volume(self, css: dict, ax: Axes) -> None:
         # Get data
-        vd = self.get_volume_info_for_css(css["id"])
-        z_waterlevel_independent = self._get_lowest_water_level_in_2d(css)
+        vd = self.getVolumeInfoForCss(css["id"])
+        z_waterlevel_independent = self._get_lowest_water_level_in_2D(css)
 
         # Plot 1D volumes
         ax.fill_between(
@@ -876,7 +876,7 @@ class VisualiseOutput(FM2ProfBase):
             pass
 
         try:
-            levels, values = self.get_roughness_info_for_css(css["id"], rtype="roughnessFP1")
+            levels, values = self.getRoughnessInfoForCss(css["id"], rtype="roughnessFP1")
             if levels is not None and values is not None:
                 ax.plot(levels, values, label="Floodplain1")
         except FileNotFoundError:
@@ -941,10 +941,11 @@ class PlotStyles:
         """Set locale."""
         try:
             locale.setlocale(locale.LC_TIME, locale_string)
-        except locale.Error:
+        except locale.Error as err:
             # known error on linux fix:
             # export LC_ALL="en_US.UTF-8" & export LC_CTYPE="en_US.UTF-8" & sudo dpkg-reconfigure locales
-            print(f"could not set locale to {locale_string}")
+            err_msg = f"could not set locale to {locale_string}"
+            raise locale.Error(err_msg) from err
 
     @staticmethod
     def _is_timeaxis(axis: Axes) -> bool:
@@ -1088,10 +1089,10 @@ class PlotStyles:
                 spine.set_linewidth(style_guide.spine_width)
 
             if cls._is_timeaxis(ax.xaxis):
-                ax.xaxis.set_major_formatter(cls.my_fmt)
+                ax.xaxis.set_major_formatter(cls.myFmt)
                 ax.xaxis.set_major_locator(cls.monthlocator)
             if cls._is_timeaxis(ax.yaxis):
-                ax.yaxis.set_major_formatter(cls.my_fmt)
+                ax.yaxis.set_major_formatter(cls.myFmt)
                 ax.yaxis.set_major_locator(cls.monthlocator)
 
             ax.patch.set_visible(False)
@@ -1312,7 +1313,7 @@ class ModelOutputReader(FM2ProfBase):
 
         Matches based on identical characters in first nine slots
         """
-        if self.file_1d2d_map.is_file():
+        if self.file_1D2D_map.is_file():
             self.set_logger_message("using existing 1d-2d map")
             return
         self._get_1d2d_map()
@@ -1447,7 +1448,7 @@ class ModelOutputReader(FM2ProfBase):
         ):
             with Dataset(self._path_flow2d) as f:
                 self.set_logger_message(f"loading 2D data for {map_key}")
-                station_map = pd.read_csv(self.file_1d2d_map, index_col=0)
+                station_map = pd.read_csv(self.file_1D2D_map, index_col=0)
                 qnames = self._parse_names(f.variables[nkey][:])
                 qdata = f.variables[dkey][:]
 
@@ -1638,7 +1639,7 @@ class Compare1D2D(ModelOutputReader):
             self.heatmap_time(route)
 
         self.set_logger_message("Making figures for stations")
-        for station in tqdm.tqdm(self.stations(), total=self._data_1d_h.shape[1]):
+        for station in tqdm.tqdm(self.stations(), total=self._data_1D_H.shape[1]):
             self.figure_at_station(station)
 
     @property
@@ -1688,7 +1689,7 @@ class Compare1D2D(ModelOutputReader):
 
     def stations(self) -> Generator[str, None, None]:
         """Yield station names."""
-        yield from self._data_1d_h.columns
+        yield from self._data_1D_H.columns
 
     @staticmethod
     def _digitize_data(hdata: pd.DateFrame, qdata: pd.DataFrame, bins: np.ndarray) -> pd.DataFrame:
@@ -1713,7 +1714,7 @@ class Compare1D2D(ModelOutputReader):
 
     def get_route(self, route: list[str]) -> tuple[list[str], list[float], list[tuple[str, float]]]:
         """Return a sorted list of stations along a route, with rkms."""
-        station_names = self._data_2d_h.columns
+        station_names = self._data_2D_H.columns
 
         # Parse names
         rkms = self._names_to_rkms(station_names)
@@ -1956,20 +1957,20 @@ class Compare1D2D(ModelOutputReader):
 
             # tijdserie
             axs[0].plot(
-                self.data_2d_q[station],
+                self.data_2D_Q[station],
                 label=f"2D, {station.split('_')[0]}",
                 linewidth=2,
                 linestyle=linestyles_2d[j],
             )
             axs[0].plot(
-                self.data_1d_q[station],
+                self.data_1D_Q[station],
                 label=f"1D, {station.split('_')[0]}",
                 linewidth=2,
                 linestyle="-",
             )
 
         ax_error.plot(
-            self._data_1d_q[station] - self._data_2d_q[station],
+            self._data_1D_Q[station] - self._data_2D_Q[station],
             ".",
             color="r",
             markersize=5,
@@ -1978,8 +1979,8 @@ class Compare1D2D(ModelOutputReader):
 
         # discharge distribution
 
-        q_2d = self.data_2d_q[stations]
-        q_1d = self.data_1d_q[stations]
+        q_2d = self.data_2D_Q[stations]
+        q_1d = self.data_1D_Q[stations]
         axs[1].plot(
             q_2d.sum(axis=1),
             (q_2d.iloc[:, 0] / q_2d.sum(axis=1)) * 100,
@@ -2081,8 +2082,8 @@ class Compare1D2D(ModelOutputReader):
             return len(data.index) - 1
 
     def _time_func(self, route: list[str]) -> dict[str, pd.Series | str]:
-        first_day = self.data_1d_h.index[0]  # + timedelta(days=delta_days) * 2
-        last_day = self.data_1d_h.index[-1]
+        first_day = self.data_1D_H.index[0]  # + timedelta(days=delta_days) * 2
+        last_day = self.data_1D_H.index[-1]
         number_of_days = (last_day - first_day).days
         delta_days = int(number_of_days / 6)
 
@@ -2091,15 +2092,15 @@ class Compare1D2D(ModelOutputReader):
 
         for day in moments:
             h1d = self.get_data_along_route_for_time(
-                data=self.data_1d_h,
+                data=self.data_1D_H,
                 route=route,
-                time_index=self._get_nearest_time(data=self.data_1d_h, date=day),
+                time_index=self._get_nearest_time(data=self.data_1D_H, date=day),
             )
 
             h2d = self.get_data_along_route_for_time(
-                data=self.data_2d_h,
+                data=self.data_2D_H,
                 route=route,
-                time_index=self._get_nearest_time(data=self.data_2d_h, date=day),
+                time_index=self._get_nearest_time(data=self.data_2D_H, date=day),
             )
 
             lines.append({"1D": h1d, "2D": h2d, "label": f"{day:%b-%d}"})
@@ -2129,8 +2130,8 @@ class Compare1D2D(ModelOutputReader):
 
     def _stat_func(self, route: list[str], stat: str = "max13") -> list[dict[str, pd.Series | str]]:
         """Apply column-wise "last25" or "max13" on 1D and 2D data."""
-        max13_1d = self._apply_stat(self.get_data_along_route(self.data_1d_h, route=route).T, stat=stat)
-        max13_2d = self._apply_stat(self.get_data_along_route(self.data_2d_h, route=route).T, stat=stat)
+        max13_1d = self._apply_stat(self.get_data_along_route(self.data_1D_H, route=route).T, stat=stat)
+        max13_2d = self._apply_stat(self.get_data_along_route(self.data_2D_H, route=route).T, stat=stat)
 
         return [{"1D": max13_1d, "2D": max13_2d, "label": stat}]
 
@@ -2224,7 +2225,7 @@ class Compare1D2D(ModelOutputReader):
         if add_to_fig is None:
             station_names, station_locs, _ = self.get_route(route)
             st_names, st_locs = labelfunc(station_names, station_locs)
-            h1d = self.get_data_along_route(data=self.data_1d_h, route=route)
+            h1d = self.get_data_along_route(data=self.data_1D_H, route=route)
             for st_name, st_loc in zip(st_names, st_locs):
                 for ax in axs:
                     ax.axvline(x=st_loc, linestyle="--")
@@ -2287,8 +2288,8 @@ class Compare1D2D(ModelOutputReader):
         routename = "-".join(route)
         _, _, lmw_stations = self.get_route(route)
 
-        h1d = self.get_data_along_route(data=self._data_1d_h_digitized, route=route)
-        h2d = self.get_data_along_route(data=self._data_2d_h_digitized, route=route)
+        h1d = self.get_data_along_route(data=self._data_1D_H_digitized, route=route)
+        h2d = self.get_data_along_route(data=self._data_2D_H_digitized, route=route)
 
         discharge_steps = list(self._iter_discharge_steps(h1d.T, n=8))
         if len(discharge_steps) < 1:
@@ -2376,7 +2377,7 @@ class Compare1D2D(ModelOutputReader):
         """
         routename = "-".join(route)
         _, _, lmw_stations = self.get_route(route)
-        data = self._data_1d_h - self._data_2d_h
+        data = self._data_1D_H - self._data_2D_H
         routedata = self.get_data_along_route(data.dropna(how="all"), route)
 
         fig, ax = plt.subplots(1, figsize=(12, 7))
@@ -2420,7 +2421,7 @@ class Compare1D2D(ModelOutputReader):
         """
         routename = "-".join(route)
         _, _, lmw_stations = self.get_route(route)
-        data = self._data_1d_h_digitized - self._data_2d_h_digitized
+        data = self._data_1D_H_digitized - self._data_2D_H_digitized
 
         routedata = self.get_data_along_route(data.dropna(how="all"), route)
 
