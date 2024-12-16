@@ -1,0 +1,846 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              75.0,
+              12.5
+            ],
+            [
+              125.0,
+              12.5
+            ],
+            [
+              125.0,
+              137.5
+            ],
+            [
+              75.0,
+              137.5
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "name": "channel1_125.000"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              175.0,
+              12.5
+            ],
+            [
+              225.0,
+              12.5
+            ],
+            [
+              225.0,
+              137.5
+            ],
+            [
+              175.0,
+              137.5
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "name": "channel1_225.000"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              275.0,
+              12.5
+            ],
+            [
+              325.0,
+              12.5
+            ],
+            [
+              325.0,
+              137.5
+            ],
+            [
+              275.0,
+              137.5
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "name": "channel1_325.000"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              375.0,
+              12.5
+            ],
+            [
+              425.0,
+              12.5
+            ],
+            [
+              425.0,
+              137.5
+            ],
+            [
+              375.0,
+              137.5
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "name": "channel1_425.000"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              475.0,
+              12.5
+            ],
+            [
+              525.0,
+              12.5
+            ],
+            [
+              525.0,
+              137.5
+            ],
+            [
+              475.0,
+              137.5
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "name": "channel1_525.000"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              575.0,
+              12.5
+            ],
+            [
+              625.0,
+              12.5
+            ],
+            [
+              625.0,
+              137.5
+            ],
+            [
+              575.0,
+              137.5
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "name": "channel1_625.000"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              675.0,
+              12.5
+            ],
+            [
+              725.0,
+              12.5
+            ],
+            [
+              725.0,
+              137.5
+            ],
+            [
+              675.0,
+              137.5
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "name": "channel1_725.000"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              775.0,
+              12.5
+            ],
+            [
+              825.0,
+              12.5
+            ],
+            [
+              825.0,
+              137.5
+            ],
+            [
+              775.0,
+              137.5
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "name": "channel1_825.000"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              875.0,
+              12.5
+            ],
+            [
+              925.0,
+              12.5
+            ],
+            [
+              925.0,
+              137.5
+            ],
+            [
+              875.0,
+              137.5
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "name": "channel1_925.000"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              975.0,
+              12.5
+            ],
+            [
+              1025.0,
+              12.5
+            ],
+            [
+              1025.0,
+              137.5
+            ],
+            [
+              975.0,
+              137.5
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "name": "channel1_1025.000"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              1075.0,
+              12.5
+            ],
+            [
+              1125.0,
+              12.5
+            ],
+            [
+              1125.0,
+              137.5
+            ],
+            [
+              1075.0,
+              137.5
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "name": "channel1_1125.000"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              1175.0,
+              12.5
+            ],
+            [
+              1225.0,
+              12.5
+            ],
+            [
+              1225.0,
+              137.5
+            ],
+            [
+              1175.0,
+              137.5
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "name": "channel1_1225.000"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              1275.0,
+              12.5
+            ],
+            [
+              1325.0,
+              12.5
+            ],
+            [
+              1325.0,
+              137.5
+            ],
+            [
+              1275.0,
+              137.5
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "name": "channel1_1325.000"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              1375.0,
+              12.5
+            ],
+            [
+              1425.0,
+              12.5
+            ],
+            [
+              1425.0,
+              137.5
+            ],
+            [
+              1375.0,
+              137.5
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "name": "channel1_1425.000"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              1475.0,
+              12.5
+            ],
+            [
+              1525.0,
+              12.5
+            ],
+            [
+              1525.0,
+              137.5
+            ],
+            [
+              1475.0,
+              137.5
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "name": "channel1_1525.000"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              1575.0,
+              12.5
+            ],
+            [
+              1625.0,
+              12.5
+            ],
+            [
+              1625.0,
+              137.5
+            ],
+            [
+              1575.0,
+              137.5
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "name": "channel1_1625.000"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              1675.0,
+              12.5
+            ],
+            [
+              1725.0,
+              12.5
+            ],
+            [
+              1725.0,
+              137.5
+            ],
+            [
+              1675.0,
+              137.5
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "name": "channel1_1725.000"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              1775.0,
+              12.5
+            ],
+            [
+              1825.0,
+              12.5
+            ],
+            [
+              1825.0,
+              137.5
+            ],
+            [
+              1775.0,
+              137.5
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "name": "channel1_1825.000"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              1875.0,
+              12.5
+            ],
+            [
+              1925.0,
+              12.5
+            ],
+            [
+              1925.0,
+              137.5
+            ],
+            [
+              1875.0,
+              137.5
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "name": "channel1_1925.000"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              1975.0,
+              12.5
+            ],
+            [
+              2025.0,
+              12.5
+            ],
+            [
+              2025.0,
+              137.5
+            ],
+            [
+              1975.0,
+              137.5
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "name": "channel1_2025.000"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              2075.0,
+              12.5
+            ],
+            [
+              2125.0,
+              12.5
+            ],
+            [
+              2125.0,
+              137.5
+            ],
+            [
+              2075.0,
+              137.5
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "name": "channel1_2125.000"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              2175.0,
+              12.5
+            ],
+            [
+              2225.0,
+              12.5
+            ],
+            [
+              2225.0,
+              137.5
+            ],
+            [
+              2175.0,
+              137.5
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "name": "channel1_2225.000"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              2275.0,
+              12.5
+            ],
+            [
+              2325.0,
+              12.5
+            ],
+            [
+              2325.0,
+              137.5
+            ],
+            [
+              2275.0,
+              137.5
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "name": "channel1_2325.000"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              2375.0,
+              12.5
+            ],
+            [
+              2425.0,
+              12.5
+            ],
+            [
+              2425.0,
+              137.5
+            ],
+            [
+              2375.0,
+              137.5
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "name": "channel1_2425.000"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              2475.0,
+              12.5
+            ],
+            [
+              2525.0,
+              12.5
+            ],
+            [
+              2525.0,
+              137.5
+            ],
+            [
+              2475.0,
+              137.5
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "name": "channel1_2525.000"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              2575.0,
+              12.5
+            ],
+            [
+              2625.0,
+              12.5
+            ],
+            [
+              2625.0,
+              137.5
+            ],
+            [
+              2575.0,
+              137.5
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "name": "channel1_2625.000"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              2675.0,
+              12.5
+            ],
+            [
+              2725.0,
+              12.5
+            ],
+            [
+              2725.0,
+              137.5
+            ],
+            [
+              2675.0,
+              137.5
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "name": "channel1_2725.000"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              2775.0,
+              12.5
+            ],
+            [
+              2825.0,
+              12.5
+            ],
+            [
+              2825.0,
+              137.5
+            ],
+            [
+              2775.0,
+              137.5
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "name": "channel1_2825.000"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              2875.0,
+              12.5
+            ],
+            [
+              2925.0,
+              12.5
+            ],
+            [
+              2925.0,
+              137.5
+            ],
+            [
+              2875.0,
+              137.5
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "name": "channel1_2925.000"
+      }
+    }
+  ]
+}
