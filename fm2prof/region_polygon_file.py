@@ -25,9 +25,8 @@ All rights reserved.
 from __future__ import annotations
 
 import json
-from collections import namedtuple
 from pathlib import Path
-from typing import TYPE_CHECKING, Iterable
+from typing import TYPE_CHECKING, Iterable, NamedTuple
 
 import numpy as np
 import rtree
@@ -38,7 +37,7 @@ from fm2prof.common import FM2ProfBase
 if TYPE_CHECKING:
     from logging import Logger
 
-Polygon = namedtuple("Polygon", ["geometry", "properties"])  # noqa: PYI024
+Polygon = NamedTuple("Polygon", ["geometry", "properties"])
 
 
 class PolygonFile(FM2ProfBase):
