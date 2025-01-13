@@ -337,6 +337,21 @@ your configuration file to fix this error.""",
         regions: RegionPolygonFile | None,
         sections: SectionPolygonFile | None,
     ) -> tuple:
+        """Read input files for 'FM2PROF'.
+
+        See documentation for file format descriptions.
+
+        Args:
+            res_file (str | Path): path to FlowFM map netcfd file (*_map.nc)
+            css_file (str | Path): path to cross-section definition file_
+            regions (RegionPolygonFile | None): RegionPolygonFile object
+            sections (SectionPolygonFile | None): SectionPolygonFile object
+
+        Returns:
+            tuple: Tuple containing time dependent data, time independent data, edge data, node coordinates,
+            and cross section data.
+
+        """
         importer = ImportInputFiles(logger=self.get_logger())
         ini_file = self.get_inifile()
 
