@@ -237,7 +237,6 @@ class FmModelData:
         edge_y = edge_data["y"][edge_data["sclass"] == css_name]
         edge_section = edge_data["section"][edge_data["sclass"] == css_name]  # roughness section number
 
-        # retrieve the full set for face_nodes and area, needed for the roughness calculation
         bedlevel = dti["bedlevel"][dti["sclass"] == css_name]
 
         velocity = (vx**2 + vy**2) ** 0.5
