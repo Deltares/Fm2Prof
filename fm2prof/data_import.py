@@ -17,29 +17,38 @@ from fm2prof.common import FM2ProfBase
 class FMDataImporter(FM2ProfBase):
     """FM Data importer class."""
 
-    dflow2d_face_keys = {  # noqa: RUF012
-        "x": "mesh2d_face_x",
-        "y": "mesh2d_face_y",
-        "area": "mesh2d_flowelem_ba",
-        "bedlevel": "mesh2d_flowelem_bl",
-    }
+    @property
+    def dflow2d_face_keys(self) -> dict:
+        """Mapping with dflow2d face keys."""
+        return {
+            "x": "mesh2d_face_x",
+            "y": "mesh2d_face_y",
+            "area": "mesh2d_flowelem_ba",
+            "bedlevel": "mesh2d_flowelem_bl",
+        }
 
-    dflow2d_edge_keys = {  # noqa: RUF012
-        "x": "mesh2d_edge_x",
-        "y": "mesh2d_edge_y",
-        "edge_faces": "mesh2d_edge_faces",
-        "edge_nodes": "mesh2d_edge_nodes",
-    }
+    @property
+    def dflow2d_edge_keys(self) -> dict:
+        """Mapping with dflow2d edge keys."""
+        return {
+            "x": "mesh2d_edge_x",
+            "y": "mesh2d_edge_y",
+            "edge_faces": "mesh2d_edge_faces",
+            "edge_nodes": "mesh2d_edge_nodes",
+        }
 
-    dflow2d_result_keys = {  # noqa: RUF012
-        "waterdepth": "mesh2d_waterdepth",
-        "waterlevel": "mesh2d_s1",
-        "chezy_mean": "mesh2d_czs",  # not used anymore!
-        "chezy_edge": "mesh2d_czu",
-        "velocity_x": "mesh2d_ucx",
-        "velocity_y": "mesh2d_ucy",
-        "velocity_edge": "mesh2d_u1",
-    }
+    @property
+    def dflow2d_result_keys(self) -> dict:
+        """Mapping with dflow2d_result_keys."""
+        return {
+            "waterdepth": "mesh2d_waterdepth",
+            "waterlevel": "mesh2d_s1",
+            "chezy_mean": "mesh2d_czs",  # not used anymore!
+            "chezy_edge": "mesh2d_czu",
+            "velocity_x": "mesh2d_ucx",
+            "velocity_y": "mesh2d_ucy",
+            "velocity_edge": "mesh2d_u1",
+        }
 
     def import_dflow2d(self, file_path: Path | str) -> tuple[pd.DataFrame | None, dict, pd.DataFrame, dict]:
         """Read input from a dflow2d output file.
