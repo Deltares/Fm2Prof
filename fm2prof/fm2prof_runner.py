@@ -437,12 +437,17 @@ your configuration file to fix this error.""",
         css_regions = regions.classify_points(cssdata["xy"])
 
         # Determine in which region each 2d point lies
+
+        nr_of_time_independent_data_values = len(time_independent_data.get("x"))
+        x_tid_array = time_independent_data.get("x").to_numpy()
+        y_tid_array = time_independent_data.get("y").to_numpy()
+
         xy_tuples_2d = [
             (
-                time_independent_data.get("x").to_numpy()[i],
-                time_independent_data.get("y").to_numpy()[i],
+                x_tid_array[i],
+                y_tid_array[i],
             )
-            for i in range(len(time_independent_data.get("x")))
+            for i in range(nr_of_time_independent_data_values)
         ]
 
         time_independent_data["region"] = regions.classify_points(xy_tuples_2d)
