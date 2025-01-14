@@ -67,7 +67,7 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.ruff]
 line-length = 120
-ignore = ["DTZ005", "DTZ001", "FA100"]
+ignore = ["DTZ005", "DTZ001"]
 exclude = ["scripts"]
 
 [tool.ruff.lint]
