@@ -37,7 +37,12 @@ from fm2prof.common import FM2ProfBase
 if TYPE_CHECKING:
     from logging import Logger
 
-Polygon = NamedTuple("Polygon", ["geometry", "properties"])
+
+class Polygon(NamedTuple):
+    """Polygon datastructure."""
+
+    geometry: shape
+    properties: dict
 
 
 class PolygonFile(FM2ProfBase):
