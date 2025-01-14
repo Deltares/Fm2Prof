@@ -1,7 +1,8 @@
 """CLI for Fm2Prof."""
 
+from __future__ import annotations
+
 from pathlib import Path
-from typing import Optional
 
 import typer
 from tqdm import tqdm
@@ -85,7 +86,7 @@ def cli_load_project(
 
 @app.callback()
 def cli(
-    version: Optional[bool] = typer.Option(  # noqa: ARG001
+    version: bool | None = typer.Option(  # noqa: ARG001
         None,
         "--version",
         "-v",
