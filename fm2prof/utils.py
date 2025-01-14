@@ -154,7 +154,7 @@ class GenerateCrossSectionLocationFile(FM2ProfBase):
 
         self._network_definition_file_to_input(network_definition_file, crossection_location_file, branchrule_file)
 
-    def _parse_network_definition_file(self, network_definition_file: Path, branchrules: dict | None = None) -> dict:  # noqa: C901, PLR0912
+    def _parse_network_definition_file(self, network_definition_file: Path, branchrules: dict | None = None) -> dict:
         """Parse network definition file.
 
         Output:
