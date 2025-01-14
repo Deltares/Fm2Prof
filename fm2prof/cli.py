@@ -85,7 +85,7 @@ def cli_load_project(
 
 @app.callback()
 def cli(
-    version: Optional[bool] = typer.Option(  # noqa: ARG001
+    version: Optional[bool] = typer.Option(  # noqa: ARG001 FA100
         None,
         "--version",
         "-v",
