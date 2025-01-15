@@ -18,6 +18,7 @@ from scipy.spatial import ConvexHull
 
 from fm2prof import __version__
 from fm2prof import functions as funcs
+from fm2prof import mask_output_file
 from fm2prof.common import FM2ProfBase
 from fm2prof.cross_section import CrossSection, CrossSectionHelpers
 from fm2prof.data_import import FMDataImporter, FmModelData, ImportInputFiles
@@ -697,7 +698,7 @@ your configuration file to fix this error.""",
                     "Collected points, dumping to file",
                     level="debug",
                 )
-                MaskOutputFile.write_mask_output_file(output_file_path, node_points)
+                mask_output_file.write_mask_output_file(output_file_path, node_points)
                 self.set_logger_message("Done", level="debug")
             except Exception as e_info:
                 self.set_logger_message(
