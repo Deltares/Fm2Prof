@@ -13,13 +13,13 @@ from geojson import Feature, FeatureCollection, Polygon
 from netCDF4 import Dataset
 from scipy.spatial import ConvexHull
 
-from fm2prof import Functions as FE
+from fm2prof import functions as FE
 from fm2prof import __version__
 from fm2prof.common import FM2ProfBase
-from fm2prof.CrossSection import CrossSection, CrossSectionHelpers
 from fm2prof.export import Export1DModelData, OutputFiles
+from fm2prof.cross_section import CrossSection, CrossSectionHelpers
 from fm2prof.Import import FMDataImporter, FmModelData, ImportInputFiles
-from fm2prof.IniFile import IniFile
+from fm2prof.ini_file import IniFile
 from fm2prof.MaskOutputFile import MaskOutputFile
 from fm2prof.RegionPolygonFile import RegionPolygonFile, SectionPolygonFile
 

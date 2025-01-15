@@ -67,9 +67,12 @@ build-backend = "poetry.core.masonry.api"
 [tool.ruff.lint]
 select = ["ALL"]
 
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
 [tool.ruff]
 line-length = 120
-ignore = ["DTZ005", "DTZ001", "SLF001"]
+ignore = ["DTZ005", "DTZ001"]
 exclude = ["scripts"]
 
 [tool.ruff.per-file-ignores]

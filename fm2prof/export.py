@@ -15,7 +15,7 @@ from fm2prof.common import FM2ProfBase
 if TYPE_CHECKING:
     from io import TextIOWrapper
 
-    from fm2prof.CrossSection import CrossSection
+    from fm2prof.cross_section import CrossSection
 
 
 @dataclass
