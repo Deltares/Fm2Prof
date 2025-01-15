@@ -236,13 +236,21 @@ class Fm2ProfRunner(FM2ProfBase):
             raise InitializationError
 
         # Read FM model data
-        fm2prof_fm_model_data = self._set_fm_model_data(
-            map_file,
-            css_file,
-            regions,
-            sections,
+        time_dependent_data, time_independent_data, edge_data, node_coordinates, css_data_dictionary = (
+            self._set_fm_model_data(
+                map_file,
+                css_file,
+                regions,
+                sections,
+            )
         )
-        self.fm_model_data = FmModelData(fm2prof_fm_model_data)
+        self.fm_model_data = FmModelData(
+            time_dependent_data=time_dependent_data,
+            time_independent_data=time_independent_data,
+            edge_data=edge_data,
+            node_coordinates=node_coordinates,
+            css_data_dictionary=css_data_dictionary,
+        )
 
         # Validate config file
         success: bool = self._validate_config_after_initalization()
