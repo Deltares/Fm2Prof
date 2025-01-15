@@ -1,7 +1,7 @@
 import os
 
 from fm2prof import Project
-from fm2prof.Fm2ProfRunner import Fm2ProfRunner
+from fm2prof.fm2prof_runner import Fm2ProfRunner
 from tests.TestUtils import TestUtils
 
 
@@ -20,9 +20,9 @@ class Test_Project:
         project = None
         value = None
 
-        # 2. Run test        
+        # 2. Run test
         project = Project()
-        value = project.get_parameter("LakeTimeSteps")       
+        value = project.get_parameter("LakeTimeSteps")
 
         # 3. Verify final expectations
         assert project is not None
@@ -32,10 +32,10 @@ class Test_Project:
         # 1. Set up initial test dat
         project = None
         value = None
-        # 2. Run test        
+        # 2. Run test
         project = Project()
         value = project.get_parameter("IDoNoTExist")
-        
+
         # 3. Verify final expectations
         assert project is not None
         assert value is None
@@ -45,9 +45,9 @@ class Test_Project:
         project = None
         value = None
 
-        # 2. Run test        
+        # 2. Run test
         project = Project()
-        value = project.get_input_file("CrossSectionLocationFile")   
+        value = project.get_input_file("CrossSectionLocationFile")
 
         # 3. Verify final expectations
         assert project is not None
@@ -58,9 +58,9 @@ class Test_Project:
         project = None
         value = None
 
-        # 2. Run test       
+        # 2. Run test
         project = Project()
-        value = project.get_output_directory()       
+        value = project.get_output_directory()
 
         # 3. Verify final expectations
         assert project is not None
@@ -71,9 +71,9 @@ class Test_Project:
         project = None
         value = 150
 
-        # 2. Run test        
+        # 2. Run test
         project = Project()
-        project.set_parameter("LakeTimeSteps", value)        
+        project.set_parameter("LakeTimeSteps", value)
 
         # 3. Verify final expectations
         assert project.get_parameter("LakeTimeSteps") == value
@@ -82,31 +82,31 @@ class Test_Project:
         # 1. Set up initial test dat
         project = None
         value = "RandomString"
-        # 2. Run test        
+        # 2. Run test
         project = Project()
-        project.set_input_file("CrossSectionLocationFile", value)       
+        project.set_input_file("CrossSectionLocationFile", value)
 
         # 3. Verify final expectations
         assert project.get_input_file("CrossSectionLocationFile") == value
 
-    def test_set_output_directory(self):
+    def test_set_output_directory(self, tmp_path):
         # 1. Set up initial test dat
         project = None
-        value = "test/subdir"
-        # 2. Run test        
+        # 2. Run test
         project = Project()
-        project.set_output_directory(value)
-        
+        project.set_output_directory(tmp_path)
+
     def test_print_configuration(self):
         # 1. Set up initial test dat
         project = None
         value = None
-        # 2. Run test       
+        # 2. Run test
         project = Project()
         value = project.print_configuration()
-       
+
         # 3. Verify final expectations
         assert value is not None
+
 
 class Test_Fm2ProfRunner:
     def test_when_no_file_path_then_no_exception_is_risen(self):
@@ -115,7 +115,6 @@ class Test_Fm2ProfRunner:
 
         # 2. Run test
         runner = Fm2ProfRunner()
-      
 
         # 3. Verify final expectations
         assert runner is not None
@@ -129,21 +128,17 @@ class Test_Fm2ProfRunner:
         runner = None
 
         # 2. Verify the initial expectations
-        assert os.path.exists(ini_file_path), "" "Test File {} was not found".format(
-            ini_file_path
-        )
+        assert os.path.exists(ini_file_path), f"Test File {ini_file_path} was not found"
 
-        # 3. Run test      
-        runner = Fm2ProfRunner(ini_file_path)       
+        # 3. Run test
+        runner = Fm2ProfRunner(ini_file_path)
 
         # 4. Verify final expectations
         assert runner is not None
 
     def test_run_with_inifile(self):
         # 1. Set up test data
-        inifile = TestUtils.get_local_test_file(
-            "cases/case_02_compound/fm2prof_config.ini"
-        )
+        inifile = TestUtils.get_local_test_file("cases/case_02_compound/fm2prof_config.ini")
 
         # 3. run test
         project = Project(inifile)
@@ -154,9 +149,7 @@ class Test_Fm2ProfRunner:
 
     def test_run_with_overwrite_false_output_unchanged(self):
         # 1. Set up test data
-        inifile = TestUtils.get_local_test_file(
-            "cases/case_02_compound/fm2prof_config.ini"
-        )
+        inifile = TestUtils.get_local_test_file("cases/case_02_compound/fm2prof_config.ini")
 
         # 2. set expections
         project = Project(inifile)
@@ -171,9 +164,7 @@ class Test_Fm2ProfRunner:
 
     def test_run_with_overwrite_true_output_has_changed(self):
         # 1. Set up test data
-        inifile = TestUtils.get_local_test_file(
-            "cases/case_02_compound/fm2prof_config.ini"
-        )
+        inifile = TestUtils.get_local_test_file("cases/case_02_compound/fm2prof_config.ini")
 
         # 2. set expections
         project = Project(inifile)
