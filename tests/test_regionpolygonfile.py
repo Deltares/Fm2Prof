@@ -1,8 +1,8 @@
+import json
 import logging
 import os
 import timeit
 from random import randint
-import json
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -10,9 +10,9 @@ import pytest
 from pytest import fixture
 from shapely.geometry import Polygon
 
-import fm2prof.functions as FE
-from fm2prof.RegionPolygonFile import Polygon as p_tuple
-from fm2prof.RegionPolygonFile import PolygonFile, SectionPolygonFile, RegionPolygonFile
+import fm2prof.functions as funcs
+from fm2prof.region_polygon_file import Polygon as p_tuple
+from fm2prof.region_polygon_file import PolygonFile, RegionPolygonFile, SectionPolygonFile
 from tests.TestUtils import TestUtils
 
 
@@ -164,7 +164,7 @@ class ARCHIVED_Test_PolygonFile:
         waal_nc_file = waal_data_dir / "FlowFM_fm2prof_map.nc"
         assert waal_nc_file.is_file()
 
-        _, edge_data, _, _ = FE._read_fm_model(str(waal_nc_file))
+        _, edge_data, _, _ = funcs._read_fm_model(str(waal_nc_file))
         points = [(edge_data["x"][i], edge_data["y"][i]) for i in range(len(edge_data["x"]))]
         assert points is not None
 
@@ -204,7 +204,7 @@ class ARCHIVED_Test_PolygonFile:
         for name, result in t_results.items():
             plt.plot(range(t_repetitions), result, label=name)
         plt.legend()
-        plt.savefig(output_dir + "\\time_performance_points_{}.png".format(number_of_points))
+        plt.savefig(output_dir + f"\\time_performance_points_{number_of_points}.png")
         plt.close()
 
         plt.figure()
@@ -212,12 +212,12 @@ class ARCHIVED_Test_PolygonFile:
             values = [classifiers_names.index(val) for val in list(result)]
             plt.scatter(range(len(list(result))), values, marker=next(markers), label=name)
         plt.yticks(
-            [c_id for c_id in range(len(classifiers_names))],
+            list(range(len(classifiers_names))),
             classifiers_names,
             rotation=45,
         )
         plt.legend()
-        plt.savefig(output_dir + "\\classifier_results_points_{}.png".format(number_of_points))
+        plt.savefig(output_dir + f"\\classifier_results_points_{number_of_points}.png")
         plt.close()
 
 
@@ -287,7 +287,8 @@ def test_PolygonFile_classify_points_with_property_rtree_by_polygons(polygon_lis
     polygon_file.polygons = polygon_list
     xy_list = [(4, 2), (8, 6), (8, 8)]
     classified_points = polygon_file.classify_points_with_property_rtree_by_polygons(
-        points=xy_list, property_name="name"
+        points=xy_list,
+        property_name="name",
     )
     assert np.array_equal(classified_points, ["poly1", "poly2", -999])
 
@@ -331,7 +332,7 @@ def test_PolygonFile_polygons_property(polygon_list):
         p_tuple(
             geometry=Polygon([[1, 1], [5, 1], [5, 4], [1, 4], [1, 1]]),
             properties={"type": "poly1"},
-        )
+        ),
     )
     with pytest.raises(ValueError, match="Polygon properties must contain key-word 'name'"):
         polygon_file.polygons = polygon_list
@@ -362,7 +363,7 @@ def test_SectionPolygonFile(mocker, test_geojson, tmp_path):
     file_path = tmp_path / "test_geojson.geojson"
     _geojson_file_writer(test_geojson, file_path)
     mock_logger = mocker.patch.object(SectionPolygonFile, "set_logger_message")
-    with pytest.raises(AssertionError, match="Section file is not valid"):
+    with pytest.raises(OSError, match="Section file is not valid"):
         SectionPolygonFile(file_path, logger=logging.getLogger())
 
         assert mock_logger.call_args_list[1][0][0] == 'Polygon poly1 has no property "section"'
@@ -370,7 +371,7 @@ def test_SectionPolygonFile(mocker, test_geojson, tmp_path):
 
     test_geojson["features"][0]["properties"]["section"] = "fake section"
     _geojson_file_writer(test_geojson, file_path)
-    with pytest.raises(AssertionError, match="Section file is not valid"):
+    with pytest.raises(OSError, match="Section file is not valid"):
         SectionPolygonFile(file_path, logger=logging.getLogger())
         assert "fake section is not a recognized section" in [log_cal[0][0] for log_cal in mock_logger.call_args_list]
     test_geojson["features"][0]["properties"]["section"] = "1"

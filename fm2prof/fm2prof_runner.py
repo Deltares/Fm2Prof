@@ -23,7 +23,7 @@ from fm2prof.cross_section import CrossSection, CrossSectionHelpers
 from fm2prof.data_import import FMDataImporter, FmModelData, ImportInputFiles
 from fm2prof.export import Export1DModelData, OutputFiles
 from fm2prof.ini_file import IniFile
-from fm2prof.RegionPolygonFile import RegionPolygonFile, SectionPolygonFile
+from fm2prof.region_polygon_file import RegionPolygonFile, SectionPolygonFile
 
 
 class InitializationError(Exception):
@@ -270,7 +270,9 @@ class Fm2ProfRunner(FM2ProfBase):
         nedges: int = self.fm_model_data.edge_data.get("x").shape[0]
         self.set_logger_message("finished reading FM and cross-sectional data data")
         self.set_logger_message(
-            f"Number of: timesteps ({ntsteps}), " + f"faces ({nfaces}), " + f"edges ({nedges})",
+            f"Number of: timesteps ({ntsteps}), "
+            + f"faces ({nfaces}), "
+            + f"edges ({nedges})",
             level="debug",
         )
 
@@ -357,7 +359,10 @@ your configuration file to fix this error.""",
         css_hulls = []
         for css in cross_sections:
             pointlist = np.array(
-                [point["geometry"]["coordinates"] for point in css.get_point_list("face")],
+                [
+                    point["geometry"]["coordinates"]
+                    for point in css.get_point_list("face")
+                ],
             )
             # construct envelope
             try:
@@ -511,7 +516,10 @@ your configuration file to fix this error.""",
 
         time_independent_data["region"] = regions.classify_points(xy_tuples_2d)
 
-        xy_tuples_2d = [(edge_data.get("x")[i], edge_data.get("y")[i]) for i in range(len(edge_data.get("x")))]
+        xy_tuples_2d = [
+            (edge_data.get("x")[i], edge_data.get("y")[i])
+            for i in range(len(edge_data.get("x")))
+        ]
 
         edge_data["region"] = regions.classify_points(xy_tuples_2d)
 
@@ -680,7 +688,11 @@ your configuration file to fix this error.""",
         for pointtype in ["face", "edge"]:
             output_file_path = Path(output_dir) / f"{pointtype}_output.geojson"
             try:
-                node_points = [node_point for cs in cross_sections for node_point in cs.get_point_list(pointtype)]
+                node_points = [
+                    node_point
+                    for cs in cross_sections
+                    for node_point in cs.get_point_list(pointtype)
+                ]
                 self.set_logger_message(
                     "Collected points, dumping to file",
                     level="debug",
@@ -689,7 +701,9 @@ your configuration file to fix this error.""",
                 self.set_logger_message("Done", level="debug")
             except Exception as e_info:
                 self.set_logger_message(
-                    "Error while generation .geojson file," + f"at {output_file_path}" + f"Reason: {e_info!s}",
+                    "Error while generation .geojson file,"
+                    + f"at {output_file_path}"
+                    + f"Reason: {e_info!s}",
                     level="error",
                 )
 
@@ -733,7 +747,11 @@ your configuration file to fix this error.""",
     def _get_css_range(self, number_of_css: int) -> np.array:
         """Parse the CssSelection keyword from the inifile."""
         css_selection = self.get_inifile().get_parameter("CssSelection")
-        return np.arange(0, number_of_css) if not css_selection else np.array(css_selection)
+        return (
+            np.arange(0, number_of_css)
+            if not css_selection
+            else np.array(css_selection)
+        )
 
     def _generate_cross_section(
         self,
@@ -890,7 +908,8 @@ your configuration file to fix this error.""",
 
         except Exception as e_info:
             self.set_logger_message(
-                "Exception thrown while creating cross-section " + f"{css_data.get('id')}, message: {e_info!s}",
+                "Exception thrown while creating cross-section "
+                + f"{css_data.get('id')}, message: {e_info!s}",
                 "error",
             )
             return None
@@ -1038,7 +1057,8 @@ your configuration file to fix this error.""",
         except Exception as e_error:
             e_message = str(e_error)
             self.set_logger_message(
-                "Exception thrown while trying to reduce the css points. " + f"{e_message}",
+                "Exception thrown while trying to reduce the css points. "
+                + f"{e_message}",
                 "error",
             )
 
@@ -1078,7 +1098,9 @@ your configuration file to fix this error.""",
         except Exception as e_error:
             e_message = str(e_error)
             self.set_logger_message(
-                "Exception thrown " + "while trying to calculate the correction. " + f"{e_message}",
+                "Exception thrown "
+                + "while trying to calculate the correction. "
+                + f"{e_message}",
                 "error",
             )
         return css
@@ -1091,7 +1113,12 @@ your configuration file to fix this error.""",
     def _output_exists(self) -> bool:
         """Check whether output exists."""
         for output_file in self._output_files:
-            if self.get_inifile().get_output_directory().joinpath(output_file).is_file():
+            if (
+                self.get_inifile()
+                .get_output_directory()
+                .joinpath(output_file)
+                .is_file()
+            ):
                 return True
         return False
 
