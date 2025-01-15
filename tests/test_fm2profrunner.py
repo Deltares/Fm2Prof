@@ -1,7 +1,7 @@
 import os
 
 from fm2prof import Project
-from fm2prof.Fm2ProfRunner import Fm2ProfRunner
+from fm2prof.fm2prof_runner import Fm2ProfRunner
 from tests.TestUtils import TestUtils
 
 
@@ -128,7 +128,7 @@ class Test_Fm2ProfRunner:
         runner = None
 
         # 2. Verify the initial expectations
-        assert os.path.exists(ini_file_path), "" "Test File {} was not found".format(ini_file_path)
+        assert os.path.exists(ini_file_path), f"Test File {ini_file_path} was not found"
 
         # 3. Run test
         runner = Fm2ProfRunner(ini_file_path)
