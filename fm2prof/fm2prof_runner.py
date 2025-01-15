@@ -20,8 +20,8 @@ from fm2prof import __version__
 from fm2prof import functions as funcs
 from fm2prof.common import FM2ProfBase
 from fm2prof.cross_section import CrossSection, CrossSectionHelpers
+from fm2prof.data_import import FMDataImporter, FmModelData, ImportInputFiles
 from fm2prof.export import Export1DModelData, OutputFiles
-from fm2prof.Import import FMDataImporter, FmModelData, ImportInputFiles
 from fm2prof.ini_file import IniFile
 from fm2prof.MaskOutputFile import MaskOutputFile
 from fm2prof.RegionPolygonFile import RegionPolygonFile, SectionPolygonFile
@@ -236,13 +236,21 @@ class Fm2ProfRunner(FM2ProfBase):
             raise InitializationError
 
         # Read FM model data
-        fm2prof_fm_model_data = self._set_fm_model_data(
-            map_file,
-            css_file,
-            regions,
-            sections,
+        time_dependent_data, time_independent_data, edge_data, node_coordinates, css_data_dictionary = (
+            self._set_fm_model_data(
+                map_file,
+                css_file,
+                regions,
+                sections,
+            )
         )
-        self.fm_model_data = FmModelData(fm2prof_fm_model_data)
+        self.fm_model_data = FmModelData(
+            time_dependent_data=time_dependent_data,
+            time_independent_data=time_independent_data,
+            edge_data=edge_data,
+            node_coordinates=node_coordinates,
+            css_data_dictionary=css_data_dictionary,
+        )
 
         # Validate config file
         success: bool = self._validate_config_after_initalization()
