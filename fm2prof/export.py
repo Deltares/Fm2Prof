@@ -103,7 +103,11 @@ class Export1DModelData(FM2ProfBase):
                 """test format for system tests, only has geometry (no summerdike)"""
                 self._write_roughness_testformat(f, cross_sections)
 
-    def export_volumes(self, cross_sections: list[CrossSection], file_path: str | Path) -> None:
+    def export_volumes(
+        self,
+        cross_sections: list[CrossSection],
+        file_path: str | Path,
+    ) -> None:
         """Write to file the volume/waterlevel information.
 
         Args:
@@ -141,7 +145,11 @@ class Export1DModelData(FM2ProfBase):
                         ),
                     )
 
-    def export_cross_section_locations(self, cross_sections: list[CrossSection], file_path: str | Path) -> None:
+    def export_cross_section_locations(
+        self,
+        cross_sections: list[CrossSection],
+        file_path: str | Path,
+    ) -> None:
         """Export cross section locations.
 
         Args:
@@ -166,7 +174,11 @@ class Export1DModelData(FM2ProfBase):
 
     """ test file formats """
 
-    def _write_geometry_testformat(self, fid: TextIOWrapper, cross_sections: list[CrossSection]) -> None:
+    def _write_geometry_testformat(
+        self,
+        fid: TextIOWrapper,
+        cross_sections: list[CrossSection],
+    ) -> None:
         # write header
         fid.write("chainage,z,total width,flow width\n")
         for _index, cross_section in enumerate(cross_sections):
@@ -176,7 +188,11 @@ class Export1DModelData(FM2ProfBase):
                     f"{cross_section.flow_width[i]}\n",
                 )
 
-    def _write_roughness_testformat(self, fid: TextIOWrapper, cross_sections: list[CrossSection]) -> None:
+    def _write_roughness_testformat(
+        self,
+        fid: TextIOWrapper,
+        cross_sections: list[CrossSection],
+    ) -> None:
         # write header
         fid.write("chainage,type,waterlevel,chezy roughness\n")
 
@@ -201,7 +217,11 @@ class Export1DModelData(FM2ProfBase):
 
     """ FM 1D file formats """
 
-    def _write_geometry_fm1d(self, fid: TextIOWrapper, cross_sections: list[CrossSection]) -> None:
+    def _write_geometry_fm1d(
+        self,
+        fid: TextIOWrapper,
+        cross_sections: list[CrossSection],
+    ) -> None:
         """FM1D uses a configuration 'Delft' file style format."""
         # Write general secton
         fid.write(
@@ -237,7 +257,12 @@ class Export1DModelData(FM2ProfBase):
                 + "\tgroundLayer\t\t\t= 0.000\n\n",
             )
 
-    def _write_roughness_fm1d(self, fid: TextIOWrapper, cross_sections: list[CrossSection], section: str) -> None:
+    def _write_roughness_fm1d(
+        self,
+        fid: TextIOWrapper,
+        cross_sections: list[CrossSection],
+        section: str,
+    ) -> None:
         general_sec = f"""[General]
         majorVersion          = 1
         minorVersion          = 0
@@ -258,7 +283,11 @@ class Export1DModelData(FM2ProfBase):
         fid.write(branch_sec)
         fid.write(definition_sec)
 
-    def _get_fm1d_definition_sec(self, cross_sections: list[CrossSection], section: str) -> str:
+    def _get_fm1d_definition_sec(
+        self,
+        cross_sections: list[CrossSection],
+        section: str,
+    ) -> str:
         def_sec = ""
 
         for css in cross_sections:
@@ -276,7 +305,11 @@ class Export1DModelData(FM2ProfBase):
                 )
         return def_sec
 
-    def _get_fm1d_branch_sec(self, cross_sections: list[CrossSection], section: str) -> str:
+    def _get_fm1d_branch_sec(
+        self,
+        cross_sections: list[CrossSection],
+        section: str,
+    ) -> str:
         branch_sec = ""
         branch_list = []
         for css in cross_sections:
@@ -300,7 +333,11 @@ class Export1DModelData(FM2ProfBase):
 
     """ SOBEK 3 file formats """
 
-    def _write_geometry_sobek3(self, fid: TextIOWrapper, cross_sections: list[CrossSection]) -> None:
+    def _write_geometry_sobek3(
+        self,
+        fid: TextIOWrapper,
+        cross_sections: list[CrossSection],
+    ) -> None:
         # write meta
         # note, the chainage is currently set to the X-coordinate of the cross-section (straight channel)
         # note, the channel naming strategy must be discussed, currently set to 'Channel' for all cross-sections
@@ -392,7 +429,11 @@ class Export1DModelData(FM2ProfBase):
                     "error",
                 )
 
-    def _write_roughness_sobek3(self, fid: TextIOWrapper, cross_sections: list[CrossSection]) -> None:
+    def _write_roughness_sobek3(
+        self,
+        fid: TextIOWrapper,
+        cross_sections: list[CrossSection],
+    ) -> None:
         # note, the chainage is currently set to the X-coordinate of the cross-section (straight channel)
         # note, the channel naming strategy must be discussed, currently set to 'Channel' for all cross-sections
 

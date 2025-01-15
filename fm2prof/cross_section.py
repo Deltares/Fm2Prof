@@ -38,7 +38,11 @@ class CrossSectionHelpers(FM2ProfBase):
 
     _friction_zstep = 0.1
 
-    def __init__(self, logger: Logger | None = None, inifile: IniFile | None = None) -> None:
+    def __init__(
+        self,
+        logger: Logger | None = None,
+        inifile: IniFile | None = None,
+    ) -> None:
         """Initialize a CrossSectionHelpers instance."""
         super().__init__(logger=logger, inifile=inifile)
 
@@ -257,7 +261,7 @@ class CrossSection(FM2ProfBase):
         The 2D data is set on initalisation of the `CrossSection` object.
         The methods modifies the following attributes
 
-        Attributes
+        Attributes:
         ----------
            _fm_wet_area
            _fm_flow_area
@@ -325,7 +329,9 @@ class CrossSection(FM2ProfBase):
         if self.get_inifile().get_parameter("ExportCSSData"):  # pickle css data
             output_dir = self.get_inifile().get_output_directory()
             self.set_logger_message(f"pickling to {output_dir}")
-            with Path(output_dir).joinpath(f"{self.name}_flowmask.pickle").open("wb") as f:
+            with Path(output_dir).joinpath(f"{self.name}_flowmask.pickle").open(
+                "wb",
+            ) as f:
                 pickle.dump(flow_mask, f)
 
         # Calculate area and volume as function of waterlevel & waterdepth
@@ -349,6 +355,9 @@ class CrossSection(FM2ProfBase):
                 area_matrix[wet_not_plas_mask] * waterdepth[wet_not_plas_mask],
                 axis=0,
             ),
+        )
+        self._fm_flow_volume = np.array(
+            np.nansum(area_matrix[flow_mask] * waterdepth[flow_mask], axis=0),
         )
         self._fm_flow_volume = np.array(
             np.nansum(area_matrix[flow_mask] * waterdepth[flow_mask], axis=0),
@@ -380,8 +389,14 @@ class CrossSection(FM2ProfBase):
         )
 
         # Compute 1D volume as integral of width with respect to z times length
-        self._css_total_volume = np.append([0], cumulative_trapezoid(self._css_total_width, self._css_z) * self.length)
-        self._css_flow_volume = np.append([0], cumulative_trapezoid(self._css_flow_width, self._css_z) * self.length)
+        self._css_total_volume = np.append(
+            [0],
+            cumulative_trapezoid(self._css_total_width, self._css_z) * self.length,
+        )
+        self._css_flow_volume = np.append(
+            [0],
+            cumulative_trapezoid(self._css_flow_width, self._css_z) * self.length,
+        )
 
         # If sd correction is run, these attributes will be updated.
         self._css_total_volume_corrected = self._css_total_volume
@@ -457,6 +472,10 @@ class CrossSection(FM2ProfBase):
         initial_total_volume = np.abs(initial_total_error[-1])
         initial_flow_volume = np.abs(initial_flow_error[-1])
 
+        self.set_logger_message(
+            f"Initial crest: {initial_crest:.4f} m",
+            level="debug",
+        )
         self.set_logger_message(
             f"Initial crest: {initial_crest:.4f} m",
             level="debug",
@@ -775,7 +794,7 @@ class CrossSection(FM2ProfBase):
     ) -> dict:
         """Optimised the crest level and volumes.
 
-        Returns
+        Returns:
         -------
             Dictionary with optimised values, final cost and optimisation message
 
@@ -906,7 +925,11 @@ class CrossSection(FM2ProfBase):
 
         return output.to_numpy()
 
-    def _friction_weighing_area(self, link_chezy: pd.DataFrame, section: str) -> np.ndarray:
+    def _friction_weighing_area(
+        self,
+        link_chezy: pd.DataFrame,
+        section: str,
+    ) -> np.ndarray:
         """Compute chezy by weighted average. Weights are determined based on area.
 
         Friction values are known at flow links, while areas are known at flow faces.
@@ -1180,7 +1203,10 @@ class CrossSection(FM2ProfBase):
             return waterdepth_condition & (relative_velocity_condition | absolute_velocity_condition)
 
         @staticmethod
-        def mean_velocity_method(waterdepth: np.ndarray, velocity: np.ndarray) -> np.ndarray:
+        def mean_velocity_method(
+            waterdepth: np.ndarray,
+            velocity: np.ndarray,
+        ) -> np.ndarray:
             """Calculate mean velocity.
 
             This was the default method < 2.3. This method leads to unreasonably
@@ -1238,7 +1264,7 @@ class CrossSection(FM2ProfBase):
             - the tolerance for deciding which cell is wet is hardcoded at -1e-3
 
 
-        Attributes
+        Attributes:
         ----------
             _css_z
             _css_total_width
@@ -1289,18 +1315,31 @@ class CrossSection(FM2ProfBase):
             self._fm_flow_volume = np.insert(self._fm_flow_volume, 0, np.nan)
             self._fm_total_volume = np.insert(self._fm_total_volume, 0, np.nan)
 
-    def _get_extra_total_area(self, waterlevel: np.ndarray, crest_level: np.ndarray, transition_height: float) -> float:
+    def _get_extra_total_area(
+        self,
+        waterlevel: np.ndarray,
+        crest_level: np.ndarray,
+        transition_height: float,
+    ) -> float:
         """Releases extra area dependent on waterlevel using a logistic (sigmoid) function."""
         delta = 0.00001  # accuracy parameter
         return 1 / (
             1 + np.e ** (np.log(delta) / (transition_height) * (waterlevel - (crest_level + 0.5 * transition_height)))
         )
 
-    def _append_to_start(self, array: np.ndarray, to_add: float | np.ndarray) -> np.ndarray:
+    def _append_to_start(
+        self,
+        array: np.ndarray,
+        to_add: float | np.ndarray,
+    ) -> np.ndarray:
         """Add ``to add`` to beginning of array."""
         return np.insert(array, 0, to_add)
 
-    def _return_volume_error(self, predicted: np.ndarray, measured: np.ndarray) -> np.ndarray:
+    def _return_volume_error(
+        self,
+        predicted: np.ndarray,
+        measured: np.ndarray,
+    ) -> np.ndarray:
         """Calculate the squared relative error."""
         non_nan_mask = ~np.isnan(predicted) & ~np.isnan(measured)
         predicted = predicted[non_nan_mask]
