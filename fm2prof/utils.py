@@ -130,8 +130,8 @@ class GenerateCrossSectionLocationFile(FM2ProfBase):
     def __init__(
         self,
         network_definition_file: str | Path,
-        crossection_location_file: str | Path,
-        branchrule_file: str | Path = "",
+        cross_section_location_file: str | Path,
+        branch_rule_file: str | Path = "",
     ) -> None:
         """Generate cross section location file object.
 
@@ -143,16 +143,16 @@ class GenerateCrossSectionLocationFile(FM2ProfBase):
         """
         super().__init__()
 
-        network_definition_file, crossection_location_file, branchrule_file = map(
+        network_definition_file, cross_section_location_file, branch_rule_file = map(
             Path,
-            [network_definition_file, crossection_location_file, branchrule_file],
+            [network_definition_file, cross_section_location_file, branch_rule_file],
         )
 
         if not network_definition_file.exists():
             err_msg = "Network difinition file not found"
             raise FileNotFoundError(err_msg)
 
-        self._network_definition_file_to_input(network_definition_file, crossection_location_file, branchrule_file)
+        self._network_definition_file_to_input(network_definition_file, cross_section_location_file, branch_rule_file)
 
     def _parse_network_definition_file(self, network_definition_file: Path, branchrules: dict | None = None) -> dict:
         """Parse network definition file.

@@ -22,7 +22,7 @@ class Test_GenerateCrossSectionLocationFile:
         # 2. Set Expectations
 
         # 3. Run test
-        GenerateCrossSectionLocationFile(network_definition_file=path_1d, crossection_location_file=output_file)
+        GenerateCrossSectionLocationFile(network_definition_file=path_1d, cross_section_location_file=output_file)
 
         # 4. verify
         assert output_file.is_file()
@@ -37,9 +37,9 @@ class Test_GenerateCrossSectionLocationFile:
 
         # 3. Run test
         GenerateCrossSectionLocationFile(
-            networkdefinitionfile=path_1d,
-            crossectionlocationfile=output_file,
-            branchrulefile=branch_rule_file,
+            network_definition_file=path_1d,
+            cross_section_location_file=output_file,
+            branch_rule_file=branch_rule_file,
         )
 
         # 4. verify
@@ -55,9 +55,9 @@ class Test_GenerateCrossSectionLocationFile:
 
         # 3. Run test
         GenerateCrossSectionLocationFile(
-            networkdefinitionfile=path_1d,
-            crossectionlocationfile=output_file,
-            branchrulefile=branch_rule_file,
+            network_definition_file=path_1d,
+            cross_section_location_file=output_file,
+            branch_rule_file=branch_rule_file,
         )
 
         # 4. verify
