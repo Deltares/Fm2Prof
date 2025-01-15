@@ -6,9 +6,9 @@ from typing import List
 import numpy as np
 
 # import from package
-from fm2prof import Functions as FE
+from fm2prof import functions as FE
 from fm2prof.common import FM2ProfBase
-from fm2prof.CrossSection import CrossSection
+from fm2prof.cross_section import CrossSection
 
 
 @dataclass
@@ -37,9 +37,7 @@ class Export1DModelData(FM2ProfBase):
     In the future, split in different classes for SOBEK, D-Hydro etc formats
     """
 
-    def export_geometry(
-        self, cross_sections: List[CrossSection], file_path, fmt="sobek3"
-    ):
+    def export_geometry(self, cross_sections: List[CrossSection], file_path, fmt="sobek3"):
         with open(file_path, "w") as f:
             if fmt == "sobek3":
                 """SOBEK 3 style csv"""
@@ -51,9 +49,7 @@ class Export1DModelData(FM2ProfBase):
                 """test format for system tests, only has geometry (no summerdike)"""
                 self._write_geometry_testformat(f, cross_sections)
 
-    def export_roughness(
-        self, cross_sections, file_path, fmt="sobek3", roughness_section="Main"
-    ):
+    def export_roughness(self, cross_sections, file_path, fmt="sobek3", roughness_section="Main"):
         with open(file_path, "w") as f:
             if fmt == "sobek3":
                 """SOBEK 3 style csv"""
@@ -101,9 +97,7 @@ class Export1DModelData(FM2ProfBase):
         """DIMR format"""
         with open(file_path, "w") as fid:
             # Write general secton
-            fid.write(
-                "[General]\nmajorVersion\t\t\t= 1\nminorversion\t\t\t= 0\nfileType\t\t\t\t= crossLoc\n\n"
-            )
+            fid.write("[General]\nmajorVersion\t\t\t= 1\nminorversion\t\t\t= 0\nfileType\t\t\t\t= crossLoc\n\n")
 
             for css in cross_sections:
                 fid.write("[CrossSection]\n")
@@ -148,11 +142,7 @@ class Export1DModelData(FM2ProfBase):
                     except IndexError:
                         break
                     if np.isnan(chezy) == False:
-                        fid.write(
-                            "{}, {}, {}, {}\n".format(
-                                cross_section.chainage, roughnesstype, level, chezy
-                            )
-                        )
+                        fid.write("{}, {}, {}, {}\n".format(cross_section.chainage, roughnesstype, level, chezy))
 
     """ FM 1D file formats """
 
@@ -160,9 +150,7 @@ class Export1DModelData(FM2ProfBase):
         """FM1D uses a configuration 'Delft' file style format"""
 
         # Write general secton
-        fid.write(
-            "[General]\nmajorVersion\t\t\t= 1\nminorversion\t\t\t= 0\nfileType\t\t\t\t= crossDef\n\n"
-        )
+        fid.write("[General]\nmajorVersion\t\t\t= 1\nminorversion\t\t\t= 0\nfileType\t\t\t\t= crossDef\n\n")
 
         for index, css in enumerate(cross_sections):
             z = ["{:.4f}".format(iz) for iz in css.z]
@@ -189,12 +177,8 @@ class Export1DModelData(FM2ProfBase):
                 + "\tsd_totalArea\t\t= {:.4f}\n".format(css.extra_total_area)
                 + "\tsd_baseLevel\t\t= {}\n".format(css.floodplain_base)
                 + "\tmain\t\t\t\t= {:.4f}\n".format(css.section_widths["main"])
-                + "\tfloodPlain1\t\t\t= {:.4f}\n".format(
-                    css.section_widths["floodplain1"]
-                )
-                + "\tfloodPlain2\t\t\t= {:.4f}\n".format(
-                    css.section_widths["floodplain2"]
-                )
+                + "\tfloodPlain1\t\t\t= {:.4f}\n".format(css.section_widths["floodplain1"])
+                + "\tfloodPlain2\t\t\t= {:.4f}\n".format(css.section_widths["floodplain2"])
                 + "\tgroundlayerUsed\t\t= 0\n"
                 + "\tgroundLayer\t\t\t= 0.000\n\n"
             )
@@ -261,9 +245,7 @@ class Export1DModelData(FM2ProfBase):
 """.format(
                             css.branch,
                             len(css.friction_tables[section].level),
-                            " ".join(
-                                map("{:.4f}".format, css.friction_tables[section].level)
-                            ),
+                            " ".join(map("{:.4f}".format, css.friction_tables[section].level)),
                         )
                 except KeyError:
                     # section not in this croess-section
@@ -300,9 +282,7 @@ class Export1DModelData(FM2ProfBase):
                     if np.isnan(cross_section.floodplain_base) == False:
                         floodplain_base = str(cross_section.floodplain_base)
                     else:
-                        floodplain_base = str(
-                            cross_section.crest_level
-                        )  # virtual summer dike
+                        floodplain_base = str(cross_section.crest_level)  # virtual summer dike
 
                 fid.write(
                     cross_section.name
@@ -371,9 +351,7 @@ class Export1DModelData(FM2ProfBase):
             "Name,Chainage,RoughnessType,SectionType,Dependance,Interpolation,Pos/neg,R_pos_constant,Q_pos,R_pos_f(Q),H_pos,R_pos__f(h),R_neg_constant,Q_neg,R_neg_f(Q),H_neg,R_neg_f(h)\n"
         )
 
-        sections = np.unique(
-            [s for css in cross_sections for s in css.friction_tables.keys()]
-        )
+        sections = np.unique([s for css in cross_sections for s in css.friction_tables.keys()])
 
         for section in sections:
             for index, cross_section in enumerate(cross_sections):
