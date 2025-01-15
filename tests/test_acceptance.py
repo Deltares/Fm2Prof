@@ -6,12 +6,11 @@ from typing import Optional
 
 import pytest
 
-from fm2prof.Fm2ProfRunner import Fm2ProfRunner
-from fm2prof.IniFile import IniFile
+from fm2prof.fm2prof_runner import Fm2ProfRunner
+from fm2prof.ini_file import IniFile
 from fm2prof.utils import VisualiseOutput
-
 from tests.CompareIdealizedModel import CompareHelper, CompareIdealizedModel
-from tests.CompareWaalModel import CompareWaalModel as CompareWaalModel
+from tests.CompareWaalModel import CompareWaalModel
 from tests.TestUtils import TestUtils, skipwhenexternalsmissing
 
 _root_output_dir = None
@@ -143,9 +142,7 @@ def get_valid_inifile_input_parameters():
 
 
 def _get_base_output_dir() -> Path:
-    """
-    Sets up the necessary data for MainMethodTest
-    """
+    """Sets up the necessary data for MainMethodTest"""
     output_dir = _create_artifact_dir(_run_with_files_dir_name)
     # Create it if it does not exist
     if not output_dir.is_dir():
@@ -154,8 +151,7 @@ def _get_base_output_dir() -> Path:
 
 
 def _create_artifact_dir(dirName: Optional[str] = None) -> Path:
-    """
-    Create test output directory
+    """Create test output directory
     so it's easier to collect output afterwards.
     """
     artifacts_dir: Path = TestUtils.get_artifacts_test_data_dir()
@@ -171,11 +167,8 @@ def _create_artifact_dir(dirName: Optional[str] = None) -> Path:
     return subOutputDir
 
 
-def _check_and_create_test_case_output_dir(
-    base_output_dir: Path, caseName: str
-) -> Path:
-    """
-    Helper to split to set up an output directory
+def _check_and_create_test_case_output_dir(base_output_dir: Path, caseName: str) -> Path:
+    """Helper to split to set up an output directory
     for the generated data of each test case.
     """
     output_directory = base_output_dir / caseName
@@ -205,7 +198,12 @@ class Test_Run_Testcases:
     )
     @skipwhenexternalsmissing
     def test_when_given_input_data_then_output_is_generated(
-        self, case_name, map_file, css_file, region_file, section_file
+        self,
+        case_name,
+        map_file,
+        css_file,
+        region_file,
+        section_file,
     ):
         # 1. Set up test data.
         iniFilePath = None
@@ -216,7 +214,7 @@ class Test_Run_Testcases:
         base_output_dir = _get_base_output_dir()
 
         iniFile._set_output_directory_no_validation(
-            str(_check_and_create_test_case_output_dir(base_output_dir, case_name))
+            str(_check_and_create_test_case_output_dir(base_output_dir, case_name)),
         )
 
         if region_file:
@@ -232,9 +230,7 @@ class Test_Run_Testcases:
         # iniFile.set_parameter('ExportMapFiles', True)
         iniFile.set_parameter("skipmaps", 6)
         iniFile.set_input_file("2dmapoutput", str(test_data_dir / map_file))
-        iniFile.set_input_file(
-            "crosssectionlocationfile", str(test_data_dir / css_file)
-        )
+        iniFile.set_input_file("crosssectionlocationfile", str(test_data_dir / css_file))
         iniFile.set_input_file("regionpolygonfile", region_file_path)
         iniFile.set_input_file("sectionpolygonfile", section_file_path)
 
@@ -244,23 +240,20 @@ class Test_Run_Testcases:
 
         # 2. Verify precondition (no output generated)
         assert (
-            os.path.exists(iniFile.get_output_directory())
-            and not len(os.listdir(iniFile.get_output_directory())) > 1
+            os.path.exists(iniFile.get_output_directory()) and not len(os.listdir(iniFile.get_output_directory())) > 1
         )
 
         # 3. Run file:
         runner.run()
 
         # 4. Verify there is output generated:
-        assert os.listdir(
-            iniFile.get_output_directory()
-        ), "" + "There is no output generated for {0}".format(case_name)
+        assert os.listdir(iniFile.get_output_directory()), "" + f"There is no output generated for {case_name}"
 
 
 class ARCHIVED_Test_Main_Run_IniFile:
     def __run_main_with_arguments(self, ini_file):
-        pythonCall = "fm2prof\\main.py -i {0}".format(ini_file)
-        os.system("python {0}".format(pythonCall))
+        pythonCall = f"fm2prof\\main.py -i {ini_file}"
+        os.system(f"python {pythonCall}")
 
     def __create_test_ini_file(self, root_dir, case_name, map_file, css_file):
         output_dir = os.path.join(root_dir, "OutputFiles")
@@ -293,29 +286,27 @@ class ARCHIVED_Test_Main_Run_IniFile:
         }
 
         # write file
-        file_path = os.path.join(root_dir, "{}_ini_file.ini".format(case_name))
+        file_path = os.path.join(root_dir, f"{case_name}_ini_file.ini")
         f = open(file_path, "w+")
 
-        f.writelines("[{}]\r\n".format(input_files_key))
+        f.writelines(f"[{input_files_key}]\r\n")
         for key, value in input_file_paths.items():
-            f.writelines("{} = {}\r\n".format(key, value))
+            f.writelines(f"{key} = {value}\r\n")
         f.writelines("\r\n")
-        f.writelines("[{}]\r\n".format(input_parameters_key))
+        f.writelines(f"[{input_parameters_key}]\r\n")
         for key, value in input_parameters.items():
-            f.writelines("{} = {}\r\n".format(key, value))
+            f.writelines(f"{key} = {value}\r\n")
 
         f.writelines("\r\n")
-        f.writelines("[{}]\r\n".format(output_directory_key))
-        f.writelines("OutputDir = {}\r\n".format(output_dir))
-        f.writelines("CaseName = {}\r\n".format(case_name))
+        f.writelines(f"[{output_directory_key}]\r\n")
+        f.writelines(f"OutputDir = {output_dir}\r\n")
+        f.writelines(f"CaseName = {case_name}\r\n")
 
         f.close()
         return (file_path, output_dir)
 
     def _get_custom_dir(self) -> Path:
-        """
-        Sets up the necessary data for MainMethodTest
-        """
+        """Sets up the necessary data for MainMethodTest"""
         return _create_artifact_dir("RunWithCustom_IniFile")
 
     def test_when_given_inifile_then_output_is_generated(self):
@@ -324,9 +315,7 @@ class ARCHIVED_Test_Main_Run_IniFile:
         map_file = "fm_map.nc"
         css_file = "fm_css.xyz"
         root_output_dir = self._get_custom_dir()
-        (ini_file_path, output_dir) = self.__create_test_ini_file(
-            root_output_dir, case_name, map_file, css_file
-        )
+        (ini_file_path, output_dir) = self.__create_test_ini_file(root_output_dir, case_name, map_file, css_file)
 
         # 2. Verify precondition (no output generated)
         assert os.path.exists(ini_file_path)
@@ -344,16 +333,14 @@ class ARCHIVED_Test_Main_Run_IniFile:
         except Exception as e_error:
             if os.path.exists(root_output_dir):
                 shutil.rmtree(root_output_dir)
-            pytest.fail("No exception expected but was thrown {}.".format(str(e_error)))
+            pytest.fail(f"No exception expected but was thrown {e_error!s}.")
 
         # 4. Verify there is output generated:
-        output_files = os.path.join(output_dir, "{}01".format(case_name))
+        output_files = os.path.join(output_dir, f"{case_name}01")
         generated_files = os.listdir(output_files)
         if os.path.exists(root_output_dir):
             shutil.rmtree(root_output_dir)
-        assert generated_files, "" + "There is no output generated for {0}".format(
-            case_name
-        )
+        assert generated_files, "" + f"There is no output generated for {case_name}"
         for expected_file in expected_files:
             assert expected_file in generated_files
 
@@ -371,9 +358,8 @@ class ARCHIVED_Test_Compare_Waal_Model:
         fm_dir = str(waal_test_folder / "Model_FM")
         fm2prof_dir = _get_test_case_output_dir(_waal_case)
 
-
         # 2. Try to compare.
-        
+
         waal_comparer = CompareWaalModel()
         output_1d, _ = waal_comparer._run_waal_1d_model(
             case_name=_waal_case,
@@ -381,13 +367,10 @@ class ARCHIVED_Test_Compare_Waal_Model:
             sobek_dir=sobek_dir,
             fm_dir=fm_dir,
         )
-        
 
         # 3. Verify final expectations
         assert output_1d
-        assert os.path.exists(output_1d), "" + "No output found at {}.".format(
-            output_1d
-        )
+        assert os.path.exists(output_1d), "" + f"No output found at {output_1d}."
 
     def test_when_sobek_output_exist_then_create_figures(self):
         # 1. Set up test data
@@ -399,7 +382,7 @@ class ARCHIVED_Test_Compare_Waal_Model:
         result_figures = []
 
         # 2. Try to compare.
-        
+
         waal_comparer = CompareWaalModel()
         result_figures = waal_comparer._compare_waal(
             case_name=_waal_case,
@@ -411,15 +394,11 @@ class ARCHIVED_Test_Compare_Waal_Model:
         # 3. Verify final expectations
         assert result_figures
         for fig_path in result_figures:
-            assert os.path.exists(fig_path), "" + "Figure not found at path {}.".format(
-                fig_path
-            )
+            assert os.path.exists(fig_path), "" + f"Figure not found at path {fig_path}."
 
     @pytest.mark.acceptance
     @pytest.mark.requires_output
-    @pytest.mark.parametrize(
-        ("case_name"), _test_scenarios_ids, ids=_test_scenarios_ids
-    )
+    @pytest.mark.parametrize(("case_name"), _test_scenarios_ids, ids=_test_scenarios_ids)
     def test_when_output_exists_then_compare_waal_model_volume(self, case_name: str):
         if case_name != _waal_case:
             # print('This case is tested on another fixture.')
@@ -434,21 +413,16 @@ class ARCHIVED_Test_Compare_Waal_Model:
         input_volume_file = os.path.join(fm2prof_dir, volume_file_name)
 
         # 2. Verify / create necessary folders and directories
-        assert os.path.exists(
-            input_volume_file
-        ), "" + "Input file {} could not be found".format(input_volume_file)
+        assert os.path.exists(input_volume_file), "" + f"Input file {input_volume_file} could not be found"
         if not os.path.exists(fm2prof_fig_dir):
             os.makedirs(fm2prof_fig_dir)
 
-        #  3. Run        
+        #  3. Run
         waal_comparer = CompareWaalModel()
         waal_comparer._compare_volume(case_name, input_volume_file, fm2prof_fig_dir)
-    
 
         #  4. Final expectation
-        assert os.listdir(
-            fm2prof_fig_dir
-        ), "" + "There is no volume output generated for {0}".format(case_name)
+        assert os.listdir(fm2prof_fig_dir), "" + f"There is no volume output generated for {case_name}"
 
 
 class Test_Compare_Idealized_Model:
@@ -523,9 +497,7 @@ class Test_Compare_Idealized_Model:
     # region for tests
     @pytest.mark.acceptance
     @pytest.mark.requires_output
-    @pytest.mark.parametrize(
-        ("case_name"), _test_scenarios_ids, ids=_test_scenarios_ids
-    )
+    @pytest.mark.parametrize(("case_name"), _test_scenarios_ids, ids=_test_scenarios_ids)
     def ARCHIVED_test_compare_generic_model_geometry(self, case_name: str):
         if case_name == _waal_case:
             # print('This case is tested on another fixture.')
@@ -541,9 +513,7 @@ class Test_Compare_Idealized_Model:
         input_geometry_file = os.path.join(fm2prof_dir, geometry_file_name)
 
         # 2. Verify / create necessary folders and directories
-        assert os.path.exists(
-            input_geometry_file
-        ), "" + "Input file {} could not be found".format(input_geometry_file)
+        assert os.path.exists(input_geometry_file), "" + f"Input file {input_geometry_file} could not be found"
 
         if os.path.exists(fm2prof_fig_dir):
             shutil.rmtree(fm2prof_fig_dir)
@@ -553,28 +523,19 @@ class Test_Compare_Idealized_Model:
         #  3. Run
         tzw_values = self.__case_tzw_dict.get(case_name)
         if not tzw_values or tzw_values is None:
-            pytest.fail("Test failed, no values retrieved for {}".format(case_name))
+            pytest.fail(f"Test failed, no values retrieved for {case_name}")
 
-        
         generic_comparer = CompareIdealizedModel()
-        generic_comparer._compare_css(
-            case_name, tzw_values, input_geometry_file, fm2prof_fig_dir
-        )
-       
+        generic_comparer._compare_css(case_name, tzw_values, input_geometry_file, fm2prof_fig_dir)
+
         #  4. Final expectation
-        assert os.listdir(
-            fm2prof_fig_dir
-        ), "" + "There is no geometry output generated for {0}".format(case_name)
+        assert os.listdir(fm2prof_fig_dir), "" + f"There is no geometry output generated for {case_name}"
 
     # region for tests
     @pytest.mark.acceptance
     @pytest.mark.requires_output
-    @pytest.mark.parametrize(
-        ("case_name"), _test_scenarios_ids, ids=_test_scenarios_ids
-    )
-    def ARCHIVED_test_when_output_exists_then_compare_generic_model_roughness(
-        self, case_name: str
-    ):
+    @pytest.mark.parametrize(("case_name"), _test_scenarios_ids, ids=_test_scenarios_ids)
+    def ARCHIVED_test_when_output_exists_then_compare_generic_model_roughness(self, case_name: str):
         if case_name == _waal_case:
             # print('This case is tested on another fixture.')
             return
@@ -586,35 +547,24 @@ class Test_Compare_Idealized_Model:
         input_roughness_file = os.path.join(fm2prof_dir, roughness_file_name)
 
         # 2. Verify / create necessary folders and directories
-        assert os.path.exists(
-            input_roughness_file
-        ), "" + "Input file {} could not be found".format(input_roughness_file)
+        assert os.path.exists(input_roughness_file), "" + f"Input file {input_roughness_file} could not be found"
         if not os.path.exists(fm2prof_fig_dir):
             os.makedirs(fm2prof_fig_dir)
 
         #  3. Run
         tzw_values = self.__case_tzw_dict.get(case_name)
         if not tzw_values or tzw_values is None:
-            pytest.fail("Test failed, no values retrieved for {}".format(case_name))
+            pytest.fail(f"Test failed, no values retrieved for {case_name}")
 
         generic_comparer = CompareIdealizedModel()
-        generic_comparer._compare_roughness(
-            case_name, tzw_values, input_roughness_file, fm2prof_fig_dir
-        )
-       
+        generic_comparer._compare_roughness(case_name, tzw_values, input_roughness_file, fm2prof_fig_dir)
 
-        assert os.listdir(
-            fm2prof_fig_dir
-        ), "" + "There is no roughness output generated for {0}".format(case_name)
+        assert os.listdir(fm2prof_fig_dir), "" + f"There is no roughness output generated for {case_name}"
 
     @pytest.mark.acceptance
     @pytest.mark.requires_output
-    @pytest.mark.parametrize(
-        ("case_name"), _test_scenarios_ids, ids=_test_scenarios_ids
-    )
-    def ARCHIVED_test_when_output_exists_then_compare_generic_model_volume(
-        self, case_name: str
-    ):
+    @pytest.mark.parametrize(("case_name"), _test_scenarios_ids, ids=_test_scenarios_ids)
+    def ARCHIVED_test_when_output_exists_then_compare_generic_model_volume(self, case_name: str):
         if case_name == _waal_case:
             # print('This case is tested on another fixture.')
             return
@@ -628,34 +578,24 @@ class Test_Compare_Idealized_Model:
         input_volume_file = os.path.join(fm2prof_dir, volume_file_name)
 
         # 2. Verify / create necessary folders and directories
-        assert os.path.exists(
-            input_volume_file
-        ), "" + "Input file {} could not be found".format(input_volume_file)
+        assert os.path.exists(input_volume_file), "" + f"Input file {input_volume_file} could not be found"
         if not os.path.exists(fm2prof_fig_dir):
             os.makedirs(fm2prof_fig_dir)
 
         #  3. Run
-        
+
         generic_comparer = CompareIdealizedModel()
-        generic_comparer._compare_volume(
-            case_name, input_volume_file, fm2prof_fig_dir
-        )
-        
+        generic_comparer._compare_volume(case_name, input_volume_file, fm2prof_fig_dir)
+
         #  4. Final expectation
-        assert os.listdir(
-            fm2prof_fig_dir
-        ), "" + "There is no volume output generated for {0}".format(case_name)
+        assert os.listdir(fm2prof_fig_dir), "" + f"There is no volume output generated for {case_name}"
 
     @pytest.mark.acceptance
     @pytest.mark.requireoutput
-    @pytest.mark.parametrize(
-        ("case_name"), _test_scenarios_ids[:-3], ids=_test_scenarios_ids[:-3]
-    )
+    @pytest.mark.parametrize(("case_name"), _test_scenarios_ids[:-3], ids=_test_scenarios_ids[:-3])
     @skipwhenexternalsmissing
     def test_when_output_exists_then_compare_with_reference(self, case_name: str):
-        """
-        This test is supposed to supercede the others
-        """
+        """This test is supposed to supercede the others"""
         # 1. Get all necessary output / input directories
         reference_geometry = self.__case_tzw_dict.get(case_name)
         fm2prof_dir = _get_test_case_output_dir(case_name)
@@ -670,9 +610,7 @@ class Test_Compare_Idealized_Model:
             ref = CompareHelper.convert_ZW_to_symmetric_css(ref)
 
             ref_friction = frictionhelper(css)
-            visualiser.make_figure(
-                css, reference_geometry=ref, reference_roughness=ref_friction
-            )
+            visualiser.make_figure(css, reference_geometry=ref, reference_roughness=ref_friction)
 
 
 class ARCHIVED_Test_WaalPerformance:
@@ -692,9 +630,7 @@ class ARCHIVED_Test_WaalPerformance:
         ini_file_path = None
         test_ini_file = IniFile(ini_file_path)
         base_output_dir = _get_base_output_dir()
-        test_ini_file._output_dir = str(
-            _check_and_create_test_case_output_dir(base_output_dir, case_name)
-        )
+        test_ini_file._output_dir = str(_check_and_create_test_case_output_dir(base_output_dir, case_name))
 
         test_ini_file._input_file_paths = {
             "fm_netcdfile": map_file,
@@ -725,13 +661,11 @@ class ARCHIVED_Test_WaalPerformance:
         assert os.path.exists(css_file), "" + "CrossSection (test) file was not found"
 
         # 3. Run test.
-        
+
         runner = Fm2ProfRunner(iniFilePath=None)
         runner.run_inifile(iniFile=test_ini_file)
-    
 
         # 4. Verify final expectations.
-        pass
 
     def test_dummy_timing(self):
         import timeit
@@ -749,7 +683,7 @@ class ARCHIVED_Test_WaalPerformance:
         assert f_res < fs_res
 
     def merge_names(self, a, b):
-        val = "{} & {}".format(a, b)
+        val = f"{a} & {b}"
         return val
 
     def test_dummy_mp(self):
