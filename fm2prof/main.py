@@ -9,7 +9,7 @@ import getopt
 import sys
 
 # Import from package
-from fm2prof import Fm2ProfRunner
+from fm2prof import fm2prof_runner
 
 # Import from dependencies
 # None
@@ -59,16 +59,12 @@ def main(argv):
 
     # Check if input parameters are in expected order
     if not __is_input(opts[0]):
-        err_mssg = (
-            ""
-            + "The first argument should be an input file.\n"
-            + "Given: {}\n".format(opts[0])
-        )
+        err_mssg = "" + "The first argument should be an input file.\n" + "Given: {}\n".format(opts[0])
         __report_expected_arguments(err_mssg)
 
     # Run Fm2Prof with given arguments
     ini_file_path = opts[0][1]
-    runner = Fm2ProfRunner.Fm2ProfRunner(ini_file_path)
+    runner = fm2prof_runner.Fm2ProfRunner(ini_file_path)
     runner.run()
 
 

@@ -3,12 +3,11 @@ import os
 import numpy as np
 import pytest
 
-import fm2prof.Functions as Func
+import fm2prof.functions as Func
 from tests.TestUtils import TestUtils
 
 
 class ARCHIVED_Test_read_css_xyz:
-
     _test_scenarios_invalid_file_paths = [(None), (""), ("dummyFilePath")]
 
     @pytest.mark.parametrize("file_path", _test_scenarios_invalid_file_paths)
@@ -38,14 +37,11 @@ class ARCHIVED_Test_read_css_xyz:
         }
 
         # 2. Verify the initial expectation
-        assert os.path.exists(file_path), "" + "Test File {} could not be found".format(
-            file_path
-        )
+        assert os.path.exists(file_path), "" + "Test File {} could not be found".format(file_path)
 
         # 3. Run test
-        
+
         result_input_data = Func._read_css_xyz(file_path)
-       
 
         # 4. Verify final expectations
         for expected_input_key in expected_input_data:
