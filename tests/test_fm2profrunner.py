@@ -89,13 +89,12 @@ class Test_Project:
         # 3. Verify final expectations
         assert project.get_input_file("CrossSectionLocationFile") == value
 
-    def test_set_output_directory(self):
+    def test_set_output_directory(self, tmp_path):
         # 1. Set up initial test dat
         project = None
-        value = "test/subdir"
         # 2. Run test
         project = Project()
-        project.set_output_directory(value)
+        project.set_output_directory(tmp_path)
 
     def test_print_configuration(self):
         # 1. Set up initial test dat
@@ -129,7 +128,7 @@ class Test_Fm2ProfRunner:
         runner = None
 
         # 2. Verify the initial expectations
-        assert os.path.exists(ini_file_path), "" "Test File {} was not found".format(ini_file_path)
+        assert os.path.exists(ini_file_path), f"Test File {ini_file_path} was not found"
 
         # 3. Run test
         runner = Fm2ProfRunner(ini_file_path)
