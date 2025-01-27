@@ -45,8 +45,8 @@ from sklearn.neighbors import KNeighborsClassifier, NearestNeighbors
 if TYPE_CHECKING:
     from logging import Logger
 
-    from fm2prof.CrossSection import CrossSection
-    from fm2prof.RegionPolygonFile import SectionPolygonFile
+    from fm2prof.cross_section import CrossSection
+    from fm2prof.region_polygon_file import SectionPolygonFile
 
 __author__ = "Koen Berends"
 __copyright__ = "Copyright 2016, University of Twente & Deltares"
