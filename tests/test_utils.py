@@ -1,60 +1,63 @@
 import os
 import shutil
-import pytest
-from fm2prof import Project
-from fm2prof.utils import GenerateCrossSectionLocationFile, Compare1D2D, VisualiseOutput
-from tests.TestUtils import TestUtils
-
 from datetime import datetime
+from pathlib import Path
+
+import pytest
+
+from fm2prof import Project
+from fm2prof.utils import Compare1D2D, GenerateCrossSectionLocationFile, VisualiseOutput
+from tests.TestUtils import TestUtils
 
 _root_output_dir = None
 
 
 class Test_GenerateCrossSectionLocationFile:
-    def test_given_networkdefinitionfile_cssloc_file_is_generated(self):
+    def test_given_networkdefinitionfile_cssloc_file_is_generated(self, tmp_path: Path):
         # 1. Set up initial test data
         path_1d = TestUtils.get_local_test_file("cases/case_02_compound/Model_SOBEK/dimr/dflow1d/NetworkDefinition.ini")
-        output_file = TestUtils.get_local_test_file("cases/case_02_compound/Data/cross_section_locations.xyz")
+
+        output_file = tmp_path / "cross_section_locations.xyz"
 
         # 2. Set Expectations
 
         # 3. Run test
-        GenerateCrossSectionLocationFile(network_definition_file=path_1d, crossection_location_file=output_file)
+        GenerateCrossSectionLocationFile(network_definition_file=path_1d, cross_section_location_file=output_file)
 
         # 4. verify
         assert output_file.is_file()
 
-    def test_given_branchrulefile_output_is_generated(self):
+    def test_given_branchrulefile_output_is_generated(self, tmp_path: Path):
         # 1. Set up initial test data
         path_1d = TestUtils.get_local_test_file("cases/case_02_compound/Model_SOBEK/dimr/dflow1d/NetworkDefinition.ini")
-        output_file = TestUtils.get_local_test_file("cases/case_02_compound/Data/cross_section_locations_new.xyz")
-        if output_file.is_file():
-            os.remove(output_file)
+        output_file = tmp_path / "cross_section_locations_new.xyz"
 
         branch_rule_file = TestUtils.get_local_test_file("cases/case_02_compound/Data/branchrules_onlyfirst.ini")
         # 2. Set Expectations
 
         # 3. Run test
         GenerateCrossSectionLocationFile(
-            network_definition_file=path_1d, crossection_location_file=output_file, branchrule_file=branch_rule_file
+            network_definition_file=path_1d,
+            cross_section_location_file=output_file,
+            branch_rule_file=branch_rule_file,
         )
 
         # 4. verify
         assert output_file.is_file()
 
-    def test_given_branchrule_exceptions_output_is_generated(self):
+    def test_given_branchrule_exceptions_output_is_generated(self, tmp_path: Path):
         # 1. Set up initial test data
         path_1d = TestUtils.get_local_test_file("cases/case_02_compound/Model_SOBEK/dimr/dflow1d/NetworkDefinition.ini")
-        output_file = TestUtils.get_local_test_file("cases/case_02_compound/Data/cross_section_locations_new.xyz")
-        if output_file.is_file():
-            os.remove(output_file)
+        output_file = tmp_path / "cross_section_locations_new.xyz"
 
         branch_rule_file = TestUtils.get_local_test_file("cases/case_02_compound/Data/branchrules_exceptions.ini")
         # 2. Set Expectations
 
         # 3. Run test
         GenerateCrossSectionLocationFile(
-            network_definition_file=path_1d, crossection_location_file=output_file, branchrule_file=branch_rule_file
+            network_definition_file=path_1d,
+            cross_section_location_file=output_file,
+            branch_rule_file=branch_rule_file,
         )
 
         # 4. verify
@@ -95,7 +98,7 @@ class Test_VisualiseOutput:
         os.mkdir(output_dir)
 
         output_file = TestUtils.get_local_test_file(
-            "cases/case_02_compound/output/figures/roughness/roughness_longitudinal_channel1.png"
+            "cases/case_02_compound/output/figures/roughness/roughness_longitudinal_channel1.png",
         )
 
         # 3. Run test
@@ -116,7 +119,7 @@ class Test_VisualiseOutput:
             shutil.rmtree(output_dir)
         os.mkdir(output_dir)
         output_file = TestUtils.get_local_test_file(
-            "cases/case_02_compound/output/figures/cross_sections/channel1_125.000.png"
+            "cases/case_02_compound/output/figures/cross_sections/channel1_125.000.png",
         )
 
         # 3. Run test
@@ -176,7 +179,7 @@ class Test_Compare1D2D:
         # 2. Set expectations
         # this file should exist
         output_file = TestUtils.get_local_test_file(
-            "compare1d2d/rijn-j22_6-v1a2/output/figures/longitudinal/BR-PK-IJ.png"
+            "compare1d2d/rijn-j22_6-v1a2/output/figures/longitudinal/BR-PK-IJ.png",
         )
 
         # 3. Run test
@@ -194,7 +197,7 @@ class Test_Compare1D2D:
         # 2. Set expectations
         # this file should exist
         output_file = TestUtils.get_local_test_file(
-            "compare1d2d/rijn-j22_6-v1a2/output/figures/discharge/Pannerdensche Kop.png"
+            "compare1d2d/rijn-j22_6-v1a2/output/figures/discharge/Pannerdensche Kop.png",
         )
 
         # 3. Run test
@@ -229,12 +232,16 @@ class Test_Compare1D2D:
         # 2. Set expectations
         # this file should exist
         output_file = TestUtils.get_local_test_file(
-            "compare1d2d/rijn-j22_6-v1a2/output/figures/longitudinal/BR-PK-IJ.png"
+            "compare1d2d/rijn-j22_6-v1a2/output/figures/longitudinal/BR-PK-IJ.png",
         )
 
         # 3. Run test
         for style in styles:
-            plotter = Compare1D2D(project=project, start_time=datetime(year=2000, month=1, day=5), style=style)
+            plotter = Compare1D2D(
+                project=project,
+                start_time=datetime(year=2000, month=1, day=5),
+                style=style,
+            )
 
             plotter.figure_longitudinal(route=["BR", "PK", "IJ"], stat="last25")
 
