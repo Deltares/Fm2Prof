@@ -10,7 +10,6 @@ import pytest
 from pytest import fixture
 from shapely.geometry import Polygon
 
-import fm2prof.functions as funcs
 from fm2prof.region_polygon_file import Polygon as p_tuple
 from fm2prof.region_polygon_file import PolygonFile, RegionPolygonFile, SectionPolygonFile
 from tests.TestUtils import TestUtils
@@ -164,7 +163,7 @@ class ARCHIVED_Test_PolygonFile:
         waal_nc_file = waal_data_dir / "FlowFM_fm2prof_map.nc"
         assert waal_nc_file.is_file()
 
-        _, edge_data, _, _ = funcs._read_fm_model(str(waal_nc_file))
+        _, edge_data, _, _ = TestUtils.read_fm_model(str(waal_nc_file))
         points = [(edge_data["x"][i], edge_data["y"][i]) for i in range(len(edge_data["x"]))]
         assert points is not None
 
