@@ -13,11 +13,11 @@ import numpy as np
 import pandas as pd
 import scipy.optimize as so
 from scipy.integrate import cumulative_trapezoid
+from sklearn.neighbors import NearestNeighbors
 from tqdm import tqdm
 
-from fm2prof import functions as funcs
-from fm2prof.common import FM2ProfBase, FrictionTable
 from fm2prof import mask_output_file
+from fm2prof.common import FM2ProfBase, FrictionTable
 from fm2prof.ini_file import IniFile
 
 from .lib import polysimplify as ps
@@ -85,9 +85,7 @@ class CrossSectionHelpers(FM2ProfBase):
         cross_section_list: list[CrossSection],
     ) -> bool:
         # Get a list of all sections
-        all_sections: list[str] = [
-            s for css in cross_section_list for s in css.friction_tables
-        ]
+        all_sections: list[str] = [s for css in cross_section_list for s in css.friction_tables]
         sections: np.ndarray[str] = np.unique(all_sections)
 
         # Parameters
@@ -157,10 +155,7 @@ class CrossSection(FM2ProfBase):
             inifile = IniFile()
         super().__init__(logger=logger, inifile=inifile)
 
-        if not all(
-            key in data
-            for key in ["id", "length", "xy", "branchid", "chainage", "fm_data"]
-        ):
+        if not all(key in data for key in ["id", "length", "xy", "branchid", "chainage", "fm_data"]):
             err_msg = "Input data does not have all required keys"
             raise KeyError(err_msg)
 
@@ -311,7 +306,7 @@ class CrossSection(FM2ProfBase):
         # Retrieve the water-depth
         # & water level nearest to the cross-section location
         self.set_logger_message("Retrieving centre point values")
-        (centre_depth, centre_level) = funcs.get_centre_values(
+        (centre_depth, centre_level) = self._get_centre_values(
             self.location,
             fm_data["x"],
             fm_data["y"],
@@ -349,9 +344,7 @@ class CrossSection(FM2ProfBase):
 
         # Correct waterdepth for deep pools (volume below deepest point in centre
         # should not be considered)
-        pools_id = [
-            i[0] for i in np.argwhere(waterdepth.to_numpy()[:, 0] > centre_depth[0])
-        ]
+        pools_id = [i[0] for i in np.argwhere(waterdepth.to_numpy()[:, 0] > centre_depth[0])]
         for pool in pools_id:
             amount_deeper = waterdepth.iloc[pool, 0] - centre_depth[0]
             waterdepth.iloc[pool] -= amount_deeper
@@ -370,7 +363,7 @@ class CrossSection(FM2ProfBase):
             np.nansum(area_matrix[flow_mask] * waterdepth[flow_mask], axis=0),
         )
         self._fm_flow_volume = np.array(
-            np.nansum(area_matrix[flow_mask] * waterdepth[flow_mask], axis=0)
+            np.nansum(area_matrix[flow_mask] * waterdepth[flow_mask], axis=0),
         )
 
         # For roughness we will need the original z-levels,
@@ -483,7 +476,8 @@ class CrossSection(FM2ProfBase):
         initial_flow_volume = np.abs(initial_flow_error[-1])
 
         self.set_logger_message(
-            "Initial crest: {:.4f} m".format(initial_crest), level="debug"
+            f"Initial crest: {initial_crest:.4f} m",
+            level="debug",
         )
         self.set_logger_message(
             f"Initial crest: {initial_crest:.4f} m",
@@ -543,12 +537,8 @@ class CrossSection(FM2ProfBase):
         )
 
         # Write to attributes
-        self._css_total_volume_corrected = (
-            self._css_total_volume + extra_area_percentage * extra_total_volume
-        )
-        self._css_flow_volume_corrected = (
-            self._css_flow_volume + extra_area_percentage * extra_flow_volume
-        )
+        self._css_total_volume_corrected = self._css_total_volume + extra_area_percentage * extra_total_volume
+        self._css_flow_volume_corrected = self._css_flow_volume + extra_area_percentage * extra_flow_volume
         self.crest_level = crest_level
         self.transition_height = transition_height
         self.extra_total_volume = extra_total_volume
@@ -616,10 +606,7 @@ class CrossSection(FM2ProfBase):
         n_before_reduction = self.get_number_of_vertices()
 
         points = np.array(
-            [
-                [self._css_z[i], self._css_total_width[i]]
-                for i in range(n_before_reduction)
-            ],
+            [[self._css_z[i], self._css_total_width[i]] for i in range(n_before_reduction)],
         )
 
         # The number of points is equal to n, it cannot be further reduced
@@ -766,14 +753,12 @@ class CrossSection(FM2ProfBase):
 
         predicted_total_volume = (
             self._css_total_volume
-            + self._get_extra_total_area(self._css_z, crest_level, transition_height)
-            * extra_total_volume
+            + self._get_extra_total_area(self._css_z, crest_level, transition_height) * extra_total_volume
         )
 
         predicted_flow_volume = (
             self._css_flow_volume
-            + self._get_extra_total_area(self._css_z, crest_level, transition_height)
-            * extra_flow_volume
+            + self._get_extra_total_area(self._css_z, crest_level, transition_height) * extra_flow_volume
         )
 
         return self._return_volume_error(
@@ -804,9 +789,7 @@ class CrossSection(FM2ProfBase):
         transition_height = self.get_parameter(self.__cs_parameter_transitionheight_sd)
 
         predicted_volume = (
-            volume
-            + self._get_extra_total_area(self._css_z, crest_level, transition_height)
-            * extra_volume
+            volume + self._get_extra_total_area(self._css_z, crest_level, transition_height) * extra_volume
         )
         return self._return_volume_error(predicted_volume, self._fm_total_volume)
 
@@ -991,14 +974,10 @@ class CrossSection(FM2ProfBase):
         for section in [1, 2, 3]:
             if section == 1:
                 section_area = (
-                    np.sum(self._fm_data["area"][self._fm_data["section"] == section])
-                    + unassigned_area
+                    np.sum(self._fm_data["area"][self._fm_data["section"] == section]) + unassigned_area
                 ) / self.length
             else:
-                section_area = (
-                    np.sum(self._fm_data["area"][self._fm_data["section"] == section])
-                    / self.length
-                )
+                section_area = np.sum(self._fm_data["area"][self._fm_data["section"] == section]) / self.length
             self.section_widths[self._section_map[str(section)]] = section_area
 
         # Finally, the sum of section width should be greater or equal to the flow width
@@ -1081,15 +1060,9 @@ class CrossSection(FM2ProfBase):
         wet_mask: np.ndarray = waterdepth > 0
 
         # find all lakes
-        lake_mask = (
-            waterdepth.T.iloc[self.get_parameter(self.__cs_parameter_plassen_timesteps)]
-            > 0
-        ) & (
+        lake_mask = (waterdepth.T.iloc[self.get_parameter(self.__cs_parameter_plassen_timesteps)] > 0) & (
             np.abs(
-                waterdepth.T.iloc[
-                    self.get_parameter(self.__cs_parameter_plassen_timesteps)
-                ]
-                - waterdepth.T.iloc[0],
+                waterdepth.T.iloc[self.get_parameter(self.__cs_parameter_plassen_timesteps)] - waterdepth.T.iloc[0],
             )
             <= 0.01  #  noqa: PLR2004 NOTE: What is this value?
         )
@@ -1234,9 +1207,7 @@ class CrossSection(FM2ProfBase):
             )
 
             # Flow mask determines which cells are conveyance (TRUE)
-            return waterdepth_condition & (
-                relative_velocity_condition | absolute_velocity_condition
-            )
+            return waterdepth_condition & (relative_velocity_condition | absolute_velocity_condition)
 
         @staticmethod
         def mean_velocity_method(
@@ -1254,15 +1225,8 @@ class CrossSection(FM2ProfBase):
 
             return (
                 (waterdepth > 0)
-                & (
-                    velocity
-                    > self.get_parameter(self.__cs_parameter_velocity_threshold)
-                )
-                & (
-                    velocity
-                    > self.get_parameter(self.__cs_parameter_relative_threshold)
-                    * np.mean(velocity)
-                )
+                & (velocity > self.get_parameter(self.__cs_parameter_velocity_threshold))
+                & (velocity > self.get_parameter(self.__cs_parameter_relative_threshold) * np.mean(velocity))
             )
 
         match self.get_inifile().get_parameter(
@@ -1321,9 +1285,7 @@ class CrossSection(FM2ProfBase):
         bedlevel = self._fm_data.get("bedlevel").to_numpy()
         cell_area = self._fm_data.get("area").to_numpy()
         flow_area_at_z0 = self._fm_flow_area[0]
-        lowest_level_of_css = (
-            centre_level[0] - centre_depth[0]
-        )  # this is in fact the bed level at centre point
+        lowest_level_of_css = centre_level[0] - centre_depth[0]  # this is in fact the bed level at centre point
         centre_level_at_t0 = centre_level[0]
         waterlevel_at_t0 = waterlevel.to_numpy()[:, 0]
         waterdepth_at_t0 = waterlevel_at_t0 - bedlevel
@@ -1369,13 +1331,7 @@ class CrossSection(FM2ProfBase):
         """Releases extra area dependent on waterlevel using a logistic (sigmoid) function."""
         delta = 0.00001  # accuracy parameter
         return 1 / (
-            1
-            + np.e
-            ** (
-                np.log(delta)
-                / (transition_height)
-                * (waterlevel - (crest_level + 0.5 * transition_height))
-            )
+            1 + np.e ** (np.log(delta) / (transition_height) * (waterlevel - (crest_level + 0.5 * transition_height)))
         )
 
     def _append_to_start(
@@ -1425,9 +1381,7 @@ class CrossSection(FM2ProfBase):
             for i in range(1, len(arr)):
                 # Last index that had rising value
                 j = np.argwhere(mask)[-1][0]
-                mask = (
-                    np.append(mask, True) if arr[i] > arr[j] else np.append(mask, False)
-                )
+                mask = np.append(mask, True) if arr[i] > arr[j] else np.append(mask, False)
 
             return mask
         if method == 2:  # noqa: PLR2004
@@ -1480,6 +1434,32 @@ class CrossSection(FM2ProfBase):
             )
             return True
         return False
+
+    def _get_centre_values(
+        self,
+        location: np.array,
+        x: float,
+        y: float,
+        waterdepth: pd.DataFrame,
+        waterlevel: pd.DataFrame,
+    ) -> tuple[np.ndarray, np.ndarray]:
+        """Find output point closest to x,y location, output depth and water level as nd arrays."""
+        nn = NearestNeighbors(n_neighbors=1, algorithm="ball_tree").fit(np.array([x, y]).T)
+
+        # conversion to 2d array, as 1d arrays are deprecated for kneighbors
+        location_array = np.array(location).reshape(1, -1)
+        (_, index) = nn.kneighbors(location_array)
+
+        # retrieve cell characteristic waterdepth
+        centre_depth = waterdepth.iloc[index[0]].to_numpy()
+        centre_level = waterlevel.iloc[index[0]].to_numpy()
+
+        # When starting from a dry bed, the centre_level may have nan values
+        #
+        bed_level = np.nanmin(centre_level - centre_depth)
+        centre_level[np.isnan(centre_level)] = bed_level
+
+        return centre_depth[0], centre_level[0]
 
     def get_parameter(self, key: str) -> str | bool | int | float | None:
         """Retrieve parameter from ini file."""

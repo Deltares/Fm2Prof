@@ -15,10 +15,9 @@ import tqdm
 from geojson import Feature, FeatureCollection, Polygon
 from netCDF4 import Dataset
 from scipy.spatial import ConvexHull
+from sklearn.neighbors import KNeighborsClassifier
 
-from fm2prof import __version__
-from fm2prof import functions as funcs
-from fm2prof import mask_output_file
+from fm2prof import __version__, mask_output_file
 from fm2prof.common import FM2ProfBase
 from fm2prof.cross_section import CrossSection, CrossSectionHelpers
 from fm2prof.data_import import FMDataImporter, FmModelData, ImportInputFiles
@@ -424,7 +423,7 @@ your configuration file to fix this error.""",
             self.set_logger_message(
                 "All 2D points assigned to the same region and classifying points to cross-sections",
             )
-            time_independent_data, edge_data = funcs.classify_without_regions(
+            time_independent_data, edge_data = self._classify_without_regions(
                 cssdata,
                 time_independent_data,
                 edge_data,
@@ -472,12 +471,12 @@ your configuration file to fix this error.""",
             self.set_logger_message(
                 "Assigning 2D points to sections using Built-In method",
             )
-            edge_data = funcs.classify_roughness_sections_by_polygon(
+            edge_data = self._classify_roughness_sections_by_polygon(
                 sections,
                 edge_data,
                 self.get_logger(),
             )
-            time_independent_data = funcs.classify_roughness_sections_by_polygon(
+            time_independent_data = self._classify_roughness_sections_by_polygon(
                 sections,
                 time_independent_data,
                 self.get_logger(),
@@ -525,7 +524,7 @@ your configuration file to fix this error.""",
         edge_data["region"] = regions.classify_points(xy_tuples_2d)
 
         # Do Nearest neighbour cross-section for each region
-        time_independent_data, edge_data = funcs.classify_with_regions(
+        time_independent_data, edge_data = self._classify_with_regions(
             regions,
             cssdata,
             time_independent_data,
@@ -585,7 +584,7 @@ your configuration file to fix this error.""",
         css_regions = polygons.classify_points(cssdata["xy"])
 
         # Do Nearest neighbour cross-section for each region
-        time_independent_data, edge_data = funcs.classify_with_regions(
+        time_independent_data, edge_data = self._classify_with_regions(
             polygons,
             cssdata,
             time_independent_data,
@@ -643,6 +642,85 @@ your configuration file to fix this error.""",
                 data[key][end_values > splitpoint] = 1
                 data[key][end_values <= splitpoint] = 2
         return data
+
+
+    def _classify_with_regions(
+        self,
+        cssdata: dict,
+        time_independent_data: pd.DataFrame,
+        edge_data: dict,
+        css_regions: list,
+    ) -> tuple[pd.DataFrame, dict]:
+        """Assign cross-section id's based on region polygons.
+
+        Within a region, assignment will be done by k nearest neighbour
+        """
+        time_independent_data["sclass"] = time_independent_data["region"].astype(str)
+        # Nearest Neighbour within regions
+        for region in np.unique(css_regions):
+            # Select cross-sections within this region
+            css_xy = cssdata["xy"][css_regions == region]
+            css_id = cssdata["id"][css_regions == region]
+
+            # Select 2d points within region
+            node_mask = time_independent_data["region"] == region
+            x_2d_node = time_independent_data["x"][node_mask]
+            y_2d_node = time_independent_data["y"][node_mask]
+
+            edge_mask = edge_data["region"] == region
+            x_2d_edge = edge_data["x"][edge_mask]
+            y_2d_edge = edge_data["y"][edge_mask]
+
+            # Do Nearest Neighour
+            neigh = self._get_classification_tree(css_xy, css_id)
+            css_2d_nodes = neigh.predict(np.array([x_2d_node, y_2d_node]).T)
+            css_2d_edges = neigh.predict(np.array([x_2d_edge, y_2d_edge]).T)
+
+            # Update data in main structures
+            time_independent_data.loc[node_mask, "sclass"] = css_2d_nodes  # sclass = cross-section id
+
+            edge_data["sclass"][edge_mask] = css_2d_edges
+
+        return time_independent_data, edge_data
+
+
+    def _classify_without_regions(
+        self,
+        cssdata: dict,
+        time_independent_data: pd.DataFrame,
+        edge_data: dict,
+    ) -> tuple[pd.DataFrame, dict]:
+        """Classify without regions."""
+        # Create a class identifier to map points to cross-sections
+        neigh = self._get_classification_tree(cssdata["xy"], cssdata["id"])
+
+        # Expand time-independent dataset with cross-section names
+        time_independent_data["sclass"] = neigh.predict(
+            np.array([time_independent_data["x"], time_independent_data["y"]]).T,
+        )
+
+        # Assign cross-section names to edge coordinates as well
+        edge_data["sclass"] = neigh.predict(np.array([edge_data["x"], edge_data["y"]]).T)
+
+        return time_independent_data, edge_data
+
+    def _classify_roughness_sections_by_polygon(self,
+        sections: SectionPolygonFile,
+        data: dict | pd.DataFrame,
+    ) -> pd.DataFrame | dict:
+        """Assign edges to a roughness section based on polygon data."""
+        self.set_logger_message("....gathering points", "debug")
+        points = [(data["x"][i], data["y"][i]) for i in range(len(data["x"]))]
+        self.set_logger_message("....classifying points", "debug")
+        data["section"] = sections.classify_points(points)
+        return data
+
+    def _get_classification_tree(self, xy: np.ndarray, c: np.ndarray) -> KNeighborsClassifier:
+        x = xy
+        y = c
+        neigh = KNeighborsClassifier(n_neighbors=1)
+        neigh.fit(x, y)
+        return neigh
 
     def _get_region_map_file(self, polytype: str) -> str:
         """Return the path to a NC file with region ifnormation in the bathymetry data."""
@@ -703,8 +781,8 @@ your configuration file to fix this error.""",
             except Exception as e_info:
                 self.set_logger_message(
                     "Error while generation .geojson file,"
-                    + f"at {output_file_path}"
-                    + f"Reason: {e_info!s}",
+                    f"at {output_file_path}"
+                    f"Reason: {e_info!s}",
                     level="error",
                 )
 
