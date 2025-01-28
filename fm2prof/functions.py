@@ -39,13 +39,13 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 import numpy as np
-import pandas as pd
 from sklearn.neighbors import KNeighborsClassifier, NearestNeighbors
 
 if TYPE_CHECKING:
     from logging import Logger
 
-    from fm2prof.cross_section import CrossSection
+    import pandas as pd
+
     from fm2prof.region_polygon_file import SectionPolygonFile
 
 __author__ = "Koen Berends"
@@ -138,13 +138,6 @@ def classify_without_regions(
     return time_independent_data, edge_data
 
 
-def mirror(array: np.array, *, reverse_sign: bool = False) -> np.array:
-    """Mirrors array."""
-    if reverse_sign:
-        return np.append(np.flipud(array) * -1, array)
-    return np.append(np.flipud(array), array)
-
-
 def get_centre_values(
     location: np.array,
     x: float,
@@ -171,62 +164,6 @@ def get_centre_values(
     return centre_depth[0], centre_level[0]
 
 
-def empirical_ppf(
-    qs: np.array,
-    p: np.array,
-    val: list | np.ndarray | None = None,
-    *,
-    single_value: bool = False,
-) -> list | np.ndarray:
-    """Construct empirical cdf, then draws quantile by linear interpolation.
-
-    Args:
-    ----
-        qs (np.array): array of quantiles
-        p (np.array): array of random inputs
-        val (np.ndarray | None, optional): array or list of values. Defaults to None.
-        single_value (bool, optional): boolean for indicating single value. Defaults to False.
-
-    Returns:
-    -------
-        list | np.ndarray
-
-    """
-    if val is None:
-        p, val = get_empirical_cdf(p)
-
-    return [np.interp(q / 100.0, p, val) for q in qs] if not single_value else np.interp(qs / 100.0, p, val)
-
-
-def get_empirical_cdf(sample: list, *, ignore_nan: bool = True) -> tuple[np.array, np.array]:
-    """Return an experimental/empirical cdf from data.
-
-    Args:
-    ----
-        sample (list): list of sample values
-        ignore_nan (bool, optional): Defaults to True.
-
-    Returns:
-    -------
-        tuple[np.array, np.array]: tuple containg arrays of values (x) and cumulative probability (y)
-
-    """
-    sample = np.array(sample)
-    if ignore_nan:
-        sample = sample[~np.isnan(sample)]
-
-    n = len(sample)
-    val = np.sort(sample)
-    p = np.array(range(n)) / float(n)
-
-    return p, val
-
-
-# endregion
-
-# region // protected functions
-
-
 def _get_class_tree(xy: np.ndarray, c: np.ndarray) -> KNeighborsClassifier:
     x = xy
     y = c
@@ -234,44 +171,3 @@ def _get_class_tree(xy: np.ndarray, c: np.ndarray) -> KNeighborsClassifier:
     neigh.fit(x, y)
     return neigh
 
-
-def _interpolate_roughness_css(
-    cross_section: CrossSection,
-    alluvial_range: np.ndarray,
-    nonalluvial_range: np.ndarray,
-) -> None:
-    # change nan's to zeros
-    chezy_alluvial = np.nan_to_num(cross_section.alluvial_friction_table[1])
-    chezy_nonalluvial = np.nan_to_num(cross_section.nonalluvial_friction_table[1])
-
-    waterlevel_alluvial = cross_section.alluvial_friction_table[0]
-    waterlevel_nonalluvial = cross_section.nonalluvial_friction_table[0]
-
-    # remove trailing zeros
-    chezy_alluvial_trimmed = np.trim_zeros(chezy_alluvial)
-    chezy_nonalluvial_trimmed = np.trim_zeros(chezy_nonalluvial)
-
-    alluvial_nonzero_mask = chezy_alluvial.to_numpy().nonzero()[0]
-    nonalluvial_nonzero_mask = chezy_nonalluvial.to_numpy().nonzero()[0]
-
-    # only interpolate and assign if nonzero elements exist in the chezy table
-    if np.sum(alluvial_nonzero_mask) > 0:
-        waterlevel_alluvial_trimmed = waterlevel_alluvial[alluvial_nonzero_mask[0] : alluvial_nonzero_mask[-1] + 1]
-        alluvial_interp = np.interp(alluvial_range, waterlevel_alluvial_trimmed, chezy_alluvial_trimmed)
-
-        # assign
-        cross_section.alluvial_friction_table[0] = alluvial_range
-        cross_section.alluvial_friction_table[1] = pd.Series(data=alluvial_interp)
-
-    if np.sum(nonalluvial_nonzero_mask) > 0:
-        waterlevel_nonalluvial_trimmed = waterlevel_nonalluvial[
-            nonalluvial_nonzero_mask[0] : nonalluvial_nonzero_mask[-1] + 1
-        ]
-        nonalluvial_interp = np.interp(nonalluvial_range, waterlevel_nonalluvial_trimmed, chezy_nonalluvial_trimmed)
-
-        # assign
-        cross_section.nonalluvial_friction_table[0] = nonalluvial_range
-        cross_section.nonalluvial_friction_table[1] = pd.Series(data=nonalluvial_interp)
-
-
-# endregion
