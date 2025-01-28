@@ -66,7 +66,7 @@ class PlotStyles:
     @staticmethod
     def _is_timeaxis(axis: Axes) -> bool:
         try:
-            label_string = axis.get_ticklabels()[0].get_text().replace("−", "-")
+            label_string = axis.get_ticklabels()[0].get_text().replace("−", "-") #noqa:RUF001
             # if label_string is empty (e.g. because of twin_axis, return false)
             if label_string:
                 float(label_string)

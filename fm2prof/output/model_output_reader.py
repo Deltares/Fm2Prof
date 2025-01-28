@@ -1,4 +1,4 @@
-
+"""Model output data reader."""
 
 from __future__ import annotations
 
@@ -221,10 +221,6 @@ class ModelOutputReader(FM2ProfBase):
         self.get_1d2d_map()
         self.load_flow2d_data()
 
-    def _dateparser(self, t: str) -> datetime:
-        # DEPRECATED
-        return datetime.strptime(t, self._time_fmt)
-
     @property
     def output_path(self) -> Path:
         """Return output path."""
@@ -391,11 +387,11 @@ class ModelOutputReader(FM2ProfBase):
         unit = timevector.units.replace("seconds since ", "").strip()
 
         try:
-            start_time = datetime.strptime(unit, self._time_fmt)
+            start_time = datetime.strptime(unit, self._time_fmt) #noqa: DTZ007
         except ValueError as e:
             if len(e.args) > 0 and e.args[0].startswith("unconverted data remains: "):
                 unit = unit[: -(len(e.args[0]) - 26)]
-                start_time = datetime.strptime(unit, self._time_fmt)
+                start_time = datetime.strptime(unit, self._time_fmt) #noqa: DTZ007
 
         return [start_time + timedelta(seconds=i) for i in timevector[:]]
 

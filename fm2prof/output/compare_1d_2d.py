@@ -1,3 +1,4 @@
+"""Compare the results of a 1D and 2D model through visualisation and statistical post-processing."""
 from __future__ import annotations
 
 import ast
