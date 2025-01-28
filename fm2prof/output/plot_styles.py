@@ -1,4 +1,5 @@
 """Plot styles for Fm2Prof output figures."""
+
 from __future__ import annotations
 
 import locale
@@ -13,7 +14,6 @@ from pandas.plotting import register_matplotlib_converters
 from fm2prof.output._types import StyleGuide
 
 if TYPE_CHECKING:
-
     from matplotlib.axes import Axes
     from matplotlib.figure import Figure
     from matplotlib.legend import Legend
@@ -44,6 +44,7 @@ COLORSCHEMES = {
     ],
 }
 
+
 class PlotStyles:
     """Class for handling and applying plot styles."""
 
@@ -66,7 +67,7 @@ class PlotStyles:
     @staticmethod
     def _is_timeaxis(axis: Axes) -> bool:
         try:
-            label_string = axis.get_ticklabels()[0].get_text().replace("−", "-") #noqa:RUF001
+            label_string = axis.get_ticklabels()[0].get_text().replace("−", "-")  # noqa:RUF001
             # if label_string is empty (e.g. because of twin_axis, return false)
             if label_string:
                 float(label_string)

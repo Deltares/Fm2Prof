@@ -8,9 +8,9 @@ class FigureOutput(NamedTuple):
     axes: mpl.axes.Axes
     legend: mpl.legend.Legend
 
+
 class StyleGuide(NamedTuple):
     font: dict
     major_grid: dict
     minor_grid: dict
     spine_width: float
-

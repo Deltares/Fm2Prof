@@ -1,6 +1,5 @@
 """Functions and classes for reading and analyzing Fm2Prof output."""
 
-
 COLORSCHEMES = {
     "Deltares": ["#000000", "#00cc96", "#0d38e0"],
     "Koeln": [
@@ -23,5 +22,3 @@ COLORSCHEMES = {
         "#BBBBBB",
     ],
 }
-
-

@@ -1,4 +1,5 @@
 """Compare the results of a 1D and 2D model through visualisation and statistical post-processing."""
+
 from __future__ import annotations
 
 import ast
@@ -21,13 +22,11 @@ from fm2prof.output.model_output_reader import ModelOutputReader
 from fm2prof.output.plot_styles import PlotStyles
 
 if TYPE_CHECKING:
-
     from matplotlib.axes import Axes
 
     from fm2prof import Project
 
 register_matplotlib_converters()
-
 
 
 class Compare1D2D(ModelOutputReader):

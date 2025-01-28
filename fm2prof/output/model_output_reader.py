@@ -16,9 +16,6 @@ if TYPE_CHECKING:
     from logging import Logger
 
 
-
-
-
 class ModelOutputReader(FM2ProfBase):
     """Provide methods to post-process 1D and 2D data.
 
@@ -387,11 +384,11 @@ class ModelOutputReader(FM2ProfBase):
         unit = timevector.units.replace("seconds since ", "").strip()
 
         try:
-            start_time = datetime.strptime(unit, self._time_fmt) #noqa: DTZ007
+            start_time = datetime.strptime(unit, self._time_fmt)  # noqa: DTZ007
         except ValueError as e:
             if len(e.args) > 0 and e.args[0].startswith("unconverted data remains: "):
                 unit = unit[: -(len(e.args[0]) - 26)]
-                start_time = datetime.strptime(unit, self._time_fmt) #noqa: DTZ007
+                start_time = datetime.strptime(unit, self._time_fmt)  # noqa: DTZ007
 
         return [start_time + timedelta(seconds=i) for i in timevector[:]]
 

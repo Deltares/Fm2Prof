@@ -21,7 +21,6 @@ if TYPE_CHECKING:
     from matplotlib.legend import Legend
 
 
-
 class VisualiseOutput(FM2ProfBase):
     """Visaulise output class."""
 
