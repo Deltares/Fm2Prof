@@ -2,16 +2,18 @@ import contextlib
 import os
 from pathlib import Path
 
+import netCDF4
+import numpy as np
+import pandas as pd
 import pytest
 
 try:
     from pip import main as pipmain
-except Exception as e_info:
+except Exception:
     from pip._internal import main as pipmain
 
 
 class TestUtils:
-
     _name_external = "external_test_data"
     _name_local = "test_data"
     _name_artifacts = "artifacts"
@@ -29,8 +31,7 @@ class TestUtils:
 
     @staticmethod
     def get_external_test_data_dir() -> Path:
-        """
-        Gets the path to the external test data directory.
+        """Gets the path to the external test data directory.
 
         Returns:
             Path: Directory path.
@@ -47,8 +48,7 @@ class TestUtils:
 
     @staticmethod
     def get_local_test_data_dir(dir_name: str) -> Path:
-        """
-        Returns the desired directory relative to the test data.
+        """Returns the desired directory relative to the test data.
         Avoiding extra code on the tests.
         """
         directory = TestUtils.get_test_data_dir(dir_name, TestUtils._name_local)
@@ -56,8 +56,7 @@ class TestUtils:
 
     @staticmethod
     def get_external_repo(dir_name: str) -> Path:
-        """
-        Returns the parent directory of this repo directory.
+        """Returns the parent directory of this repo directory.
 
         Args:
             dir_name (str): Repo 'sibbling' of the current one.
@@ -69,8 +68,7 @@ class TestUtils:
 
     @staticmethod
     def get_test_data_dir(dir_name: str, test_data_name: str) -> Path:
-        """
-        Returns the desired directory relative to the test external data.
+        """Returns the desired directory relative to the test external data.
         Avoiding extra code on the tests.
         """
         return Path(__file__).parent / test_data_name / dir_name
@@ -89,6 +87,74 @@ class TestUtils:
             yield
         finally:
             os.chdir(prev_cwd)
+
+    @staticmethod
+    def read_fm_model(file_path):
+        """input: FM2D map file"""
+        fm_edge_keys = {
+            "x": "mesh2d_edge_x",
+            "y": "mesh2d_edge_y",
+            "edge_faces": "mesh2d_edge_faces",
+            "edge_nodes": "mesh2d_edge_nodes",
+        }
+        edge_data = dict()
+        # Open results file for reading
+        res_fid = netCDF4.Dataset(file_path, "r")
+        # Time-invariant variables from FM 2D
+        df = pd.DataFrame(columns=["x"], data=np.array(res_fid.variables["mesh2d_face_x"]))
+        df["y"] = np.array(res_fid.variables["mesh2d_face_y"])
+        df["area"] = np.array(res_fid.variables["mesh2d_flowelem_ba"])
+        df["bedlevel"] = np.array(res_fid.variables["mesh2d_flowelem_bl"])
+        # These are filled later
+        df["region"] = [""] * len(df["y"])
+        df["section"] = ["main"] * len(df["y"])
+        df["sclass"] = [""] * len(df["y"])  # cross-section id
+        df["islake"] = [False] * len(df["y"])  # roughness section number
+
+        # Edge data
+        # edgetype 1 = 'internal'
+        internal_edges = res_fid.variables["mesh2d_edge_type"][:] == 1
+        for key, value in fm_edge_keys.items():
+            try:
+                edge_data[key] = np.array(res_fid.variables[value])[internal_edges]
+            except KeyError:
+                # 'edge_faces' does not always seem to exist in the file.
+                # TODO: incorporate this function in its FmModelData with logger to
+                # output a warning. For now, the omission of 'edge_faces' is handled
+                # in FmModelData.
+                pass
+        edge_data["sclass"] = np.array([""] * np.sum(internal_edges), dtype="U99")
+        edge_data["section"] = np.array(["main"] * np.sum(internal_edges), dtype="U99")
+        edge_data["region"] = np.array([""] * np.sum(internal_edges), dtype="U99")
+        # node data (not used?)
+        df_node = pd.DataFrame(columns=["x"], data=np.array(res_fid.variables["mesh2d_node_x"]))
+        df_node["y"] = np.array(res_fid.variables["mesh2d_node_y"])
+
+        # Time-variant variables
+        time_dependent = {
+            "waterdepth": pd.DataFrame(
+                data=np.array(res_fid.variables["mesh2d_waterdepth"]).T, columns=res_fid.variables["time"]
+            ),
+            "waterlevel": pd.DataFrame(
+                data=np.array(res_fid.variables["mesh2d_s1"]).T, columns=res_fid.variables["time"]
+            ),
+            "chezy_mean": pd.DataFrame(
+                data=np.array(res_fid.variables["mesh2d_czs"]).T, columns=res_fid.variables["time"]
+            ),
+            "chezy_edge": pd.DataFrame(
+                data=np.array(res_fid.variables["mesh2d_cftrt"]).T[internal_edges], columns=res_fid.variables["time"]
+            ),
+            "velocity_x": pd.DataFrame(
+                data=np.array(res_fid.variables["mesh2d_ucx"]).T, columns=res_fid.variables["time"]
+            ),
+            "velocity_y": pd.DataFrame(
+                data=np.array(res_fid.variables["mesh2d_ucy"]).T, columns=res_fid.variables["time"]
+            ),
+            "velocity_edge": pd.DataFrame(
+                data=np.array(res_fid.variables["mesh2d_u1"]).T, columns=res_fid.variables["time"]
+            ),
+        }
+        return df, edge_data, df_node, time_dependent
 
 
 skipwhenexternalsmissing = pytest.mark.skipif(
