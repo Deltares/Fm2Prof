@@ -59,8 +59,6 @@ unless all tests are passing. To run tests locally, use `pytest`:
     pixi run -e dev pytest --cov=fm2prof 
     ```
 
-``
-
 
 ## Deploying
 
