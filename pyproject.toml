@@ -59,20 +59,6 @@ default-groups = [
 requires = ["hatchling"]
 build-backend = "hatchling.build"
 
-[tool.optional-dependencies]
-dev = [
-	"pytest",
-	"pytest-cov",
-]
-docs = [
-	"mkdocs",
-	"mkdocs-material",
-    "mkdocs-material-extensions",
-	"mkdocs-jupyter",
-	"mkdocstrings-python",
-	"mkdocs-exclude",
-]
-
 [tool.ruff.lint]
 select = ["ALL"]
 
