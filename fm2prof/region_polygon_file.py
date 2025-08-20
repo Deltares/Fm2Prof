@@ -33,10 +33,11 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import TYPE_CHECKING, NamedTuple
+from typing import TYPE_CHECKING, Literal, NamedTuple
 
 import numpy as np
 import rtree
+from netCDF4 import Dataset
 from shapely.geometry import Point, shape
 
 from fm2prof.common import FM2ProfBase
@@ -44,6 +45,8 @@ from fm2prof.common import FM2ProfBase
 if TYPE_CHECKING:
     from collections.abc import Iterable
     from logging import Logger
+
+    import pandas as pd
 
 
 class Polygon(NamedTuple):
@@ -63,6 +66,47 @@ class PolygonFile(FM2ProfBase):
         self.set_logger(logger)
         self._polygons = []
         self.undefined = -999
+
+    def get_gridpoints_in_polygon(self,
+        grid: str | Path,  # path to grid netcdf file
+        dtype: Literal["face", "edge"],
+        polytype: Literal["region", "section"],
+    ) -> pd.DataFrame | dict:
+        """Placeholder method to get points in polygon.
+
+        1. checks if node-to-polygon has already been done
+            - if so, load from file
+        2. if not, perform the action. (may take several minutes)
+        3. save the result to file
+
+        TODO: node_to_face and node_to_edge should be added to input data on data import (data_import.py)
+
+        """
+        # Step 1: check if data already exists
+        self.set_logger_message(f"Looking for {polytype.upper()}.dat", "debug")
+
+        # If exist, validate and load file. If not, create it
+        # to validate, store creation dates of grid and polygon file and check with input files
+
+        # Step 2
+        # get nodes_in_polygon
+        # region_at_node: List[int] = meshkernel func(data)  # list of region ids for each node index [1, 1, 2, 3, ...]
+        """
+        # keep here
+        if dtype == "face":
+            node_to_face = data["face_nodes"]
+            region_at_face = region_at_node[node_to_face.T[0] - 1]
+            return region_at_face
+        elif dtype == "edge":
+            node_to_edge = data["edge_nodes"]
+            region_at_edge = region_at_node[node_to_edge.T[0] - 1]
+            return region_at_edge
+        """
+
+        # Step 3: save the result to file
+        #self.save_to_file(polytype, region_at_face | region_at_edge) # include metadata
+        return #region_at_face | region_at_edge
+
 
     def classify_points_with_property(self, points: Iterable[Point], property_name: str = "name") -> np.array:
         """Classify points as belonging to which region.
