@@ -1,12 +1,53 @@
-"""Module for running Fm2Prof processess."""
+"""FM2PROF Runner Module.
 
-from __future__ import annotations
+This module provides the main execution engine for FM2PROF, a tool for converting
+2D dflowFM model results to 1D cross-sections for hydraulic modelling.
+
+FM2PROF (dflowFM to Profile) extracts cross-sectional data from 2D hydrodynamic
+model outputs and generates 1D model inputs. The main workflow includes:
+
+1. **Initialisation**: Load configuration files and validate input data
+  -. **Data Import**: Read dflowfm map files and cross-section location files
+  -. **Classification**: Assign 2D model points to regions and cross-sections
+2. **Generation**: Create cross-section geometries and roughness tables
+3. **Finalisation**: Write output files in various formats (D-Flow 1D, SOBEK 3, etc.)
+
+Classes:
+    InitializationError: Custom exception for initialisation failures.
+    Fm2ProfRunner: Main class that orchestrates the FM2PROF workflow.
+    Project: Python API wrapper for programmatic access to FM2PROF functionality.
+
+The Project class is auto-imported when using the fm2prof package.
+
+Example:
+    Basic usage through the Project API:
+
+    >>> from fm2prof import Project
+    >>> project = Project('config.ini')
+    >>> project.run()
+
+    Programmatic configuration:
+
+    >>> project = Project()
+    >>> project.set_input_file('2DMapOutput', 'model_map.nc')
+    >>> project.set_input_file('CrossSectionLocationFile', 'crosssections.csv')
+    >>> project.set_output_directory('./output')
+    >>> project.run()
+
+Note:
+    This module requires FlowFM map files (NetCDF format) and cross-section
+    location files as input. The output includes 1D model geometry and
+    roughness data suitable for various hydraulic modelling software.
+
+License:
+    GPL-3.0-or-later AND LGPL-3.0-or-later
+"""
 
 import datetime
 import pickle
 import traceback
+from collections.abc import Generator
 from pathlib import Path
-from typing import Generator
 
 import geojson
 import numpy as np
@@ -16,9 +57,8 @@ from geojson import Feature, FeatureCollection, Polygon
 from netCDF4 import Dataset
 from scipy.spatial import ConvexHull
 
-from fm2prof import __version__
+from fm2prof import __version__, mask_output_file
 from fm2prof import functions as funcs
-from fm2prof import mask_output_file
 from fm2prof.common import FM2ProfBase
 from fm2prof.cross_section import CrossSection, CrossSectionHelpers
 from fm2prof.data_import import FMDataImporter, FmModelData, ImportInputFiles
