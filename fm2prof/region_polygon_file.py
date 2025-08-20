@@ -1,32 +1,39 @@
-"""Module handles region polygon files.
+"""Region and Section Polygon File Module.
 
-Copyright (C) Stichting Deltares 2019. All rights reserved.
+This module provides functionality for handling polygon files used in FM2PROF
+for spatial classification of 2D model data into regions and sections.
 
-This file is part of the Fm2Prof.
+The module supports GeoJSON format polygon files and provides efficient spatial
+indexing and point-in-polygon classification algorithms. It handles two main
+types of polygon files:
 
-The Fm2Prof is free software: you can redistribute it and/or modify
-it under the terms of the GNU Lesser General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
+1. **Region Polygons**: Define geographical regions for grouping cross-sections
+2. **Section Polygons**: Define hydraulic sections (main channel, floodplains)
 
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-GNU Affero General Public License for more details.
+Key Features:
+    - GeoJSON file parsing and validation
+    - Spatial indexing using MeshKernel for efficient point classification
+    - Overlap detection and validation
+    - Property-based point classification
 
-You should have received a copy of the GNU Affero General Public License
-along with this program. If not, see <http://www.gnu.org/licenses/>.
+Classes:
+    Polygon: Named tuple representing a polygon with geometry and properties.
+    PolygonFile: Base class for polygon file handling with classification methods.
+    RegionPolygonFile: Specialised class for region polygon files.
+    SectionPolygonFile: Specialised class for section polygon files with hydraulic validation.
 
-All names, logos, and references to "Deltares" are registered trademarks of
-Stichting Deltares and remain full property of Stichting Deltares at all times.
-All rights reserved.
+
+Note:
+    Polygon files must be in GeoJSON format with specific property requirements:
+    - Region polygons: require 'name' and 'id' properties
+    - Section polygons: require 'name' and 'section' properties ('main', 'floodplain1', 'floodplain2')
 """
 
 from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import TYPE_CHECKING, Iterable, NamedTuple
+from typing import TYPE_CHECKING, NamedTuple
 
 import numpy as np
 import rtree
@@ -35,6 +42,7 @@ from shapely.geometry import Point, shape
 from fm2prof.common import FM2ProfBase
 
 if TYPE_CHECKING:
+    from collections.abc import Iterable
     from logging import Logger
 
 
