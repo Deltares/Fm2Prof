@@ -312,8 +312,8 @@ class Fm2ProfRunner(FM2ProfBase):
         self.set_logger_message("finished reading FM and cross-sectional data data")
         self.set_logger_message(
             f"Number of: timesteps ({ntsteps}), "
-            + f"faces ({nfaces}), "
-            + f"edges ({nedges})",
+            f"faces ({nfaces}), "
+            f"edges ({nedges})",
             level="debug",
         )
 
@@ -742,9 +742,9 @@ your configuration file to fix this error.""",
                 self.set_logger_message("Done", level="debug")
             except Exception as e_info:
                 self.set_logger_message(
-                    "Error while generation .geojson file,"
-                    + f"at {output_file_path}"
-                    + f"Reason: {e_info!s}",
+                    ("Error while generation .geojson file,"
+                     f"at {output_file_path}"
+                     f"Reason: {e_info!s}"),
                     level="error",
                 )
 
@@ -949,8 +949,8 @@ your configuration file to fix this error.""",
 
         except Exception as e_info:
             self.set_logger_message(
-                "Exception thrown while creating cross-section "
-                + f"{css_data.get('id')}, message: {e_info!s}",
+                ("Exception thrown while creating cross-section "
+                 f"{css_data.get('id')}, message: {e_info!s}"),
                 "error",
             )
             return None
@@ -1098,8 +1098,10 @@ your configuration file to fix this error.""",
         except Exception as e_error:
             e_message = str(e_error)
             self.set_logger_message(
-                "Exception thrown while trying to reduce the css points. "
-                + f"{e_message}",
+                (
+                    "Exception thrown while trying to reduce the css points. "
+                    f"{e_message}"
+                ),
                 "error",
             )
 
@@ -1139,9 +1141,11 @@ your configuration file to fix this error.""",
         except Exception as e_error:
             e_message = str(e_error)
             self.set_logger_message(
-                "Exception thrown "
-                + "while trying to calculate the correction. "
-                + f"{e_message}",
+                (
+                    "Exception thrown "
+                    "while trying to calculate the correction. "
+                    f"{e_message}"
+                ),
                 "error",
             )
         return css
