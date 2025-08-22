@@ -14,7 +14,6 @@ Key Features:
     - GeoJSON file parsing and validation
     - Spatial indexing using MeshKernel for efficient point classification
     - Overlap detection and validation
-    - Property-based point classification
 
 Classes:
     Polygon: Named tuple representing a polygon with geometry and properties.
@@ -68,7 +67,7 @@ class PolygonFile(FM2ProfBase):
         self.undefined = -999
 
     def get_gridpoints_in_polygon(self,
-        grid: str | Path,  # path to grid netcdf file
+        res_file: str | Path,  # path to result (map) netcdf file
         dtype: Literal["face", "edge"],
         polytype: Literal["region", "section"],
     ) -> pd.DataFrame | dict:
@@ -105,6 +104,9 @@ class PolygonFile(FM2ProfBase):
 
         # Step 3: save the result to file
         #self.save_to_file(polytype, region_at_face | region_at_edge) # include metadata
+
+        # Step 4: return region_at_face or region_at_edge. This needs to be added
+        # to time_independent_data or edge_data as e.g. data["region"] = region_at_face
         return #region_at_face | region_at_edge
 
 

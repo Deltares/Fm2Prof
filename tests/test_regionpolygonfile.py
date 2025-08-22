@@ -1,13 +1,14 @@
 import json
 import logging
+from pathlib import Path
 
 import numpy as np
 import pytest
-from Pathlib import Path
 from shapely.geometry import Polygon
 
 from fm2prof.region_polygon_file import Polygon as p_tuple  # noqa: N813
 from fm2prof.region_polygon_file import PolygonFile, RegionPolygonFile, SectionPolygonFile
+from tests.TestUtils import TestUtils
 
 
 @pytest.fixture
@@ -55,7 +56,7 @@ def _geojson_file_writer(geojson_dict, file_path) -> None:
 
 class Test_PolygonFile:  # noqa: N801
 
-    def test_polygonfile_parse_geojson_file(self, tmp_path, test_geojson):
+    def test_parse_geojson_file(self, tmp_path, test_geojson):
         file_path = tmp_path / "polygons.geojson"
 
         _geojson_file_writer(test_geojson, file_path)
@@ -66,8 +67,7 @@ class Test_PolygonFile:  # noqa: N801
         assert len(polygon_file.polygons) == 2
         assert polygon_file.polygons[1].properties.get("name") == "poly2"
 
-
-    def test_polygonfile_validate_extension(self):
+    def test_validate_extension(self):
         polygon_file = PolygonFile(logging.getLogger())
         test_fp = "test.sjon"
 
@@ -79,16 +79,15 @@ class Test_PolygonFile:  # noqa: N801
         test_fp = "test.json"
         polygon_file._validate_extension(test_fp)   # noqa: SLF001
 
-
-    def test_polygonfile_check_overlap(self, polygon_list, mocker):
+    def test_check_overlap(self, polygon_list, mocker):
         polygon_file = PolygonFile(logging.getLogger(__name__))
         polygon_file.polygons = polygon_list
         mocked_logger = mocker.patch.object(polygon_file, "set_logger_message")
         polygon_file._check_overlap()  # noqa: SLF001
         mocked_logger.assert_called_with("poly2 overlaps poly1.", level="warning")
 
-
-    def test_polygonfile_polygons_property(self, polygon_list):
+    def test_polygons_property_setter(self, polygon_list):
+        """Test that the polygon setter raises errors for invalid input."""
         polygon_file = PolygonFile(logging.getLogger())
         with pytest.raises(ValueError, match="Polygons must be of type Polygon"):
             polygon_file.polygons = ["test", "case"]
@@ -109,6 +108,21 @@ class Test_PolygonFile:  # noqa: N801
         polygon_list.pop()
         polygon_file.polygons = polygon_list
         assert polygon_file.polygons == polygon_list
+
+    def test_get_gridpoints_in_polygon(self):
+        """Test the get_gridpoints_in_polygon method."""
+        # Step 1. Fetch the grid file
+        res_file = TestUtils.get_local_test_file("cases/case_02_compound/Data/2DModelOutput/FlowFM_map.nc")
+
+        # Step 2. Instantiate the RegionPolygonFile class
+        polygon_file = PolygonFile(logging.getLogger(__name__))
+        polygon_file.polygons = polygon_list
+
+        # Step 3. Call the get_gridpoints_in_polygon method
+        region_at_points = polygon_file.get_gridpoints_in_polygon(res_file=res_file, dtype="face", polytype="region")
+
+        # Step 4. Verify the output
+        assert region_at_points == [1, 2, 3, 4]
 
 class Test_RegionPolygonFile:  # noqa: N801
 
