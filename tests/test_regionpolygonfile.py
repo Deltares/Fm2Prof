@@ -109,7 +109,7 @@ class Test_PolygonFile:  # noqa: N801
         polygon_file.polygons = polygon_list
         assert polygon_file.polygons == polygon_list
 
-    def test_get_gridpoints_in_polygon(self):
+    def test_get_gridpoints_in_polygon(self, polygon_list, mocker):
         """Test the get_gridpoints_in_polygon method."""
         # Step 1. Fetch the grid file
         res_file = TestUtils.get_local_test_file("cases/case_02_compound/Data/2DModelOutput/FlowFM_map.nc")
@@ -117,6 +117,7 @@ class Test_PolygonFile:  # noqa: N801
         # Step 2. Instantiate the RegionPolygonFile class
         polygon_file = PolygonFile(logging.getLogger(__name__))
         polygon_file.polygons = polygon_list
+        mocked_logger = mocker.patch.object(polygon_file, "set_logger_message")
 
         # Step 3. Call the get_gridpoints_in_polygon method
         region_at_points = polygon_file.get_gridpoints_in_polygon(res_file=res_file, dtype="face", polytype="region")

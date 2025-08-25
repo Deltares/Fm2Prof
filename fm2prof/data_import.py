@@ -8,6 +8,7 @@ from pathlib import Path
 # import from dependencies
 import numpy as np
 import pandas as pd
+import xarray as xr
 from netCDF4 import Dataset
 
 # import from  package
@@ -16,6 +17,26 @@ from fm2prof.common import FM2ProfBase
 
 class FMDataImporter(FM2ProfBase):
     """FM Data importer class."""
+
+    def __init__(self, file_path: Path | str) -> None:
+        """Initialize the FMDataImporter."""
+        super().__init__()
+        self.set_logger_message("FMDataImporter initialized", "debug")
+        self.file_path = Path(file_path)
+
+    @property
+    def file_path(self) -> Path:
+        """Return the file path."""
+        return self._file_path
+
+    @file_path.setter
+    def file_path(self, value: Path | str) -> None:
+        """Set the file path."""
+        if isinstance(value, str):
+            value = Path(value)
+        if not value.exists():
+            raise FileNotFoundError(f"The file {value} does not exist.")
+        self._file_path = value
 
     @property
     def dflow2d_face_keys(self) -> dict:
@@ -49,6 +70,11 @@ class FMDataImporter(FM2ProfBase):
             "velocity_y": "mesh2d_ucy",
             "velocity_edge": "mesh2d_u1",
         }
+
+    def get_variable(self, var_name: str) -> np.ndarray:
+        """Get a variable from the netCDF file."""
+        grid = xr.open_dataset(self.file_path, engine="netcdf4")
+        return grid[var_name].to_numpy()
 
     def import_dflow2d(self, file_path: Path | str) -> tuple[pd.DataFrame | None, dict, pd.DataFrame, dict]:
         """Read input from a dflow2d output file.

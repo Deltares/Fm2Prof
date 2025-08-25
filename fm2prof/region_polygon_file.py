@@ -36,10 +36,11 @@ from typing import TYPE_CHECKING, Literal, NamedTuple
 
 import numpy as np
 import rtree
-from netCDF4 import Dataset
+from meshkernel import GeometryList, MeshKernel, ProjectionType
 from shapely.geometry import Point, shape
 
 from fm2prof.common import FM2ProfBase
+from fm2prof.data_import import FMDataImporter
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
@@ -83,11 +84,32 @@ class PolygonFile(FM2ProfBase):
         """
         # Step 1: check if data already exists
         self.set_logger_message(f"Looking for {polytype.upper()}.dat", "debug")
-
-        # If exist, validate and load file. If not, create it
-        # to validate, store creation dates of grid and polygon file and check with input files
+        poly_file = Path(res_file).parent / f"{polytype}.dat"
+        if poly_file.exists():
+            self.set_logger_message(f"Found {polytype.upper()}.dat", "debug")
+            # Load existing data
+            with poly_file.open("r") as file:
+                data = json.load(file)
+        else:
+            self.set_logger_message(f"{polytype.upper()}.dat not found", "debug")
 
         # Step 2
+        # Construct Meshkernel grid
+        mk = MeshKernel(projection=ProjectionType.CARTESIAN)
+        mesh2d_input = mk.mesh2d_get()
+
+        fmdata = FMDataImporter(res_file)
+        mesh2d_input.node_x = fmdata.get_variable("mesh2d_node_x")
+        mesh2d_input.node_y = fmdata.get_variable("mesh2d_node_y")
+        mesh2d_input.edge_nodes = fmdata.get_variable("mesh2d_edge_nodes").flatten() - 1
+
+        mk.mesh2d_set(mesh2d_input)
+
+        x = np.array(self.polygons[0].geometry.exterior.coords.xy[0])
+        y = np.array(self.polygons[0].geometry.exterior.coords.xy[1])
+        mk_polygon = GeometryList(x_coordinates=x, y_coordinates=y)
+
+        nodes_in_polygon = mk.mesh2d_get_nodes_in_polygons(mk_polygon, inside=True)
         # get nodes_in_polygon
         # region_at_node: List[int] = meshkernel func(data)  # list of region ids for each node index [1, 1, 2, 3, ...]
         """
@@ -108,85 +130,6 @@ class PolygonFile(FM2ProfBase):
         # Step 4: return region_at_face or region_at_edge. This needs to be added
         # to time_independent_data or edge_data as e.g. data["region"] = region_at_face
         return #region_at_face | region_at_edge
-
-
-    def classify_points_with_property(self, points: Iterable[Point], property_name: str = "name") -> np.array:
-        """Classify points as belonging to which region.
-
-        Points = list of tuples [(x,y), (x,y)]
-        """
-        # Convert to shapely point
-        points = [Point(xy) for xy in points]
-        points_regions = [self.undefined] * len(points)
-
-        # Assign point to region
-        for i, point in enumerate(points):
-            for polygon in self.polygons:
-                if point.within(polygon.geometry):
-                    points_regions[i] = polygon.properties.get(property_name)
-                    break
-
-        return np.array(points_regions)
-
-    def classify_points_with_property_shapely_prep(
-        self,
-        points: Iterable[Point],
-        property_name: str = "name",
-    ) -> np.array:
-        """Classify points as belonging to which region.
-
-        Points = list of tuples [(x,y), (x,y)]
-        """
-        from shapely.prepared import prep
-
-        # Convert to shapely point
-        points = [Point(xy) for xy in points]
-        points_regions = [self.undefined] * len(points)
-
-        prep_polygons = [prep(p.geometry) for p in self.polygons]
-
-        # Assign point to region
-        for i, point in enumerate(points):
-            for p_id, polygon in enumerate(prep_polygons):
-                if polygon.intersects(point):
-                    points_regions[i] = self.polygons[p_id].properties.get(property_name)
-                    break
-
-        return np.array(points_regions)
-
-    def classify_points_with_property_rtree_by_polygons(
-        self,
-        points: Iterable[Point],
-        property_name: str = "name",
-    ) -> list:
-        """Apply RTree index to quickly classify points in polygons.
-
-        Args:
-            points (Iterable[list]): List of unformatted points.
-            property_name (str): Property to retrieve from the polygons (default: {'name'})
-
-        Returns:
-            (list): List of mapped points to polygon properties.
-
-        """
-        idx = rtree.index.Index()
-        for p_id, polygon in enumerate(self.polygons):
-            idx.insert(p_id, polygon.geometry.bounds, polygon)
-
-        point_properties_list = []
-        for point in map(Point, points):
-            point_properties_polygon = next(
-                iter(
-                    self.polygons[polygon_id].properties.get(property_name)
-                    for polygon_id in idx.intersection(point.bounds)
-                    if self.polygons[polygon_id].geometry.intersects(point)
-                ),
-                self.undefined,
-            )
-            point_properties_list.append(point_properties_polygon)
-
-        del idx
-        return np.array(point_properties_list)
 
     def parse_geojson_file(self, file_path: Path | str) -> None:
         """Read data from geojson file."""
