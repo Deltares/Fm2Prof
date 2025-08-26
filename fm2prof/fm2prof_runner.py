@@ -335,15 +335,16 @@ class Fm2ProfRunner(FM2ProfBase):
         if skipmap >= nsteps:
             self.set_logger_message(
                 f"""You are attempting to skip more than  available timesteps.
-({self.__key_skipmaps} = {skipmap}, available maps in output file: {nsteps}). Modify the value of {self.__key_skipmaps}
-your configuration file to fix this error.""",
+                ({self.__key_skipmaps} = {skipmap}, available maps in output file:
+                 {nsteps}). Modify the value of {self.__key_skipmaps}
+                in your configuration file to fix this error.""",
                 level="error",
             )
             success = False
         elif skipmap > nsteps / 2:
             self.set_logger_message(
                 f"""You are skipping more than half of available timesteps.
-({self.__key_skipmaps} = {skipmap}, available maps in output file: {nsteps})""",
+                    ({self.__key_skipmaps} = {skipmap}, available maps in output file: {nsteps})""",
                 level="warning",
             )
 
@@ -531,110 +532,6 @@ your configuration file to fix this error.""",
             cssdata,
         )
 
-    def _classify_with_builtin_methods(
-        self,
-        time_independent_data: pd.DataFrame,
-        edge_data: dict,
-        cssdata: dict,
-        regions: RegionPolygonFile,
-    ) -> tuple[pd.DataFrame, dict]:
-        # Determine in which region each cross-section lies
-        css_regions = regions.classify_points(cssdata["xy"])
-
-        # Determine in which region each 2d point lies
-
-        nr_of_time_independent_data_values = len(time_independent_data.get("x"))
-        x_tid_array = time_independent_data.get("x").to_numpy()
-        y_tid_array = time_independent_data.get("y").to_numpy()
-
-        xy_tuples_2d = [
-            (
-                x_tid_array[i],
-                y_tid_array[i],
-            )
-            for i in range(nr_of_time_independent_data_values)
-        ]
-
-        time_independent_data["region"] = regions.classify_points(xy_tuples_2d)
-
-        xy_tuples_2d = [
-            (edge_data.get("x")[i], edge_data.get("y")[i])
-            for i in range(len(edge_data.get("x")))
-        ]
-
-        edge_data["region"] = regions.classify_points(xy_tuples_2d)
-
-        # Do Nearest neighbour cross-section for each region
-        time_independent_data, edge_data = funcs.classify_with_regions(
-            regions,
-            cssdata,
-            time_independent_data,
-            edge_data,
-            css_regions,
-        )
-
-        return time_independent_data, edge_data
-
-    def _classify_section_with_deltashell(
-        self,
-        time_independent_data: pd.DataFrame,
-        edge_data: dict,
-    ) -> tuple[pd.DataFrame, dict]:
-        # Determine in which section each 2D point lies
-        self.set_logger_message("Assigning faces...")
-        time_independent_data = self._assign_polygon_using_deltashell(
-            time_independent_data,
-            dtype="face",
-            polytype="section",
-        )
-        self.set_logger_message("Assigning edges...")
-        edge_data = self._assign_polygon_using_deltashell(
-            edge_data,
-            dtype="edge",
-            polytype="section",
-        )
-
-        return time_independent_data, edge_data
-
-    def _classify_with_deltashell(
-        self,
-        time_independent_data: pd.DataFrame,
-        edge_data: dict,
-        cssdata: dict,
-        polygons: RegionPolygonFile,
-        polytype: str = "region",
-    ) -> tuple[pd.DataFrame, dict]:
-        # Determine in which region each 2D point lies
-        self.set_logger_message("Assigning faces...")
-        time_independent_data = self._assign_polygon_using_deltashell(
-            time_independent_data,
-            dtype="face",
-            polytype=polytype,
-        )
-        self.set_logger_message("Assigning edges...")
-        edge_data = self._assign_polygon_using_deltashell(
-            edge_data,
-            dtype="edge",
-            polytype=polytype,
-        )
-
-        self.set_logger_message(
-            "Assigning cross-sections using nearest neighbour within regions...",
-        )
-        # Determine in which region each cross-section lies
-        css_regions = polygons.classify_points(cssdata["xy"])
-
-        # Do Nearest neighbour cross-section for each region
-        time_independent_data, edge_data = funcs.classify_with_regions(
-            polygons,
-            cssdata,
-            time_independent_data,
-            edge_data,
-            css_regions,
-        )
-
-        return time_independent_data, edge_data
-
     def _classify_roughness_sections_by_variance(
         self,
         data: pd.DataFrame | dict,
@@ -682,39 +579,6 @@ your configuration file to fix this error.""",
             else:
                 data[key][end_values > splitpoint] = 1
                 data[key][end_values <= splitpoint] = 2
-        return data
-
-    def _get_region_map_file(self, polytype: str) -> str:
-        """Return the path to a NC file with region ifnormation in the bathymetry data."""
-        map_file_path = Path(self.get_inifile().get_input_file("2DMapOutput"))
-        return f"{map_file_path.parent / map_file_path.stem}_{polytype.upper()}BATHY{map_file_path.suffix}"
-
-    def _assign_polygon_using_deltashell(
-        self,
-        data: dict | pd.DataFrame,
-        dtype: str = "face",
-        polytype: str = "region",
-    ) -> pd.DataFrame | dict:
-        """Assign all 2D points using DeltaShell method."""
-        # NOTE
-        self.set_logger_message(f"Looking for _{polytype.upper()}BATHY.nc", "debug")
-
-        path_to_modified_nc = self._get_region_map_file(polytype)
-
-        # Load Modified NetCDF
-        with Dataset(path_to_modified_nc) as nf:
-            # Data stored in node z, while fm2prof uses data at faces or edges.
-            region_at_node = nf.variables.get("mesh2d_node_z")[:].data.astype(int)
-
-            if dtype == "face":
-                node_to_face = nf.variables.get("mesh2d_face_nodes")[:].data
-                region_at_face = region_at_node[node_to_face.T[0] - 1]
-                data[polytype] = region_at_face
-            elif dtype == "edge":
-                node_to_edge = data["edge_nodes"]
-                region_at_edge = region_at_node[node_to_edge.T[0] - 1]
-                data[polytype] = region_at_edge
-
         return data
 
     def _generate_geojson_output(self, output_dir: str, cross_sections: list) -> None:

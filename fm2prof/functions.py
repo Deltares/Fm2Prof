@@ -48,31 +48,7 @@ if TYPE_CHECKING:
     from fm2prof.CrossSection import CrossSection
     from fm2prof.RegionPolygonFile import SectionPolygonFile
 
-__author__ = "Koen Berends"
-__copyright__ = "Copyright 2016, University of Twente & Deltares"
-__credits__ = ["Koen Berends"]
-__license__ = "no license (restricted)"
-__version__ = "$Revision$"
-__maintainer__ = "Koen Berends"
-__email__ = "koen.berends@deltares.nl"
-__status__ = "Prototype"
-
-
 # region // public functions
-
-
-def classify_roughness_sections_by_polygon(
-    sections: SectionPolygonFile,
-    data: dict | pd.DataFrame,
-    logger: Logger,
-) -> pd.DataFrame | dict:
-    """Assign edges to a roughness section based on polygon data."""
-    logger.debug("....gathering points")
-    points = [(data["x"][i], data["y"][i]) for i in range(len(data["x"]))]
-    logger.debug("....classifying points")
-    data["section"] = sections.classify_points(points)
-    return data
-
 
 def extract_point_from_np(data: dict, pos: int) -> list:
     """Extract points."""
