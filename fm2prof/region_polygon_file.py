@@ -32,143 +32,64 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import TYPE_CHECKING, Literal, NamedTuple
+from typing import TYPE_CHECKING, Literal
 
-import numpy as np
-import rtree
+import shapely
 from meshkernel import GeometryList, MeshKernel, ProjectionType
-from shapely.geometry import Point, shape
 
 from fm2prof.common import FM2ProfBase
 from fm2prof.data_import import FMDataImporter
 
 if TYPE_CHECKING:
-    from collections.abc import Iterable
     from logging import Logger
 
+    import numpy as np
     import pandas as pd
 
+class Polygon:
+    """Polygon class."""
 
-class Polygon(NamedTuple):
-    """Polygon datastructure."""
+    def __init__(self, coordinates: list[list[float]], properties: dict) -> None:
+        """Instantiate a Polygon object.
 
-    geometry: shape
-    properties: dict
+        Args:
+            coordinates (list[list[float]]): List of [x, y] coordinates defining the polygon.
+            properties (dict): Dictionary of properties associated with the polygon.
+        """
+        self.coordinates = coordinates
+        self.properties = properties
+
+    @property
+    def x(self) -> list[float]:
+        """X coordinates of the polygon."""
+        return [coord[0] for coord in self.coordinates]
+
+    @property
+    def y(self) -> list[float]:
+        """Y coordinates of the polygon."""
+        return [coord[1] for coord in self.coordinates]
 
 
-class PolygonFile(FM2ProfBase):
-    """Polygon file class."""
+class MultiPolygon(FM2ProfBase):
+    """MultiPolygon file class.
+
+    This class handles MultiPolygon files used in FM2PROF for spatial classification
+    of 2D model data into regions and sections. It supports GeoJSON format polygon files
+    and provides methods for reading, validating, and classifying points within the polygons.
+
+    We use a base MultiPolygon class to leverage MeshKernel and Shapely functionality
+    within a common framework. E.g. `MultiPolygon.as_meshkernel()` outputs a MeshKernel GeometryList
+    object that can be used for spatial classification, while `MultiPolygon.as_shapely()` outputs
+    a list of Shapely Polygon objects for geometric operations.
+    """
 
     __logger = None
 
     def __init__(self, logger: Logger) -> None:
-        """Instantiae a PolygonFile object."""
+        """Instantiate a MultiPolygon object."""
         self.set_logger(logger)
         self._polygons = []
-        self.undefined = -999
-
-    def get_gridpoints_in_polygon(self,
-        res_file: str | Path,  # path to result (map) netcdf file
-        dtype: Literal["face", "edge"],
-        polytype: Literal["region", "section"],
-    ) -> pd.DataFrame | dict:
-        """Placeholder method to get points in polygon.
-
-        1. checks if node-to-polygon has already been done
-            - if so, load from file
-        2. if not, perform the action. (may take several minutes)
-        3. save the result to file
-
-        TODO: node_to_face and node_to_edge should be added to input data on data import (data_import.py)
-
-        """
-        # Step 1: check if data already exists
-        self.set_logger_message(f"Looking for {polytype.upper()}.dat", "debug")
-        poly_file = Path(res_file).parent / f"{polytype}.dat"
-        if poly_file.exists():
-            self.set_logger_message(f"Found {polytype.upper()}.dat", "debug")
-            # Load existing data
-            with poly_file.open("r") as file:
-                data = json.load(file)
-        else:
-            self.set_logger_message(f"{polytype.upper()}.dat not found", "debug")
-
-        # Step 2
-        # Construct Meshkernel grid
-        mk = MeshKernel(projection=ProjectionType.CARTESIAN)
-        mesh2d_input = mk.mesh2d_get()
-
-        fmdata = FMDataImporter(res_file)
-        mesh2d_input.node_x = fmdata.get_variable("mesh2d_node_x")
-        mesh2d_input.node_y = fmdata.get_variable("mesh2d_node_y")
-        mesh2d_input.edge_nodes = fmdata.get_variable("mesh2d_edge_nodes").flatten() - 1
-
-        mk.mesh2d_set(mesh2d_input)
-
-        x = np.array(self.polygons[0].geometry.exterior.coords.xy[0])
-        y = np.array(self.polygons[0].geometry.exterior.coords.xy[1])
-        mk_polygon = GeometryList(x_coordinates=x, y_coordinates=y)
-
-        nodes_in_polygon = mk.mesh2d_get_nodes_in_polygons(mk_polygon, inside=True)
-        # get nodes_in_polygon
-        # region_at_node: List[int] = meshkernel func(data)  # list of region ids for each node index [1, 1, 2, 3, ...]
-        """
-        # keep here
-        if dtype == "face":
-            node_to_face = data["face_nodes"]
-            region_at_face = region_at_node[node_to_face.T[0] - 1]
-            return region_at_face
-        elif dtype == "edge":
-            node_to_edge = data["edge_nodes"]
-            region_at_edge = region_at_node[node_to_edge.T[0] - 1]
-            return region_at_edge
-        """
-
-        # Step 3: save the result to file
-        #self.save_to_file(polytype, region_at_face | region_at_edge) # include metadata
-
-        # Step 4: return region_at_face or region_at_edge. This needs to be added
-        # to time_independent_data or edge_data as e.g. data["region"] = region_at_face
-        return #region_at_face | region_at_edge
-
-    def parse_geojson_file(self, file_path: Path | str) -> None:
-        """Read data from geojson file."""
-        PolygonFile._validate_extension(file_path)
-
-        with Path(file_path).open("r") as geojson_file:
-            geojson_data = json.load(geojson_file).get("features")
-
-        for feature in geojson_data:
-            feature_props = {k.lower(): v for k, v in feature.get("properties").items()}
-            self.polygons.append(
-                Polygon(
-                    geometry=shape(feature["geometry"]).buffer(0),
-                    properties=feature_props,
-                ),
-            )
-
-    @staticmethod
-    def _validate_extension(file_path: Path | str) -> None:
-        if isinstance(file_path, str):
-            file_path = Path(file_path)
-        if file_path.suffix not in (".json", ".geojson"):
-            err_msg = "Invalid file path extension, should be .json or .geojson."
-            raise OSError(err_msg)
-
-    def _check_overlap(self) -> None:
-        for polygon in self.polygons:
-            for testpoly in self.polygons:
-                if polygon.properties.get("name") == testpoly.properties.get("name"):
-                    # polygon will obviously overlap with itself
-                    continue
-                if polygon.geometry.intersects(testpoly.geometry):
-                    self.set_logger_message(
-                        "{} overlaps {}.".format(
-                            polygon.properties.get("name"),
-                            testpoly.properties.get("name"),
-                        ),
-                        level="warning",
-                    )
+        self.undefined = "undefined"
 
     @property
     def polygons(self) -> list[Polygon]:
@@ -177,7 +98,7 @@ class PolygonFile(FM2ProfBase):
 
     @polygons.setter
     def polygons(self, polygons_list: list[Polygon]) -> None:
-        if not all([isinstance(polygon, Polygon) for polygon in polygons_list]):  # noqa: C419
+        if not all(isinstance(polygon, Polygon) for polygon in polygons_list):
             err_msg = "Polygons must be of type Polygon"
             raise ValueError(err_msg)
         # Check if properties contain the required 'name' property
@@ -191,29 +112,165 @@ class PolygonFile(FM2ProfBase):
             raise ValueError(err_msg)
         self._polygons = polygons_list
 
+    def as_meshkernel(self) -> list[GeometryList]:
+        """Convert polygons to MeshKernel GeometryList.
 
-class RegionPolygonFile(PolygonFile):
+        Note:
+            MeshKernel GeometryList supports multiple polygons,
+            separated by some int (default -999). However,
+            to keep track of polygon properties (e.g. name),
+            we create a list of single polygon GeometryList objects.
+
+        Returns:
+            GeometryList: MeshKernel GeometryList object containing all polygons.
+        """
+        if not self.polygons:
+            err_msg = "No polygons defined"
+            raise ValueError(err_msg)
+
+        return [GeometryList(x_coordinates=polygon.x, y_coordinates=polygon.y) for polygon in self.polygons]
+
+    def as_shapely(self) -> list[shapely.geometry.Polygon]:
+        """Convert polygons to list of Shapely Polygon objects.
+
+        Returns:
+            list[shapely.geometry.Polygon]: List of Shapely Polygon objects.
+        """
+        if not self.polygons:
+            err_msg = "No polygons defined"
+            raise ValueError(err_msg)
+
+        return [shapely.Polygon(polygon.coordinates) for polygon in self.polygons]
+
+    def get_gridpoints_in_polygon(self,
+        res_file: str | Path,  # path to result (map) netcdf file
+        dtype: Literal["face", "edge", "node"],
+        property_name: Literal["name", "section"],
+        ) -> list[str]:
+        """Get grid points in polygon.
+
+        Args:
+            res_file (str | Path): Path to result (map) netcdf file.
+            dtype (Literal["face", "edge", "node"]): Type of grid points to retrieve.
+            property_name (Literal["name", "section"]): Property to use for classification.
+
+        Returns:
+            pd.DataFrame | dict: DataFrame or dictionary containing grid points in polygon.
+        """
+        # Step 1
+        # Construct Meshkernel grid
+        mk = MeshKernel(projection=ProjectionType.CARTESIAN)
+        mesh2d_input = mk.mesh2d_get()
+
+        fmdata = FMDataImporter(res_file)
+        mesh2d_input.node_x = fmdata.get_variable("mesh2d_node_x")
+        mesh2d_input.node_y = fmdata.get_variable("mesh2d_node_y")
+        mesh2d_input.edge_nodes = fmdata.get_variable("mesh2d_edge_nodes").flatten() - 1
+
+        mk.mesh2d_set(mesh2d_input)
+
+        # Step 2: perform point-in-polygon classification
+        nodes_in_polygon: list[str] = [self.undefined] * len(mesh2d_input.node_x)  # default to undefined
+
+        for i, mk_polygon in enumerate(self.as_meshkernel()):
+            indices: list[float] = mk.mesh2d_get_nodes_in_polygons(mk_polygon, inside=True).tolist()
+            for j in indices:
+                nodes_in_polygon[j] = self.polygons[i].properties.get(property_name)
+
+        # Step 3: map to faces or edges if needed
+        if dtype == "node":
+            output = nodes_in_polygon
+        elif dtype == "face":
+            face_map: np.ndarray = fmdata.get_variable("mesh2d_face_nodes").T[0] -1
+            node_to_face: list[str] = [self.undefined] * len(face_map)
+            for face_index, map_index in enumerate(face_map.tolist()):
+                node_to_face[int(face_index)] = nodes_in_polygon[int(map_index)]
+            output = node_to_face
+        elif dtype == "edge":
+            edge_map: np.ndarray = fmdata.get_variable("mesh2d_edge_nodes").T[0] -1
+            node_to_edge: list[str] = [self.undefined] * len(edge_map)
+            for edge_index, map_index in enumerate(edge_map.tolist()):
+                node_to_edge[int(edge_index)] = nodes_in_polygon[int(map_index)]
+            output = node_to_edge
+
+        return output
+
+    def check_overlap(self) -> None:
+        """Check if polygons overlap and log a warning if they do."""
+        for i, poly1 in enumerate(self.as_shapely()):
+            for j, poly2 in enumerate(self.as_shapely()):
+                if i == j:
+                    # polygon will obviously overlap with itself
+                    continue
+                if poly1.intersects(poly2):
+                    self.set_logger_message(
+                        f"{self.polygons[i].properties.get('name')} overlaps {self.polygons[j].properties.get('name')}." ,
+                        level="warning",
+                    )
+
+    def from_file(self, file_path: Path | str) -> None:
+        """Read data from geojson file.
+
+        Args:
+            file_path (Path | str): path to geojson file
+        """
+        self._validate_extension(file_path)
+
+        with Path(file_path).open("r") as geojson_file:
+            geojson_data = json.load(geojson_file).get("features")
+
+        polygons: list[Polygon] = []
+        for feature in geojson_data:
+            feature_props = {k.lower(): v for k, v in feature.get("properties").items()}
+            polygons.append(Polygon(coordinates=feature["geometry"]["coordinates"], properties=feature_props))
+
+        self.polygons = polygons
+
+    @staticmethod
+    def _validate_extension(file_path: Path | str) -> None:
+        if isinstance(file_path, str):
+            file_path = Path(file_path)
+        if file_path.suffix not in (".json", ".geojson"):
+            err_msg = "Invalid file path extension, should be .json or .geojson."
+            raise OSError(err_msg)
+
+
+class RegionPolygonFile(MultiPolygon):
     """RegionPolygonFile class."""
 
     def __init__(self, region_file_path: str | Path, logger: Logger) -> None:
         """Instantiate a RegionPolygonFile object."""
         super().__init__(logger)
-        self.read_region_file(region_file_path)
+        self.from_file(region_file_path)
 
     @property
     def regions(self) -> list[Polygon]:
         """Region polygons."""
         return self.polygons
 
-    def read_region_file(self, file_path: Path | str) -> None:
-        """Read region file.
+    def from_file(self, file_path: Path | str) -> None:
+        """Read geojson file and performs validation.
 
         Args:
             file_path (Path | str): region file path
 
         """
-        self.parse_geojson_file(file_path)
+        super().from_file(file_path)
         self._validate_regions()
+
+    def get_gridpoints_in_polygon(self, res_file: str | Path) -> list[str]:
+        """Convenience method to get faces in region.
+
+        This method is an overload of the parent method with fixed
+        property_name and dtype arguments.
+
+        Args:
+            res_file (str | Path): path to result (map) netcdf file.
+
+        Returns:
+            list[str]: List of region names for each face in the grid.
+        """
+        super().get_gridpoints_in_polygon(res_file, "face", "name")
 
     def _validate_regions(self) -> None:
         self.set_logger_message("Validating region file", level="info")
@@ -223,23 +280,10 @@ class RegionPolygonFile(PolygonFile):
         self.set_logger_message(f"{number_of_regions} regions found", level="info")
 
         # Test if polygons overlap
-        self._check_overlap()
-
-    def classify_points(self, points: Iterable[Point], property_name: str = "id") -> list:
-        """Classify region points with a property.
-
-        Args:
-            points (Iterable[Point]): Points to classify
-            property_name (str, optional): Property. Defaults to "id".
-
-        Returns:
-            list: _description_
-
-        """
-        return self.classify_points_with_property(points, property_name=property_name)
+        self.check_overlap()
 
 
-class SectionPolygonFile(PolygonFile):
+class SectionPolygonFile(MultiPolygon):
     """SectionPolygonFile class."""
 
     def __init__(self, section_file_path: str | Path, logger: Logger) -> None:
@@ -251,7 +295,7 @@ class SectionPolygonFile(PolygonFile):
 
         """
         super().__init__(logger)
-        self.read_section_file(section_file_path)
+        self.from_file(section_file_path)
         self.undefined = 1  # 1 is main
 
     @property
@@ -259,27 +303,29 @@ class SectionPolygonFile(PolygonFile):
         """Section polygons."""
         return self.polygons
 
-    def read_section_file(self, file_path: str | Path) -> None:
+    def from_file(self, file_path: str | Path) -> None:
         """Read section polygon file.
 
         Args:
             file_path (str | Path): path to section polygon file.
 
         """
-        self.parse_geojson_file(file_path)
+        super().from_file(file_path)
         self._validate_sections()
 
-    def classify_points(self, points: Iterable[Point]) -> np.array:
-        """Classify points with a section property name.
+    def get_gridpoints_in_polygon(self, res_file: str | Path) -> list[int]:
+        """Convenience method to get edges in section.
+
+        This method is an overload of the parent method with fixed
+        property_name and dtype arguments.
 
         Args:
-            points (Iterable[Point]): List of points to classify.
+            res_file (str | Path): path to result (map) netcdf file.
 
         Returns:
-            np.array: array of points
-
+            list[str]: List of section ids for each edge in the grid.
         """
-        return self.classify_points_with_property(points, property_name="section")
+        super().get_gridpoints_in_polygon(res_file, "edge", "section")
 
     def _validate_sections(self) -> None:
         self.set_logger_message("Validating Section file")
@@ -316,7 +362,7 @@ class SectionPolygonFile(PolygonFile):
                     )
                     section.properties["section"] = map_section_keys.get(section_key)
         # check for overlap (only raise a warning)
-        self._check_overlap()
+        self.check_overlap()
 
         if raise_exception:
             err_msg = "Section file is not valid"
