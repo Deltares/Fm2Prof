@@ -235,7 +235,7 @@ class MultiPolygon(FM2ProfBase):
             raise OSError(err_msg)
 
 
-class RegionPolygonFile(MultiPolygon):
+class RegionPolygon(MultiPolygon):
     """RegionPolygonFile class."""
 
     def __init__(self, region_file_path: str | Path, logger: Logger) -> None:
@@ -283,7 +283,7 @@ class RegionPolygonFile(MultiPolygon):
         self.check_overlap()
 
 
-class SectionPolygonFile(MultiPolygon):
+class SectionPolygon(MultiPolygon):
     """SectionPolygonFile class."""
 
     def __init__(self, section_file_path: str | Path, logger: Logger) -> None:

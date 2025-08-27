@@ -5,7 +5,7 @@ from pathlib import Path
 import numpy as np
 import pytest
 
-from fm2prof.region_polygon_file import Polygon, MultiPolygon, RegionPolygonFile, SectionPolygonFile
+from fm2prof.polygon_file import Polygon, MultiPolygon, RegionPolygon, SectionPolygon
 from tests.TestUtils import TestUtils
 
 
@@ -176,9 +176,9 @@ class Test_RegionPolygonFile:  # noqa: N801
         file_path = tmp_path / "test.geojson"
         _geojson_file_writer(test_geojson, file_path)
 
-        # create RegionPolygonFile instance
-        mock_logger = mocker.patch.object(RegionPolygonFile, "set_logger_message")
-        region_polygon_file = RegionPolygonFile(region_file_path=file_path, logger=logging.getLogger(__name__))
+        # create RegionPolygon instance
+        mock_logger = mocker.patch.object(RegionPolygon, "set_logger_message")
+        region_polygon_file = RegionPolygon(region_file_path=file_path, logger=logging.getLogger(__name__))
 
         # verify logger messages
         assert mock_logger.call_args_list[0][0][0] == "Validating region file"
@@ -192,28 +192,28 @@ class Test_SectionPolygonFile:  # noqa: N801
         file_path = tmp_path / "test_geojson.geojson"
         _geojson_file_writer(test_geojson, file_path)
 
-        # create SectionPolygonFile instance with wrong data
-        mock_logger = mocker.patch.object(SectionPolygonFile, "set_logger_message")
+        # create SectionPolygon instance with wrong data
+        mock_logger = mocker.patch.object(SectionPolygon, "set_logger_message")
         with pytest.raises(OSError, match="Section file is not valid"):
-            SectionPolygonFile(file_path, logger=logging.getLogger())
+            SectionPolygon(file_path, logger=logging.getLogger())
 
         assert mock_logger.call_args_list[1][0][0] == 'Polygon poly1 has no property "section"'
         assert mock_logger.call_args_list[2][0][0] == 'Polygon poly2 has no property "section"'
 
-        # create SectionPolygonFile instance with incorrect data (2)
+        # create SectionPolygon instance with incorrect data (2)
         test_geojson["features"][0]["properties"]["section"] = "fake section"
         _geojson_file_writer(test_geojson, file_path)
         with pytest.raises(OSError, match="Section file is not valid"):
-            SectionPolygonFile(file_path, logger=logging.getLogger())
+            SectionPolygon(file_path, logger=logging.getLogger())
 
         assert "fake section is not a recognized section" in [log_cal[0][0] for log_cal in mock_logger.call_args_list]
 
-        # create SectionPolygonFile instance with correct data
+        # create SectionPolygon instance with correct data
         test_geojson["features"][0]["properties"]["section"] = "1"
         test_geojson["features"][1]["properties"]["section"] = "2"
         _geojson_file_writer(test_geojson, file_path)
-        section_polygonfile = SectionPolygonFile(file_path, logging.getLogger())
-        assert section_polygonfile.sections[0].properties["section"] == "main"
-        assert section_polygonfile.sections[1].properties["section"] == "floodplain1"
+        section_polygon = SectionPolygon(file_path, logging.getLogger())
+        assert section_polygon.sections[0].properties["section"] == "main"
+        assert section_polygon.sections[1].properties["section"] == "floodplain1"
 
         assert mock_logger.call_args_list[-1][0][0] == "Section file succesfully validated"

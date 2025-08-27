@@ -54,7 +54,6 @@ import numpy as np
 import pandas as pd
 import tqdm
 from geojson import Feature, FeatureCollection, Polygon
-from netCDF4 import Dataset
 from scipy.spatial import ConvexHull
 
 from fm2prof import __version__, mask_output_file
@@ -64,7 +63,7 @@ from fm2prof.cross_section import CrossSection, CrossSectionHelpers
 from fm2prof.data_import import FMDataImporter, FmModelData, ImportInputFiles
 from fm2prof.export import Export1DModelData, OutputFiles
 from fm2prof.ini_file import IniFile
-from fm2prof.region_polygon_file import RegionPolygonFile, SectionPolygonFile
+from fm2prof.polygon_file import RegionPolygon, SectionPolygon
 
 
 class InitializationError(Exception):
@@ -250,14 +249,14 @@ class Fm2ProfRunner(FM2ProfBase):
         section_file = ini_file.get_input_file("SectionPolygonFile")
 
         # Read region & section polygon
-        regions: RegionPolygonFile = None
-        sections: SectionPolygonFile = None
+        regions: RegionPolygon = None
+        sections: SectionPolygon = None
 
         if region_file:
-            regions = RegionPolygonFile(region_file, logger=self.get_logger())
+            regions = RegionPolygon(region_file, logger=self.get_logger())
 
         if bool(section_file):
-            sections = SectionPolygonFile(section_file, logger=self.get_logger())
+            sections = SectionPolygon(section_file, logger=self.get_logger())
 
         # Check if mandatory input exists
         if not Path(map_file).is_file():
@@ -424,8 +423,8 @@ class Fm2ProfRunner(FM2ProfBase):
         self,
         res_file: str | Path,
         css_file: str | Path,
-        regions: RegionPolygonFile | None,
-        sections: SectionPolygonFile | None,
+        regions: RegionPolygon | None,
+        sections: SectionPolygon | None,
     ) -> tuple:
         """Read input files for 'FM2PROF'.
 
@@ -434,8 +433,8 @@ class Fm2ProfRunner(FM2ProfBase):
         Args:
             res_file (str | Path): path to FlowFM map netcfd file (*_map.nc)
             css_file (str | Path): path to cross-section definition file_
-            regions (RegionPolygonFile | None): RegionPolygonFile object
-            sections (SectionPolygonFile | None): SectionPolygonFile object
+            regions (RegionPolygon | None): RegionPolygon object
+            sections (SectionPolygon | None): SectionPolygon object
 
         Returns:
             tuple: Tuple containing time dependent data, time independent data, edge data, node coordinates,
