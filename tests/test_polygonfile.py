@@ -70,6 +70,22 @@ class Test_MultiPolygon:  # noqa: N801
         # Verify the properties of the polygons
         assert polygon_file.polygons[1].properties.get("name") == "poly2"
 
+    def test_from_file_invalid(self, tmp_path):
+        file_path = tmp_path / "polygons.geojson"
+
+        # Write invalid geojson (missing 'features' key)
+        invalid_geojson = {"type": "FeatureCollection"}
+        _geojson_file_writer(invalid_geojson, file_path)
+
+        polygon_file = MultiPolygon(logging.getLogger())
+        with pytest.raises(ValueError, match="Polygon file is not valid"):
+            polygon_file.from_file(file_path=file_path)
+
+    def test_from_file_nonexistent(self):
+        polygon_file = MultiPolygon(logging.getLogger())
+        with pytest.raises(FileNotFoundError, match="Polygon file does not exist"):
+            polygon_file.from_file(file_path="non_existent_file.geojson")
+
     def test_validate_extension(self):
         polygon_file = MultiPolygon(logging.getLogger())
         test_fp = "test.sjon"
