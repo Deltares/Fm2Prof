@@ -103,7 +103,7 @@
   	"ClassificationMethod": {
 	    "type": "int",
 	    "hint": "How to classify 2D output using Section and Region polygons. Options: [0] Do not classify regions or sections. [1] Use DeltaShell",
-	    "value": 0 
+	    "value": 1 
   	},
   	"MinimumTotalWidth": {
 	    "type": "float",

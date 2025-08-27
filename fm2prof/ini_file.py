@@ -347,9 +347,9 @@ class IniFile(FM2ProfBase):
         try:
             self._extract_parameters(supplied_ini, self.__input_parameters_key)
             self._extract_parameters(supplied_ini, self.__input_debug_key)
-        except Exception:
+        except Exception as e:
             self.set_logger_message(
-                "Unexpected error reading (debug) parameters. Check config file",
+                f"Unexpected error reading (debug) parameters. Check config file: {e}",
                 "error",
             )
         try:

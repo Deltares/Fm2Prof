@@ -5,7 +5,7 @@ from fm2prof.fm2prof_runner import Fm2ProfRunner
 from tests.TestUtils import TestUtils
 
 
-class Test_Project:
+class TestProject:
     def test_when_no_file_path_then_no_exception_is_risen(self):
         # 1. Set up initial test dat
         project = Project()
@@ -108,7 +108,7 @@ class Test_Project:
         assert value is not None
 
 
-class Test_Fm2ProfRunner:
+class TestFm2ProfRunner:
     def test_when_no_file_path_then_no_exception_is_risen(self):
         # 1. Set up initial test dat
         runner = None

@@ -2,10 +2,9 @@ import json
 import logging
 from pathlib import Path
 
-import numpy as np
 import pytest
 
-from fm2prof.polygon_file import Polygon, MultiPolygon, RegionPolygon, SectionPolygon
+from fm2prof.polygon_file import MultiPolygon, Polygon, RegionPolygon, SectionPolygon
 from tests.TestUtils import TestUtils
 
 
@@ -14,11 +13,11 @@ def polygon_list():
     return [
         Polygon(
             coordinates=[[100, 100], [500, 10], [500, 400], [100, 400], [100, 100]],
-            properties={"name": "poly1"},
+            properties={"region": "poly1", "name": "poly1"},
         ),
         Polygon(
             coordinates=[[300, 300], [900, 300], [900, 400], [300, 400], [300, 300]],
-            properties={"name": "poly2"},
+            properties={"region": "poly2", "name": "poly2"},
         ),
     ]
 
@@ -29,7 +28,7 @@ def test_geojson():
         "features": [
             {
                 "type": "Feature",
-                "properties": {"name": "poly1"},
+                "properties": {"name": "poly1", "region": "poly1"},
                 "geometry": {
                     "type": "Polygon",
                     "coordinates": [[100, 100], [500, 10], [500, 400], [100, 400], [100, 100]],
@@ -37,7 +36,7 @@ def test_geojson():
             },
             {
                 "type": "Feature",
-                "properties": {"name": "poly2"},
+                "properties": {"name": "poly2", "region": "poly2"},
                 "geometry": {
                     "type": "Polygon",
                     "coordinates": [[300, 300], [900, 300], [900, 400], [300, 400], [300, 300]],
@@ -139,13 +138,13 @@ class Test_MultiPolygon:  # noqa: N801
         mocked_logger = mocker.patch.object(polygon_file, "set_logger_message")
 
         # Step 3. Call the get_gridpoints_in_polygon method
-        region_at_points = polygon_file.get_gridpoints_in_polygon(res_file=res_file, dtype="face", property_name="name")
+        faces_in_polygon = polygon_file.meshkernel_inpolygon(res_file=res_file, dtype="face", property_name="region")
 
         # Step 4. Verify the output
-        assert isinstance(region_at_points, list)
-        assert len(region_at_points) == 360
-        assert region_at_points[0] == polygon_file.undefined
-        assert region_at_points[73] == "poly1"
+        assert isinstance(faces_in_polygon, list)
+        assert len(faces_in_polygon) == 360
+        assert faces_in_polygon[0] == polygon_file.undefined
+        assert faces_in_polygon[73] == "poly1"
 
     def test_get_nodes_in_polygon(self, polygon_list, mocker):
         """Test the get_gridpoints_in_polygon method for faces."""
@@ -158,7 +157,9 @@ class Test_MultiPolygon:  # noqa: N801
         mocked_logger = mocker.patch.object(polygon_file, "set_logger_message")
 
         # Step 3. Call the get_gridpoints_in_polygon method
-        region_at_points = polygon_file.get_gridpoints_in_polygon(res_file=res_file, dtype="node", property_name="name")
+        region_at_points = polygon_file.meshkernel_inpolygon(res_file=res_file,
+                                                                 dtype="node",
+                                                                 property_name="region")
 
         # Step 4. Verify the output
         assert isinstance(region_at_points, list)
@@ -177,7 +178,7 @@ class Test_MultiPolygon:  # noqa: N801
         mocked_logger = mocker.patch.object(polygon_file, "set_logger_message")
 
         # Step 3. Call the get_gridpoints_in_polygon method
-        region_at_points = polygon_file.get_gridpoints_in_polygon(res_file=res_file, dtype="edge", property_name="name")
+        region_at_points = polygon_file.meshkernel_inpolygon(res_file=res_file, dtype="edge", property_name="region")
 
         # Step 4. Verify the output
         assert isinstance(region_at_points, list)
@@ -199,6 +200,110 @@ class Test_RegionPolygonFile:  # noqa: N801
         # verify logger messages
         assert mock_logger.call_args_list[0][0][0] == "Validating region file"
         assert mock_logger.call_args_list[1][0][0] == "2 regions found"
+
+    def test_get_gridpoints_in_polygon_creates_cache(self, mocker, test_geojson, tmp_path):
+        # setup geojson file
+        file_path = tmp_path / "test.geojson"
+        _geojson_file_writer(test_geojson, file_path)
+
+        # create RegionPolygon instance
+        mocked_logger = mocker.patch.object(RegionPolygon, "set_logger_message")
+        region_polygon_file = RegionPolygon(region_file_path=file_path, logger=logging.getLogger(__name__))
+
+        # Step 1. Fetch the grid file
+        res_file = TestUtils.get_local_test_file("cases/case_02_compound/Data/2DModelOutput/FlowFM_map.nc")
+        cache_file = Path(res_file).with_suffix(".region_cache.json")
+        cache_file.unlink(missing_ok=True)
+        # Step 2. Call the get_gridpoints_in_polygon method
+        _ = region_polygon_file.get_gridpoints_in_polygon(res_file=res_file, force_cache_invalidation=True)
+
+        # Step 3. Verify the output
+        assert cache_file.exists()
+
+    def test_get_gridpoints_in_polygon_loads_cache(self, mocker, test_geojson, tmp_path):
+        # setup geojson file
+        file_path = tmp_path / "test.geojson"
+        _geojson_file_writer(test_geojson, file_path)
+
+        # create RegionPolygon instance
+        mock_logger = mocker.patch.object(RegionPolygon, "set_logger_message")
+        region_polygon_file = RegionPolygon(region_file_path=file_path, logger=logging.getLogger(__name__))
+
+        # Step 1. Fetch the grid file
+        res_file = TestUtils.get_local_test_file("cases/case_02_compound/Data/2DModelOutput/FlowFM_map.nc")
+
+        # Step 2. Call the get_gridpoints_in_polygon method
+        result = region_polygon_file.get_gridpoints_in_polygon(res_file=res_file, force_cache_invalidation=False)
+
+        # Step 3. Verify the output
+        assert mock_logger.call_args_list[-1][0][0] == "Using cached regions"
+
+        assert len(result.faces_in_polygon) == 360
+        assert result.faces_in_polygon[0] == region_polygon_file.undefined
+        assert result.faces_in_polygon[73] == "poly1"
+
+        assert len(result.edges_in_polygon) == 786
+        assert result.edges_in_polygon[0] == region_polygon_file.undefined
+        assert result.edges_in_polygon[27] == "poly1"
+
+    def test_get_gridpoints_in_polygon_force_cache(self, mocker, test_geojson, tmp_path):
+        # setup geojson file
+        file_path = tmp_path / "test.geojson"
+        _geojson_file_writer(test_geojson, file_path)
+
+        # create RegionPolygon instance
+        mock_logger = mocker.patch.object(RegionPolygon, "set_logger_message")
+        region_polygon_file = RegionPolygon(region_file_path=file_path, logger=logging.getLogger(__name__))
+
+        # Step 1. Fetch the grid file
+        res_file = TestUtils.get_local_test_file("cases/case_02_compound/Data/2DModelOutput/FlowFM_map.nc")
+        cache_file = Path(res_file).with_suffix(".region_cache.json")
+
+        # Step 2. Call the get_gridpoints_in_polygon method
+        result = region_polygon_file.get_gridpoints_in_polygon(res_file=res_file, force_cache_invalidation=True)
+
+        # Step 3. Verify the output
+        assert cache_file.exists()
+        assert mock_logger.call_args_list[-1][0][0] == "Forcing recalculating region cache"
+
+        assert len(result.faces_in_polygon) == 360
+        assert result.faces_in_polygon[0] == region_polygon_file.undefined
+        assert result.faces_in_polygon[73] == "poly1"
+
+        assert len(result.edges_in_polygon) == 786
+        assert result.edges_in_polygon[0] == region_polygon_file.undefined
+        assert result.edges_in_polygon[27] == "poly1"
+
+    def test_get_gridpoints_in_polygon_stale_cache(self, mocker, test_geojson, tmp_path):
+        # setup geojson file
+        file_path = tmp_path / "test.geojson"
+        _geojson_file_writer(test_geojson, file_path)
+
+        # create RegionPolygon instance
+        mock_logger = mocker.patch.object(RegionPolygon, "set_logger_message")
+        region_polygon_file = RegionPolygon(region_file_path=file_path, logger=logging.getLogger(__name__))
+
+        # Step 1. Fetch the grid file
+        res_file = TestUtils.get_local_test_file("cases/case_02_compound/Data/2DModelOutput/FlowFM_map.nc")
+        cache_file = Path(res_file).with_suffix(".region_cache.json")
+
+        # update map file to change its modified time
+        res_file.touch()
+
+        # Step 2. Call the get_gridpoints_in_polygon method
+        result = region_polygon_file.get_gridpoints_in_polygon(res_file=res_file, force_cache_invalidation=False)
+
+        # Step 3. Verify the output
+        assert cache_file.exists()
+        assert mock_logger.call_args_list[-1][0][0] == "Cached regions are stale"
+
+        assert len(result.faces_in_polygon) == 360
+        assert result.faces_in_polygon[0] == region_polygon_file.undefined
+        assert result.faces_in_polygon[73] == "poly1"
+
+        assert len(result.edges_in_polygon) == 786
+        assert result.edges_in_polygon[0] == region_polygon_file.undefined
+        assert result.edges_in_polygon[27] == "poly1"
 
 
 class Test_SectionPolygonFile:  # noqa: N801

@@ -63,7 +63,7 @@ from fm2prof.cross_section import CrossSection, CrossSectionHelpers
 from fm2prof.data_import import FMDataImporter, FmModelData, ImportInputFiles
 from fm2prof.export import Export1DModelData, OutputFiles
 from fm2prof.ini_file import IniFile
-from fm2prof.polygon_file import RegionPolygon, SectionPolygon
+from fm2prof.polygon_file import GridPointsInPolygonResults, RegionPolygon, SectionPolygon
 
 
 class InitializationError(Exception):
@@ -187,13 +187,13 @@ class Fm2ProfRunner(FM2ProfBase):
         3. Finalization
 
         """
-        # Initialise the project
+        # Step 1. Initialise the project
         self.start_new_log_task("Initialising FM2PROF")
         try:
             self._initialise_fm2prof()
         except InitializationError:
             return False
-        except:
+        except:  # noqa: E722
             self.set_logger_message(
                 "Unexpected exception during initialisation",
                 "error",
@@ -203,10 +203,10 @@ class Fm2ProfRunner(FM2ProfBase):
             return False
         self.finish_log_task()
 
-        # Generate cross-sections
+        # Step 2. Generate cross-sections
         try:
             cross_sections = self._generate_cross_section_list()
-        except:
+        except:  # noqa: E722
             self.set_logger_message(
                 "Unexpected exception during generation of cross-sections. No output produced",
                 "error",
@@ -215,11 +215,11 @@ class Fm2ProfRunner(FM2ProfBase):
                 self.set_logger_message(line, "debug")
             return False
 
-        # Finalise and write output
+        # Step 3. Finalise and write output
         self.start_new_log_task("Finalizing")
         try:
             self._finalise_fm2prof(cross_sections)
-        except:
+        except:  # noqa: E722
             self.set_logger_message("Unexpected exception during finalisation", "error")
             for line in traceback.format_exc().splitlines():
                 self.set_logger_message(line, "debug")
@@ -228,7 +228,7 @@ class Fm2ProfRunner(FM2ProfBase):
         # Print final report
         try:
             self._print_log_report()
-        except:
+        except:  # noqa: E722
             self.set_logger_message(
                 "Unexpected exception during printing of log report",
                 "error",
@@ -248,16 +248,6 @@ class Fm2ProfRunner(FM2ProfBase):
         region_file = ini_file.get_input_file("RegionPolygonFile")
         section_file = ini_file.get_input_file("SectionPolygonFile")
 
-        # Read region & section polygon
-        regions: RegionPolygon = None
-        sections: SectionPolygon = None
-
-        if region_file:
-            regions = RegionPolygon(region_file, logger=self.get_logger())
-
-        if bool(section_file):
-            sections = SectionPolygon(section_file, logger=self.get_logger())
-
         # Check if mandatory input exists
         if not Path(map_file).is_file():
             self.set_logger_message(
@@ -275,24 +265,11 @@ class Fm2ProfRunner(FM2ProfBase):
             raise InitializationError
 
         # Read FM model data
-        (
-            time_dependent_data,
-            time_independent_data,
-            edge_data,
-            node_coordinates,
-            css_data_dictionary,
-        ) = self._set_fm_model_data(
+        self._set_fm_model_data(
             map_file,
             css_file,
-            regions,
-            sections,
-        )
-        self.fm_model_data = FmModelData(
-            time_dependent_data=time_dependent_data,
-            time_independent_data=time_independent_data,
-            edge_data=edge_data,
-            node_coordinates=node_coordinates,
-            css_data_dictionary=css_data_dictionary,
+            region_file,
+            section_file,
         )
 
         # Validate config file
@@ -423,8 +400,8 @@ class Fm2ProfRunner(FM2ProfBase):
         self,
         res_file: str | Path,
         css_file: str | Path,
-        regions: RegionPolygon | None,
-        sections: SectionPolygon | None,
+        region_file: str | Path,
+        section_file: str | Path,
     ) -> tuple:
         """Read input files for 'FM2PROF'.
 
@@ -432,34 +409,40 @@ class Fm2ProfRunner(FM2ProfBase):
 
         Args:
             res_file (str | Path): path to FlowFM map netcfd file (*_map.nc)
-            css_file (str | Path): path to cross-section definition file_
-            regions (RegionPolygon | None): RegionPolygon object
-            sections (SectionPolygon | None): SectionPolygon object
+            css_file (str | Path): path to cross-section definition file
+            region_file (str | Path): path to region polygon file
+            section_file (str | Path): path to section polygon file
 
         Returns:
             tuple: Tuple containing time dependent data, time independent data, edge data, node coordinates,
             and cross section data.
 
         """
-        importer = ImportInputFiles(logger=self.get_logger())
         ini_file = self.get_inifile()
 
         # Read FM map file
-        self.set_logger_message("Opening FM Map file")
+        self.set_logger_message("Reading FM Map file")
         (
             time_independent_data,
             edge_data,
             node_coordinates,
             time_dependent_data,
-        ) = FMDataImporter().import_dflow2d(res_file)
-        self.set_logger_message("Closed FM Map file")
+        ) = FMDataImporter(res_file).import_dflow2d()
 
         # Load locations and names of cross-sections
-        self.set_logger_message("Opening css file")
+        self.set_logger_message("Reading css file")
+        importer = ImportInputFiles(logger=self.get_logger())
         cssdata = importer.css_file(css_file)
-        self.set_logger_message("Closed css file")
 
-        # Classify regions & set cross-sections
+        # Read region & section polygon
+        self.set_logger_message("Reading polygon files")
+        region_file: str | Path = None
+        section_file: str | Path = None
+
+        regions = RegionPolygon(region_file, logger=self.get_logger()) if region_file else None
+        sections = SectionPolygon(section_file, logger=self.get_logger()) if section_file else None
+
+        # Assign 2D points to cross-sections
         if (ini_file.get_parameter("classificationmethod") == 0) or (regions is None):
             self.set_logger_message(
                 "All 2D points assigned to the same region and classifying points to cross-sections",
@@ -469,25 +452,22 @@ class Fm2ProfRunner(FM2ProfBase):
                 time_independent_data,
                 edge_data,
             )
-        elif ini_file.get_parameter("classificationmethod") == 1:
-            self.set_logger_message(
-                "Assigning 2D points to regions using DeltaShell and classifying points to cross-sections",
-            )
-            time_independent_data, edge_data = self._classify_with_deltashell(
-                time_independent_data,
-                edge_data,
-                cssdata,
-                regions,
-                polytype="region",
-            )
         else:
-            self.set_logger_message(
-                "Assigning 2D points to regions using Built-In method and classifying points to cross-sections",
-            )
-            time_independent_data, edge_data = self._classify_with_builtin_methods(
+            # do in-polygon
+            gridpoints_in_regions: GridPointsInPolygonResults = regions.get_gridpoints_in_polygon(res_file)
+            gridpoints_in_sections: GridPointsInPolygonResults = sections.get_gridpoints_in_polygon(res_file)
+
+            time_independent_data["region"] = gridpoints_in_regions.faces_in_polygon
+            time_independent_data["sections"] = gridpoints_in_sections.faces_in_polygon
+
+            edge_data["region"] = gridpoints_in_regions.edges_in_polygon
+            edge_data["sections"] = gridpoints_in_sections.edges_in_polygon
+
+            # do funcs.classify_with_regions
+            time_independent_data, edge_data = funcs.classify_with_regions(
+                cssdata,
                 time_independent_data,
                 edge_data,
-                cssdata,
                 regions,
             )
 
@@ -523,13 +503,14 @@ class Fm2ProfRunner(FM2ProfBase):
                 self.get_logger(),
             )
 
-        return (
-            time_dependent_data,
-            time_independent_data,
-            edge_data,
-            node_coordinates,
-            cssdata,
+        self.fm_model_data = FmModelData(
+            time_dependent_data=time_dependent_data,
+            time_independent_data=time_independent_data,
+            edge_data=edge_data,
+            node_coordinates=node_coordinates,
+            css_data_dictionary=cssdata,
         )
+
 
     def _classify_roughness_sections_by_variance(
         self,

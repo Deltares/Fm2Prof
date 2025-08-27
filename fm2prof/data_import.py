@@ -76,7 +76,7 @@ class FMDataImporter(FM2ProfBase):
         grid = xr.open_dataset(self.file_path, engine="netcdf4")
         return grid[var_name].to_numpy()
 
-    def import_dflow2d(self, file_path: Path | str) -> tuple[pd.DataFrame | None, dict, pd.DataFrame, dict]:
+    def import_dflow2d(self) -> tuple[pd.DataFrame | None, dict, pd.DataFrame, dict]:
         """Read input from a dflow2d output file.
 
         Args:
@@ -92,7 +92,7 @@ class FMDataImporter(FM2ProfBase):
         self.set_logger_message("hello from dflow2d importer")
 
         # Open results file for reading, within context manager to ensure garbage collection
-        with Dataset(file_path, "r") as map_file:
+        with Dataset(self.file_path, "r") as map_file:
             # Time-invariant variables from FM 2D at faces
             # -----------------------------------------------
             tid_face = None

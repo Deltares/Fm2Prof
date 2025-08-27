@@ -32,7 +32,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING, Literal, NamedTuple
 
 import shapely
 from meshkernel import GeometryList, MeshKernel, ProjectionType
@@ -44,7 +44,12 @@ if TYPE_CHECKING:
     from logging import Logger
 
     import numpy as np
-    import pandas as pd
+
+class GridPointsInPolygonResults(NamedTuple):
+    """Named tuple for grid points in polygon results."""
+
+    faces_in_polygon: list[str]
+    edges_in_polygon: list[str]
 
 class Polygon:
     """Polygon class."""
@@ -101,13 +106,13 @@ class MultiPolygon(FM2ProfBase):
         if not all(isinstance(polygon, Polygon) for polygon in polygons_list):
             err_msg = "Polygons must be of type Polygon"
             raise ValueError(err_msg)
-        # Check if properties contain the required 'name' property
-        names = [polygon.properties.get("name") for polygon in polygons_list]
-        if not all(names):
+        # Check if properties contain the required 'region' property
+        regions = [polygon.properties.get("name") for polygon in polygons_list]
+        if not all(regions):
             err_msg = "Polygon properties must contain key-word 'name'"
             raise ValueError(err_msg)
-        # Check if 'name' property is unique, otherwise _check_overlap will produce bugs
-        if len(names) != len(set(names)):
+        # Check if 'region' property is unique, otherwise _check_overlap will produce bugs
+        if len(regions) != len(set(regions)):
             err_msg = "Property 'name' must be unique"
             raise ValueError(err_msg)
         self._polygons = polygons_list
@@ -143,16 +148,85 @@ class MultiPolygon(FM2ProfBase):
         return [shapely.Polygon(polygon.coordinates) for polygon in self.polygons]
 
     def get_gridpoints_in_polygon(self,
+        res_file: str | Path,
+        property_name: Literal["region", "section"],
+        *,
+        force_cache_invalidation:bool=False) -> GridPointsInPolygonResults:
+        """Method to get faces and edges in region.
+
+        This method performs caching of the in-polygon classification results
+        to avoid recalculating if the region file has not changed. The cache
+        is invalidated if the region file is modified or if `force_cache_invalidation`
+        is set to `True`.
+
+        Args:
+            res_file (str | Path): path to result (map) netcdf file.
+            property_name (Literal["region", "section"]): Property to use for classification.
+            force_cache_invalidation (bool): Force cache invalidation even if region file has not changed.
+
+        Returns:
+            GridPointsInPolygonResults
+        """
+        # get metadata of file path to determine if the in-polygon classification needs
+        # to be rerun
+        meta = {"last_modified": res_file.stat().st_mtime,
+                "file_size": res_file.stat().st_size}
+
+        # check if cache file exists and is valid
+        cache_file = Path(res_file).with_suffix(f".{property_name}_cache.json")
+        if cache_file.exists() and not force_cache_invalidation:
+            # read cache file
+            meta_cache, faces_in_polygon, edges_in_polygon = self._load_cache(cache_file)
+            if meta == meta_cache:
+                self.set_logger_message("Using cached regions", level="info")
+                return GridPointsInPolygonResults(faces_in_polygon=faces_in_polygon, edges_in_polygon=edges_in_polygon)
+            self.set_logger_message("Cached regions are stale", level="warning")
+            faces_in_polygon = self.meshkernel_inpolygon(res_file, dtype="face", property_name=property_name)
+            edges_in_polygon = self.meshkernel_inpolygon(res_file, dtype="edge", property_name=property_name)
+            self._write_cache(cache_file, meta, faces_in_polygon, edges_in_polygon)
+        elif cache_file.exists() and force_cache_invalidation:
+            self.set_logger_message("Forcing recalculating region cache", level="info")
+            cache_file.unlink()
+            faces_in_polygon = self.meshkernel_inpolygon(res_file, dtype="face", property_name=property_name)
+            edges_in_polygon = self.meshkernel_inpolygon(res_file, dtype="edge", property_name=property_name)
+            self._write_cache(cache_file, meta, faces_in_polygon, edges_in_polygon)
+        elif not cache_file.exists():
+            faces_in_polygon = self.meshkernel_inpolygon(res_file, dtype="face", property_name=property_name)
+            edges_in_polygon = self.meshkernel_inpolygon(res_file, dtype="edge", property_name=property_name)
+            self._write_cache(cache_file, meta, faces_in_polygon, edges_in_polygon)
+
+        return GridPointsInPolygonResults(faces_in_polygon=faces_in_polygon, edges_in_polygon=edges_in_polygon)
+
+    @staticmethod
+    def _load_cache(cache_file: Path) -> tuple[dict, list[str], list[str]]:
+        with cache_file.open("r") as f:
+            cache_data = json.load(f)
+        return cache_data.get("meta"), cache_data.get("faces"), cache_data.get("edges")
+
+    @staticmethod
+    def _write_cache(
+        cache_file: Path,
+        meta: dict,
+        faces_in_region: list[str],
+        edges_in_region: list[str]) -> None:
+        cache_data = {
+            "meta": meta,
+            "faces": faces_in_region,
+            "edges": edges_in_region}
+        with cache_file.open("w") as f:
+            json.dump(cache_data, f)
+
+    def meshkernel_inpolygon(self,
         res_file: str | Path,  # path to result (map) netcdf file
         dtype: Literal["face", "edge", "node"],
-        property_name: Literal["name", "section"],
+        property_name: Literal["region", "section"],
         ) -> list[str]:
         """Get grid points in polygon.
 
         Args:
             res_file (str | Path): Path to result (map) netcdf file.
             dtype (Literal["face", "edge", "node"]): Type of grid points to retrieve.
-            property_name (Literal["name", "section"]): Property to use for classification.
+            property_name (Literal["region", "section"]): Property to use for classification.
 
         Returns:
             pd.DataFrame | dict: DataFrame or dictionary containing grid points in polygon.
@@ -204,8 +278,8 @@ class MultiPolygon(FM2ProfBase):
                     continue
                 if poly1.intersects(poly2):
                     self.set_logger_message(
-                        f"{self.polygons[i].properties.get('name')} overlaps {self.polygons[j].properties.get('name')}." ,
-                        level="warning",
+                       f"{self.polygons[i].properties.get('name')} overlaps {self.polygons[j].properties.get('name')}.",
+                       level="warning",
                     )
 
     def from_file(self, file_path: Path | str) -> None:
@@ -216,8 +290,16 @@ class MultiPolygon(FM2ProfBase):
         """
         self._validate_extension(file_path)
 
+        if Path(file_path).exists() is False:
+            err_msg = "Polygon file does not exist"
+            raise FileNotFoundError(err_msg)
+
         with Path(file_path).open("r") as geojson_file:
             geojson_data = json.load(geojson_file).get("features")
+
+        if not geojson_data:
+            err_msg = "Polygon file is not valid"
+            raise ValueError(err_msg)
 
         polygons: list[Polygon] = []
         for feature in geojson_data:
@@ -258,19 +340,27 @@ class RegionPolygon(MultiPolygon):
         super().from_file(file_path)
         self._validate_regions()
 
-    def get_gridpoints_in_polygon(self, res_file: str | Path) -> list[str]:
-        """Convenience method to get faces in region.
+    def get_gridpoints_in_polygon(self,
+        res_file: str | Path,
+        *,
+        force_cache_invalidation:bool=False) -> GridPointsInPolygonResults:
+        """Method to get faces and edges in region.
 
-        This method is an overload of the parent method with fixed
-        property_name and dtype arguments.
+        This method performs caching of the in-polygon classification results
+        to avoid recalculating if the region file has not changed. The cache
+        is invalidated if the region file is modified or if `force_cache_invalidation`
+        is set to `True`.
 
         Args:
             res_file (str | Path): path to result (map) netcdf file.
+            force_cache_invalidation (bool): Force cache invalidation even if region file has not changed.
 
         Returns:
-            list[str]: List of region names for each face in the grid.
+            GridPointsInPolygonResults
         """
-        super().get_gridpoints_in_polygon(res_file, "face", "name")
+        return super().get_gridpoints_in_polygon(res_file,
+                                              property_name="region",
+                                              force_cache_invalidation=force_cache_invalidation)
 
     def _validate_regions(self) -> None:
         self.set_logger_message("Validating region file", level="info")
@@ -313,19 +403,27 @@ class SectionPolygon(MultiPolygon):
         super().from_file(file_path)
         self._validate_sections()
 
-    def get_gridpoints_in_polygon(self, res_file: str | Path) -> list[int]:
-        """Convenience method to get edges in section.
+    def get_gridpoints_in_polygon(self,
+        res_file: str | Path,
+        *,
+        force_cache_invalidation:bool=False) -> GridPointsInPolygonResults:
+        """Method to get faces and edges in section.
 
-        This method is an overload of the parent method with fixed
-        property_name and dtype arguments.
+        This method performs caching of the in-polygon classification results
+        to avoid recalculating if the section file has not changed. The cache
+        is invalidated if the section file is modified or if `force_cache_invalidation`
+        is set to `True`.
 
         Args:
             res_file (str | Path): path to result (map) netcdf file.
+            force_cache_invalidation (bool): Force cache invalidation even if section file has not changed.
 
         Returns:
-            list[str]: List of section ids for each edge in the grid.
+            GridPointsInPolygonResults
         """
-        super().get_gridpoints_in_polygon(res_file, "edge", "section")
+        return super().get_gridpoints_polygon(res_file,
+                                              property_name="section",
+                                              force_cache_invalidation=force_cache_invalidation)
 
     def _validate_sections(self) -> None:
         self.set_logger_message("Validating Section file")
@@ -343,7 +441,7 @@ class SectionPolygon(MultiPolygon):
             if "section" not in section.properties:
                 raise_exception = True
                 self.set_logger_message(
-                    'Polygon {} has no property "section"'.format(section.properties.get("name")),
+                    f'Polygon {section.properties.get("name")} has no property "section"',
                     level="error",
                 )
 

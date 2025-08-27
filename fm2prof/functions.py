@@ -60,7 +60,7 @@ def classify_with_regions(
     time_independent_data: pd.DataFrame,
     edge_data: dict,
     css_regions: list,
-) -> tuple[pd.DataFrame, dict]:
+    ) -> tuple[pd.DataFrame, dict]:
     """Assign cross-section id's based on region polygons.
 
     Within a region, assignment will be done by k nearest neighbour
