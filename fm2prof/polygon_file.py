@@ -88,8 +88,6 @@ class MultiPolygon(FM2ProfBase):
     a list of Shapely Polygon objects for geometric operations.
     """
 
-    __logger = None
-
     def __init__(self, logger: Logger) -> None:
         """Instantiate a MultiPolygon object."""
         self.set_logger(logger)
@@ -374,6 +372,7 @@ class RegionPolygon(MultiPolygon):
     def get_gridpoints_in_polygon(self,
         res_file: str | Path,
         *,
+        property_name: Literal["region", "section"]="region",
         force_cache_invalidation:bool=False) -> GridPointsInPolygonResults:
         """Method to get faces and edges in region.
 
@@ -384,13 +383,14 @@ class RegionPolygon(MultiPolygon):
 
         Args:
             res_file (str | Path): path to result (map) netcdf file.
+            property_name (Literal["region", "section"]): Property to use for classification. Defaults to region
             force_cache_invalidation (bool): Force cache invalidation even if region file has not changed.
 
         Returns:
             GridPointsInPolygonResults
         """
         return super().get_gridpoints_in_polygon(res_file,
-                                              property_name="region",
+                                              property_name=property_name,
                                               force_cache_invalidation=force_cache_invalidation)
 
     def _validate_regions(self) -> None:
@@ -437,6 +437,7 @@ class SectionPolygon(MultiPolygon):
     def get_gridpoints_in_polygon(self,
         res_file: str | Path,
         *,
+        property_name: Literal["region", "section"]="section",
         force_cache_invalidation:bool=False) -> GridPointsInPolygonResults:
         """Method to get faces and edges in section.
 
@@ -447,13 +448,14 @@ class SectionPolygon(MultiPolygon):
 
         Args:
             res_file (str | Path): path to result (map) netcdf file.
+            property_name (Literal["region", "section"]): Property to use for classification. Defaults to section
             force_cache_invalidation (bool): Force cache invalidation even if section file has not changed.
 
         Returns:
             GridPointsInPolygonResults
         """
         return super().get_gridpoints_in_polygon(res_file,
-                                              property_name="section",
+                                              property_name=property_name,
                                               force_cache_invalidation=force_cache_invalidation)
 
     def _validate_sections(self) -> None:

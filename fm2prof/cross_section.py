@@ -15,7 +15,7 @@ import scipy.optimize as so
 from scipy.integrate import cumulative_trapezoid
 from tqdm import tqdm
 
-from fm2prof import functions as funcs
+from fm2prof import nearest_neighbour
 from fm2prof import mask_output_file
 from fm2prof.common import FM2ProfBase, FrictionTable
 from fm2prof.ini_file import IniFile
@@ -311,7 +311,7 @@ class CrossSection(FM2ProfBase):
         # Retrieve the water-depth
         # & water level nearest to the cross-section location
         self.set_logger_message("Retrieving centre point values")
-        (centre_depth, centre_level) = funcs.get_centre_values(
+        (centre_depth, centre_level) = nearest_neighbour.get_centre_values(
             self.location,
             fm_data["x"],
             fm_data["y"],

@@ -56,8 +56,7 @@ import tqdm
 from geojson import Feature, FeatureCollection, Polygon
 from scipy.spatial import ConvexHull
 
-from fm2prof import __version__, mask_output_file
-from fm2prof import functions as funcs
+from fm2prof import __version__, mask_output_file, nearest_neighbour
 from fm2prof.common import FM2ProfBase
 from fm2prof.cross_section import CrossSection, CrossSectionHelpers
 from fm2prof.data_import import FMDataImporter, FmModelData, ImportInputFiles
@@ -200,35 +199,12 @@ class Fm2ProfRunner(FM2ProfBase):
         self.finish_log_task()
 
         # Step 2. Generate cross-sections
-        try:
-            cross_sections = self._generate_cross_section_list()
-        except:  # noqa: E722
-            self.set_logger_message(
-                "Unexpected exception during generation of cross-sections. No output produced",
-                "error",
-            )
-            for line in traceback.format_exc().splitlines():
-                self.set_logger_message(line, "debug")
-            return False
+        cross_sections = self._generate_cross_section_list()
 
         # Step 3. Finalise and write output
         self.start_new_log_task("Finalizing")
-        try:
-            self._finalise_fm2prof(cross_sections)
-        except:  # noqa: E722
-            self.set_logger_message("Unexpected exception during finalisation", "error")
-            for line in traceback.format_exc().splitlines():
-                self.set_logger_message(line, "debug")
-            return False
-
-        # Print final report
-        try:
-            self._print_log_report()
-        except:  # noqa: E722
-            self.set_logger_message(
-                "Unexpected exception during printing of log report",
-                "error",
-            )
+        self._finalise_fm2prof(cross_sections)
+        self._print_log_report()
         self.finish_log_task()
 
         return True
@@ -441,7 +417,7 @@ class Fm2ProfRunner(FM2ProfBase):
             self.set_logger_message(
                 "All 2D points assigned to the same region and classifying points to cross-sections",
             )
-            time_independent_data, edge_data = funcs.classify_without_regions(
+            time_independent_data, edge_data = nearest_neighbour.classify_without_regions(
                 cssdata,
                 time_independent_data,
                 edge_data,
@@ -456,8 +432,8 @@ class Fm2ProfRunner(FM2ProfBase):
             # Determine in which region the cross-sections are
             css_regions = regions.get_points_in_polygon(cssdata["xy"], property_name="region")
 
-            # do funcs.classify_with_regions
-            time_independent_data, edge_data = funcs.classify_with_regions(
+            # do nearest_neighbour.classify_with_regions
+            time_independent_data, edge_data = nearest_neighbour.classify_with_regions(
                 cssdata,
                 time_independent_data,
                 edge_data,
@@ -514,10 +490,11 @@ class Fm2ProfRunner(FM2ProfBase):
         # Get chezy values at last timestep
         end_values = variable.T.iloc[-1].to_numpy()
         key = "section"
+        threshold_no_variance = 2 # this means that all end values are very close together, so do not split
 
         # Find split point (chezy value) by variance minimisation
         split_candidates = np.arange(min(end_values), max(end_values), 1)
-        if len(split_candidates) < 2:  # noqa: PLR2004, this means that all end values are very close together, so do not split
+        if len(split_candidates) < threshold_no_variance:
             data[key][:] = 1
         else:
             variance_list = [
