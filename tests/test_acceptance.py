@@ -16,7 +16,7 @@ class CaseData(NamedTuple):
     expected_cross_section: dict
 
 # Test data to be used
-cases: CaseData = [{
+cases = [{
     "name": "case_02_compound",
     "inifile": "cases/case_02_compound/fm2prof_config.ini",
     "expected_cross_section": {
@@ -30,12 +30,19 @@ cases: CaseData = [{
         "total_width": [20, 80],
         "levels": [0, 2],
     }},
+    {
+    "name": "case_02_compound_with_region_and_section",
+    "inifile": "cases/case_02_compound/fm2prof_config_with_region_and_section.ini",
+    "expected_cross_section": {
+        "total_width": [20, 80],
+        "levels": [0, 2],
+    }},
 ]
 
 
 class TestAcceptance:
 
-    @pytest.mark.parametrize(("case"), cases)
+    @pytest.mark.parametrize("case", cases)
     def test_generated_css_match_expected(self, case):
         # 1. Set up test data and expectations
         tolerated_max_level_error = 0.05 # meters

@@ -764,22 +764,13 @@ class Fm2ProfRunner(FM2ProfBase):
             output_dir = Path(self.get_inifile().get_output_directory())
             with output_dir.joinpath(f"{css_data.get('id')}.pickle").open("wb") as f:
                 pickle.dump(css_data, f)
-        try:
-            css = CrossSection(
-                logger=self.get_logger(),
-                inifile=self.get_inifile(),
-                data=css_data,
-            )
 
-        except Exception as e_info:
-            self.set_logger_message(
-                ("Exception thrown while creating cross-section "
-                 f"{css_data.get('id')}, message: {e_info!s}"),
-                "error",
-            )
-            return None
+        return CrossSection(
+            logger=self.get_logger(),
+            inifile=self.get_inifile(),
+            data=css_data,
+        )
 
-        return css
 
     def _write_output(self, cross_sections: list, output_dir: Path) -> None:
         """Export all cross sections to the necessary file formats.

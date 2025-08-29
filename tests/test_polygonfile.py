@@ -182,7 +182,7 @@ class Test_MultiPolygon:  # noqa: N801
 
         # Step 4. Verify the output
         assert isinstance(region_at_points, list)
-        assert len(region_at_points) == 786
+        assert len(region_at_points) == 654  # number of **internal** edges in the test file
         assert region_at_points[0] == polygon_file.undefined
         assert region_at_points[27] == "poly1"
 
@@ -257,7 +257,7 @@ class Test_RegionPolygonFile:  # noqa: N801
         assert result.faces_in_polygon[0] == region_polygon_file.undefined
         assert result.faces_in_polygon[73] == "poly1"
 
-        assert len(result.edges_in_polygon) == 786
+        assert len(result.edges_in_polygon) == 654
         assert result.edges_in_polygon[0] == region_polygon_file.undefined
         assert result.edges_in_polygon[27] == "poly1"
 
@@ -285,7 +285,7 @@ class Test_RegionPolygonFile:  # noqa: N801
         assert result.faces_in_polygon[0] == region_polygon_file.undefined
         assert result.faces_in_polygon[73] == "poly1"
 
-        assert len(result.edges_in_polygon) == 786
+        assert len(result.edges_in_polygon) == 654
         assert result.edges_in_polygon[0] == region_polygon_file.undefined
         assert result.edges_in_polygon[27] == "poly1"
 
@@ -316,7 +316,7 @@ class Test_RegionPolygonFile:  # noqa: N801
         assert result.faces_in_polygon[0] == region_polygon_file.undefined
         assert result.faces_in_polygon[73] == "poly1"
 
-        assert len(result.edges_in_polygon) == 786
+        assert len(result.edges_in_polygon) == 654
         assert result.edges_in_polygon[0] == region_polygon_file.undefined
         assert result.edges_in_polygon[27] == "poly1"
 

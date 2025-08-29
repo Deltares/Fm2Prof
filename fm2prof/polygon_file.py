@@ -452,7 +452,7 @@ class SectionPolygon(MultiPolygon):
         Returns:
             GridPointsInPolygonResults
         """
-        return super().get_gridpoints_polygon(res_file,
+        return super().get_gridpoints_in_polygon(res_file,
                                               property_name="section",
                                               force_cache_invalidation=force_cache_invalidation)
 

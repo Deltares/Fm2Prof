@@ -261,7 +261,7 @@ class FmModelData:
 
         edge_x = edge_data["x"][edge_data["sclass"] == css_name]
         edge_y = edge_data["y"][edge_data["sclass"] == css_name]
-        edge_section = edge_data["section"][edge_data["sclass"] == css_name]  # roughness section number
+        edge_section = np.array(edge_data["section"])[edge_data["sclass"] == css_name]  # roughness section number
 
         bedlevel = dti["bedlevel"][dti["sclass"] == css_name]
 

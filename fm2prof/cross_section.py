@@ -16,8 +16,8 @@ from scipy.integrate import cumulative_trapezoid
 from tqdm import tqdm
 
 from fm2prof import functions as funcs
-from fm2prof.common import FM2ProfBase, FrictionTable
 from fm2prof import mask_output_file
+from fm2prof.common import FM2ProfBase, FrictionTable
 from fm2prof.ini_file import IniFile
 
 from .lib import polysimplify as ps
@@ -936,7 +936,7 @@ class CrossSection(FM2ProfBase):
                 )
                 raise ValueError(err_msg)
 
-            self.friction_tables[self._section_map[str(section)]] = FrictionTable(
+            self.friction_tables[section] = FrictionTable(
                 level=self._css_z_roughness,
                 friction=friction,
             )
