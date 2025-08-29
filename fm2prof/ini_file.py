@@ -376,7 +376,7 @@ class IniFile(FM2ProfBase):
             key_default, key_type = self._get_key_from_template(section, key)
             try:
                 parsed_value = key_type(value)
-                self._set_config_value("parameters", key_default, parsed_value)
+                self._set_config_value(section, key_default, parsed_value)
             except ValueError:
                 self.set_logger_message(
                     f"{key} could not be cast as {key_type}",

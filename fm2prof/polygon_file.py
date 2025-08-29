@@ -197,6 +197,34 @@ class MultiPolygon(FM2ProfBase):
 
         return GridPointsInPolygonResults(faces_in_polygon=faces_in_polygon, edges_in_polygon=edges_in_polygon)
 
+    def get_points_in_polygon(self, points: np.ndarray, property_name: Literal["region", "section"]) -> list[str]:
+        """Method to determine in which polygon input points are.
+
+        Warning:
+            This method is not applicable for large number of points.
+            Only use for small number of points (e.g. cross-section locations).
+
+        Args:
+            points (np.ndarray): Array of shape (n_points, 2) containing x,y coordinates of points to classify.
+            property_name (Literal['region', 'section']): Property to use for classification.
+
+        Returns:
+            list[str]: List of polygon names in which the points are located. If a point is not located
+                       in any polygon, it is classified as 'undefined'.
+        """
+        # Convert to shapely point
+        points = [shapely.Point(xy) for xy in points]
+        points_regions = [self.undefined] * len(points)
+
+        # Assign point to region
+        for i, point in enumerate(points):
+            for j, polygon in enumerate(self.as_shapely()):
+                if point.within(polygon):
+                    points_regions[i] = self.polygons[j].properties.get(property_name)
+                    break
+
+        return points_regions
+
     @staticmethod
     def _load_cache(cache_file: Path) -> tuple[dict, list[str], list[str]]:
         with cache_file.open("r") as f:
@@ -261,7 +289,10 @@ class MultiPolygon(FM2ProfBase):
                 node_to_face[int(face_index)] = nodes_in_polygon[int(map_index)]
             output = node_to_face
         elif dtype == "edge":
+            # only internal edges!
+            internal_edges = fmdata.get_variable("mesh2d_edge_type")[:] == 1
             edge_map: np.ndarray = fmdata.get_variable("mesh2d_edge_nodes").T[0] -1
+            edge_map = edge_map[internal_edges]
             node_to_edge: list[str] = [self.undefined] * len(edge_map)
             for edge_index, map_index in enumerate(edge_map.tolist()):
                 node_to_edge[int(edge_index)] = nodes_in_polygon[int(map_index)]

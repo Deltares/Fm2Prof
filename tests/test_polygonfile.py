@@ -31,7 +31,7 @@ def test_geojson():
                 "properties": {"name": "poly1", "region": "poly1"},
                 "geometry": {
                     "type": "Polygon",
-                    "coordinates": [[100, 100], [500, 10], [500, 400], [100, 400], [100, 100]],
+                    "coordinates": [[100, 100], [500, 100], [500, 400], [100, 400], [100, 100]],
                 },
             },
             {
@@ -186,6 +186,21 @@ class Test_MultiPolygon:  # noqa: N801
         assert region_at_points[0] == polygon_file.undefined
         assert region_at_points[27] == "poly1"
 
+    def test_get_points_in_polygon(self, polygon_list, mocker):
+        """Test the get_points_in_polygon method."""
+        # Step 1. Fetch the grid file
+        res_file = TestUtils.get_local_test_file("cases/case_02_compound/Data/2DModelOutput/FlowFM_map.nc")
+
+        # Step 2. Instantiate the RegionPolygonFile class
+        polygon_file = MultiPolygon(logging.getLogger(__name__))
+        polygon_file.polygons = polygon_list
+        mocked_logger = mocker.patch.object(polygon_file, "set_logger_message")
+
+        # Step 3. Call the get_gridpoints_in_polygon method
+        region_at_points = polygon_file.get_points_in_polygon(points=[[0, 0], [200, 300]], property_name="region")
+
+        # Step 4. Verify the output
+        assert region_at_points == [polygon_file.undefined, "poly1"]
 class Test_RegionPolygonFile:  # noqa: N801
 
     def test_initialisation(self, mocker, test_geojson, tmp_path):

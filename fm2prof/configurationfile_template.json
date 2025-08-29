@@ -66,12 +66,12 @@
 	    "value": 10 
   	},
     "ExtrapolateStorage": {
-	    "type": "fm2prof.IniFile.ImportBoolType",
+	    "type": "fm2prof.ini_file.ImportBoolType",
 	    "hint": "Add storage to water level independent cross-section section",
 	    "value": true 
   	},
   	"SDCorrection": {
-	    "type": "fm2prof.IniFile.ImportBoolType",
+	    "type": "fm2prof.ini_file.ImportBoolType",
 	    "hint": "Use summerdike volume correction",
 	    "value": true 
   	},
@@ -113,17 +113,17 @@
   },
   "debug":{
 	"ExportCSSData": {
-	    "type": "fm2prof.IniFile.ImportBoolType",
+	    "type": "fm2prof.ini_file.ImportBoolType",
 	    "hint": "If True, exports pickled (1) input data for cross-section object, (2) flow mask for conveyance/storage.",
 	    "value": false 
   	},
   	"ExportMapFiles": {
-	    "type": "fm2prof.IniFile.ImportBoolType",
+	    "type": "fm2prof.ini_file.ImportBoolType",
 	    "hint": "Export detailed map output. Only use for small models or limited number of cross-sections b/c output can be huge.",
 	    "value": false 
   	},
   	"CssSelection": {
-	    "type": "fm2prof.IniFile.ImportListType",
+	    "type": "fm2prof.ini_file.ImportListType",
 	    "hint": "provide comma separated list of ints; e.g. 38, 39, 40. Leave empty to generate all cross-sections",
 	    "value": "" 
   	}

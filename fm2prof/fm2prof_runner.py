@@ -120,20 +120,21 @@ class Fm2ProfRunner(FM2ProfBase):
         # Print configuration to log
         self.set_logger_message(self.get_inifile().print_configuration(), header=True)
 
-    def run(self, *, overwrite: bool = False) -> None:
+    def run(self, *, overwrite: bool = False) -> bool:
         """Execute FM2PROF routines.
 
         Args:
-        ----
             overwrite (bool): if True, overwrites existing output. If False, exits if output detected.
 
+        Returns:
+            bool: True if run was successful, False if errors occurred.
         """
         if self.get_inifile() is None:
             self.set_logger_message(
                 "No ini file was specified: the run cannot go further.",
                 "Warning",
             )
-            return
+            return False
 
         # Check for already existing output
         if self._output_exists() and not overwrite:
@@ -141,15 +142,17 @@ class Fm2ProfRunner(FM2ProfBase):
                 "Output already exists. Use overwrite option if you want to re-run the program",
                 "warning",
             )
-            return
+            return False
 
         # Run
-        succes = self._run_inifile()
+        success = self._run_inifile()
 
-        if not succes:
+        if not success:
             self.set_logger_message("Program finished with errors", "warning")
         else:
             self.set_logger_message("Program finished", "info")
+
+        return success
 
     def load_inifile(self, ini_file_path: str) -> None:
         """Use this method to load a configuration file from path.
@@ -191,15 +194,8 @@ class Fm2ProfRunner(FM2ProfBase):
         self.start_new_log_task("Initialising FM2PROF")
         try:
             self._initialise_fm2prof()
-        except InitializationError:
-            return False
-        except:  # noqa: E722
-            self.set_logger_message(
-                "Unexpected exception during initialisation",
-                "error",
-            )
-            for line in traceback.format_exc().splitlines():
-                self.set_logger_message(line, "debug")
+        except InitializationError as e:
+            self.set_logger_message(f"Initialization failed: {e}", "error")
             return False
         self.finish_log_task()
 
@@ -436,8 +432,6 @@ class Fm2ProfRunner(FM2ProfBase):
 
         # Read region & section polygon
         self.set_logger_message("Reading polygon files")
-        region_file: str | Path = None
-        section_file: str | Path = None
 
         regions = RegionPolygon(region_file, logger=self.get_logger()) if region_file else None
         sections = SectionPolygon(section_file, logger=self.get_logger()) if section_file else None
@@ -453,25 +447,24 @@ class Fm2ProfRunner(FM2ProfBase):
                 edge_data,
             )
         else:
+            self.set_logger_message("Assigning 2D points to regions using Region Polygon")
             # do in-polygon
             gridpoints_in_regions: GridPointsInPolygonResults = regions.get_gridpoints_in_polygon(res_file)
-            gridpoints_in_sections: GridPointsInPolygonResults = sections.get_gridpoints_in_polygon(res_file)
-
             time_independent_data["region"] = gridpoints_in_regions.faces_in_polygon
-            time_independent_data["sections"] = gridpoints_in_sections.faces_in_polygon
-
             edge_data["region"] = gridpoints_in_regions.edges_in_polygon
-            edge_data["sections"] = gridpoints_in_sections.edges_in_polygon
+
+            # Determine in which region the cross-sections are
+            css_regions = regions.get_points_in_polygon(cssdata["xy"], property_name="region")
 
             # do funcs.classify_with_regions
             time_independent_data, edge_data = funcs.classify_with_regions(
                 cssdata,
                 time_independent_data,
                 edge_data,
-                regions,
+                css_regions,
             )
 
-        # Classify sections for roughness tables
+        # Classify sections
         if (ini_file.get_parameter("classificationmethod") == 0) or (sections is None):
             self.set_logger_message("Assigning point to sections without polygons")
             edge_data = self._classify_roughness_sections_by_variance(
@@ -482,26 +475,13 @@ class Fm2ProfRunner(FM2ProfBase):
                 time_independent_data,
                 time_dependent_data["chezy_mean"],
             )
-        elif ini_file.get_parameter("classificationmethod") == 1:
-            self.set_logger_message("Assigning 2D points to sections using DeltaShell")
-            time_independent_data, edge_data = self._classify_section_with_deltashell(
-                time_independent_data,
-                edge_data,
-            )
         else:
-            self.set_logger_message(
-                "Assigning 2D points to sections using Built-In method",
-            )
-            edge_data = funcs.classify_roughness_sections_by_polygon(
-                sections,
-                edge_data,
-                self.get_logger(),
-            )
-            time_independent_data = funcs.classify_roughness_sections_by_polygon(
-                sections,
-                time_independent_data,
-                self.get_logger(),
-            )
+            self.set_logger_message("Assigning 2D points to sections using Section Polygon")
+            # do in-polygon
+            gridpoints_in_sections: GridPointsInPolygonResults = sections.get_gridpoints_in_polygon(res_file)
+
+            time_independent_data["section"] = gridpoints_in_sections.faces_in_polygon
+            edge_data["section"] = gridpoints_in_sections.edges_in_polygon
 
         self.fm_model_data = FmModelData(
             time_dependent_data=time_dependent_data,
@@ -1084,7 +1064,7 @@ class Project(Fm2ProfRunner):
         """
         self.get_inifile().set_output_directory(path)
 
-    def get_output_directory(self) -> str:
+    def get_output_directory(self) -> Path:
         """Return the current output directory."""
         return self.get_inifile().get_output_directory()
 

@@ -89,7 +89,7 @@ class CompareIdealizedModel:
             # Plot volume at each cross-section
             self.__plot_volume(df, crosssection, fm2prof_fig_dir)
 
-    def _compare_css(self, case_name, tzw_values, input_geometry_file, fm2prof_fig_dir):
+    def compare_css(self, case_name, tzw_values, input_geometry_file, fm2prof_fig_dir):
 
         #  Read data
         (Z, W, F, Y, CL, FPB, FA, TA) = self.__get_geometry_data(input_geometry_file)
