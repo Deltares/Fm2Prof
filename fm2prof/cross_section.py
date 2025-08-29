@@ -15,8 +15,7 @@ import scipy.optimize as so
 from scipy.integrate import cumulative_trapezoid
 from tqdm import tqdm
 
-from fm2prof import nearest_neighbour
-from fm2prof import mask_output_file
+from fm2prof import mask_output_file, nearest_neighbour
 from fm2prof.common import FM2ProfBase, FrictionTable
 from fm2prof.ini_file import IniFile
 
@@ -302,10 +301,10 @@ class CrossSection(FM2ProfBase):
 
         # Convert area to a matrix for matrix operations
         # (much more efficient than for-loops)
-        area_matrix = pd.DataFrame({col: area for col in waterdepth.columns})
+        area_matrix = pd.DataFrame(dict.fromkeys(waterdepth.columns, area))
         area_matrix.index = area.index
 
-        bedlevel_matrix = pd.DataFrame({col: area for col in waterdepth.columns})
+        bedlevel_matrix = pd.DataFrame(dict.fromkeys(waterdepth.columns, area))
         bedlevel_matrix.index = bedlevel.index
 
         # Retrieve the water-depth

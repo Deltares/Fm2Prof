@@ -147,9 +147,9 @@ class MultiPolygon(FM2ProfBase):
 
     def get_gridpoints_in_polygon(self,
         res_file: str | Path,
-        property_name: Literal["region", "section"],
         *,
-        force_cache_invalidation:bool=False) -> GridPointsInPolygonResults:
+        property_name: Literal["region", "section"],
+        force_cache_invalidation: bool = False) -> GridPointsInPolygonResults:
         """Method to get faces and edges in region.
 
         This method performs caching of the in-polygon classification results

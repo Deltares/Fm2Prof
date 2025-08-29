@@ -66,14 +66,15 @@ class CrossSectionDefinition(dict):
     """Cross section definition."""
     id: str
     levels: list[float]
-    flow_width: float
-    total_width: float
+    flow_width: list[float]
+    total_width: list[float]
     SD_crest: float
     SD_flow_area: float
     SD_total_area: float
     SD_baselevel: float
     mainsectionwidth: float
     fp1sectionwidth: float
+
 
 class GenerateCrossSectionLocationFile(FM2ProfBase):
     """Build a cross-section input file for FM2PROF from a SOBEK 3 DIMR network definition file.
@@ -730,18 +731,19 @@ class VisualiseOutput(FM2ProfBase):
                     css_mainsectionwidth = float(VisualiseOutput._get_value_from_line(f))
                     css_fp1sectionwidth = float(VisualiseOutput._get_value_from_line(f))
 
-                    css: CrossSectionDefinition = {
-                        "id": css_id.strip(),
-                        "levels": css_levels,
-                        "flow_width": css_fwidth,
-                        "total_width": css_twidth,
-                        "SD_crest": css_sdcrest,
-                        "SD_flow_area": css_sdflow,
-                        "SD_total_area": css_sdtotal,
-                        "SD_baselevel": css_sdbaselevel,
-                        "mainsectionwidth": css_mainsectionwidth,
-                        "fp1sectionwidth": css_fp1sectionwidth,
-                    }
+                    css: CrossSectionDefinition = CrossSectionDefinition(
+                        id=css_id.strip(),
+                        levels=css_levels,
+                        flow_width=css_fwidth,
+                        total_width=css_twidth,
+                        SD_crest=css_sdcrest,
+                        SD_flow_area=css_sdflow,
+                        SD_total_area=css_sdtotal,
+                        SD_baselevel=css_sdbaselevel,
+                        mainsectionwidth=css_mainsectionwidth,
+                        fp1sectionwidth=css_fp1sectionwidth,
+                    )
+
                     csslist.append(css)
 
         return csslist
