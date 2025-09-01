@@ -62,7 +62,7 @@ from fm2prof.cross_section import CrossSection, CrossSectionHelpers
 from fm2prof.data_import import FMDataImporter, FmModelData, ImportInputFiles
 from fm2prof.export import Export1DModelData, OutputFiles
 from fm2prof.ini_file import IniFile
-from fm2prof.polygon_file import GridPointsInPolygonResults, RegionPolygon, SectionPolygon
+from fm2prof.polygon_file import GridPointsInPolygonResults, PolygonError, RegionPolygon, SectionPolygon
 
 
 class InitializationError(Exception):
@@ -237,12 +237,16 @@ class Fm2ProfRunner(FM2ProfBase):
             raise InitializationError
 
         # Read FM model data
-        self._set_fm_model_data(
-            map_file,
-            css_file,
-            region_file,
-            section_file,
-        )
+        try:
+            self._set_fm_model_data(
+                map_file,
+                css_file,
+                region_file,
+                section_file,
+            )
+        except PolygonError as e:
+            self.set_logger_message(f"Error during initialisation: {e}", "error")
+            raise InitializationError from e
 
         # Validate config file
         success: bool = self._validate_config_after_initalization()

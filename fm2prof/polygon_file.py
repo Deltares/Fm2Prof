@@ -45,6 +45,13 @@ if TYPE_CHECKING:
 
     import numpy as np
 
+class PolygonError(Exception):
+    """Custom exception for polygon errors."""
+    def __init__(self, message: str="Polygon file is not valid") -> None:
+        """Initialize PolygonError with a message."""
+        self.message = message
+        super().__init__(self.message)
+
 class GridPointsInPolygonResults(NamedTuple):
     """Named tuple for grid points in polygon results."""
 
@@ -86,6 +93,17 @@ class MultiPolygon(FM2ProfBase):
     within a common framework. E.g. `MultiPolygon.as_meshkernel()` outputs a MeshKernel GeometryList
     object that can be used for spatial classification, while `MultiPolygon.as_shapely()` outputs
     a list of Shapely Polygon objects for geometric operations.
+
+    Not all geojson geometry types are supported:
+
+    - Only 'Polygon' and 'MultiPolygon' are supported.
+    - Polygons with holes are not supported.
+    - MultiPolygons with multiple polygons are not supported.
+    - Properties must contain a 'name' key-word.
+    - Properties must be unique, otherwise overlap checking will produce bugs.
+    - SectionPolygon properties must contain a 'section' key-word.
+    - RegionPolygon properties must contain a 'region' key-word.
+
     """
 
     def __init__(self, logger: Logger) -> None:
@@ -327,13 +345,34 @@ class MultiPolygon(FM2ProfBase):
             geojson_data = json.load(geojson_file).get("features")
 
         if not geojson_data:
-            err_msg = "Polygon file is not valid"
-            raise ValueError(err_msg)
+            err_msg = "Polygon file has no features"
+            raise PolygonError(err_msg)
 
         polygons: list[Polygon] = []
         for feature in geojson_data:
             feature_props = {k.lower(): v for k, v in feature.get("properties").items()}
-            polygons.append(Polygon(coordinates=feature["geometry"]["coordinates"], properties=feature_props))
+
+            if "name" not in feature_props:
+                err_msg = "Polygon properties must contain key-word 'name'"
+                raise PolygonError(err_msg)
+
+            geometry_type = feature["geometry"]["type"]
+            if geometry_type not in ("Polygon", "MultiPolygon"):
+                err_msg = "Polygon geometry must be of type 'Polygon' or 'MultiPolygon'"
+                raise PolygonError(err_msg)
+
+            geometry_coordinates = feature["geometry"]["coordinates"]
+            if geometry_type == "Polygon":
+                if len(geometry_coordinates) != 1:
+                    err_msg = "Polygon geometry must contain a single polygon and no holes"
+                    raise PolygonError(err_msg)
+                geometry_coordinates = geometry_coordinates[0]
+            elif geometry_type == "MultiPolygon":
+                if len(geometry_coordinates) != 1 & len(geometry_coordinates[0]) != 1:
+                    err_msg = "MultiPolygon geometry must contain a single polygon and no holes"
+                    raise PolygonError(err_msg)
+                geometry_coordinates = geometry_coordinates[0][0]
+            polygons.append(Polygon(coordinates=geometry_coordinates, properties=feature_props))
 
         self.polygons = polygons
 
@@ -352,7 +391,11 @@ class RegionPolygon(MultiPolygon):
     def __init__(self, region_file_path: str | Path, logger: Logger) -> None:
         """Instantiate a RegionPolygonFile object."""
         super().__init__(logger)
-        self.from_file(region_file_path)
+        try:
+            self.from_file(region_file_path)
+        except TypeError as e:
+            self.set_logger_message(f"Potentially invalid geojson file: {e}", level="error")
+            raise PolygonError from e
 
     @property
     def regions(self) -> list[Polygon]:
@@ -462,40 +505,44 @@ class SectionPolygon(MultiPolygon):
         self.set_logger_message("Validating Section file")
         raise_exception = False
 
-        valid_section_keys = {"main", "floodplain1", "floodplain2"}
+        valid_section_keys = {"main", "floodplain1", "floodplain2", "1", "2", "3"}
         map_section_keys = {
             "1": "main",
             "2": "floodplain1",
             "3": "floodplain2",
         }
 
-        # each polygon must have a 'section' property
+        # check section polygon validity
         for section in self.sections:
             if "section" not in section.properties:
-                raise_exception = True
+                err_msg = f"Polygon {section.properties.get('name')} has no property 'section'"
                 self.set_logger_message(
-                    f'Polygon {section.properties.get("name")} has no property "section"',
+                    err_msg,
                     level="error",
                 )
+                raise PolygonError(err_msg)
 
-            elif str(section.properties.get("section")).lower() not in valid_section_keys:
-                section_key = str(section.properties.get("section")).lower()
-                if section_key not in list(map_section_keys.keys()):
-                    raise_exception = True
-                    self.set_logger_message(
-                        f"{section_key} is not a recognized section",
-                        level="error",
-                    )
-                else:
-                    self.set_logger_message(
-                        f"remapped section {section_key} to {map_section_keys[section_key]}",
-                        level="warning",
-                    )
-                    section.properties["section"] = map_section_keys.get(section_key)
+            section_key = section.properties.get("section").lower()
+            if section_key not in valid_section_keys:
+                err_msg = f"{section_key} is not a recognized section"
+                self.set_logger_message(
+                    err_msg,
+                    level="error",
+                )
+                raise PolygonError(err_msg)
+
+            # remap 1, 2, 3 to main, floodplain1, floodplain2
+            if section_key in map_section_keys:
+                self.set_logger_message(
+                    f"remapped section {section_key} to {map_section_keys[section_key]}",
+                    level="warning",
+                )
+                section.properties["section"] = map_section_keys.get(section_key)
+
         # check for overlap (only raise a warning)
         self.check_overlap()
 
         if raise_exception:
             err_msg = "Section file is not valid"
-            raise OSError(err_msg)
+            raise PolygonError(err_msg)
         self.set_logger_message("Section file succesfully validated")

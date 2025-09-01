@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-from fm2prof.polygon_file import MultiPolygon, Polygon, RegionPolygon, SectionPolygon
+from fm2prof.polygon_file import MultiPolygon, Polygon, PolygonError, RegionPolygon, SectionPolygon
 from tests.TestUtils import TestUtils
 
 
@@ -18,7 +18,7 @@ def polygon_list():
         Polygon(
             coordinates=[[300, 300], [900, 300], [900, 400], [300, 400], [300, 300]],
             properties={"region": "poly2", "name": "poly2"},
-        ),
+        )
     ]
 
 @pytest.fixture
@@ -31,7 +31,7 @@ def test_geojson():
                 "properties": {"name": "poly1", "region": "poly1"},
                 "geometry": {
                     "type": "Polygon",
-                    "coordinates": [[100, 100], [500, 100], [500, 400], [100, 400], [100, 100]],
+                    "coordinates": [[[100, 100], [500, 100], [500, 400], [100, 400], [100, 100]]],
                 },
             },
             {
@@ -39,7 +39,15 @@ def test_geojson():
                 "properties": {"name": "poly2", "region": "poly2"},
                 "geometry": {
                     "type": "Polygon",
-                    "coordinates": [[300, 300], [900, 300], [900, 400], [300, 400], [300, 300]],
+                    "coordinates": [[[300, 300], [900, 300], [900, 400], [300, 400], [300, 300]]],
+                },
+            },
+            {
+                "type": "Feature",
+                "properties": {"name": "multipoly1", "region": "multipoly1"},
+                "geometry": {
+                    "type": "MultiPolygon",
+                    "coordinates": [[[[300, 300], [900, 300], [900, 400], [300, 400], [300, 300]]]],
                 },
             },
         ],
@@ -64,10 +72,11 @@ class Test_MultiPolygon:  # noqa: N801
         assert isinstance(polygon_file.polygons[0],Polygon)
 
         # Verify the number of polygons loaded
-        assert len(polygon_file.polygons) == 2
+        assert len(polygon_file.polygons) == 3
 
         # Verify the properties of the polygons
         assert polygon_file.polygons[1].properties.get("name") == "poly2"
+        assert polygon_file.polygons[2].properties.get("name") == "multipoly1"
 
     def test_from_file_invalid(self, tmp_path):
         file_path = tmp_path / "polygons.geojson"
@@ -77,7 +86,7 @@ class Test_MultiPolygon:  # noqa: N801
         _geojson_file_writer(invalid_geojson, file_path)
 
         polygon_file = MultiPolygon(logging.getLogger())
-        with pytest.raises(ValueError, match="Polygon file is not valid"):
+        with pytest.raises(PolygonError, match="Polygon file has no features"):
             polygon_file.from_file(file_path=file_path)
 
     def test_from_file_nonexistent(self):
@@ -201,6 +210,7 @@ class Test_MultiPolygon:  # noqa: N801
 
         # Step 4. Verify the output
         assert region_at_points == [polygon_file.undefined, "poly1"]
+
 class Test_RegionPolygonFile:  # noqa: N801
 
     def test_initialisation(self, mocker, test_geojson, tmp_path):
@@ -210,11 +220,11 @@ class Test_RegionPolygonFile:  # noqa: N801
 
         # create RegionPolygon instance
         mock_logger = mocker.patch.object(RegionPolygon, "set_logger_message")
-        region_polygon_file = RegionPolygon(region_file_path=file_path, logger=logging.getLogger(__name__))
+        RegionPolygon(region_file_path=file_path, logger=logging.getLogger(__name__))
 
         # verify logger messages
         assert mock_logger.call_args_list[0][0][0] == "Validating region file"
-        assert mock_logger.call_args_list[1][0][0] == "2 regions found"
+        assert mock_logger.call_args_list[1][0][0] == "3 regions found"
 
     def test_get_gridpoints_in_polygon_creates_cache(self, mocker, test_geojson, tmp_path):
         # setup geojson file
@@ -321,32 +331,41 @@ class Test_RegionPolygonFile:  # noqa: N801
         assert result.edges_in_polygon[27] == "poly1"
 
 
-class Test_SectionPolygonFile:  # noqa: N801
+class TestSectionPolygonFile:
 
-    def test_initialisation(self, mocker, test_geojson, tmp_path):
+    def test_initialisation_with_missing_section_property(self, mocker, test_geojson, tmp_path):
         # setup geojson file
         file_path = tmp_path / "test_geojson.geojson"
         _geojson_file_writer(test_geojson, file_path)
 
         # create SectionPolygon instance with wrong data
         mock_logger = mocker.patch.object(SectionPolygon, "set_logger_message")
-        with pytest.raises(OSError, match="Section file is not valid"):
+        with pytest.raises(PolygonError, match="Section file is not valid"):
             SectionPolygon(file_path, logger=logging.getLogger())
 
         assert mock_logger.call_args_list[1][0][0] == 'Polygon poly1 has no property "section"'
         assert mock_logger.call_args_list[2][0][0] == 'Polygon poly2 has no property "section"'
 
-        # create SectionPolygon instance with incorrect data (2)
+    def test_initialisation_with_invalid_section_name(self, mocker, test_geojson, tmp_path):
+        # set up test
+        file_path = tmp_path / "test_geojson.geojson"
         test_geojson["features"][0]["properties"]["section"] = "fake section"
+        mock_logger = mocker.patch.object(SectionPolygon, "set_logger_message")
         _geojson_file_writer(test_geojson, file_path)
-        with pytest.raises(OSError, match="Section file is not valid"):
+
+        # create SectionPolygon instance with wrong data
+        with pytest.raises(PolygonError, match="Section file is not valid"):
             SectionPolygon(file_path, logger=logging.getLogger())
 
         assert "fake section is not a recognized section" in [log_cal[0][0] for log_cal in mock_logger.call_args_list]
 
+    def test_initialisation_with_valid_section_polygon(self, mocker, test_geojson, tmp_path):
         # create SectionPolygon instance with correct data
+        file_path = tmp_path / "test_geojson.geojson"
+        mock_logger = mocker.patch.object(SectionPolygon, "set_logger_message")
         test_geojson["features"][0]["properties"]["section"] = "1"
         test_geojson["features"][1]["properties"]["section"] = "2"
+        test_geojson["features"][2]["properties"]["section"] = "1"
         _geojson_file_writer(test_geojson, file_path)
         section_polygon = SectionPolygon(file_path, logging.getLogger())
         assert section_polygon.sections[0].properties["section"] == "main"
