@@ -78,6 +78,19 @@ class Test_MultiPolygon:  # noqa: N801
         assert polygon_file.polygons[1].properties.get("name") == "poly2"
         assert polygon_file.polygons[2].properties.get("name") == "multipoly1"
 
+    def test_from_file_with_invalid_json(self, tmp_path, test_geojson):
+        file_path = tmp_path / "polygons.geojson"
+
+        _geojson_file_writer(test_geojson, file_path)
+        polygon_file = MultiPolygon(logging.getLogger())
+
+        # Corrupt the file by writing invalid JSON
+        with file_path.open("w") as f:
+            f.write("{invalid_json: true,}")
+
+        with pytest.raises(PolygonError, match="Error decoding JSON from"):
+            polygon_file.from_file(file_path=file_path)
+
     def test_from_file_invalid(self, tmp_path):
         file_path = tmp_path / "polygons.geojson"
 
@@ -88,6 +101,7 @@ class Test_MultiPolygon:  # noqa: N801
         polygon_file = MultiPolygon(logging.getLogger())
         with pytest.raises(PolygonError, match="Polygon file has no features"):
             polygon_file.from_file(file_path=file_path)
+
 
     def test_from_file_nonexistent(self):
         polygon_file = MultiPolygon(logging.getLogger())

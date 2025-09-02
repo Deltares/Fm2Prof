@@ -342,7 +342,11 @@ class MultiPolygon(FM2ProfBase):
             raise FileNotFoundError(err_msg)
 
         with Path(file_path).open("r") as geojson_file:
-            geojson_data = json.load(geojson_file).get("features")
+            try:
+                geojson_data = json.load(geojson_file).get("features")
+            except json.JSONDecodeError as e:
+                err_msg = f"Error decoding JSON from {file_path}: {e}"
+                raise PolygonError(err_msg) from e
 
         if not geojson_data:
             err_msg = "Polygon file has no features"
