@@ -300,7 +300,7 @@ class Test_RegionPolygonFile:  # noqa: N801
 
         # Step 3. Verify the output
         assert cache_file.exists()
-        assert mock_logger.call_args_list[-1][0][0] == "Forcing recalculating region cache"
+        mock_logger.assert_any_call("Forcing recalculating region cache", level="info")
 
         assert len(result.faces_in_polygon) == 360
         assert result.faces_in_polygon[0] == region_polygon_file.undefined
@@ -331,7 +331,7 @@ class Test_RegionPolygonFile:  # noqa: N801
 
         # Step 3. Verify the output
         assert cache_file.exists()
-        assert mock_logger.call_args_list[-1][0][0] == "Cached regions are stale"
+        mock_logger.assert_any_call("Cached regions are stale", level="warning")
 
         assert len(result.faces_in_polygon) == 360
         assert result.faces_in_polygon[0] == region_polygon_file.undefined
