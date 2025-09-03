@@ -35,6 +35,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Literal, NamedTuple
 
 import shapely
+import tqdm
 from meshkernel import GeometryList, MeshKernel, ProjectionType
 
 from fm2prof.common import FM2ProfBase
@@ -200,6 +201,7 @@ class MultiPolygon(FM2ProfBase):
         cache_file = Path(res_file).with_suffix(f".{property_name}_cache.json")
         if cache_file.exists() and not force_cache_invalidation:
             # read cache file
+            self.set_logger_message("Found cached regions, reading...", level="info")
             meta_cache, faces_in_polygon, edges_in_polygon = self._load_cache(cache_file)
             if meta == meta_cache:
                 self.set_logger_message("Using cached regions", level="info")
@@ -299,6 +301,10 @@ class MultiPolygon(FM2ProfBase):
         nodes_in_polygon: list[str] = [self.undefined] * len(mesh2d_input.node_x)  # default to undefined
 
         for i, mk_polygon in enumerate(self.as_meshkernel()):
+            self.set_logger_message(
+                f"  | Classifying {dtype}s in polygon {self.polygons[i].properties.get('name')} "
+                f"({i+1}/{len(self.polygons)})",
+                level="info")
             indices: list[float] = mk.mesh2d_get_nodes_in_polygons(mk_polygon, inside=True).tolist()
             for j in indices:
                 nodes_in_polygon[j] = self.polygons[i].properties.get(property_name)
