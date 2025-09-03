@@ -1,5 +1,6 @@
 from pathlib import Path
 
+import numpy as np
 import pytest
 
 from fm2prof.data_import import FMDataImporter, FmModelData
@@ -19,6 +20,26 @@ class Test_FMDataImporter:
         # 3. Verify final expectations
         assert return_value is not None
 
+    def test_initialisation_with_map_file(self):
+        test_file = TestUtils.get_local_test_file("cases/case_02_compound/Data/2DModelOutput/FlowFM_map.nc")
+
+        fmdata = FMDataImporter(test_file)
+
+        assert fmdata is not None
+        assert fmdata.file_path == test_file
+
+    def test_get_variable(self):
+        test_file = TestUtils.get_local_test_file("cases/case_02_compound/Data/2DModelOutput/FlowFM_map.nc")
+
+        fmdata = FMDataImporter(test_file)
+
+        var_data = fmdata.get_variable("mesh2d_face_x")
+
+        assert var_data is not None
+        assert isinstance(var_data, np.ndarray)
+        assert len(var_data) == 360
+        assert var_data[0] == 25.0
+        assert var_data[-1] == 2975.0
 
 class Test_FmModelData:
     def test_when_given_expected_arguments_then_object_is_created(self):

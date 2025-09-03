@@ -495,17 +495,19 @@ dependencies = [
     { name = "colorama" },
     { name = "geojson" },
     { name = "matplotlib" },
+    { name = "meshkernel" },
     { name = "netcdf4" },
     { name = "notebook" },
     { name = "numpy" },
     { name = "pandas" },
     { name = "pip" },
-    { name = "rtree" },
     { name = "scikit-learn" },
     { name = "scipy" },
     { name = "shapely" },
     { name = "tqdm" },
     { name = "typer" },
+    { name = "xarray", version = "2025.6.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
+    { name = "xarray", version = "2025.8.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
 ]
 
 [package.dev-dependencies]
@@ -539,17 +541,18 @@ requires-dist = [
     { name = "colorama", specifier = ">=0.4.6" },
     { name = "geojson", specifier = "~=3.1" },
     { name = "matplotlib", specifier = ">=3.8.0,<4" },
+    { name = "meshkernel", specifier = ">=8.1.2" },
     { name = "netcdf4", specifier = ">=1.6.0,<2" },
     { name = "notebook", specifier = ">=7.1.2,<8" },
     { name = "numpy", specifier = "~=1.26" },
     { name = "pandas", specifier = ">=2.2.1,<3" },
     { name = "pip", specifier = ">=25.1.1" },
-    { name = "rtree", specifier = ">=1.3.0,<2" },
     { name = "scikit-learn", specifier = ">=1.3.0,<2" },
     { name = "scipy", specifier = "~=1.11" },
     { name = "shapely", specifier = "~=2.0" },
     { name = "tqdm", specifier = ">=4.64.0,<5" },
     { name = "typer", specifier = ">=0.9.0,<0.10" },
+    { name = "xarray", specifier = ">=2025.6.1" },
 ]
 
 [package.metadata.requires-dev]
@@ -1352,6 +1355,22 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/3a/41/580bb4006e3ed0361b8151a01d324fb03f420815446c7def45d02f74c270/mergedeep-1.3.4.tar.gz", hash = "sha256:0096d52e9dad9939c3d975a774666af186eda617e6ca84df4c94dec30004f2a8", size = 4661, upload-time = "2021-02-05T18:55:30.623Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/2c/19/04f9b178c2d8a15b076c8b5140708fa6ffc5601fb6f1e975537072df5b2a/mergedeep-1.3.4-py3-none-any.whl", hash = "sha256:70775750742b25c0d8f36c55aed03d24c3384d17c951b3175d898bd778ef0307", size = 6354, upload-time = "2021-02-05T18:55:29.583Z" },
+]
+
+[[package]]
+name = "meshkernel"
+version = "8.1.2"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "matplotlib" },
+    { name = "numpy" },
+]
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/da/37/fd202d5ee559fef5dfe7dbae440fd02a249bddb8b96e03d5b9be1cf03320/meshkernel-8.1.2-py3-none-macosx_13_0_arm64.whl", hash = "sha256:2bc0e89efc4249e045292f31bf58ac56840c7d90a5b2bb9cb5072def2efc6939", size = 1172296, upload-time = "2025-06-24T14:50:42.321Z" },
+    { url = "https://files.pythonhosted.org/packages/58/1e/6c549780e6a393cc80b841282cd3a65b1c3411fc92a9a85632188b825915/meshkernel-8.1.2-py3-none-macosx_13_0_x86_64.whl", hash = "sha256:80096ae38d9a486bcb7203dd5a35109ee021df662c588a23e3983b60eb0b1c74", size = 1249106, upload-time = "2025-06-24T14:50:43.999Z" },
+    { url = "https://files.pythonhosted.org/packages/30/1f/12c7770b2c1a0a7db6fd64d8c0900e656591831c76b8db5d0649779fe716/meshkernel-8.1.2-py3-none-macosx_14_0_arm64.whl", hash = "sha256:7f88cd16ad240d932eef513ce1242b95055e473498877adcbce505d60568f9d1", size = 1172294, upload-time = "2025-06-24T14:50:45.74Z" },
+    { url = "https://files.pythonhosted.org/packages/19/9f/0d8670da006b5f3ade409d5244c41d587721b3c67bb4a68b0e583dfc17e7/meshkernel-8.1.2-py3-none-manylinux_2_28_x86_64.whl", hash = "sha256:d404973091e247ec2a787122c8614b643903fef4e3fbd103fab120ad1515c7a8", size = 1422233, upload-time = "2025-06-24T14:50:47.482Z" },
+    { url = "https://files.pythonhosted.org/packages/f1/b0/2c4fd63ee9c0ab9653d7d7607ed86ab223026d75867506f231e42aade42c/meshkernel-8.1.2-py3-none-win_amd64.whl", hash = "sha256:4fdf8066a3c8b3b6ce257a5ed514081e0517461403c43f2b6daeecd93dd5a009", size = 1033419, upload-time = "2025-06-24T14:50:49.735Z" },
 ]
 
 [[package]]
@@ -2417,23 +2436,6 @@ wheels = [
 ]
 
 [[package]]
-name = "rtree"
-version = "1.3.0"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/6e/79/44fdc619e87bd7b5388f76418719bd8b99de5565475f74a2e0d82b401062/rtree-1.3.0.tar.gz", hash = "sha256:b36e9dd2dc60ffe3d02e367242d2c26f7281b00e1aaf0c39590442edaaadd916", size = 48190, upload-time = "2024-07-10T00:46:22.697Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/06/cc/1b494bde9c99a5cf27e980bf36ef99e76abac6316736231007c04e3a7b28/Rtree-1.3.0-py3-none-macosx_10_9_x86_64.whl", hash = "sha256:80879d9db282a2273ca3a0d896c84583940e9777477727a277624ebfd424c517", size = 475526, upload-time = "2024-07-10T00:45:53.918Z" },
-    { url = "https://files.pythonhosted.org/packages/dd/5b/085d6fad9d45c0cc2acbea5b78c3a2d7f1e7ccc7c05929633461a6a741d8/Rtree-1.3.0-py3-none-macosx_11_0_arm64.whl", hash = "sha256:4328e9e421797c347e6eb08efbbade962fe3664ebd60c1dffe82c40911b1e125", size = 432890, upload-time = "2024-07-10T00:45:57.582Z" },
-    { url = "https://files.pythonhosted.org/packages/12/70/f0553ffb163c47a62c09e4bdc5e0c7fb3392a03cd5a3dbde965aa6a85052/Rtree-1.3.0-py3-none-manylinux2014_aarch64.manylinux_2_17_aarch64.whl", hash = "sha256:037130d3ce1fc029de81941ec416ba5546f66228380ba19bb41f2ea1294e8423", size = 500384, upload-time = "2024-07-10T00:46:01.889Z" },
-    { url = "https://files.pythonhosted.org/packages/4e/92/3c972e534ce0508214b9ed0cfeba03d1e26d193e8fa624131b5324b91b25/Rtree-1.3.0-py3-none-manylinux2014_i686.manylinux_2_17_i686.whl", hash = "sha256:864a05d0c3b7ce6c5e34378b7ab630057603b79179368bc50624258bdf2ff631", size = 569246, upload-time = "2024-07-10T00:46:05.132Z" },
-    { url = "https://files.pythonhosted.org/packages/70/db/6c8bc20061572c33766ade296071d0127e7365d4d3ff54a6c2c075de637b/Rtree-1.3.0-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl", hash = "sha256:ec2ed6d1635753dab966e68f592a9c4896f3f4ec6ad2b09b776d592eacd883a9", size = 543195, upload-time = "2024-07-10T00:46:08.095Z" },
-    { url = "https://files.pythonhosted.org/packages/71/2c/5d04fa6010f2d4d4b38078efdc6f371430f499ef2cf7eeced3d18f57daaa/Rtree-1.3.0-py3-none-musllinux_1_2_aarch64.whl", hash = "sha256:b4485fb3e5c5e85b94a95f0a930a3848e040d2699cfb012940ba5b0130f1e09a", size = 1416562, upload-time = "2024-07-10T00:46:10.896Z" },
-    { url = "https://files.pythonhosted.org/packages/b6/63/0a2bee2940a8ba116d845ac8b360e49c315a57aeb4aa92ea12a4cb84eb4f/Rtree-1.3.0-py3-none-musllinux_1_2_i686.whl", hash = "sha256:7e2e9211f4fb404c06a08fd2cbebb03234214f73c51913bb371c3d9954e99cc9", size = 1630693, upload-time = "2024-07-10T00:46:14.592Z" },
-    { url = "https://files.pythonhosted.org/packages/10/8a/8a50fc8d58807ba5780485ecc502136aa814f6a08e1cce4f9c4f109ba2b4/Rtree-1.3.0-py3-none-musllinux_1_2_x86_64.whl", hash = "sha256:c021f4772b25cc24915da8073e553ded6fa8d0b317caa4202255ed26b2344c1c", size = 1506863, upload-time = "2024-07-10T00:46:18.188Z" },
-    { url = "https://files.pythonhosted.org/packages/85/d2/5bb7617faa3b23b51e2259f9d23e0b33f6ff0ed9811b0d05511e9b7ed84e/Rtree-1.3.0-py3-none-win_amd64.whl", hash = "sha256:97f835801d24c10bbf02381abe5e327345c8296ec711dde7658792376abafc66", size = 377458, upload-time = "2024-07-10T00:46:21.187Z" },
-]
-
-[[package]]
 name = "ruff"
 version = "0.6.9"
 source = { registry = "https://pypi.org/simple" }
@@ -2841,6 +2843,41 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/56/fc/238c424fd7f4ebb25f8b1da9a934a3ad7c848286732ae04263661eb0fc03/widgetsnbextension-4.0.13.tar.gz", hash = "sha256:ffcb67bc9febd10234a362795f643927f4e0c05d9342c727b65d2384f8feacb6", size = 1164730, upload-time = "2024-08-22T12:18:22.534Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/21/02/88b65cc394961a60c43c70517066b6b679738caf78506a5da7b88ffcb643/widgetsnbextension-4.0.13-py3-none-any.whl", hash = "sha256:74b2692e8500525cc38c2b877236ba51d34541e6385eeed5aec15a70f88a6c71", size = 2335872, upload-time = "2024-08-22T12:18:19.491Z" },
+]
+
+[[package]]
+name = "xarray"
+version = "2025.6.1"
+source = { registry = "https://pypi.org/simple" }
+resolution-markers = [
+    "python_full_version < '3.11'",
+]
+dependencies = [
+    { name = "numpy", marker = "python_full_version < '3.11'" },
+    { name = "packaging", marker = "python_full_version < '3.11'" },
+    { name = "pandas", marker = "python_full_version < '3.11'" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/19/ec/e50d833518f10b0c24feb184b209bb6856f25b919ba8c1f89678b930b1cd/xarray-2025.6.1.tar.gz", hash = "sha256:a84f3f07544634a130d7dc615ae44175419f4c77957a7255161ed99c69c7c8b0", size = 3003185, upload-time = "2025-06-12T03:04:09.099Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/82/8a/6b50c1dd2260d407c1a499d47cf829f59f07007e0dcebafdabb24d1d26a5/xarray-2025.6.1-py3-none-any.whl", hash = "sha256:8b988b47f67a383bdc3b04c5db475cd165e580134c1f1943d52aee4a9c97651b", size = 1314739, upload-time = "2025-06-12T03:04:06.708Z" },
+]
+
+[[package]]
+name = "xarray"
+version = "2025.8.0"
+source = { registry = "https://pypi.org/simple" }
+resolution-markers = [
+    "python_full_version >= '3.12'",
+    "python_full_version == '3.11.*'",
+]
+dependencies = [
+    { name = "numpy", marker = "python_full_version >= '3.11'" },
+    { name = "packaging", marker = "python_full_version >= '3.11'" },
+    { name = "pandas", marker = "python_full_version >= '3.11'" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/d2/55/18055bc943029d25fb8f260b7e3b1485c30646ccf503a5e4a744d31a3b78/xarray-2025.8.0.tar.gz", hash = "sha256:323d4169ce72d4ef849de2b0bd122f9cd2905b82c7558169930dc16070982bab", size = 3034425, upload-time = "2025-08-14T16:52:13.872Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/e6/c8/0f8db9d9478de8d70cbcae2056588401e26168e269d6d9919bf2ecb01f78/xarray-2025.8.0-py3-none-any.whl", hash = "sha256:1c454f32b38c93df68e450238c9473fe21248b8572d42ddd58c5170bb30934ee", size = 1342279, upload-time = "2025-08-14T16:52:10.956Z" },
 ]
 
 [[package]]

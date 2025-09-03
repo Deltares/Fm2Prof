@@ -5,7 +5,7 @@ from fm2prof.fm2prof_runner import Fm2ProfRunner
 from tests.TestUtils import TestUtils
 
 
-class Test_Project:
+class TestProject:
     def test_when_no_file_path_then_no_exception_is_risen(self):
         # 1. Set up initial test dat
         project = Project()
@@ -14,6 +14,47 @@ class Test_Project:
     def test_run_without_input_no_exception_is_raised(self):
         project = Project()
         project.run()
+
+    def test_run_with_inifile(self):
+        # 1. Set up test data
+        inifile = TestUtils.get_local_test_file("cases/case_02_compound/fm2prof_config.ini")
+
+        # 3. run test
+        project = Project(inifile)
+        project.run()
+
+        # 4. verify output
+        assert project._output_exists()  # noqa: SLF001
+
+    def test_run_with_overwrite_false_output_unchanged(self):
+        # 1. Set up test data
+        inifile = TestUtils.get_local_test_file("cases/case_02_compound/fm2prof_config.ini")
+
+        # 2. set expectations
+        project = Project(inifile)
+        time_before = os.path.getmtime(next(project.output_files))
+
+        # 3. run test
+        project.run()
+        time_after = os.path.getmtime(next(project.output_files))
+
+        # 4. verify output
+        assert time_before == time_after
+
+    def test_run_with_overwrite_true_output_has_changed(self):
+        # 1. Set up test data
+        inifile = TestUtils.get_local_test_file("cases/case_02_compound/fm2prof_config.ini")
+
+        # 2. set expections
+        project = Project(inifile)
+        time_before = os.path.getmtime(next(project.output_files))
+
+        # 3. run test
+        project.run(overwrite=True)
+        time_after = os.path.getmtime(next(project.output_files))
+
+        # 4. verify output
+        assert time_before != time_after
 
     def test_if_get_existing_parameter_then_returned(self):
         # 1. Set up initial test dat
@@ -107,8 +148,7 @@ class Test_Project:
         # 3. Verify final expectations
         assert value is not None
 
-
-class Test_Fm2ProfRunner:
+class TestFm2ProfRunner:
     def test_when_no_file_path_then_no_exception_is_risen(self):
         # 1. Set up initial test dat
         runner = None
@@ -124,11 +164,11 @@ class Test_Fm2ProfRunner:
         ini_file_name = "valid_ini_file.ini"
         dir_name = "IniFile"
         test_data_dir = TestUtils.get_local_test_data_dir(dir_name)
-        ini_file_path = os.path.join(test_data_dir, ini_file_name)
+        ini_file_path = test_data_dir / ini_file_name
         runner = None
 
         # 2. Verify the initial expectations
-        assert os.path.exists(ini_file_path), f"Test File {ini_file_path} was not found"
+        assert ini_file_path.exists(), f"Test File {ini_file_path} was not found"
 
         # 3. Run test
         runner = Fm2ProfRunner(ini_file_path)
@@ -136,43 +176,3 @@ class Test_Fm2ProfRunner:
         # 4. Verify final expectations
         assert runner is not None
 
-    def test_run_with_inifile(self):
-        # 1. Set up test data
-        inifile = TestUtils.get_local_test_file("cases/case_02_compound/fm2prof_config.ini")
-
-        # 3. run test
-        project = Project(inifile)
-        project.run()
-
-        # 4. verify output
-        assert project._output_exists()
-
-    def test_run_with_overwrite_false_output_unchanged(self):
-        # 1. Set up test data
-        inifile = TestUtils.get_local_test_file("cases/case_02_compound/fm2prof_config.ini")
-
-        # 2. set expections
-        project = Project(inifile)
-        time_before = os.path.getmtime(next(project.output_files))
-
-        # 3. run test
-        project.run()
-        time_after = os.path.getmtime(next(project.output_files))
-
-        # 4. verify output
-        assert time_before == time_after
-
-    def test_run_with_overwrite_true_output_has_changed(self):
-        # 1. Set up test data
-        inifile = TestUtils.get_local_test_file("cases/case_02_compound/fm2prof_config.ini")
-
-        # 2. set expections
-        project = Project(inifile)
-        time_before = os.path.getmtime(next(project.output_files))
-
-        # 3. run test
-        project.run(overwrite=True)
-        time_after = os.path.getmtime(next(project.output_files))
-
-        # 4. verify output
-        assert time_before != time_after

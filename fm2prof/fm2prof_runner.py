@@ -1,30 +1,67 @@
-"""Module for running Fm2Prof processess."""
+"""FM2PROF Runner Module.
 
-from __future__ import annotations
+This module provides the main execution engine for FM2PROF, a tool for converting
+2D dflowFM model results to 1D cross-sections for hydraulic modelling.
+
+FM2PROF (dflowFM to Profile) extracts cross-sectional data from 2D hydrodynamic
+model outputs and generates 1D model inputs. The main workflow includes:
+
+1. **Initialisation**: Load configuration files and validate input data
+  -. **Data Import**: Read dflowfm map files and cross-section location files
+  -. **Classification**: Assign 2D model points to regions and cross-sections
+2. **Generation**: Create cross-section geometries and roughness tables
+3. **Finalisation**: Write output files in various formats (D-Flow 1D, SOBEK 3, etc.)
+
+Classes:
+    InitializationError: Custom exception for initialisation failures.
+    Fm2ProfRunner: Main class that orchestrates the FM2PROF workflow.
+    Project: Python API wrapper for programmatic access to FM2PROF functionality.
+
+The Project class is auto-imported when using the fm2prof package.
+
+Example:
+    Basic usage through the Project API:
+
+    >>> from fm2prof import Project
+    >>> project = Project('config.ini')
+    >>> project.run()
+
+    Programmatic configuration:
+
+    >>> project = Project()
+    >>> project.set_input_file('2DMapOutput', 'model_map.nc')
+    >>> project.set_input_file('CrossSectionLocationFile', 'crosssections.csv')
+    >>> project.set_output_directory('./output')
+    >>> project.run()
+
+Note:
+    This module requires FlowFM map files (NetCDF format) and cross-section
+    location files as input. The output includes 1D model geometry and
+    roughness data suitable for various hydraulic modelling software.
+
+License:
+    GPL-3.0-or-later AND LGPL-3.0-or-later
+"""
 
 import datetime
 import pickle
-import traceback
+from collections.abc import Generator
 from pathlib import Path
-from typing import Generator
 
 import geojson
 import numpy as np
 import pandas as pd
 import tqdm
 from geojson import Feature, FeatureCollection, Polygon
-from netCDF4 import Dataset
 from scipy.spatial import ConvexHull
 
-from fm2prof import __version__
-from fm2prof import functions as funcs
-from fm2prof import mask_output_file
+from fm2prof import __version__, mask_output_file, nearest_neighbour
 from fm2prof.common import FM2ProfBase
 from fm2prof.cross_section import CrossSection, CrossSectionHelpers
 from fm2prof.data_import import FMDataImporter, FmModelData, ImportInputFiles
 from fm2prof.export import Export1DModelData, OutputFiles
-from fm2prof.ini_file import IniFile
-from fm2prof.region_polygon_file import RegionPolygonFile, SectionPolygonFile
+from fm2prof.ini_file import ConfigurationFileError, IniFile
+from fm2prof.polygon_file import GridPointsInPolygonResults, PolygonError, RegionPolygon, SectionPolygon
 
 
 class InitializationError(Exception):
@@ -50,14 +87,14 @@ class Fm2ProfRunner(FM2ProfBase):
         self.fm_model_data: FmModelData = None
         self._output_files: OutputFiles = OutputFiles()
 
-        self._create_logger()
+        self.set_logger(self.create_logger())
 
         ini_file_path = Path(ini_file_path)
 
         self.start_new_log_task("Loading configuration file")
         try:
-            self.load_inifile(ini_file_path)
-        except (OSError, FileNotFoundError) as e:
+            self.load_configuration(ini_file_path)
+        except (ConfigurationFileError, FileNotFoundError) as e:
             self.set_logger_message(f"Exiting {e}", "error")
             return
 
@@ -81,20 +118,21 @@ class Fm2ProfRunner(FM2ProfBase):
         # Print configuration to log
         self.set_logger_message(self.get_inifile().print_configuration(), header=True)
 
-    def run(self, *, overwrite: bool = False) -> None:
+    def run(self, *, overwrite: bool = False) -> bool:
         """Execute FM2PROF routines.
 
         Args:
-        ----
             overwrite (bool): if True, overwrites existing output. If False, exits if output detected.
 
+        Returns:
+            bool: True if run was successful, False if errors occurred.
         """
         if self.get_inifile() is None:
             self.set_logger_message(
                 "No ini file was specified: the run cannot go further.",
                 "Warning",
             )
-            return
+            return False
 
         # Check for already existing output
         if self._output_exists() and not overwrite:
@@ -102,25 +140,33 @@ class Fm2ProfRunner(FM2ProfBase):
                 "Output already exists. Use overwrite option if you want to re-run the program",
                 "warning",
             )
-            return
+            return False
 
         # Run
-        succes = self._run_inifile()
+        success = self._run_inifile()
 
-        if not succes:
+        if not success:
             self.set_logger_message("Program finished with errors", "warning")
         else:
             self.set_logger_message("Program finished", "info")
 
-    def load_inifile(self, ini_file_path: str) -> None:
+        return success
+
+    def load_configuration(self, ini_file_path: Path) -> None:
         """Use this method to load a configuration file from path.
+
+        If no path is given, the default configuration is used.
 
         Args:
         ----
-            ini_file_path (str): path to configuration file
+            ini_file_path (Path | str): path to configuration file
 
         """
-        ini_file_object = IniFile(ini_file_path, logger=self.get_logger())
+        if not ini_file_path.is_file():
+            self.set_logger_message("No ini file path given, using default configuration", "warning")
+            ini_file_object = IniFile(logger=self.get_logger())
+        else:
+            ini_file_object = IniFile(ini_file_path, logger=self.get_logger())
         self.set_inifile(ini_file_object)
 
     def _print_header(self) -> None:
@@ -148,52 +194,22 @@ class Fm2ProfRunner(FM2ProfBase):
         3. Finalization
 
         """
-        # Initialise the project
+        # Step 1. Initialise the project
         self.start_new_log_task("Initialising FM2PROF")
         try:
             self._initialise_fm2prof()
-        except InitializationError:
-            return False
-        except:
-            self.set_logger_message(
-                "Unexpected exception during initialisation",
-                "error",
-            )
-            for line in traceback.format_exc().splitlines():
-                self.set_logger_message(line, "debug")
+        except InitializationError as e:
+            self.set_logger_message(f"Initialization failed: {e}", "error")
             return False
         self.finish_log_task()
 
-        # Generate cross-sections
-        try:
-            cross_sections = self._generate_cross_section_list()
-        except:
-            self.set_logger_message(
-                "Unexpected exception during generation of cross-sections. No output produced",
-                "error",
-            )
-            for line in traceback.format_exc().splitlines():
-                self.set_logger_message(line, "debug")
-            return False
+        # Step 2. Generate cross-sections
+        cross_sections = self._generate_cross_section_list()
 
-        # Finalise and write output
+        # Step 3. Finalise and write output
         self.start_new_log_task("Finalizing")
-        try:
-            self._finalise_fm2prof(cross_sections)
-        except:
-            self.set_logger_message("Unexpected exception during finalisation", "error")
-            for line in traceback.format_exc().splitlines():
-                self.set_logger_message(line, "debug")
-            return False
-
-        # Print final report
-        try:
-            self._print_log_report()
-        except:
-            self.set_logger_message(
-                "Unexpected exception during printing of log report",
-                "error",
-            )
+        self._finalise_fm2prof(cross_sections)
+        self._print_log_report()
         self.finish_log_task()
 
         return True
@@ -208,16 +224,6 @@ class Fm2ProfRunner(FM2ProfBase):
         css_file = ini_file.get_input_file(self.__css_key)
         region_file = ini_file.get_input_file("RegionPolygonFile")
         section_file = ini_file.get_input_file("SectionPolygonFile")
-
-        # Read region & section polygon
-        regions: RegionPolygonFile = None
-        sections: SectionPolygonFile = None
-
-        if region_file:
-            regions = RegionPolygonFile(region_file, logger=self.get_logger())
-
-        if bool(section_file):
-            sections = SectionPolygonFile(section_file, logger=self.get_logger())
 
         # Check if mandatory input exists
         if not Path(map_file).is_file():
@@ -236,25 +242,16 @@ class Fm2ProfRunner(FM2ProfBase):
             raise InitializationError
 
         # Read FM model data
-        (
-            time_dependent_data,
-            time_independent_data,
-            edge_data,
-            node_coordinates,
-            css_data_dictionary,
-        ) = self._set_fm_model_data(
-            map_file,
-            css_file,
-            regions,
-            sections,
-        )
-        self.fm_model_data = FmModelData(
-            time_dependent_data=time_dependent_data,
-            time_independent_data=time_independent_data,
-            edge_data=edge_data,
-            node_coordinates=node_coordinates,
-            css_data_dictionary=css_data_dictionary,
-        )
+        try:
+            self._set_fm_model_data(
+                map_file,
+                css_file,
+                region_file,
+                section_file,
+            )
+        except PolygonError as e:
+            self.set_logger_message(f"Error during initialisation: {e}", "error")
+            raise InitializationError from e
 
         # Validate config file
         success: bool = self._validate_config_after_initalization()
@@ -272,8 +269,8 @@ class Fm2ProfRunner(FM2ProfBase):
         self.set_logger_message("finished reading FM and cross-sectional data data")
         self.set_logger_message(
             f"Number of: timesteps ({ntsteps}), "
-            + f"faces ({nfaces}), "
-            + f"edges ({nedges})",
+            f"faces ({nfaces}), "
+            f"edges ({nedges})",
             level="debug",
         )
 
@@ -295,15 +292,16 @@ class Fm2ProfRunner(FM2ProfBase):
         if skipmap >= nsteps:
             self.set_logger_message(
                 f"""You are attempting to skip more than  available timesteps.
-({self.__key_skipmaps} = {skipmap}, available maps in output file: {nsteps}). Modify the value of {self.__key_skipmaps}
-your configuration file to fix this error.""",
+                ({self.__key_skipmaps} = {skipmap}, available maps in output file:
+                 {nsteps}). Modify the value of {self.__key_skipmaps}
+                in your configuration file to fix this error.""",
                 level="error",
             )
             success = False
         elif skipmap > nsteps / 2:
             self.set_logger_message(
                 f"""You are skipping more than half of available timesteps.
-({self.__key_skipmaps} = {skipmap}, available maps in output file: {nsteps})""",
+                    ({self.__key_skipmaps} = {skipmap}, available maps in output file: {nsteps})""",
                 level="warning",
             )
 
@@ -383,8 +381,8 @@ your configuration file to fix this error.""",
         self,
         res_file: str | Path,
         css_file: str | Path,
-        regions: RegionPolygonFile | None,
-        sections: SectionPolygonFile | None,
+        region_file: str | Path,
+        section_file: str | Path,
     ) -> tuple:
         """Read input files for 'FM2PROF'.
 
@@ -392,67 +390,71 @@ your configuration file to fix this error.""",
 
         Args:
             res_file (str | Path): path to FlowFM map netcfd file (*_map.nc)
-            css_file (str | Path): path to cross-section definition file_
-            regions (RegionPolygonFile | None): RegionPolygonFile object
-            sections (SectionPolygonFile | None): SectionPolygonFile object
+            css_file (str | Path): path to cross-section definition file
+            region_file (str | Path): path to region polygon file
+            section_file (str | Path): path to section polygon file
 
         Returns:
             tuple: Tuple containing time dependent data, time independent data, edge data, node coordinates,
             and cross section data.
 
         """
-        importer = ImportInputFiles(logger=self.get_logger())
         ini_file = self.get_inifile()
 
         # Read FM map file
-        self.set_logger_message("Opening FM Map file")
+        self.set_logger_message("Reading FM Map file")
         (
             time_independent_data,
             edge_data,
             node_coordinates,
             time_dependent_data,
-        ) = FMDataImporter().import_dflow2d(res_file)
-        self.set_logger_message("Closed FM Map file")
+        ) = FMDataImporter(res_file).import_dflow2d()
 
         # Load locations and names of cross-sections
-        self.set_logger_message("Opening css file")
+        self.set_logger_message("Reading css file")
+        importer = ImportInputFiles(logger=self.get_logger())
         cssdata = importer.css_file(css_file)
-        self.set_logger_message("Closed css file")
 
-        # Classify regions & set cross-sections
-        if (ini_file.get_parameter("classificationmethod") == 0) or (regions is None):
+        # Read region & section polygon files
+        self.set_logger_message("Reading polygon files")
+
+        regions = RegionPolygon(region_file,
+                                logger=self.get_logger(),
+                                default_value=ini_file.get_parameter("DefaultRegion")) if region_file else None
+        sections = SectionPolygon(section_file,
+                                  logger=self.get_logger(),
+                                  default_value=ini_file.get_parameter("DefaultSection")) if section_file else None
+
+        # Assign 2D points to cross-sections
+        if regions is None:
             self.set_logger_message(
                 "All 2D points assigned to the same region and classifying points to cross-sections",
             )
-            time_independent_data, edge_data = funcs.classify_without_regions(
+            time_independent_data, edge_data = nearest_neighbour.classify_without_regions(
                 cssdata,
                 time_independent_data,
                 edge_data,
-            )
-        elif ini_file.get_parameter("classificationmethod") == 1:
-            self.set_logger_message(
-                "Assigning 2D points to regions using DeltaShell and classifying points to cross-sections",
-            )
-            time_independent_data, edge_data = self._classify_with_deltashell(
-                time_independent_data,
-                edge_data,
-                cssdata,
-                regions,
-                polytype="region",
             )
         else:
-            self.set_logger_message(
-                "Assigning 2D points to regions using Built-In method and classifying points to cross-sections",
-            )
-            time_independent_data, edge_data = self._classify_with_builtin_methods(
+            self.set_logger_message("Assigning 2D points to regions using Region Polygon")
+            # do in-polygon
+            gridpoints_in_regions: GridPointsInPolygonResults = regions.get_gridpoints_in_polygon(res_file)
+            time_independent_data["region"] = gridpoints_in_regions.faces_in_polygon
+            edge_data["region"] = gridpoints_in_regions.edges_in_polygon
+
+            # Determine in which region the cross-sections are
+            css_regions = regions.get_points_in_polygon(cssdata["xy"], property_name="region")
+
+            # do nearest_neighbour.classify_with_regions
+            time_independent_data, edge_data = nearest_neighbour.classify_with_regions(
+                cssdata,
                 time_independent_data,
                 edge_data,
-                cssdata,
-                regions,
+                css_regions,
             )
 
-        # Classify sections for roughness tables
-        if (ini_file.get_parameter("classificationmethod") == 0) or (sections is None):
+        # Classify sections
+        if sections is None:
             self.set_logger_message("Assigning point to sections without polygons")
             edge_data = self._classify_roughness_sections_by_variance(
                 edge_data,
@@ -462,138 +464,22 @@ your configuration file to fix this error.""",
                 time_independent_data,
                 time_dependent_data["chezy_mean"],
             )
-        elif ini_file.get_parameter("classificationmethod") == 1:
-            self.set_logger_message("Assigning 2D points to sections using DeltaShell")
-            time_independent_data, edge_data = self._classify_section_with_deltashell(
-                time_independent_data,
-                edge_data,
-            )
         else:
-            self.set_logger_message(
-                "Assigning 2D points to sections using Built-In method",
-            )
-            edge_data = funcs.classify_roughness_sections_by_polygon(
-                sections,
-                edge_data,
-                self.get_logger(),
-            )
-            time_independent_data = funcs.classify_roughness_sections_by_polygon(
-                sections,
-                time_independent_data,
-                self.get_logger(),
-            )
+            self.set_logger_message("Assigning 2D points to sections using Section Polygon")
+            # do in-polygon
+            gridpoints_in_sections: GridPointsInPolygonResults = sections.get_gridpoints_in_polygon(res_file)
 
-        return (
-            time_dependent_data,
-            time_independent_data,
-            edge_data,
-            node_coordinates,
-            cssdata,
+            time_independent_data["section"] = gridpoints_in_sections.faces_in_polygon
+            edge_data["section"] = gridpoints_in_sections.edges_in_polygon
+
+        self.fm_model_data = FmModelData(
+            time_dependent_data=time_dependent_data,
+            time_independent_data=time_independent_data,
+            edge_data=edge_data,
+            node_coordinates=node_coordinates,
+            css_data_dictionary=cssdata,
         )
 
-    def _classify_with_builtin_methods(
-        self,
-        time_independent_data: pd.DataFrame,
-        edge_data: dict,
-        cssdata: dict,
-        regions: RegionPolygonFile,
-    ) -> tuple[pd.DataFrame, dict]:
-        # Determine in which region each cross-section lies
-        css_regions = regions.classify_points(cssdata["xy"])
-
-        # Determine in which region each 2d point lies
-
-        nr_of_time_independent_data_values = len(time_independent_data.get("x"))
-        x_tid_array = time_independent_data.get("x").to_numpy()
-        y_tid_array = time_independent_data.get("y").to_numpy()
-
-        xy_tuples_2d = [
-            (
-                x_tid_array[i],
-                y_tid_array[i],
-            )
-            for i in range(nr_of_time_independent_data_values)
-        ]
-
-        time_independent_data["region"] = regions.classify_points(xy_tuples_2d)
-
-        xy_tuples_2d = [
-            (edge_data.get("x")[i], edge_data.get("y")[i])
-            for i in range(len(edge_data.get("x")))
-        ]
-
-        edge_data["region"] = regions.classify_points(xy_tuples_2d)
-
-        # Do Nearest neighbour cross-section for each region
-        time_independent_data, edge_data = funcs.classify_with_regions(
-            regions,
-            cssdata,
-            time_independent_data,
-            edge_data,
-            css_regions,
-        )
-
-        return time_independent_data, edge_data
-
-    def _classify_section_with_deltashell(
-        self,
-        time_independent_data: pd.DataFrame,
-        edge_data: dict,
-    ) -> tuple[pd.DataFrame, dict]:
-        # Determine in which section each 2D point lies
-        self.set_logger_message("Assigning faces...")
-        time_independent_data = self._assign_polygon_using_deltashell(
-            time_independent_data,
-            dtype="face",
-            polytype="section",
-        )
-        self.set_logger_message("Assigning edges...")
-        edge_data = self._assign_polygon_using_deltashell(
-            edge_data,
-            dtype="edge",
-            polytype="section",
-        )
-
-        return time_independent_data, edge_data
-
-    def _classify_with_deltashell(
-        self,
-        time_independent_data: pd.DataFrame,
-        edge_data: dict,
-        cssdata: dict,
-        polygons: RegionPolygonFile,
-        polytype: str = "region",
-    ) -> tuple[pd.DataFrame, dict]:
-        # Determine in which region each 2D point lies
-        self.set_logger_message("Assigning faces...")
-        time_independent_data = self._assign_polygon_using_deltashell(
-            time_independent_data,
-            dtype="face",
-            polytype=polytype,
-        )
-        self.set_logger_message("Assigning edges...")
-        edge_data = self._assign_polygon_using_deltashell(
-            edge_data,
-            dtype="edge",
-            polytype=polytype,
-        )
-
-        self.set_logger_message(
-            "Assigning cross-sections using nearest neighbour within regions...",
-        )
-        # Determine in which region each cross-section lies
-        css_regions = polygons.classify_points(cssdata["xy"])
-
-        # Do Nearest neighbour cross-section for each region
-        time_independent_data, edge_data = funcs.classify_with_regions(
-            polygons,
-            cssdata,
-            time_independent_data,
-            edge_data,
-            css_regions,
-        )
-
-        return time_independent_data, edge_data
 
     def _classify_roughness_sections_by_variance(
         self,
@@ -617,10 +503,11 @@ your configuration file to fix this error.""",
         # Get chezy values at last timestep
         end_values = variable.T.iloc[-1].to_numpy()
         key = "section"
+        threshold_no_variance = 2 # this means that all end values are very close together, so do not split
 
         # Find split point (chezy value) by variance minimisation
         split_candidates = np.arange(min(end_values), max(end_values), 1)
-        if len(split_candidates) < 2:  # noqa: PLR2004, this means that all end values are very close together, so do not split
+        if len(split_candidates) < threshold_no_variance:
             data[key][:] = 1
         else:
             variance_list = [
@@ -642,39 +529,6 @@ your configuration file to fix this error.""",
             else:
                 data[key][end_values > splitpoint] = 1
                 data[key][end_values <= splitpoint] = 2
-        return data
-
-    def _get_region_map_file(self, polytype: str) -> str:
-        """Return the path to a NC file with region ifnormation in the bathymetry data."""
-        map_file_path = Path(self.get_inifile().get_input_file("2DMapOutput"))
-        return f"{map_file_path.parent / map_file_path.stem}_{polytype.upper()}BATHY{map_file_path.suffix}"
-
-    def _assign_polygon_using_deltashell(
-        self,
-        data: dict | pd.DataFrame,
-        dtype: str = "face",
-        polytype: str = "region",
-    ) -> pd.DataFrame | dict:
-        """Assign all 2D points using DeltaShell method."""
-        # NOTE
-        self.set_logger_message(f"Looking for _{polytype.upper()}BATHY.nc", "debug")
-
-        path_to_modified_nc = self._get_region_map_file(polytype)
-
-        # Load Modified NetCDF
-        with Dataset(path_to_modified_nc) as nf:
-            # Data stored in node z, while fm2prof uses data at faces or edges.
-            region_at_node = nf.variables.get("mesh2d_node_z")[:].data.astype(int)
-
-            if dtype == "face":
-                node_to_face = nf.variables.get("mesh2d_face_nodes")[:].data
-                region_at_face = region_at_node[node_to_face.T[0] - 1]
-                data[polytype] = region_at_face
-            elif dtype == "edge":
-                node_to_edge = data["edge_nodes"]
-                region_at_edge = region_at_node[node_to_edge.T[0] - 1]
-                data[polytype] = region_at_edge
-
         return data
 
     def _generate_geojson_output(self, output_dir: str, cross_sections: list) -> None:
@@ -702,9 +556,9 @@ your configuration file to fix this error.""",
                 self.set_logger_message("Done", level="debug")
             except Exception as e_info:
                 self.set_logger_message(
-                    "Error while generation .geojson file,"
-                    + f"at {output_file_path}"
-                    + f"Reason: {e_info!s}",
+                    ("Error while generation .geojson file,"
+                     f"at {output_file_path}"
+                     f"Reason: {e_info!s}"),
                     level="error",
                 )
 
@@ -900,22 +754,13 @@ your configuration file to fix this error.""",
             output_dir = Path(self.get_inifile().get_output_directory())
             with output_dir.joinpath(f"{css_data.get('id')}.pickle").open("wb") as f:
                 pickle.dump(css_data, f)
-        try:
-            css = CrossSection(
-                logger=self.get_logger(),
-                inifile=self.get_inifile(),
-                data=css_data,
-            )
 
-        except Exception as e_info:
-            self.set_logger_message(
-                "Exception thrown while creating cross-section "
-                + f"{css_data.get('id')}, message: {e_info!s}",
-                "error",
-            )
-            return None
+        return CrossSection(
+            logger=self.get_logger(),
+            inifile=self.get_inifile(),
+            data=css_data,
+        )
 
-        return css
 
     def _write_output(self, cross_sections: list, output_dir: Path) -> None:
         """Export all cross sections to the necessary file formats.
@@ -1058,8 +903,10 @@ your configuration file to fix this error.""",
         except Exception as e_error:
             e_message = str(e_error)
             self.set_logger_message(
-                "Exception thrown while trying to reduce the css points. "
-                + f"{e_message}",
+                (
+                    "Exception thrown while trying to reduce the css points. "
+                    f"{e_message}"
+                ),
                 "error",
             )
 
@@ -1099,9 +946,11 @@ your configuration file to fix this error.""",
         except Exception as e_error:
             e_message = str(e_error)
             self.set_logger_message(
-                "Exception thrown "
-                + "while trying to calculate the correction. "
-                + f"{e_message}",
+                (
+                    "Exception thrown "
+                    "while trying to calculate the correction. "
+                    f"{e_message}"
+                ),
                 "error",
             )
         return css
@@ -1196,7 +1045,7 @@ class Project(Fm2ProfRunner):
         """
         self.get_inifile().set_output_directory(path)
 
-    def get_output_directory(self) -> str:
+    def get_output_directory(self) -> Path:
         """Return the current output directory."""
         return self.get_inifile().get_output_directory()
 

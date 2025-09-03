@@ -47,12 +47,11 @@ class TestUtils:
 
     @staticmethod
     def get_local_test_data_dir(dir_name: str) -> Path:
-        """
-        Returns the desired directory relative to the test data.
+        """Returns the desired directory relative to the test data.
+
         Avoiding extra code on the tests.
         """
-        directory = TestUtils.get_test_data_dir(dir_name, TestUtils._name_local)
-        return directory
+        return TestUtils.get_test_data_dir(dir_name, TestUtils._name_local)
 
     @staticmethod
     def get_external_repo(dir_name: str) -> Path:

@@ -1,3 +1,20 @@
+## v2.4.0 (Xx-xx-2025)
+
+### New features
+
+- missing key in configuration now prints a warning
+
+BREAKING CHANGES: 
+- Region polygon now requires "region" property as well as "name" property. 
+- Section polygon now requires the "name" property
+- configuration parameter "classification method" no longer exists
+
+
+### Bugs fixed
+
+
+### Maintenance
+
 ## v2.3.3 (24-09-2024)
 
 ### New features

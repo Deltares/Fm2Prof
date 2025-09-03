@@ -15,9 +15,8 @@ import scipy.optimize as so
 from scipy.integrate import cumulative_trapezoid
 from tqdm import tqdm
 
-from fm2prof import functions as funcs
+from fm2prof import mask_output_file, nearest_neighbour
 from fm2prof.common import FM2ProfBase, FrictionTable
-from fm2prof import mask_output_file
 from fm2prof.ini_file import IniFile
 
 from .lib import polysimplify as ps
@@ -302,16 +301,16 @@ class CrossSection(FM2ProfBase):
 
         # Convert area to a matrix for matrix operations
         # (much more efficient than for-loops)
-        area_matrix = pd.DataFrame({col: area for col in waterdepth.columns})
+        area_matrix = pd.DataFrame(dict.fromkeys(waterdepth.columns, area))
         area_matrix.index = area.index
 
-        bedlevel_matrix = pd.DataFrame({col: area for col in waterdepth.columns})
+        bedlevel_matrix = pd.DataFrame(dict.fromkeys(waterdepth.columns, area))
         bedlevel_matrix.index = bedlevel.index
 
         # Retrieve the water-depth
         # & water level nearest to the cross-section location
         self.set_logger_message("Retrieving centre point values")
-        (centre_depth, centre_level) = funcs.get_centre_values(
+        (centre_depth, centre_level) = nearest_neighbour.get_centre_values(
             self.location,
             fm_data["x"],
             fm_data["y"],
@@ -936,7 +935,7 @@ class CrossSection(FM2ProfBase):
                 )
                 raise ValueError(err_msg)
 
-            self.friction_tables[self._section_map[str(section)]] = FrictionTable(
+            self.friction_tables[section] = FrictionTable(
                 level=self._css_z_roughness,
                 friction=friction,
             )
