@@ -204,7 +204,7 @@ class FM2ProfBase:
             self.set_inifile(inifile)
 
     @staticmethod
-    def create_logger() -> None:
+    def create_logger() -> Logger:
         """Create logger instance."""
         # Create logger
         logger = logging.getLogger(__name__)

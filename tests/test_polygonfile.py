@@ -378,4 +378,4 @@ class TestSectionPolygonFile:
         assert section_polygon.sections[0].properties["section"] == "main"
         assert section_polygon.sections[1].properties["section"] == "floodplain1"
 
-        assert mock_logger.call_args_list[-1][0][0] == "Section file succesfully validated"
+        assert mock_logger.call_args_list[-1][0][0] == "Section file successfully validated"

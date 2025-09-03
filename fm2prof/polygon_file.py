@@ -366,6 +366,9 @@ class MultiPolygon(FM2ProfBase):
             err_msg = "Polygon file has no features"
             raise PolygonError(err_msg)
 
+        self.polygons = self._polygons_from_geojson_data(geojson_data)
+
+    def _polygons_from_geojson_data(self, geojson_data: list[dict]) -> list[Polygon]:
         polygons: list[Polygon] = []
         for feature in geojson_data:
             feature_props = {k.lower(): v for k, v in feature.get("properties").items()}
@@ -392,7 +395,7 @@ class MultiPolygon(FM2ProfBase):
                 geometry_coordinates = geometry_coordinates[0][0]
             polygons.append(Polygon(coordinates=geometry_coordinates, properties=feature_props))
 
-        self.polygons = polygons
+        return polygons
 
     @staticmethod
     def _validate_extension(file_path: Path | str) -> None:
@@ -530,7 +533,6 @@ class SectionPolygon(MultiPolygon):
 
     def _validate_sections(self) -> None:
         self.set_logger_message("Validating Section file")
-        raise_exception = False
 
         valid_section_keys = {"main", "floodplain1", "floodplain2", "1", "2", "3"}
         map_section_keys = {
@@ -568,8 +570,4 @@ class SectionPolygon(MultiPolygon):
 
         # check for overlap (only raise a warning)
         self.check_overlap()
-
-        if raise_exception:
-            err_msg = "Section file is not valid"
-            raise PolygonError(err_msg)
-        self.set_logger_message("Section file succesfully validated")
+        self.set_logger_message("Section file successfully validated")
