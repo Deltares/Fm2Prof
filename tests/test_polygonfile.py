@@ -69,7 +69,7 @@ class Test_MultiPolygon:  # noqa: N801
         polygon_file.from_file(file_path=file_path)
 
         # Verify the polygons were loaded correctly
-        assert isinstance(polygon_file.polygons[0],Polygon)
+        assert isinstance(polygon_file.polygons[0], Polygon)
 
         # Verify the number of polygons loaded
         assert len(polygon_file.polygons) == 3
