@@ -99,9 +99,16 @@ def get_centre_values(
     return centre_depth[0], centre_level[0]
 
 def _get_class_tree(xy: np.ndarray, c: np.ndarray) -> KNeighborsClassifier:
-    x = xy # {array-like, sparse matrix} of shape (n_samples, n_features)
-    y = c # {array-like, sparse matrix} of shape (n_samples,)
+    """Get a k-nearest neighbour classifier for given xy and class c.
+
+    Parameters
+    ----------
+    xy : np.ndarray
+        Array of shape (n_samples, 2) with the coordinates of the samples.
+    c : np.ndarray
+        Array of shape (n_samples,) with the class labels of the samples.
+    """
     neigh = KNeighborsClassifier(n_neighbors=1)
-    neigh.fit(x, y) 
+    neigh.fit(xy, c)
     return neigh
 

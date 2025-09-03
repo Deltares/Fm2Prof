@@ -35,7 +35,6 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Literal, NamedTuple
 
 import shapely
-import tqdm
 from meshkernel import GeometryList, MeshKernel, ProjectionType
 
 from fm2prof.common import FM2ProfBase
@@ -48,7 +47,7 @@ if TYPE_CHECKING:
 
 class PolygonError(Exception):
     """Custom exception for polygon errors."""
-    def __init__(self, message: str="Polygon file is not valid") -> None:
+    def __init__(self, message: str) -> None:
         """Initialize PolygonError with a message."""
         self.message = message
         super().__init__(self.message)
@@ -389,7 +388,7 @@ class MultiPolygon(FM2ProfBase):
                     raise PolygonError(err_msg)
                 geometry_coordinates = geometry_coordinates[0]
             elif geometry_type == "MultiPolygon":
-                if len(geometry_coordinates) != 1 & len(geometry_coordinates[0]) != 1:
+                if len(geometry_coordinates) != 1 and len(geometry_coordinates[0]) != 1:
                     err_msg = "MultiPolygon geometry must contain a single polygon and no holes"
                     raise PolygonError(err_msg)
                 geometry_coordinates = geometry_coordinates[0][0]
@@ -421,8 +420,9 @@ class RegionPolygon(MultiPolygon):
         try:
             self.from_file(region_file_path)
         except TypeError as e:
-            self.set_logger_message(f"Potentially invalid geojson file: {e}", level="error")
-            raise PolygonError from e
+            err_msg = f"Potentially invalid geojson file: {e}"
+            self.set_logger_message(err_msg, level="error")
+            raise PolygonError(err_msg) from e
 
         self.undefined = default_value
 

@@ -1,6 +1,3 @@
-
-from typing import NamedTuple
-
 import numpy as np
 import pytest
 
@@ -9,11 +6,6 @@ from fm2prof.utils import VisualiseOutput
 from tests.TestUtils import TestUtils
 
 _root_output_dir = None
-
-class CaseData(NamedTuple):
-    name: str
-    inifile: str
-    expected_cross_section: dict
 
 # Test data to be used
 cases = [{
