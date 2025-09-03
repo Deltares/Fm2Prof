@@ -45,7 +45,6 @@ License:
 
 import datetime
 import pickle
-import traceback
 from collections.abc import Generator
 from pathlib import Path
 
@@ -61,7 +60,7 @@ from fm2prof.common import FM2ProfBase
 from fm2prof.cross_section import CrossSection, CrossSectionHelpers
 from fm2prof.data_import import FMDataImporter, FmModelData, ImportInputFiles
 from fm2prof.export import Export1DModelData, OutputFiles
-from fm2prof.ini_file import IniFile
+from fm2prof.ini_file import ConfigurationFileError, IniFile
 from fm2prof.polygon_file import GridPointsInPolygonResults, PolygonError, RegionPolygon, SectionPolygon
 
 
@@ -88,14 +87,14 @@ class Fm2ProfRunner(FM2ProfBase):
         self.fm_model_data: FmModelData = None
         self._output_files: OutputFiles = OutputFiles()
 
-        self._create_logger()
+        self.set_logger(self.create_logger())
 
         ini_file_path = Path(ini_file_path)
 
         self.start_new_log_task("Loading configuration file")
         try:
-            self.load_inifile(ini_file_path)
-        except (OSError, FileNotFoundError) as e:
+            self.load_configuration(ini_file_path)
+        except (ConfigurationFileError, FileNotFoundError) as e:
             self.set_logger_message(f"Exiting {e}", "error")
             return
 
@@ -153,15 +152,21 @@ class Fm2ProfRunner(FM2ProfBase):
 
         return success
 
-    def load_inifile(self, ini_file_path: str) -> None:
+    def load_configuration(self, ini_file_path: Path) -> None:
         """Use this method to load a configuration file from path.
+
+        If no path is given, the default configuration is used.
 
         Args:
         ----
-            ini_file_path (str): path to configuration file
+            ini_file_path (Path | str): path to configuration file
 
         """
-        ini_file_object = IniFile(ini_file_path, logger=self.get_logger())
+        if not ini_file_path.is_file():
+            self.set_logger_message("No ini file path given, using default configuration", "warning")
+            ini_file_object = IniFile(logger=self.get_logger())
+        else:
+            ini_file_object = IniFile(ini_file_path, logger=self.get_logger())
         self.set_inifile(ini_file_object)
 
     def _print_header(self) -> None:
@@ -410,14 +415,18 @@ class Fm2ProfRunner(FM2ProfBase):
         importer = ImportInputFiles(logger=self.get_logger())
         cssdata = importer.css_file(css_file)
 
-        # Read region & section polygon
+        # Read region & section polygon files
         self.set_logger_message("Reading polygon files")
 
-        regions = RegionPolygon(region_file, logger=self.get_logger()) if region_file else None
-        sections = SectionPolygon(section_file, logger=self.get_logger()) if section_file else None
+        regions = RegionPolygon(region_file,
+                                logger=self.get_logger(),
+                                default_value=ini_file.get_parameter("DefaultRegion")) if region_file else None
+        sections = SectionPolygon(section_file,
+                                  logger=self.get_logger(),
+                                  default_value=ini_file.get_parameter("DefaultSection")) if section_file else None
 
         # Assign 2D points to cross-sections
-        if (ini_file.get_parameter("classificationmethod") == 0) or (regions is None):
+        if regions is None:
             self.set_logger_message(
                 "All 2D points assigned to the same region and classifying points to cross-sections",
             )
@@ -445,7 +454,7 @@ class Fm2ProfRunner(FM2ProfBase):
             )
 
         # Classify sections
-        if (ini_file.get_parameter("classificationmethod") == 0) or (sections is None):
+        if sections is None:
             self.set_logger_message("Assigning point to sections without polygons")
             edge_data = self._classify_roughness_sections_by_variance(
                 edge_data,

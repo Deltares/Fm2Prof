@@ -198,7 +198,7 @@ class Test_MultiPolygon:  # noqa: N801
         # Step 2. Instantiate the RegionPolygonFile class
         polygon_file = MultiPolygon(logging.getLogger(__name__))
         polygon_file.polygons = polygon_list
-        mocked_logger = mocker.patch.object(polygon_file, "set_logger_message")
+        mocker.patch.object(polygon_file, "set_logger_message")
 
         # Step 3. Call the get_gridpoints_in_polygon method
         region_at_points = polygon_file.meshkernel_inpolygon(res_file=res_file, dtype="edge", property_name="region")
@@ -211,13 +211,10 @@ class Test_MultiPolygon:  # noqa: N801
 
     def test_get_points_in_polygon(self, polygon_list, mocker):
         """Test the get_points_in_polygon method."""
-        # Step 1. Fetch the grid file
-        res_file = TestUtils.get_local_test_file("cases/case_02_compound/Data/2DModelOutput/FlowFM_map.nc")
-
-        # Step 2. Instantiate the RegionPolygonFile class
+        # Step 1. Instantiate the RegionPolygonFile class
         polygon_file = MultiPolygon(logging.getLogger(__name__))
         polygon_file.polygons = polygon_list
-        mocked_logger = mocker.patch.object(polygon_file, "set_logger_message")
+        mocker.patch.object(polygon_file, "set_logger_message")
 
         # Step 3. Call the get_gridpoints_in_polygon method
         region_at_points = polygon_file.get_points_in_polygon(points=[[0, 0], [200, 300]], property_name="region")
@@ -246,7 +243,7 @@ class Test_RegionPolygonFile:  # noqa: N801
         _geojson_file_writer(test_geojson, file_path)
 
         # create RegionPolygon instance
-        mocked_logger = mocker.patch.object(RegionPolygon, "set_logger_message")
+        mocker.patch.object(RegionPolygon, "set_logger_message")
         region_polygon_file = RegionPolygon(region_file_path=file_path, logger=logging.getLogger(__name__))
 
         # Step 1. Fetch the grid file
@@ -353,25 +350,21 @@ class TestSectionPolygonFile:
         _geojson_file_writer(test_geojson, file_path)
 
         # create SectionPolygon instance with wrong data
-        mock_logger = mocker.patch.object(SectionPolygon, "set_logger_message")
-        with pytest.raises(PolygonError, match="Section file is not valid"):
+        mocker.patch.object(SectionPolygon, "set_logger_message")
+        with pytest.raises(PolygonError, match="Polygon poly1 has no property 'section'"):
             SectionPolygon(file_path, logger=logging.getLogger())
 
-        assert mock_logger.call_args_list[1][0][0] == 'Polygon poly1 has no property "section"'
-        assert mock_logger.call_args_list[2][0][0] == 'Polygon poly2 has no property "section"'
 
     def test_initialisation_with_invalid_section_name(self, mocker, test_geojson, tmp_path):
         # set up test
         file_path = tmp_path / "test_geojson.geojson"
         test_geojson["features"][0]["properties"]["section"] = "fake section"
-        mock_logger = mocker.patch.object(SectionPolygon, "set_logger_message")
         _geojson_file_writer(test_geojson, file_path)
 
         # create SectionPolygon instance with wrong data
-        with pytest.raises(PolygonError, match="Section file is not valid"):
+        mocker.patch.object(SectionPolygon, "set_logger_message")
+        with pytest.raises(PolygonError, match="fake section is not a recognized section"):
             SectionPolygon(file_path, logger=logging.getLogger())
-
-        assert "fake section is not a recognized section" in [log_cal[0][0] for log_cal in mock_logger.call_args_list]
 
     def test_initialisation_with_valid_section_polygon(self, mocker, test_geojson, tmp_path):
         # create SectionPolygon instance with correct data

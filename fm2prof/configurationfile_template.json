@@ -100,15 +100,20 @@
 	    "hint": "number of timesteps to skip at begin of 2D output. Use to skip problems related to initial conditions. ",
 	    "value": 0 
   	},
-  	"ClassificationMethod": {
-	    "type": "int",
-	    "hint": "How to classify 2D output using Section and Region polygons. Options: [0] Do not classify regions or sections. [1] Use DeltaShell",
-	    "value": 1 
-  	},
   	"MinimumTotalWidth": {
 	    "type": "float",
 	    "hint": "Minimum width in meters. Zero width may lead to numerical instability in 1D solvers",
 	    "value": 0.5 
+  	},
+	"DefaultSection": {
+	    "type": "str",
+	    "hint": "Default section name to use in cells not covered by a section polygon. Value options: floodplain1, floodplain2 or main",
+	    "value": "floodplain1"
+  	},
+	"DefaultRegion": {
+	    "type": "str",
+	    "hint": "Default region name to use in cells not covered by a region polygon.",
+	    "value": "undefined"
   	}
   },
   "debug":{

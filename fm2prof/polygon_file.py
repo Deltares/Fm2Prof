@@ -59,7 +59,15 @@ class GridPointsInPolygonResults(NamedTuple):
     edges_in_polygon: list[str]
 
 class Polygon:
-    """Polygon class."""
+    """Polygon class.
+
+    This class represents a single polygon with its geometry and properties.
+    It is used by the MultiPolygon class to store individual polygons.
+
+    Attributes:
+        coordinates (list[list[float]]): List of [x, y] coordinates defining the polygon.
+        properties (dict): Dictionary of properties associated with the polygon.
+    """
 
     def __init__(self, coordinates: list[list[float]], properties: dict) -> None:
         """Instantiate a Polygon object.
@@ -392,14 +400,22 @@ class MultiPolygon(FM2ProfBase):
 class RegionPolygon(MultiPolygon):
     """RegionPolygonFile class."""
 
-    def __init__(self, region_file_path: str | Path, logger: Logger) -> None:
-        """Instantiate a RegionPolygonFile object."""
+    def __init__(self, region_file_path: str | Path, logger: Logger, default_value: str="undefined") -> None:
+        """Instantiate a RegionPolygonFile object.
+
+        Args:
+            region_file_path (str | Path): path to region polygon file.
+            logger (Logger): logger
+            default_value (str): default region name to use in cells not covered by a region polygon
+        """
         super().__init__(logger)
         try:
             self.from_file(region_file_path)
         except TypeError as e:
             self.set_logger_message(f"Potentially invalid geojson file: {e}", level="error")
             raise PolygonError from e
+
+        self.undefined = default_value
 
     @property
     def regions(self) -> list[Polygon]:
@@ -454,17 +470,18 @@ class RegionPolygon(MultiPolygon):
 class SectionPolygon(MultiPolygon):
     """SectionPolygonFile class."""
 
-    def __init__(self, section_file_path: str | Path, logger: Logger) -> None:
+    def __init__(self, section_file_path: str | Path, logger: Logger, default_value: str="floodplain1") -> None:
         """Instantiate a SectionPolygonFile object.
 
         Args:
             section_file_path (str | Path): path to section polygon file.
             logger (Logger): logger
+            default_value (str): default section name to use in cells not covered by a section polygon.
 
         """
         super().__init__(logger)
         self.from_file(section_file_path)
-        self.undefined = 1  # 1 is main
+        self.undefined = default_value
 
     @property
     def sections(self) -> list[Polygon]:
