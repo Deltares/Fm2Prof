@@ -69,10 +69,12 @@ class Test_read_mask_output_file:
         not_existing_file = tmp_path / "test.geojson"
 
         # 2. Set expectation
+        import re
         expected_error = f"File path {not_existing_file} not found"
+        expected_error_regex = re.escape(expected_error)
 
         # 3. Run test
-        with pytest.raises(FileNotFoundError, match=expected_error):
+        with pytest.raises(FileNotFoundError, match=expected_error_regex):
             read_mask_output_file(not_existing_file)
 
     def test_when_valid_file_with_no_content_then_returns_expected_geojson(self, tmp_path):

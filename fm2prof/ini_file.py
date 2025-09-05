@@ -9,15 +9,15 @@ import json
 import os
 from pathlib import Path
 from pydoc import locate
-from typing import TYPE_CHECKING, Any, Generator, Mapping
+from typing import TYPE_CHECKING, Any
 
 from fm2prof.common import FM2ProfBase
 
 if TYPE_CHECKING:
+    from collections.abc import Generator, Mapping
     from logging import Logger
 
-
-class InvalidConfigurationFileError(Exception):
+class ConfigurationFileError(Exception):
     """Raised when config file is not up to snot."""
 
 
@@ -59,19 +59,20 @@ class IniFile(FM2ProfBase):
         "section_file": "sectionpolygonfile",
         "export_mapfiles": "exportmapfiles",
         "css_selection": "cssselection",
-        "classificationmethod": "classificationmethod",
         "sdfloodplainbase": "sdfloodplainbase",
         "sdstorage": "sdstorage",
         "transitionheight_sd": "transitionheight_sd",
         "number_of_css_points": "number_of_css_points",
         "minimum_width": "minimum_width",
+        "default_section": "defaultsection",
+        "default_region": "defaultregion",
     }
 
     _output_dir = None
     _input_file_paths = None
     _input_parameters = None
 
-    def __init__(self, file_path: Path | str = ".", logger: Logger | None = None) -> None:
+    def __init__(self, file_path: Path | None = None, logger: Logger | None = None) -> None:
         """Initialize the object Ini File.
 
         File should contain the path locations of all
@@ -92,10 +93,12 @@ class IniFile(FM2ProfBase):
             logger (Logger): logger object to log messages to.
 
         """
-        super().__init__(logger=logger)
+        if logger:
+            self.set_logger(logger)
 
-        self._ini_template = self._get_template_ini()  # Template to fill defaults from
-        self._configuration = self._get_template_ini()  # What will be used
+        self._file = None
+        self._ini_template = self._get_template_ini()  # Default template
+        self._configuration = self._get_template_ini()  # This will hold the actual configuration
 
         if file_path is None:
             self.set_logger_message(
@@ -103,21 +106,8 @@ class IniFile(FM2ProfBase):
                 "warning",
             )
             return
-        file_path = Path(file_path)
-        if isinstance(file_path, Path):
-            self._file = file_path
-        if file_path.is_file():
-            self.set_logger_message(f"Received ini file: {self._file}", "debug")
-            self._read_inifile(file_path)
-        elif file_path.is_dir():
-            self.set_logger_message(
-                "No ini file given, using default options",
-                "warning",
-            )
-        else:
-            # User has supplied a file, but the file does not exist. Raise error.
-            err_msg = f"The given file path {file_path} could not be found"
-            raise OSError(err_msg)
+
+        self.load_configuration_from_file(file_path)
 
     @property
     def _file_dir(self) -> Path:
@@ -141,9 +131,9 @@ class IniFile(FM2ProfBase):
         if not self.get_output_directory().exists():
             try:
                 self.get_output_directory().mkdir(parents=True)
-            except OSError:
+            except FileNotFoundError:
                 self.set_logger_message(
-                    f"The output directory {self.get_output_directory()}, could not be found neither created.",
+                    f"The output directory {self.get_output_directory()}, could not be found or created.",
                     "warning",
                 )
                 return False
@@ -233,6 +223,34 @@ class IniFile(FM2ProfBase):
         """Use this method to set a input files the configuration."""
         self._set_config_value("input", key, value)
 
+    def print_configuration(self) -> str:
+        """Print the configuration as a string."""
+        f = io.StringIO()
+        for sectionname, section in self._configuration.get("sections").items():
+            f.write(f"[{sectionname}]\n")
+            for key, contents in section.items():
+                f.write(
+                    f"{key:<30}= {contents.get('value')!s:<10}# {contents.get('hint')}\n",
+                )
+            f.write("\n")
+        return f.getvalue()
+
+    def load_configuration_from_file(self, file_path: Path) -> None:
+        """Load configuration from file.
+
+        Args:
+            file_path (str): path to configuration file.
+        """
+        self._file = Path(file_path)
+        if self._file.is_file():
+            self.set_logger_message(f"Received ini file: {self._file}", "debug")
+            self._read_inifile()
+        else:
+            err_msg = f"The given file path {file_path} could not be found"
+            raise FileNotFoundError(err_msg)
+
+        self._read_inifile()
+
     def set_parameter(self, key: str, value: str | float, section: str = "parameters") -> None:
         """Use this method to set a key/value pair to the configuration."""
         self._set_config_value(section, key, value)
@@ -262,18 +280,6 @@ class IniFile(FM2ProfBase):
         """
         self._configuration["sections"]["output"][self.__output_directory_key]["value"] = value
 
-    def print_configuration(self) -> str:
-        """Print the configuration as a string."""
-        f = io.StringIO()
-        for sectionname, section in self._configuration.get("sections").items():
-            f.write(f"[{sectionname}]\n")
-            for key, contents in section.items():
-                f.write(
-                    f"{key:<30}= {contents.get('value')!s:<10}# {contents.get('hint')}\n",
-                )
-            f.write("\n")
-        return f.getvalue()
-
     def iter_parameters(self) -> Generator[tuple[str], None, None]:
         """Iterate through the names and values of all parameters."""
         for parameter, content in self._configuration["sections"].get("parameters").items():
@@ -295,7 +301,7 @@ class IniFile(FM2ProfBase):
         self,
         section: str,
         key: str,
-    ) -> str | bool | int | float:
+        ) -> str | bool | int | float:
         for parameter, content in self._configuration["sections"].get(section).items():
             if parameter.lower() == key.lower():
                 return content.get("value")
@@ -308,7 +314,7 @@ class IniFile(FM2ProfBase):
         with Path(path).joinpath("configurationfile_template.json").open("r") as f:
             return json.load(f)
 
-    def _read_inifile(self, file_path: str) -> None:
+    def _read_inifile(self) -> None:
         """Reads the inifile and extract all its parameters for later usage.
 
         Parameters
@@ -316,49 +322,20 @@ class IniFile(FM2ProfBase):
             file_path {str} -- File path where the IniFile is located
 
         """
-        if not file_path:
-            msg = "No ini file was specified and no data could be read."
-            self.set_logger_message(msg, "error")
-            raise OSError(msg)
-        try:
-            if not Path(file_path).exists():
-                msg = f"The given file path {file_path} could not be found."
-                self.set_logger_message(msg, "error")
-                raise OSError(msg)
-        except TypeError as err:
-            if not isinstance(file_path, io.StringIO):
-                err_msg = "Unknown file format entered"
-                raise TypeError(err_msg) from err
-        try:
-            supplied_ini = self._get_inifile_params(file_path)
-        except Exception as e_info:
-            raise Exception(
-                f"It was not possible to extract ini parameters from the file {file_path}. Exception thrown: {e_info!s}",
-            )
+        # Read inifile
+        supplied_ini = self._get_inifile_params(self._file)
 
-        # Compare supplied with default/expected inifile
-        try:
-            self._extract_input_files(supplied_ini)
-        except Exception:
-            self.set_logger_message(
-                "Unexpected error reading input files. Check config file",
-                "error",
-            )
-        try:
-            self._extract_parameters(supplied_ini, self.__input_parameters_key)
-            self._extract_parameters(supplied_ini, self.__input_debug_key)
-        except Exception:
-            self.set_logger_message(
-                "Unexpected error reading (debug) parameters. Check config file",
-                "error",
-            )
-        try:
-            self._extract_output_dir(supplied_ini)
-        except Exception:
-            self.set_logger_message(
-                "Unexpected error output parameters. Check config file",
-                "error",
-            )
+        # Parse input files
+        self._extract_input_files(supplied_ini)
+
+        # parse parameters
+        self._extract_parameters(supplied_ini, self.__input_parameters_key)
+
+        # Parse debug parameters
+        self._extract_parameters(supplied_ini, self.__input_debug_key)
+
+        # Parse output options
+        self._extract_output_dir(supplied_ini)
 
     def _extract_parameters(self, supplied_ini: Mapping[str, list], section: str) -> None:
         """Extract InputParameters and convert values either integer or float from string.
@@ -367,16 +344,32 @@ class IniFile(FM2ProfBase):
             supplied_ini (Mapping[str, list]): Mapping of ini config parameters
             section (str): name of section
         """
-        try:
-            inputsection = supplied_ini.get(section)
-        except KeyError as err:
-            raise InvalidConfigurationFileError from err
+        inputsection = supplied_ini.get(section)
+        if inputsection is None:
+            self.set_logger_message(f"Section {section} not found in configuration file. Using default", "Warning")
+            return
+
+        # check for missing keys
+        default_keys = [key.lower() for key in self._get_template_ini()["sections"][section]]
+        supplied_keys = [key.lower() for key in inputsection]
+        missing_keys_in_configuration_file = set(default_keys).difference(set(supplied_keys))
+        superfluous_keys_in_configuration_file = set(supplied_keys).difference(set(default_keys))
+
+        for key in missing_keys_in_configuration_file:
+            self.set_logger_message(f"Missing key in configuration [{section}]: {key}. Using default value", "warning")
+
+        for key in superfluous_keys_in_configuration_file:
+            self.set_logger_message(f"Superfluous key in configuration [{section}]: {key}. Ignoring", "warning")
 
         for key, value in inputsection.items():
+            # Skip superfluous keys
+            if key.lower() in superfluous_keys_in_configuration_file:
+                continue
+
             key_default, key_type = self._get_key_from_template(section, key)
             try:
                 parsed_value = key_type(value)
-                self._set_config_value("parameters", key_default, parsed_value)
+                self._set_config_value(section, key_default, parsed_value)
             except ValueError:
                 self.set_logger_message(
                     f"{key} could not be cast as {key_type}",
@@ -394,7 +387,7 @@ class IniFile(FM2ProfBase):
         try:
             inputsection = supplied_ini.get(self.__input_files_key)
         except KeyError as err:
-            raise InvalidConfigurationFileError from err
+            raise ConfigurationFileError from err
 
         for key, input_file in inputsection.items():
             key_default, _ = self._get_key_from_template("input", key)
@@ -413,7 +406,6 @@ class IniFile(FM2ProfBase):
                     err_msg,
                     "error",
                 )
-                raise FileNotFoundError(err_msg)
             self.set_logger_message(
                 f"Could not find optional input file for {key_default}, skipping",
                 "warning",
@@ -439,7 +431,7 @@ class IniFile(FM2ProfBase):
         try:
             outputsection = supplied_ini.get(self.__output_key)
         except KeyError as err:
-            raise InvalidConfigurationFileError from err
+            raise ConfigurationFileError from err
 
         for key, value in outputsection.items():
             if key.lower() == self.__output_directory_key.lower():

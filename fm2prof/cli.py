@@ -73,7 +73,7 @@ def cli_load_project(
         "-p",
         help="Post-process the results, generates figures",
     ),
-) -> None:
+    ) -> None:
     """Load and run a project."""
     cf = Path(projectname).with_suffix(".ini")
     project = Project(cf)
@@ -81,7 +81,7 @@ def cli_load_project(
 
     if pp:
         vis = VisualiseOutput(
-            project.get_output_directory(), logger=project.get_logger()
+            project.get_output_directory(), logger=project.get_logger(),
         )
         for css in tqdm(vis.cross_sections):
             vis.figure_cross_section(css)
@@ -91,7 +91,7 @@ def cli_load_project(
 
 @app.callback()
 def cli(
-    version: Optional[bool] = typer.Option(  # noqa: ARG001 FA100
+    version: Optional[bool] = typer.Option(  # noqa: ARG001, UP007
         None,
         "--version",
         "-v",
@@ -102,7 +102,3 @@ def cli(
 ) -> None:
     """Fm2Prof Command-line interface."""
     typer.echo("Welcome to Fm2Prof")
-
-
-def main():  # noqa: ANN201, D103
-    app()

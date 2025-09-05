@@ -8,7 +8,7 @@ import warnings
 from collections import namedtuple
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Callable, Generator
+from typing import TYPE_CHECKING, Any
 
 import matplotlib as mpl
 import matplotlib.dates as mdates
@@ -24,6 +24,7 @@ from pandas.plotting import register_matplotlib_converters
 from fm2prof.common import FM2ProfBase
 
 if TYPE_CHECKING:
+    from collections.abc import Callable, Generator
     from io import TextIOWrapper
     from logging import Logger
 
@@ -60,6 +61,19 @@ COLORSCHEMES = {
         "#BBBBBB",
     ],
 }
+
+class CrossSectionDefinition(dict):
+    """Cross section definition."""
+    id: str
+    levels: list[float]
+    flow_width: list[float]
+    total_width: list[float]
+    SD_crest: float
+    SD_flow_area: float
+    SD_total_area: float
+    SD_baselevel: float
+    mainsectionwidth: float
+    fp1sectionwidth: float
 
 
 class GenerateCrossSectionLocationFile(FM2ProfBase):
@@ -685,39 +699,51 @@ class VisualiseOutput(FM2ProfBase):
             "roughnessFP1": self.output_dir / self.__rfp1file,
         }
 
-    def _get_value_from_line(self, f: TextIOWrapper) -> str:
+    @staticmethod
+    def _get_value_from_line(f: TextIOWrapper) -> str:
         return f.readline().strip().split("=")[1].strip()
 
-    def _read_css_def_file(self) -> list[dict]:
-        csslist = []
+    def _read_css_def_file(self) -> list[CrossSectionDefinition]:
+        return self.parse_cross_section_definition_file(Path(self.files["css_def"]))
 
-        with self.files.get("css_def").open("r") as f:
+    @staticmethod
+    def parse_cross_section_definition_file(css_def: Path) -> list[CrossSectionDefinition]:
+        """Parse cross-section definition file.
+
+        Args:
+            css_def (Path): path to cross-section definition file
+        Returns:
+            list[CrossSectionDefinition]: list of cross-section definitions
+        """
+        csslist = []
+        with css_def.open("r") as f:
             for line in f:
                 if line.lower().strip() == "[definition]":
                     css_id = f.readline().strip().split("=")[1]
                     [f.readline() for i in range(3)]
-                    css_levels = list(map(float, self._get_value_from_line(f).split()))
-                    css_fwidth = list(map(float, self._get_value_from_line(f).split()))
-                    css_twidth = list(map(float, self._get_value_from_line(f).split()))
-                    css_sdcrest = float(self._get_value_from_line(f))
-                    css_sdflow = float(self._get_value_from_line(f))
-                    css_sdtotal = float(self._get_value_from_line(f))
-                    css_sdbaselevel = float(self._get_value_from_line(f))
-                    css_mainsectionwidth = float(self._get_value_from_line(f))
-                    css_fp1sectionwidth = float(self._get_value_from_line(f))
+                    css_levels = list(map(float, VisualiseOutput._get_value_from_line(f).split()))
+                    css_fwidth = list(map(float, VisualiseOutput._get_value_from_line(f).split()))
+                    css_twidth = list(map(float, VisualiseOutput._get_value_from_line(f).split()))
+                    css_sdcrest = float(VisualiseOutput._get_value_from_line(f))
+                    css_sdflow = float(VisualiseOutput._get_value_from_line(f))
+                    css_sdtotal = float(VisualiseOutput._get_value_from_line(f))
+                    css_sdbaselevel = float(VisualiseOutput._get_value_from_line(f))
+                    css_mainsectionwidth = float(VisualiseOutput._get_value_from_line(f))
+                    css_fp1sectionwidth = float(VisualiseOutput._get_value_from_line(f))
 
-                    css = {
-                        "id": css_id.strip(),
-                        "levels": css_levels,
-                        "flow_width": css_fwidth,
-                        "total_width": css_twidth,
-                        "SD_crest": css_sdcrest,
-                        "SD_flow_area": css_sdflow,
-                        "SD_total_area": css_sdtotal,
-                        "SD_baselevel": css_sdbaselevel,
-                        "mainsectionwidth": css_mainsectionwidth,
-                        "fp1sectionwidth": css_fp1sectionwidth,
-                    }
+                    css: CrossSectionDefinition = CrossSectionDefinition(
+                        id=css_id.strip(),
+                        levels=css_levels,
+                        flow_width=css_fwidth,
+                        total_width=css_twidth,
+                        SD_crest=css_sdcrest,
+                        SD_flow_area=css_sdflow,
+                        SD_total_area=css_sdtotal,
+                        SD_baselevel=css_sdbaselevel,
+                        mainsectionwidth=css_mainsectionwidth,
+                        fp1sectionwidth=css_fp1sectionwidth,
+                    )
+
                     csslist.append(css)
 
         return csslist

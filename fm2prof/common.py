@@ -203,21 +203,25 @@ class FM2ProfBase:
         if inifile:
             self.set_inifile(inifile)
 
-    def _create_logger(self) -> None:
+    @staticmethod
+    def create_logger() -> Logger:
+        """Create logger instance."""
         # Create logger
-        self.__logger = logging.getLogger(__name__)
-        self.__logger.setLevel(logging.DEBUG)
+        logger = logging.getLogger(__name__)
+        logger.setLevel(logging.DEBUG)
 
         # create formatter
-        self.__logger.__logformatter = ElapsedFormatter()  # noqa: SLF001
-        self.__logger._Filelogformatter = ElapsedFileFormatter()  # noqa: SLF001
+        logger.__logformatter = ElapsedFormatter()  # noqa: SLF001
+        logger._Filelogformatter = ElapsedFileFormatter()  # noqa: SLF001
 
         # create console handler
-        if TqdmLoggingHandler not in map(type, self.__logger.handlers):
+        if TqdmLoggingHandler not in map(type, logger.handlers):
             ch = TqdmLoggingHandler()
             ch.setLevel(logging.DEBUG)
-            ch.setFormatter(self.__logger.__logformatter)  # noqa: SLF001
-            self.__logger.addHandler(ch)
+            ch.setFormatter(logger.__logformatter)  # noqa: SLF001
+            logger.addHandler(ch)
+
+        return logger
 
     def get_logger(self) -> Logger:
         """Use this method to return logger object."""

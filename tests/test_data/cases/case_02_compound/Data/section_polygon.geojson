@@ -1,0 +1,13 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+      {
+          "type": "Feature",
+          "properties": {"name": "poly1", "section": "main"},
+          "geometry": {
+              "type": "Polygon",
+              "coordinates": [[[-50, -50], [3050, -50], [3050, 300], [-50, 300], [-50, -50]]]
+          }
+      }
+  ]
+}
