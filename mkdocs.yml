@@ -80,6 +80,7 @@ repo_name: deltares/fm2prof
 copyright: Copyright &copy; 2025 Deltares
 extra_css:
   - stylesheets/extra.css
+  - stylesheets/hero.css
 nav:
     - Home: index.md
     - User Manual:
