@@ -26,13 +26,9 @@ FM2PROF (Flow**FM** **to** **Prof**ile) is a Python package that extracts 1D cro
 
 ### Installation
 
-**Option 1: Python Package (Recommended)**
 ```bash
 pip install fm2prof
 ```
-
-**Option 2: Windows Executable**
-Download from [GitHub Releases](https://github.com/Deltares/Fm2Prof/releases)
 
 ### Basic Usage
 
@@ -55,10 +51,10 @@ project.run()
 **Command Line:**
 ```bash
 # Create new project
-FM2PROF create MyProject
+python fm2prof create MyProject
 
 # Edit MyProject.ini with your file paths, then run
-FM2PROF run MyProject --overwrite
+python fm2prof run MyProject --overwrite
 ```
 
 ### Required Input Files
@@ -88,10 +84,10 @@ FM2PROF generates:
 
 ## Key Features
 
-### 🌊 **Hydraulic Intelligence**
+## 🌊 **Using Geometric and Hydraulic Information**
 - Volume-preserving 1D geometry
 - Roughness weighting methods (area-based, distance-based)
-- Flood-dependent storage areas
+- Flow-dependent storage areas
 - Transition height calculations for overbank flow
 
 ### ⚡ **Performant**
@@ -155,6 +151,3 @@ Deltares. https://github.com/Deltares/Fm2Prof
 ```
 
 ---
-
-**Ready to extract 1D profiles from your 2D model?** 
-Start with our [Quick Tutorial](https://deltares.github.io/Fm2Prof/markdown/quickstart/) or explore the [example notebooks](notebooks/) to see FM2PROF in action.

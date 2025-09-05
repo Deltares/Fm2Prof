@@ -1,19 +1,27 @@
-## v2.4.0 (Xx-xx-2025)
+## v2.4.0 (05-09-2025)
+
+This update introduces a new built-in method to use region & section polygons 
+built on the MeshKernel package, switches to the uv package and project
+manager and increases test coverage. 
 
 ### New features
 
+- new built-in method to use region- and section polygons, enabled by default, see [documentation](https://deltares.github.io/fm2prof/markdown/conceptual_design/#region-polygon-file) for more information
 - missing key in configuration now prints a warning
+- new configuration parameters "defaultsection" and "defaultregion"
+- configuration parameter "classificationmethod" no longer exists
 
-BREAKING CHANGES: 
-- Region polygon now requires "region" property as well as "name" property. 
-- Section polygon now requires the "name" property
-- configuration parameter "classification method" no longer exists
+### Breaking changes
 
-
-### Bugs fixed
-
+- old "DeltaShell" classification with undocumented "_BATHY.nc" no longer works
+- Region polygon now requires "region" property as well as "name" property.
+- Section polygon now requires the "name" property as well as the "section" property
 
 ### Maintenance
+
+- increased test coverage
+- removed archived tests
+
 
 ## v2.3.3 (24-09-2024)
 
@@ -144,13 +152,12 @@ This version adds the parameter stoptime to utils.Compare1D2D and makes both sta
 
 - log style now the same as stream, added support for tqdm
 - added cross-section progress to log
-- (#34)
 - revised logger style (#34)
 - first figure does not use correct style
 - added 10 cm tolerance to section width correction
 - main section width check
 - output path compare1d2d discharge figure
-- #33
+- issue 33
 
 ## v2.1.2 (2022-07-05)
 
