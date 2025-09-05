@@ -1,6 +1,6 @@
 [project]
 name = "fm2prof"
-version = "2.3.3"
+version = "2.4.0"
 description = ""
 authors = [{ name = "Koen Berends", email = "koen.berends@deltares.nl" }]
 requires-python = ">=3.10, <3.13"
