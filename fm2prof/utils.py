@@ -77,68 +77,92 @@ class CrossSectionDefinition(dict):
 
 
 class GenerateCrossSectionLocationFile(FM2ProfBase):
-    """Build a cross-section input file for FM2PROF from a SOBEK 3 DIMR network definition file.
+    """Generates a [`CrossSectionInputFile`](../configuration.md) for FM2PROF from an existing 1D network.
 
-    The distance between cross-section is computed from the differences between the offsets/chainages.
-    The beginning and end point of each branch are treated as half-distance control volumes.
+    A [`CrossSectionInputFile`](../configuration.md) is a file that contains the locations of cross-sections
+    as X,Y coordinates, the lengths of each cross-section and the branch and offset/chainage on which
+    they are located. For a conceptual overview of how this data is used in FM2PROF, see
+    [Control Volumes](glossary.md#control-volume).
 
-    It supports an optional :ref:`branchRuleFile.
+    This is a vitally important file for FM2PROF, as it defines not only where the cross-sections are
+    located, but also how 2D volumes are mapped to 1D widths. This utility helps to generate a
+    valid and consistent input file. Manual editing of this file is only recommended for advanced users.
 
-    Use as a function i.e. this code will generate a cross-section location file:
+    # Cross-Section Placement
+    By default, cross-sections are placed at all computational points in the 1D network. However,
+    this can lead to cross-sections in places where they are not desired. See
+    [Troubleshooting](../troubleshooting.md) for examples of how to diagnose such issues.
 
-    >>> GenerateCrossSectionLocationFile(**input)
+    To customise the placement of cross-sections, it supports an
+    optional Branch Rule File (see below).
 
-    Parameters
-    ----------
-        networkdefinitionfile: path to NetworkDefinitionFile.ini
+    # Example usage
 
-        crossectionlocationfile: path to the desired output file
+    Example:
+        This illustrates how to use the tool in Python code:
 
-        branchrulefile: OPTIONAL path to a branchrulefile
+        ```python
+        from fm2prof.utils import GenerateCrossSectionLocationFile
 
+        input = {
+             "network_definition_file": "NetworkDefinitionFile.ini",
+             "cross_section_location_file": "CrossSectionLocationFile.ini",
+             "branch_rule_file": "BranchRuleFile.ini"
+        }
+        GenerateCrossSectionLocationFile(**input)
+        ```
 
+    # Branch Rule File
 
-
-    branchrulefile
-    ^^^^^^^^^^^^^^
-    This file may be used to exclude certain computational points from being
+    This optional file is used to exclude certain computational points from being
     used as the location of a cross-section. This is particularily useful
-    when smaller branches connect to a major branch.
+    when smaller branches connect to a major branch, see [Troubleshooting](troubleshooting.md).
 
-    The branchrule file is a comma-seperates file with the following syntaxt:
+    The branch_rule_file is a comma-separated file with the following syntax:
 
-    .. code-block:: shell
+    ```shell
+        branch,rules,exclusions
+    ```
 
-        branch,rules
+    ## Rules
 
-    Here, `branch` is the name of the branch and `rules` are rules for exclusion
+    Rules are general rules to exclude cross-sections. Supported general rules are:
 
-    Supported general rules are:
+    - **onlyFirst**: only keep the first cross-section, and exclude all others
+    - **onlyLast**: only keep the last cross-section, and exclude all others
+    - **onlyEdges**: only keep the first and last cross-section, and exclude all others
+    - **ignoreFirst**: exclude the first cross-section on a branch
+    - **ignoreLast**: exclude the last cross-section on a branch
+    - **ignoreEdges**: exclude the first and last cross-section on a branch
+    - **noRule**: use to not use any of the above rules
 
-    - onlyFirst: only keep the first cross-section, and exclude all others
-    - onlyLast: only keep the last cross-section, and exclude all others
-    - onlyEdges: only keep the first and last cross-section, and exclude all others
-    - ignoreFirst: exclude the first cross-section on a branch
-    - ignoreLast: exclude the last cross-section on a branch
-    - ignoreEdges: exclude the first and last cross-section on a branch
-    - noRule: use to not use any of the above rules
-
-    Additionally, specific cross-sections can be excluded by id. For example:
+    ## Exclusions
+    Exclusions are used to exclude specific cross-sections by id. 
 
 
-    .. code-block:: shell
+    ## Usage
 
+    To only exclude one specific cross-section:
+
+    ```shell
         Channel1, noRule, channel_1_350.000
+    ```
 
     In this case, the computational point with name `channel_1_350.000` will
-    not be used as the location of a cross-section.
+    not be used as the location of a cross-section, but all other computational points 
+    on branch `Channel1` will be used.
 
     Rules and individual exclusions can be mixed, e.g.:
 
-    .. code-block:: shell
-
+    ```shell
         Channel1, ignoreLast, channel_1_350.000
+    ```
 
+    More than one exclusion can be specified, e.g.:
+
+    ```shell
+        Channel1, ignoreLast, channel_1_350.000, channel_1_400.000
+    ```
     """
 
     def __init__(
@@ -151,8 +175,8 @@ class GenerateCrossSectionLocationFile(FM2ProfBase):
 
         Args:
             network_definition_file (str | Path): network definition file
-            crossection_location_file (str | Path): crosssection location file
-            branchrule_file (str | Path, optional): . Defaults to "".
+            cross_section_location_file (str | Path): cross-section location file
+            branch_rule_file (str | Path, optional): branch rule file. Defaults to "".
 
         """
         super().__init__()

@@ -57,6 +57,7 @@ plugins:
   - search
   - markdown-exec
   - blog
+  - autorefs
   - glightbox
   - git-revision-date-localized:
       enable_creation_date: true
@@ -84,18 +85,29 @@ extra_css:
 nav:
     - Home: index.md
     - User Manual:
+      - Overview: markdown/overview.md
       - Installation: markdown/installation.md
       - Quickstart: markdown/quickstart.md
-      - Utilities: 
-        - markdown/utils.md
+      - Analysing output: 
         - notebooks/cross_section_data.ipynb
-        - notebooks/compare1d2d.ipynb
-        - notebooks/VisualiseOutput.ipynb
-      - Settings:
-        - Configuration: markdown/configuration.md
+        - markdown/troubleshooting.md
+      - Utilities: 
+        - Generate CrossSection Location file:
+          - markdown/utils/GenerateCrossSectionsLocations.md
+        - Compare 1D and 2D model results:
+          - markdown/utils/compare1d2d.md
+          - Example: notebooks/compare1d2d.ipynb
+        - VisualiseOutput:
+          - markdown/utils/visualiseoutput.md
+          - notebooks/VisualiseOutput.ipynb
+      - Files and Settings:
+        - markdown/configuration.md
+        - Files:
+          - markdown/files/2DMapOutput.md
+          - markdown/files/branch_rule_file.md
     - Technical Manual:
       - Methodology: markdown/conceptual_design.md
-      - Glossary: markdown/glossary.md
+      - Important concepts: markdown/glossary.md
       - Numerical methods: markdown/numerical_methods.md
       - API: markdown/api.md
     - Contributing: markdown/contributing.md
