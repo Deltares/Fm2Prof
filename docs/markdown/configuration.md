@@ -1,4 +1,6 @@
-# FM2PROF configuration 
+# Settings
+
+Settings are managed in the FM2PROF Configuration file
 
 ```python exec="on"
 import json
@@ -10,11 +12,14 @@ with open('fm2prof/configurationfile_template.json', 'r') as f:
         for key_value, key_content in section_content.items():
             print (f"### {key_value}")
             print (f"""
-**type**: {key_content.get('type')}
-
-**default value**: {key_content.get('value')}
 
 {key_content.get('hint')}
+
+| Input   |      Value      |
+|----------|:-------------:|
+| Type |  {key_content.get('type')}  |
+| Default value |{key_content.get('value')}|
+
 """)
 
 
