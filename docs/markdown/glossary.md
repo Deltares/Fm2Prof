@@ -13,11 +13,15 @@ cross-section by k-Nearest Neighbour classification. As such,
 the bounds of the control volumes are not uniquely defined by 
 a polygon but rather by a collection of points. 
 
-Control volumes are based on the Cross-section Location File, which 
-contains the 2D coordinates of each cross-section. These coordinates
-are used during the nearest-neighbour classification. Additionally
-it contains information on the 1D coordinates (branch and chainage) 
-and the length. The figure below shows how cross-section length
+Control volumes use the 2D coordinates of each cross-section as
+specified in the CrossSectionLocationFile during the nearest-neighbour 
+classification. The 2D input data used during classification is 
+filtered by [region](#region) in the following way: a cross-section within 
+a certain region can only be assigned 2D information from that region. 
+
+The `CrossSectionLocationFile` additionally contains information on the 1D 
+coordinates (branch and chainage) and the length. 
+The figure below shows how cross-section length
 is defined. We recommend that this file is generated using the 
 [GenerateCrossSectionLocations](utils/GenerateCrossSectionsLocations.md) 
 tool.
