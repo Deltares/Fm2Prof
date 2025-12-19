@@ -1597,18 +1597,6 @@ class Compare1D2D(ModelOutputReader):
         plotter.figure_at_station("NR_919.00")
 
         ```
-
-    Parameters
-    ----------
-        project: `fm2prof.Project` object.
-        path_1d: path to SOBEK dimr directory
-        path_2d: path to his nc file
-        routes: list of branch abbreviations, e.g. ['NR', 'LK']
-        start_time: start time for plotting and analytics. Use this to crop the time to prevent initalisation from
-        affecting statistics.
-        stop_time: stop time for plotting and analytics.
-        style: `PlotStyles` style
-
     """
 
     _routes: list[list[str]] = None
@@ -1623,7 +1611,18 @@ class Compare1D2D(ModelOutputReader):
         stop_time: None | datetime = None,
         style: str = "sito",
     ) -> None:
-        """Instantiate a Compare1D2D object."""
+        """Instantiate a Compare1D2D object.
+
+        Args:
+            project (fm2prof.Project): `fm2prof.Project` object.
+            path_1d (Path | str | None): path to SOBEK dimr directory
+            path_2d (Path | str | None): path to his nc file
+            routes (list[list[str]] | None): list of branch abbreviations, e.g. ['NR', 'LK']
+            start_time (None | datetime): start time for plotting and analytics. Use this to crop the time to prevent initalisation from
+            affecting statistics.
+            stop_time (None | datetime): stop time for plotting and analytics.
+            style (str): `fm2prof.utils.PlotStyles` style
+        """
         if project:
             super().__init__(logger=project.get_logger(), start_time=start_time, stop_time=stop_time)
             self.output_path = project.get_output_directory()
