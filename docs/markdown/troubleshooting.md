@@ -5,21 +5,21 @@
 One of the output files is a geojson file called `cross_section_volumes.geojson`. 
 This file can be opened and visualised using common GIS software, for
 example QGIS. This file contains convex hull approximation of the 
-[control volumes](glossary.md/#control-volume). 
+[control volumes](glossary.md#control-volume). 
 
-A good file has cleary delineated polygon within each [region](glossary.md/#region). 
+A good file has cleary delineated polygon within each [region](glossary.md#region). 
 Common problems that can be spotted by visualising this file
 are detailed below. 
 
 ### Problem: Large overlapping polygons
 
 Cross-section that do not fall within a single region polygon get assigned to 
-the [`default region`](configuration.md/#exec-1--defaultregion). If you 
+the [`default region`](configuration.md#exec-1--defaultregion). If you 
 are using regions, it is highly recommended to make sure all cross-section
 locations are within a single region polygon. 
 
 It is therefore usually by mistake that some locations are assigned the 
-[`default region`](configuration.md/#exec-1--defaultregion). Visually,
+[`default region`](configuration.md#exec-1--defaultregion). Visually,
 this often results in something like the figure below. 
 
 <figure markdown="span">
@@ -29,7 +29,7 @@ this often results in something like the figure below.
 
 ### Problem: Cross-section in wrong region
 
-A [region](glossary.md/#region) is used to prevent side-branches from limiting
+A [region](glossary.md#region) is used to prevent side-branches from limiting
 the cross-sectional volume of the main channel. Users should take care to 
 make sure that all cross-section locations lie within the appropriate region. The figure below shows an example where this is not the case. 
 
