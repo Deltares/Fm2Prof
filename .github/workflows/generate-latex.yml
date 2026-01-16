@@ -117,19 +117,19 @@ jobs:
       - name: Compile PDF with pdflatex and bibtex
         run: |
           cd docs/end-user-docs/source
-          pdflatex toets-svkw_user_manual.tex
-          pdflatex toets-svkw_release_notes.tex
+          pdflatex fm2prof_user_manual.tex
+          pdflatex fm2prof-release-notes.tex
           # Run bibtex if citations exist, otherwise skip
-          if grep -q '\\citation' toets-svkw_user_manual.aux 2>/dev/null; then
-            bibtex toets-svkw_user_manual
-            bibtex toets-svkw_release_notes
+          if grep -q '\\citation' fm2prof_user_manual.aux 2>/dev/null; then
+            bibtex fm2prof_user_manual
+            bibtex fm2prof-release-notes
           else
             echo "No citations found, skipping bibtex"
           fi
-          pdflatex toets-svkw_user_manual.tex
-          pdflatex toets-svkw_release_notes.tex
-          pdflatex toets-svkw_user_manual.tex
-          pdflatex toets-svkw_release_notes.tex
+          pdflatex fm2prof_user_manual.tex
+          pdflatex fm2prof-release-notes.tex
+          pdflatex fm2prof_user_manual.tex
+          pdflatex fm2prof-release-notes.tex
 
       - name: List generated files
         run: |
