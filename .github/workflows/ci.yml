@@ -8,7 +8,7 @@ jobs:
       fail-fast: false
       matrix:
         uv-version: ["0.8.11"]
-        python-version: ["3.10", "3.11", "3.12"]
+        python-version: ["3.11", "3.12"]
         os: [ubuntu-latest]
     runs-on: ${{ matrix.os }}
     steps:
