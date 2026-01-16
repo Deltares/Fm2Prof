@@ -70,15 +70,10 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Copy examples directory
-        run: |
-          echo "Copying examples directory..."
-          cp -r examples/* bundle/examples/
-
       - name: Create readme.txt file
         run: |
           echo "Creating readme.txt..."
-          echo "start point: docs/toets-svkw_user_manual.pdf" > bundle/readme.txt
+          echo "start point: docs/fm2prof_user_manual.pdf" > bundle/readme.txt
           cat bundle/readme.txt
 
       - name: List bundle contents
@@ -89,9 +84,9 @@ jobs:
       - name: Create zip bundle
         run: |
           cd bundle
-          zip -r ../toets-svkw-${{ steps.get_release.outputs.tag }}-bundle.zip .
+          zip -r ../fm2prof-${{ steps.get_release.outputs.tag }}-bundle.zip .
           cd ..
-          ls -lh toets-svkw-${{ steps.get_release.outputs.tag }}-bundle.zip
+          ls -lh fm2prof-${{ steps.get_release.outputs.tag }}-bundle.zip
 
       - name: Upload bundle to release
         if: github.event_name == 'workflow_run'
@@ -99,7 +94,7 @@ jobs:
         with:
           tag_name: ${{ steps.get_release.outputs.tag }}
           files: |
-            toets-svkw-${{ steps.get_release.outputs.tag }}-bundle.zip
+            fm2prof-${{ steps.get_release.outputs.tag }}-bundle.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -107,6 +102,6 @@ jobs:
         if: github.event_name == 'workflow_dispatch'
         uses: actions/upload-artifact@v4
         with:
-          name: toets-svkw-${{ steps.get_release.outputs.tag }}-bundle
+          name: fm2prof-${{ steps.get_release.outputs.tag }}-bundle
           path: bundle/
           retention-days: 10
