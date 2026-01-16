@@ -62,6 +62,16 @@ default-groups = [
 requires = ["hatchling"]
 build-backend = "hatchling.build"
 
+
+[tool.commitizen]
+name = "cz_conventional_commits"
+version_provider = "pep621"
+tag_format = "$version"
+version_files = [
+    "pyproject.toml:^version",
+]
+changelog_file = "docs/mkdocs/CHANGELOG.md"
+
 [tool.ruff.lint]
 select = ["ALL"]
 
