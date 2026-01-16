@@ -141,7 +141,7 @@ jobs:
       - name: Upload PDF artifact
         uses: actions/upload-artifact@v4
         with:
-          name: Toets-SVKW-Documentations
+          name: Documentations
           path: docs/end-user-docs/source/*.pdf
           retention-days: 3
 
