@@ -2,9 +2,6 @@ name: Generate LaTeX Documentation
 
 on:
   workflow_dispatch:    # Manual trigger
-  pull_request:
-    branches:
-      - '**'  # Match all branches for pull requests
   workflow_run:         # Auto-trigger when release.yml completes
     workflows: ["Automated release workflow"]
     types:
