@@ -1,0 +1,167 @@
+name: Generate LaTeX Documentation
+
+on:
+  workflow_dispatch:    # Manual trigger
+  workflow_run:         # Auto-trigger when release.yml completes
+    workflows: ["Automated release workflow"]
+    types:
+      - completed
+  release:              # Trigger on manual release creation
+    types: [created, published]
+
+env:
+  SVN_USERNAME: ${{ secrets.SVN_USERNAME }}
+  SVN_PASSWORD: ${{ secrets.SVN_PASSWORD }}
+  SVN_REPO_URL: ${{ secrets.SVN_REPO_URL }}
+
+jobs:
+  generate-latex:
+    runs-on: ubuntu-latest
+    # Only run if triggered by workflow_dispatch, release, pull_request, or if workflow_run completed successfully
+    if: |
+      github.event_name == 'workflow_dispatch' ||
+      github.event_name == 'release' ||
+      github.event_name == 'pull_request' ||
+      (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success')
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_branch || github.ref }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Pandoc
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y pandoc
+          pandoc --version
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+        with:
+          enable-cache: true
+          cache-dependency-glob: uv.lock
+
+      - name: Update lock file if needed
+        run: |
+          uv lock --check || uv lock
+
+      - name: Install Dependencies
+        run: uv sync --group dev --group docs
+
+      - name: list env contents
+        run: |
+          uv pip list
+
+      - name: Install Subversion
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y subversion
+
+      - name: Checkout Deltares LaTeX styles from SVN
+        run: |
+          cd docs/end-user-docs
+
+          # Checkout SVN repository with error handling
+          if ! svn checkout --username "${{ secrets.SVN_USERNAME }}" --password "${{ secrets.SVN_PASSWORD }}" --non-interactive --trust-server-cert "${{ secrets.SVN_REPO_URL }}" temp_svn; then
+            echo "::error::Failed to checkout SVN repository"
+            exit 1
+          fi
+
+          # List available directories for debugging
+          echo "Available LaTeX directories in SVN:"
+          ls -la temp_svn/templates/latex/tex/latex/ || echo "Directory structure different than expected"
+
+          # Copy Deltares styles with error handling
+          if [ -d "temp_svn/templates/latex/tex/latex/deltares" ]; then
+            cp -r temp_svn/templates/latex/tex/latex/deltares/* source/ || echo "::warning::Failed to copy deltares styles"
+          fi
+
+          if [ -d "temp_svn/templates/latex/tex/latex/nomentbl/deltares" ]; then
+            cp -r temp_svn/templates/latex/tex/latex/nomentbl/deltares/* source/ || echo "::warning::Failed to copy nomentbl styles"
+          fi
+
+          if [ -d "temp_svn/templates/latex/bibtex/bst/deltares" ]; then
+            cp -r temp_svn/templates/latex/bibtex/bst/deltares/* source/ || echo "::warning::Failed to copy bibtex styles"
+          fi
+
+          rm -rf temp_svn
+
+      - name: Generate LaTeX from Markdown (user_docs)
+        run: |
+           uv run ddocs markdown-to-latex \
+            --input docs/mkdocs/user_docs \
+            --output docs/end-user-docs/source
+
+      - name: Install LaTeX
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            texlive-latex-base \
+            texlive-latex-extra \
+            texlive-fonts-recommended \
+            texlive-fonts-extra \
+            texlive-bibtex-extra \
+            texlive-science biber
+
+          pdflatex --version
+
+      - name: Compile PDF with pdflatex and bibtex
+        run: |
+          cd docs/end-user-docs/source
+          pdflatex fm2prof_user_manual.tex
+          pdflatex fm2prof-release-notes.tex
+          # Run bibtex if citations exist, otherwise skip
+          if grep -q '\\citation' fm2prof_user_manual.aux 2>/dev/null; then
+            bibtex fm2prof_user_manual
+            bibtex fm2prof-release-notes
+          else
+            echo "No citations found, skipping bibtex"
+          fi
+          pdflatex fm2prof_user_manual.tex
+          pdflatex fm2prof-release-notes.tex
+          pdflatex fm2prof_user_manual.tex
+          pdflatex fm2prof-release-notes.tex
+
+      - name: List generated files
+        run: |
+          echo "Generated LaTeX files:"
+          find docs/end-user-docs/source -name "*.tex" -type f
+          echo "Generated PDF files:"
+          find docs/end-user-docs/source -name "*.pdf" -type f
+
+      - name: Upload PDF artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Documentations
+          path: docs/end-user-docs/source/*.pdf
+          retention-days: 3
+
+      - name: Get release tag
+        id: get_tag
+        if: github.event_name == 'release' || github.event_name == 'workflow_run'
+        run: |
+          if [ "${{ github.event_name }}" == "release" ]; then
+            echo "tag=${{ github.event.release.tag_name }}" >> $GITHUB_OUTPUT
+          elif [ "${{ github.event_name }}" == "workflow_run" ]; then
+            # Get the latest release tag
+            TAG=$(gh release list --limit 1 --json tagName --jq '.[0].tagName')
+            echo "tag=$TAG" >> $GITHUB_OUTPUT
+          fi
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload PDF to release
+        if: (github.event_name == 'release' || github.event_name == 'workflow_run') && steps.get_tag.outputs.tag != ''
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ steps.get_tag.outputs.tag }}
+          files: |
+            docs/end-user-docs/source/*.pdf
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

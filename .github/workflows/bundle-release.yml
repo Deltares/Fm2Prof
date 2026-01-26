@@ -1,0 +1,107 @@
+name: Bundle Release Assets
+# bundle/
+# ├── readme.txt
+# ├── *.whl (wheel at root)
+# ├── docs/
+# │   └── *.pdf (all PDF documentation)
+# └── examples/
+
+on:
+  workflow_dispatch:    # Manual trigger
+  workflow_run:
+    workflows: ["Generate LaTeX Documentation"]
+    types:
+      - completed
+
+permissions:
+  contents: write
+
+jobs:
+  bundle-assets:
+    runs-on: ubuntu-latest
+    # Only run if manually triggered or workflow_run completed successfully
+    if: |
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success')
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_branch || github.ref }}
+
+      - name: Get latest release tag
+        id: get_release
+        run: |
+          TAG=$(gh release list --limit 1 --json tagName --jq '.[0].tagName')
+          echo "tag=$TAG" >> $GITHUB_OUTPUT
+          echo "Latest release tag: $TAG"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create bundle directory structure
+        run: |
+          mkdir -p bundle/docs
+          mkdir -p bundle/examples
+
+      - name: Download wheel from release
+        run: |
+          echo "Downloading wheel for release ${{ steps.get_release.outputs.tag }}"
+          gh release download ${{ steps.get_release.outputs.tag }} \
+            --pattern "*.whl" \
+            --dir bundle/
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Copy existing PDFs from docs/end-user-docs
+        run: |
+          echo "Copying existing PDFs from docs/end-user-docs/source..."
+          cp docs/end-user-docs/*.pdf bundle/docs/ 2>/dev/null || echo "No PDFs found in source directory"
+          echo "PDFs copied to bundle/docs:"
+          ls -lh bundle/docs/
+
+      - name: Download PDF documentation from release
+        run: |
+          echo "Downloading PDF documentation for release ${{ steps.get_release.outputs.tag }}"
+          gh release download ${{ steps.get_release.outputs.tag }} \
+            --pattern "*.pdf" \
+            --dir bundle/docs/
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create readme.txt file
+        run: |
+          echo "Creating readme.txt..."
+          echo "start point: docs/fm2prof_user_manual.pdf" > bundle/readme.txt
+          cat bundle/readme.txt
+
+      - name: List bundle contents
+        run: |
+          echo "Bundle structure:"
+          find bundle -type f
+
+      - name: Create zip bundle
+        run: |
+          cd bundle
+          zip -r ../fm2prof-${{ steps.get_release.outputs.tag }}-bundle.zip .
+          cd ..
+          ls -lh fm2prof-${{ steps.get_release.outputs.tag }}-bundle.zip
+
+      - name: Upload bundle to release
+        if: github.event_name == 'workflow_run'
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ steps.get_release.outputs.tag }}
+          files: |
+            fm2prof-${{ steps.get_release.outputs.tag }}-bundle.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload bundle as artifact
+        if: github.event_name == 'workflow_dispatch'
+        uses: actions/upload-artifact@v4
+        with:
+          name: fm2prof-${{ steps.get_release.outputs.tag }}-bundle
+          path: bundle/
+          retention-days: 10

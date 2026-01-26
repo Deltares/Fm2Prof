@@ -3,7 +3,7 @@ name = "fm2prof"
 version = "2.4.0"
 description = ""
 authors = [{ name = "Koen Berends", email = "koen.berends@deltares.nl" }]
-requires-python = ">=3.10, <3.13"
+requires-python = ">=3.11, <3.13"
 readme = "README.md"
 license = "GPL-3.0-or-later AND LGPL-3.0-or-later"
 dependencies = [
@@ -48,6 +48,8 @@ docs = [
     "mkdocs-autorefs>=1.0.1,<2",
     "mkdocs-glightbox>=0.3.7,<0.4",
     "mkdocs-git-committers-plugin-2>=2.3.0,<3",
+    "commitizen>=4.8.3,<5.0.0",
+    "deltares-hms-docs",
 ]
 
 [tool.uv]
@@ -59,6 +61,16 @@ default-groups = [
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
+
+
+[tool.commitizen]
+name = "cz_conventional_commits"
+version_provider = "pep621"
+tag_format = "$version"
+version_files = [
+    "pyproject.toml:^version",
+]
+changelog_file = "docs/mkdocs/CHANGELOG.md"
 
 [tool.ruff.lint]
 select = ["ALL"]
@@ -87,3 +99,7 @@ dev = { features = ["dev"], solve-group = "default" }
 docs = { features = ["docs"], solve-group = "default" }
 
 [tool.pixi.tasks]
+
+
+[tool.uv.sources]
+deltares-hms-docs = { git = "https://github.com/Deltares-research/doc_utils.git", branch = "latex-templates" }
