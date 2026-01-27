@@ -6,7 +6,7 @@ on:
       release_branch:
         description: "Branch to create release from"
         required: false
-        default: "main"
+        default: "master"
       major:
         description: "The new major version."
         required: false
