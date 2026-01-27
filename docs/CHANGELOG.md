@@ -1,3 +1,5 @@
+## 3.0.0 (2026-01-27)
+
 ## v2.4.0 (05-09-2025)
 
 This update introduces a new built-in method to use region & section polygons 
