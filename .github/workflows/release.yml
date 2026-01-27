@@ -39,25 +39,25 @@ jobs:
   release:
     runs-on: ubuntu-latest
     steps:
-      - name: Check user permissions
-        run: |
-          echo "Checking if user ${{ github.actor }} has admin permissions..."
-
-          # Get user's permission level for this repository
-          PERMISSION=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-            "https://api.github.com/repos/${{ github.repository }}/collaborators/${{ github.actor }}/permission" \
-            | jq -r '.permission // "none"')
-
-          echo "User permission level: $PERMISSION"
-
-          # Check if user has admin permissions
-          if [ "$PERMISSION" != "admin" ]; then
-            echo "::error::Access denied. Only repository administrators can trigger releases."
-            echo "::error::User '${{ github.actor }}' has '$PERMISSION' permissions, but 'admin' is required."
-            exit 1
-          fi
-
-          echo "✅ Permission check passed. User has admin access."
+#       - name: Check user permissions
+#         run: |
+#           echo "Checking if user ${{ github.actor }} has admin permissions..."
+#
+#           # Get user's permission level for this repository
+#           PERMISSION=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+#             "https://api.github.com/repos/${{ github.repository }}/collaborators/${{ github.actor }}/permission" \
+#             | jq -r '.permission // "none"')
+#
+#           echo "User permission level: $PERMISSION"
+#
+#           # Check if user has admin permissions
+#           if [ "$PERMISSION" != "admin" ]; then
+#             echo "::error::Access denied. Only repository administrators can trigger releases."
+#             echo "::error::User '${{ github.actor }}' has '$PERMISSION' permissions, but 'admin' is required."
+#             exit 1
+#           fi
+#
+#           echo "✅ Permission check passed. User has admin access."
 
       - name: Check out the code
         uses: actions/checkout@v4
