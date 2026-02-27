@@ -6,7 +6,7 @@ from pathlib import Path
 import pytest
 
 from fm2prof.cross_section import CrossSection
-from fm2prof.export import DFlow1DExporter, ExporterFactory, Sobek3Exporter
+from fm2prof.export import DFlow1DExporter, ExporterFactory
 from tests.TestUtils import TestUtils
 
 css_test_dir = "cross_sections"
@@ -51,11 +51,6 @@ class TestExporters:
         """Test that factory creates DFlow1DExporter."""
         exporter = ExporterFactory.create("dflow1d", output_dir=temp_output_dir)
         assert isinstance(exporter, DFlow1DExporter)
-
-    def test_factory_create_sobek3(self, temp_output_dir: Path) -> None:
-        """Test that factory creates Sobek3Exporter."""
-        exporter = ExporterFactory.create("sobek3", output_dir=temp_output_dir)
-        assert isinstance(exporter, Sobek3Exporter)
 
     def test_factory_unsupported_format(self, temp_output_dir: Path) -> None:
         """Test that factory raises error for unsupported format."""
@@ -138,41 +133,6 @@ class TestExporters:
         assert all(p.exists() for p in results["roughness"])
         assert results["volumes"].exists()
 
-    def test_sobek3_export_geometry_creates_file(
-        self,
-        cross_section: CrossSection,
-        temp_output_dir: Path,
-    ) -> None:
-        """Test that SOBEK3 exporter creates geometry file."""
-        exporter = Sobek3Exporter(output_dir=temp_output_dir)
-        cross_sections = [cross_section]
-
-        # Act
-        result_path = exporter.export_geometry(cross_sections)
-
-        # Assert
-        assert result_path.exists(), "Geometry file should be created"
-        assert result_path.stat().st_size > 0, "File should not be empty"
-        assert result_path.suffix == ".csv", "File should be CSV"
-
-    def test_sobek3_export_roughness_creates_file(
-        self,
-        cross_section: CrossSection,
-        temp_output_dir: Path,
-    ) -> None:
-        """Test that SOBEK3 exporter creates roughness file."""
-        exporter = Sobek3Exporter(output_dir=temp_output_dir)
-        cross_sections = [cross_section]
-
-        # Act
-        result_paths = exporter.export_roughness(cross_sections)
-
-        # Assert
-        assert len(result_paths) == 1, "Should create one roughness file"
-        assert result_paths[0].exists(), "Roughness file should exist"
-        assert result_paths[0].stat().st_size > 0, "File should not be empty"
-        assert result_paths[0].suffix == ".csv", "File should be CSV"
-
     def test_dflow1d_geometry_file_content(
         self,
         cross_section: CrossSection,
@@ -194,22 +154,3 @@ class TestExporters:
         assert "levels" in content, "File should contain levels"
         assert "flowWidths" in content, "File should contain flowWidths"
         assert "totalWidths" in content, "File should contain totalWidths"
-
-    def test_sobek3_geometry_file_content(
-        self,
-        cross_section: CrossSection,
-        temp_output_dir: Path,
-    ) -> None:
-        """Test that exported SOBEK3 geometry file contains expected content."""
-        exporter = Sobek3Exporter(output_dir=temp_output_dir)
-        cross_sections = [cross_section]
-
-        # Act
-        result_path = exporter.export_geometry(cross_sections)
-
-        # Assert
-        content = result_path.read_text()
-        assert "id,Name,Data_type" in content, "File should contain CSV header"
-        assert "meta" in content, "File should contain meta rows"
-        assert "geom" in content, "File should contain geom rows"
-        assert cross_section.name in content, "File should contain cross-section name"

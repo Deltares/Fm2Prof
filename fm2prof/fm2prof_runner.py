@@ -213,10 +213,11 @@ class Fm2ProfRunner(FM2ProfBase):
         # Step 3. Finalise and write output
         self.start_new_log_task("Finalizing")
         self._finalise_fm2prof(cross_sections)
-        self._print_log_report()
+        errors = self._print_log_report()
         self.finish_log_task()
 
-        return True
+        # Returns true if program finished without errors
+        return errors == 0
 
     def _initialise_fm2prof(self) -> None:
         """Load data, inifile."""
@@ -778,6 +779,19 @@ class Fm2ProfRunner(FM2ProfBase):
         if not cross_sections or not output_dir.exists():
             return
 
+        # Export D-Hydro format
+        try:
+            dhydro_exporter = ExporterFactory.create("dhydro", output_dir=output_dir / "dhydro")
+            dhydro_exporter.export_all(cross_sections)
+            self.set_logger_message("Successfully exported D-Hydro format files", "info")
+        except (ValueError, OSError, KeyError) as e_info:
+            self.set_logger_message(
+                "An error was produced while exporting files to D-Hydro format,"
+                " not all output files might be exported. "
+                f"{e_info!s}",
+                level="error",
+            )
+
         # Export D-Flow 1D format
         try:
             dflow1d_exporter = ExporterFactory.create("dflow1d", output_dir=output_dir / "dflow1d")
@@ -786,19 +800,6 @@ class Fm2ProfRunner(FM2ProfBase):
         except (ValueError, OSError, KeyError) as e_info:
             self.set_logger_message(
                 "An error was produced while exporting files to D-Flow 1D format,"
-                " not all output files might be exported. "
-                f"{e_info!s}",
-                level="error",
-            )
-
-        # Export SOBEK 3 format
-        try:
-            sobek3_exporter = ExporterFactory.create("sobek3", output_dir=output_dir / "sobek3")
-            sobek3_exporter.export_all(cross_sections)
-            self.set_logger_message("Successfully exported SOBEK 3 format files", "info")
-        except (ValueError, OSError, KeyError) as e_info:
-            self.set_logger_message(
-                "An error was produced while exporting files to SOBEK 3 format,"
                 " not all output files might be exported. "
                 f"{e_info!s}",
                 level="error",
@@ -883,6 +884,8 @@ class Fm2ProfRunner(FM2ProfBase):
         ll = self.get_logformatter()._loglibrary
         self.set_logger_message(f"Warnings: {ll.get('WARNING')}")
         self.set_logger_message(f"Errors: {ll.get('ERROR')}")
+
+        return ll.get("ERROR")
 
     def _output_exists(self) -> bool:
         """Check whether output exists."""

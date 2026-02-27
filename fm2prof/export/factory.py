@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, ClassVar
 
 from fm2prof.export.dflow1d import DFlow1DExporter
-from fm2prof.export.sobek3 import Sobek3Exporter
+from fm2prof.export.dhydro import DHydroExporter
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -22,14 +22,13 @@ class ExporterFactory:
 
     Example:
         >>> from fm2prof.export import ExporterFactory
-        >>> exporter = ExporterFactory.create('sobek3', output_dir='./output')
+        >>> exporter = ExporterFactory.create('dflow1d', output_dir='./output')
         >>> exporter.export_all(cross_sections)
     """
 
     _exporters: ClassVar[dict] = {
-        "sobek3": Sobek3Exporter,
         "dflow1d": DFlow1DExporter,
-        "fm1d": DFlow1DExporter,  # Alias for dflow1d
+        "dhydro": DHydroExporter,
     }
 
     @classmethod
@@ -42,7 +41,7 @@ class ExporterFactory:
         """Create an exporter for the specified format.
 
         Args:
-            fmt: Format identifier ('sobek3', 'dflow1d', or 'fm1d')
+            fmt: Format identifier ('dflow1d' or 'dhydro')
             output_dir: Directory for output files
             output_files: Custom output file configuration
 
