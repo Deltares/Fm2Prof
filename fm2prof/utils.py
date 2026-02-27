@@ -442,10 +442,10 @@ class GenerateCrossSectionLocationFile(FM2ProfBase):
 class VisualiseOutput(FM2ProfBase):
     """Visaulise output class."""
 
-    __cssdeffile = "CrossSectionDefinitions.ini"
-    __volumefile = "volumes.csv"
-    __rmainfile = "roughness-Main.ini"
-    __rfp1file = "roughness-FloodPlain1.ini"
+    __cssdeffile = "dflow1d/CrossSectionDefinitions.ini"
+    __volumefile = "dflow1d/volumes.csv"
+    __rmainfile = "dflow1d/roughness-Main.ini"
+    __rfp1file = "dflow1d/roughness-FloodPlain1.ini"
 
     def __init__(
         self,

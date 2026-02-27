@@ -49,7 +49,7 @@ class TestAcceptance:
         assert success
 
         # 4. get output
-        css_def_file = project.get_output_directory() / "CrossSectionDefinitions.ini"
+        css_def_file = project.get_output_directory() / "dflow1d" / "CrossSectionDefinitions.ini"
         css_def = VisualiseOutput.parse_cross_section_definition_file(css_def_file)
 
         # 5. verify output

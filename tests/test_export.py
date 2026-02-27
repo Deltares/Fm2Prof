@@ -1,4 +1,4 @@
-"""Tests for export.py module."""
+"""Tests for export module."""
 
 import pickle
 from pathlib import Path
@@ -6,14 +6,14 @@ from pathlib import Path
 import pytest
 
 from fm2prof.cross_section import CrossSection
-from fm2prof.export import Export1DModelData
+from fm2prof.export import DFlow1DExporter, ExporterFactory, Sobek3Exporter
 from tests.TestUtils import TestUtils
 
 css_test_dir = "cross_sections"
 
 
-class TestExport1DModelData:
-    """Test class for Export1DModelData."""
+class TestExporters:
+    """Test class for export module."""
 
     @pytest.fixture
     def cross_section(self) -> CrossSection:
@@ -31,17 +31,14 @@ class TestExport1DModelData:
         with pickle_file.open("rb") as f:
             css_data = pickle.load(f)  # noqa: S301
 
-        # Create and build cross-section
+        # Create and build cross-section (including geometry and roughness)
         css = CrossSection(data=css_data)
         css.build_geometry()
         css.calculate_correction()
+        css.reduce_points(count_after=20)  # Must be called before assign_roughness
+        css.assign_roughness()  # Add roughness tables
 
         return css
-
-    @pytest.fixture
-    def exporter(self) -> Export1DModelData:
-        """Create an Export1DModelData instance."""
-        return Export1DModelData()
 
     @pytest.fixture
     def temp_output_dir(self, tmp_path: Path) -> Path:
@@ -50,126 +47,169 @@ class TestExport1DModelData:
         output_dir.mkdir()
         return output_dir
 
-    def test_export_geometry_fm1d_creates_file(
+    def test_factory_create_dflow1d(self, temp_output_dir: Path) -> None:
+        """Test that factory creates DFlow1DExporter."""
+        exporter = ExporterFactory.create("dflow1d", output_dir=temp_output_dir)
+        assert isinstance(exporter, DFlow1DExporter)
+
+    def test_factory_create_sobek3(self, temp_output_dir: Path) -> None:
+        """Test that factory creates Sobek3Exporter."""
+        exporter = ExporterFactory.create("sobek3", output_dir=temp_output_dir)
+        assert isinstance(exporter, Sobek3Exporter)
+
+    def test_factory_unsupported_format(self, temp_output_dir: Path) -> None:
+        """Test that factory raises error for unsupported format."""
+        with pytest.raises(ValueError, match="Unsupported format"):
+            ExporterFactory.create("unknown_format", output_dir=temp_output_dir)
+
+    def test_dflow1d_export_geometry_creates_files(
         self,
         cross_section: CrossSection,
-        exporter: Export1DModelData,
         temp_output_dir: Path,
     ) -> None:
-        """Test that export_geometry creates output file for fm1d format."""
-        # Arrange
-        output_file = temp_output_dir / "geometry_fm1d.ini"
+        """Test that DFlow1D exporter creates geometry files."""
+        exporter = DFlow1DExporter(output_dir=temp_output_dir)
         cross_sections = [cross_section]
 
         # Act
-        exporter.export_geometry(cross_sections, output_file, fmt="dflow1d")
+        result_path = exporter.export_geometry(cross_sections)
 
         # Assert
-        assert output_file.exists(), "Output file should be created"
-        assert output_file.stat().st_size > 0, "Output file should not be empty"
+        assert result_path.exists(), "Geometry definitions file should be created"
+        assert result_path.stat().st_size > 0, "File should not be empty"
 
-    def test_export_roughness_fm1d_creates_file(
+        # Check that locations file was also created
+        locations_file = temp_output_dir / "CrossSectionLocations.ini"
+        assert locations_file.exists(), "Locations file should be created"
+
+    def test_dflow1d_export_roughness_creates_files(
         self,
         cross_section: CrossSection,
-        exporter: Export1DModelData,
         temp_output_dir: Path,
     ) -> None:
-        """Test that export_roughness creates output file for fm1d format."""
-        # Arrange
-        output_file = temp_output_dir / "roughness_fm1d.ini"
+        """Test that DFlow1D exporter creates roughness files."""
+        exporter = DFlow1DExporter(output_dir=temp_output_dir)
         cross_sections = [cross_section]
 
         # Act
-        exporter.export_roughness(
-            cross_sections,
-            output_file,
-            fmt="dflow1d",
-            roughness_section="Main",
-        )
+        result_paths = exporter.export_roughness(cross_sections)
 
         # Assert
-        assert output_file.exists(), "Output file should be created"
-        assert output_file.stat().st_size > 0, "Output file should not be empty"
+        assert len(result_paths) > 0, "At least one roughness file should be created"
+        for path in result_paths:
+            assert path.exists(), f"Roughness file {path} should exist"
+            assert path.stat().st_size > 0, "File should not be empty"
 
-    def test_export_cross_section_locations_creates_file(
+    def test_dflow1d_export_volumes_creates_file(
         self,
         cross_section: CrossSection,
-        exporter: Export1DModelData,
         temp_output_dir: Path,
     ) -> None:
-        """Test that export_cross_section_locations creates output file."""
-        # Arrange
-        output_file = temp_output_dir / "CrossSectionLocations.ini"
+        """Test that DFlow1D exporter creates volumes file."""
+        exporter = DFlow1DExporter(output_dir=temp_output_dir)
         cross_sections = [cross_section]
 
         # Act
-        exporter.export_cross_section_locations(cross_sections, output_file)
+        result_path = exporter.export_volumes(cross_sections)
 
         # Assert
-        assert output_file.exists(), "Output file should be created"
-        assert output_file.stat().st_size > 0, "Output file should not be empty"
+        assert result_path.exists(), "Volumes file should be created"
+        assert result_path.stat().st_size > 0, "File should not be empty"
 
-    def test_export_volumes_creates_file(
+    def test_dflow1d_export_all(
         self,
         cross_section: CrossSection,
-        exporter: Export1DModelData,
         temp_output_dir: Path,
     ) -> None:
-        """Test that export_volumes creates output file."""
-        # Arrange
-        output_file = temp_output_dir / "volumes.csv"
+        """Test that export_all creates all required files."""
+        exporter = DFlow1DExporter(output_dir=temp_output_dir)
         cross_sections = [cross_section]
 
         # Act
-        exporter.export_volumes(cross_sections, output_file)
+        results = exporter.export_all(cross_sections)
 
         # Assert
-        assert output_file.exists(), "Output file should be created"
-        assert output_file.stat().st_size > 0, "Output file should not be empty"
+        assert "geometry" in results, "Results should contain geometry key"
+        assert "roughness" in results, "Results should contain roughness key"
+        assert "volumes" in results, "Results should contain volumes key"
 
-    def test_export_geometry_fm1d_file_content(
+        # Check files exist
+        assert results["geometry"].exists()
+        assert all(p.exists() for p in results["roughness"])
+        assert results["volumes"].exists()
+
+    def test_sobek3_export_geometry_creates_file(
         self,
         cross_section: CrossSection,
-        exporter: Export1DModelData,
         temp_output_dir: Path,
     ) -> None:
-        """Test that exported fm1d geometry file contains expected content."""
-        # Arrange
-        output_file = temp_output_dir / "geometry_fm1d.ini"
+        """Test that SOBEK3 exporter creates geometry file."""
+        exporter = Sobek3Exporter(output_dir=temp_output_dir)
         cross_sections = [cross_section]
 
         # Act
-        exporter.export_geometry(cross_sections, output_file, fmt="dflow1d")
+        result_path = exporter.export_geometry(cross_sections)
 
         # Assert
-        content = output_file.read_text()
+        assert result_path.exists(), "Geometry file should be created"
+        assert result_path.stat().st_size > 0, "File should not be empty"
+        assert result_path.suffix == ".csv", "File should be CSV"
+
+    def test_sobek3_export_roughness_creates_file(
+        self,
+        cross_section: CrossSection,
+        temp_output_dir: Path,
+    ) -> None:
+        """Test that SOBEK3 exporter creates roughness file."""
+        exporter = Sobek3Exporter(output_dir=temp_output_dir)
+        cross_sections = [cross_section]
+
+        # Act
+        result_paths = exporter.export_roughness(cross_sections)
+
+        # Assert
+        assert len(result_paths) == 1, "Should create one roughness file"
+        assert result_paths[0].exists(), "Roughness file should exist"
+        assert result_paths[0].stat().st_size > 0, "File should not be empty"
+        assert result_paths[0].suffix == ".csv", "File should be CSV"
+
+    def test_dflow1d_geometry_file_content(
+        self,
+        cross_section: CrossSection,
+        temp_output_dir: Path,
+    ) -> None:
+        """Test that exported DFlow1D geometry file contains expected content."""
+        exporter = DFlow1DExporter(output_dir=temp_output_dir)
+        cross_sections = [cross_section]
+
+        # Act
+        result_path = exporter.export_geometry(cross_sections)
+
+        # Assert
+        content = result_path.read_text()
         assert "[General]" in content, "File should contain [General] section"
         assert "[Definition]" in content, "File should contain [Definition] section"
         assert "fileType" in content, "File should contain fileType parameter"
         assert cross_section.name in content, "File should contain cross-section name"
+        assert "levels" in content, "File should contain levels"
+        assert "flowWidths" in content, "File should contain flowWidths"
+        assert "totalWidths" in content, "File should contain totalWidths"
 
-    def test_export_roughness_fm1d_file_content(
+    def test_sobek3_geometry_file_content(
         self,
         cross_section: CrossSection,
-        exporter: Export1DModelData,
         temp_output_dir: Path,
     ) -> None:
-        """Test that exported fm1d roughness file contains expected content."""
-        # Arrange
-        output_file = temp_output_dir / "roughness_fm1d.ini"
+        """Test that exported SOBEK3 geometry file contains expected content."""
+        exporter = Sobek3Exporter(output_dir=temp_output_dir)
         cross_sections = [cross_section]
 
         # Act
-        exporter.export_roughness(
-            cross_sections,
-            output_file,
-            fmt="dflow1d",
-            roughness_section="Main",
-        )
+        result_path = exporter.export_geometry(cross_sections)
 
         # Assert
-        content = output_file.read_text()
-        assert "[General]" in content, "File should contain [General] section"
-        assert "[Content]" in content, "File should contain [Content] section"
-        assert "sectionId" in content, "File should contain sectionId parameter"
-        assert "Main" in content, "File should reference Main section"
+        content = result_path.read_text()
+        assert "id,Name,Data_type" in content, "File should contain CSV header"
+        assert "meta" in content, "File should contain meta rows"
+        assert "geom" in content, "File should contain geom rows"
+        assert cross_section.name in content, "File should contain cross-section name"

@@ -59,7 +59,7 @@ from fm2prof import __version__, mask_output_file, nearest_neighbour
 from fm2prof.common import FM2ProfBase
 from fm2prof.cross_section import CrossSection, CrossSectionHelpers
 from fm2prof.data_import import FMDataImporter, FmModelData, ImportInputFiles
-from fm2prof.export import Export1DModelData, OutputFiles
+from fm2prof.export import ExporterFactory
 from fm2prof.ini_file import ConfigurationFileError, IniFile
 from fm2prof.polygon_file import GridPointsInPolygonResults, PolygonError, RegionPolygon, SectionPolygon
 
@@ -76,6 +76,11 @@ class Fm2ProfRunner(FM2ProfBase):
     __key_frictionweighingmethod = "FrictionweighingMethod"
     __key_skipmaps = "SkipMaps"
 
+    # Expected output files (used to check if output exists)
+    _output_files = [
+        "dflow1d/CrossSectionDefinitions.ini",  # D-Flow 1D geometry
+    ]
+
     def __init__(self, ini_file_path: Path | str = "") -> None:
         """Initialize the project.
 
@@ -85,7 +90,6 @@ class Fm2ProfRunner(FM2ProfBase):
 
         """
         self.fm_model_data: FmModelData = None
-        self._output_files: OutputFiles = OutputFiles()
 
         self.set_logger(self.create_logger())
 
@@ -774,107 +778,27 @@ class Fm2ProfRunner(FM2ProfBase):
         if not cross_sections or not output_dir.exists():
             return
 
-        output_exporter = Export1DModelData(logger=self.get_logger())
-
-        # File paths
-        css_location_ini_file = output_dir.joinpath(
-            self._output_files.dimr_css_locations,
-        )
-        css_definitions_ini_file = output_dir.joinpath(
-            self._output_files.dimr_css_definitions,
-        )
-
-        # Legacy file formats
-        csv_geometry_file = output_dir.joinpath(self._output_files.sobek3_geometry)
-        csv_roughness_file = output_dir.joinpath(self._output_files.sobek3_roughness)
-
-        csv_geometry_test_file = output_dir.joinpath(self._output_files.test_geometry)
-        csv_volumes_file = output_dir.joinpath(self._output_files.fm2prof_volume)
-
-        # export fm1D format
+        # Export D-Flow 1D format
         try:
-            # Export locations
-            output_exporter.export_cross_section_locations(
-                cross_sections,
-                file_path=css_location_ini_file,
-            )
-
-            # Export definitions
-            output_exporter.export_geometry(
-                cross_sections,
-                file_path=css_definitions_ini_file,
-                fmt="dflow1d",
-            )
-
-            # Export roughness
-            sections = np.unique(
-                [s for css in cross_sections for s in css.friction_tables],
-            )
-            section_file_key_dict = {
-                "main": [self._output_files.dimr_roughness_main, "Main"],
-                "floodplain1": [
-                    self._output_files.dimr_roughness_floodplain1,
-                    "FloodPlain1",
-                ],
-                "floodplain2": [
-                    self._output_files.dimr_roughness_floodplain2,
-                    "FloodPlain2",
-                ],
-            }
-            for section in sections:
-                csv_roughness_ini_file = output_dir.joinpath(
-                    section_file_key_dict[section][0],
-                )
-                output_exporter.export_roughness(
-                    cross_sections,
-                    file_path=csv_roughness_ini_file,
-                    fmt="dflow1d",
-                    roughness_section=section_file_key_dict[section][1],
-                )
-
-        except Exception as e_info:
+            dflow1d_exporter = ExporterFactory.create("dflow1d", output_dir=output_dir / "dflow1d")
+            dflow1d_exporter.export_all(cross_sections)
+            self.set_logger_message("Successfully exported D-Flow 1D format files", "info")
+        except (ValueError, OSError, KeyError) as e_info:
             self.set_logger_message(
-                "An error was produced while exporting files to DIMR format,"
+                "An error was produced while exporting files to D-Flow 1D format,"
                 " not all output files might be exported. "
                 f"{e_info!s}",
                 level="error",
             )
 
-        # Eport SOBEK 3 format
+        # Export SOBEK 3 format
         try:
-            # Cross-sections
-            output_exporter.export_geometry(
-                cross_sections,
-                file_path=csv_geometry_file,
-                fmt="sobek3",
-            )
-
-            # Roughness
-            output_exporter.export_roughness(
-                cross_sections,
-                file_path=csv_roughness_file,
-                fmt="sobek3",
-            )
-        except Exception as e_info:
+            sobek3_exporter = ExporterFactory.create("sobek3", output_dir=output_dir / "sobek3")
+            sobek3_exporter.export_all(cross_sections)
+            self.set_logger_message("Successfully exported SOBEK 3 format files", "info")
+        except (ValueError, OSError, KeyError) as e_info:
             self.set_logger_message(
-                "An error was produced while exporting files to SOBEK format,"
-                " not all output files might be exported. "
-                f"{e_info!s}",
-                level="error",
-            )
-
-        # Other files:
-        try:
-            output_exporter.export_geometry(
-                cross_sections,
-                file_path=csv_geometry_test_file,
-                fmt="testformat",
-            )
-
-            output_exporter.export_volumes(cross_sections, file_path=csv_volumes_file)
-        except Exception as e_info:
-            self.set_logger_message(
-                "An error was produced while exporting files,"
+                "An error was produced while exporting files to SOBEK 3 format,"
                 " not all output files might be exported. "
                 f"{e_info!s}",
                 level="error",
