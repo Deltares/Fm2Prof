@@ -9,6 +9,9 @@ on:
   release:              # Trigger on manual release creation
     types: [created, published]
 
+permissions:
+  contents: write
+
 env:
   SVN_USERNAME: ${{ secrets.SVN_USERNAME }}
   SVN_PASSWORD: ${{ secrets.SVN_PASSWORD }}
