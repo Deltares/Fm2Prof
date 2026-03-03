@@ -76,6 +76,9 @@ class DFlow1DExporter(BaseExporter):
             1: "main",
             2: "floodplain1",
             3: "floodplain2",
+            "1": "main",
+            "2": "floodplain1",
+            "3": "floodplain2",
         }
 
         # Export roughness for each section type
