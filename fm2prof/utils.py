@@ -696,7 +696,7 @@ class VisualiseOutput(FM2ProfBase):
         self.start_new_log_task("Plotting cross-secton figures", pbar=pbar)
 
         for css in self.cross_sections:
-            self.figure_cross_section(css, pbar=pbar)
+            self.figure_cross_section(css)
             pbar.update(1)
 
         self.finish_log_task()
