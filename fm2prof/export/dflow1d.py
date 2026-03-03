@@ -73,9 +73,9 @@ class DFlow1DExporter(BaseExporter):
 
         # Map numeric section IDs to section names
         section_map = {
-            "1": "main",
-            "2": "floodplain1",
-            "3": "floodplain2",
+            1: "main",
+            2: "floodplain1",
+            3: "floodplain2",
         }
 
         # Export roughness for each section type
