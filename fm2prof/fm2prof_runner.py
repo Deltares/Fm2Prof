@@ -880,8 +880,9 @@ class Fm2ProfRunner(FM2ProfBase):
             )
         return css
 
-    def _print_log_report(self) -> None:
-        ll = self.get_logformatter()._loglibrary
+    def _print_log_report(self) -> int:
+        """Print a report of the log with amount of warnings and errors and returns number of errors."""
+        ll = self.get_logformatter().get_loglibrary()
         self.set_logger_message(f"Warnings: {ll.get('WARNING')}")
         self.set_logger_message(f"Errors: {ll.get('ERROR')}")
 
