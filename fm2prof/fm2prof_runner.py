@@ -335,7 +335,9 @@ class Fm2ProfRunner(FM2ProfBase):
         self.set_logger_message(f"Export model input files to {output_dir}")
         self._write_output(cross_sections, output_dir)
 
-        # Generate output geojson
+        # Generate debug output
+        self._create_debug_output_if_not_exists(output_dir / "debug")
+
         try:
             export_mapfiles = self.get_inifile().get_parameter("ExportMapFiles")
         except KeyError:
@@ -343,16 +345,22 @@ class Fm2ProfRunner(FM2ProfBase):
             # We need a better solution for this (inifile.getparam?.. handle defaults there?)
             export_mapfiles = False
         if export_mapfiles:
-            self.set_logger_message(f"Export geojson output to {output_dir}")
-            self._generate_geojson_output(output_dir, cross_sections)
+            self.set_logger_message(f"Export geojson output to {output_dir}/debug")
+            self._generate_geojson_output(output_dir / "debug", cross_sections)
 
         # Export bounding boxes of cross-section control volumes
         try:
-            self._export_envelope(output_dir, cross_sections)
+            self._export_envelope(output_dir / "debug", cross_sections)
         except Exception as e_error:
             e_message = str(e_error)
             self.set_logger_message("Error while exporting bounding boxes", "error")
             self.set_logger_message(e_message, "error")
+
+    def _create_debug_output_if_not_exists(self, output_dir: Path) -> None:
+        """Create debug output directory if it does not exist."""
+        if not output_dir.exists():
+            output_dir.mkdir(parents=True, exist_ok=True)
+
 
     def _export_envelope(
         self,

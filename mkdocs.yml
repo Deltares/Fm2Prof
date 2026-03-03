@@ -92,7 +92,8 @@ nav:
       - Overview: markdown/overview.md
       - Installation: markdown/installation.md
       - Quickstart: markdown/quickstart.md
-      - Analysing output: 
+      - Output files: markdown/output_files.md
+      - Analysing results: 
         - notebooks/cross_section_data.ipynb
         - markdown/troubleshooting.md
       - Utilities: 

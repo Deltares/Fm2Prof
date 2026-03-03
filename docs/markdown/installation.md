@@ -9,7 +9,7 @@ FM2PROF is a package written in Python. If you're familiar with Python, you can 
 
 ### With pip
 
-FM2PROF is published as a [Python package] and can be installed with `pip`, ideally by using a [virtual environment] and using Python 3.10 or higher. Open up a terminal and install FM2PROF with:
+FM2PROF is published as a [Python package] and can be installed with `pip`, ideally by using a [virtual environment] and using Python 3.11 or higher. Open up a terminal and install FM2PROF with:
 
 === "Latest"
 
