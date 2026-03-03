@@ -31,6 +31,23 @@ cases = [{
     }},
 ]
 
+# Expected D-Flow 1D output files
+EXPECTED_DFLOW1D_FILES = [
+    "CrossSectionLocations.ini",
+    "CrossSectionDefinitions.ini",
+    "roughness-Main.ini",
+    "roughness-FloodPlain1.ini",
+    "volumes.csv",
+]
+
+# Expected D-Hydro output files
+EXPECTED_DHYDRO_FILES = [
+    "crsloc.ini",
+    "crsdef.ini",
+    "roughness-Main.ini",
+    "roughness-FloodPlain1.ini",
+    "volumes.csv",
+]
 
 class TestAcceptance:
 
@@ -49,7 +66,7 @@ class TestAcceptance:
         assert success
 
         # 4. get output
-        css_def_file = project.get_output_directory() / "CrossSectionDefinitions.ini"
+        css_def_file = project.get_output_directory() / "dflow1d" / "CrossSectionDefinitions.ini"
         css_def = VisualiseOutput.parse_cross_section_definition_file(css_def_file)
 
         # 5. verify output
@@ -68,3 +85,65 @@ class TestAcceptance:
             max_lvl_error = max(max_lvl_error, abs(expected_lvl - lvl))
 
         assert max_lvl_error < tolerated_max_level_error
+
+    @pytest.mark.parametrize("case", cases)
+    def test_all_dflow1d_output_files_created(self, case):
+        """Test that all expected D-Flow 1D output files are created after running a project."""
+        # 1. Set up test data
+        inifile = TestUtils.get_local_test_file(case.get("inifile"))
+
+        # 2. Run the project
+        project = Project(inifile)
+        success = project.run(overwrite=True)
+
+        # 3. Verify the project ran successfully
+        assert success, f"Project run failed for case: {case.get('name')}"
+
+        # 4. Get the output directory for D-Flow 1D format
+        output_dir = project.get_output_directory() / "dflow1d"
+
+        # 5. Check that the output directory exists
+        assert output_dir.exists(), f"Output directory does not exist: {output_dir}"
+
+        # 6. Check that all expected files are created
+        missing_files = []
+        for expected_file in EXPECTED_DFLOW1D_FILES:
+            file_path = output_dir / expected_file
+            if not file_path.exists():
+                missing_files.append(expected_file)
+
+        # 7. Assert that no files are missing
+        assert not missing_files, (
+            f"Missing expected output files for case '{case.get('name')}': {missing_files}"
+        )
+
+    @pytest.mark.parametrize("case", cases)
+    def test_all_dhydro_output_files_created(self, case):
+        """Test that all expected D-Hydro output files are created after running a project."""
+        # 1. Set up test data
+        inifile = TestUtils.get_local_test_file(case.get("inifile"))
+
+        # 2. Run the project
+        project = Project(inifile)
+        success = project.run(overwrite=True)
+
+        # 3. Verify the project ran successfully
+        assert success, f"Project run failed for case: {case.get('name')}"
+
+        # 4. Get the output directory for D-Flow 1D format
+        output_dir = project.get_output_directory() / "dhydro"
+
+        # 5. Check that the output directory exists
+        assert output_dir.exists(), f"Output directory does not exist: {output_dir}"
+
+        # 6. Check that all expected files are created
+        missing_files = []
+        for expected_file in EXPECTED_DHYDRO_FILES:
+            file_path = output_dir / expected_file
+            if not file_path.exists():
+                missing_files.append(expected_file)
+
+        # 7. Assert that no files are missing
+        assert not missing_files, (
+            f"Missing expected output files for case '{case.get('name')}': {missing_files}"
+        )

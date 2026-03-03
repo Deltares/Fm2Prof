@@ -442,10 +442,10 @@ class GenerateCrossSectionLocationFile(FM2ProfBase):
 class VisualiseOutput(FM2ProfBase):
     """Visaulise output class."""
 
-    __cssdeffile = "CrossSectionDefinitions.ini"
-    __volumefile = "volumes.csv"
-    __rmainfile = "roughness-Main.ini"
-    __rfp1file = "roughness-FloodPlain1.ini"
+    __cssdeffile = "dflow1d/CrossSectionDefinitions.ini"
+    __volumefile = "dflow1d/volumes.csv"
+    __rmainfile = "dflow1d/roughness-Main.ini"
+    __rfp1file = "dflow1d/roughness-FloodPlain1.ini"
 
     def __init__(
         self,
@@ -696,7 +696,7 @@ class VisualiseOutput(FM2ProfBase):
         self.start_new_log_task("Plotting cross-secton figures", pbar=pbar)
 
         for css in self.cross_sections:
-            self.figure_cross_section(css, pbar=pbar)
+            self.figure_cross_section(css)
             pbar.update(1)
 
         self.finish_log_task()

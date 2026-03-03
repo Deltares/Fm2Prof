@@ -100,6 +100,21 @@ docs = { features = ["docs"], solve-group = "default" }
 
 [tool.pixi.tasks]
 
-
 [tool.uv.sources]
 deltares-hms-docs = { git = "https://github.com/Deltares-research/doc_utils.git", branch = "latex-templates" }
+
+[tool.coverage.run]
+branch = true
+source = ["fm2prof"]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+    "if TYPE_CHECKING:",
+    "class .*\\bProtocol\\):",
+    "@(abc\\.)?abstractmethod",
+]

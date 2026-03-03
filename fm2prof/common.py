@@ -83,6 +83,10 @@ class ElapsedFormatter:
         else:
             raise TypeError
 
+    def get_loglibrary(self) -> dict:
+        """Get loglibrary."""
+        return self._loglibrary
+
     def format(self, record: LogRecord) -> str:
         """Format log record."""
         if self._intro:
