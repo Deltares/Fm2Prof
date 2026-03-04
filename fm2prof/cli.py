@@ -6,7 +6,8 @@ from typing import Optional
 import typer
 from tqdm import tqdm
 
-from fm2prof import Project, __version__
+from fm2prof import Project
+from fm2prof.common import get_version
 from fm2prof.ini_file import IniFile
 from fm2prof.utils import Compare1D2D, VisualiseOutput
 
@@ -15,7 +16,7 @@ app = typer.Typer()
 
 def _display_version(value: bool) -> None:  # noqa:FBT001
     if value:
-        typer.echo(f"Fm2Prof v{__version__}")
+        typer.echo(f"Fm2Prof v{get_version()}")
         raise typer.Exit
 
 

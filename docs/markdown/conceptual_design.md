@@ -20,21 +20,21 @@ times in the next step.
 
 ### Region polygon file
 
-The region polygon file (*Dutch: gebiedsvakken*) is provided in the configuration and should be a valid [MultiPolygon geojson file](../api/#fm2prof.polygon_file.MultiPolygon). If a polygon file is provided, FM2PROF will perform an `inpolygon` algorithm during initialisation and write the results to a `.region_cache.json` file which is placed in the same directory as the 2D map file. This can take up to 30 minutes for a sizable river. If a cache file is already present and valid, it will be read instead. A cache file is invalidated if the 2D input has changed since the cache was created. 
+The region polygon file (*Dutch: gebiedsvakken*) is provided in the configuration and should be a valid [MultiPolygon geojson file](api.md#fm2prof.polygon_file.MultiPolygon). If a polygon file is provided, FM2PROF will perform an `inpolygon` algorithm during initialisation and write the results to a `.region_cache.json` file which is placed in the same directory as the 2D map file. This can take up to 30 minutes for a sizable river. If a cache file is already present and valid, it will be read instead. A cache file is invalidated if the 2D input has changed since the cache was created. 
 
 !!! note
 
-    There are special conditions for the geojson file, see [MultiPolygon](../api/#fm2prof.polygon_file.MultiPolygon). 
+    There are special conditions for the geojson file, see [MultiPolygon](api.md#fm2prof.polygon_file.MultiPolygon). 
 
 The region file is used to map each point (node, edge or face) in the 2D input grid to one
-unique region. They are used to determine what 2D points are assigned to which cross-section, see [Classification of volumes](#Classification-of-control-volumes)
+unique region. They are used to determine what 2D points are assigned to which cross-section, see [Classification of volumes](#classification-of-control-volumes)
 
 
 ### Section polygon file
 
-The section polygon file (*Dutch: gebiedsvakken*) is provided in the configuration and should be a valid [MultiPolygon geojson file](../api/#fm2prof.polygon_file.MultiPolygon). If a polygon file is provided, FM2PROF will perform an `inpolygon` algorithm during initialisation and write the results to a `.section_cache.json` file which is placed in the same directory as the 2D map file. This can take up to 30 minutes for a sizable river. If a cache file is already present and valid, it will be read instead. A cache file is invalidated if the 2D input has changed since the cache was created. 
+The section polygon file (*Dutch: gebiedsvakken*) is provided in the configuration and should be a valid [MultiPolygon geojson file](api/#fm2prof.polygon_file.MultiPolygon). If a polygon file is provided, FM2PROF will perform an `inpolygon` algorithm during initialisation and write the results to a `.section_cache.json` file which is placed in the same directory as the 2D map file. This can take up to 30 minutes for a sizable river. If a cache file is already present and valid, it will be read instead. A cache file is invalidated if the 2D input has changed since the cache was created. 
 
-[Sections](../glossary/sections) are used to divide the cross-section between floodplain and main channel (e.g. the 'floodplain' section and the 'main channel' section). This distinction is only used to assign different roughness values to each section. 
+[Sections](glossary.md#sections) are used to divide the cross-section between floodplain and main channel (e.g. the 'floodplain' section and the 'main channel' section). This distinction is only used to assign different roughness values to each section. 
 
 !!! tip
 
@@ -61,16 +61,16 @@ in *cell faces*. FM2PROF needs both information from the faces, as from the link
 #### Classification of control volumes
 
 `Control volumes` are used to define
-which 2D datepoints are linked to which 1D cross-section. This is done
+which 2D datapoints are linked to which 1D cross-section. This is done
 in the following steps:
 
--   Each 2D point (node, edge and face) is assigned a [Region](../glossary/Region). If a [region polygon](#Region-polygon-file) is provided, each 2D point is assigned the same region as the polygon they are in. If no region polygon is provided, each point will be assigned to the same default region. 
+-   Each 2D point (node, edge and face) is assigned a [Region](glossary.md#regions). If a [region polygon](#region-polygon-file) is provided, each 2D point is assigned the same region as the polygon they are in. If no region polygon is provided, each point will be assigned to the same default region. 
 - Each cross-section is assigned a region following the same principle. 
-- For each region seperately, we perform [nearest neighbour classification](../api/nearest_neighbour) to uniquely identify each 2D point to a 1D cross-section. Only 2D points that have the same region as the cross-section can be assigned to a cross-section. 
+- For each region seperately, we perform [nearest neighbour classification](api.md#nearest_neighbour) to uniquely identify each 2D point to a 1D cross-section. Only 2D points that have the same region as the cross-section can be assigned to a cross-section. 
 
 #### Classification of sections
 
-[Sections](../glossary/sections) are used to output a
+[Sections](glossary/md#sections) are used to output a
 different roughness function for the main channel and the floodplains.
 The purpose of the classification is to determine whether a 2D point
 belongs to the main channel section, or to the floodplain section (see

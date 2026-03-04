@@ -55,11 +55,11 @@ import tqdm
 from geojson import Feature, FeatureCollection, Polygon
 from scipy.spatial import ConvexHull
 
-from fm2prof import __version__, mask_output_file, nearest_neighbour
-from fm2prof.common import FM2ProfBase
+from fm2prof import mask_output_file, nearest_neighbour
+from fm2prof.common import FM2ProfBase, get_version
 from fm2prof.cross_section import CrossSection, CrossSectionHelpers
 from fm2prof.data_import import FMDataImporter, FmModelData, ImportInputFiles
-from fm2prof.export import Export1DModelData, OutputFiles
+from fm2prof.export import ExporterFactory
 from fm2prof.ini_file import ConfigurationFileError, IniFile
 from fm2prof.polygon_file import GridPointsInPolygonResults, PolygonError, RegionPolygon, SectionPolygon
 
@@ -76,6 +76,11 @@ class Fm2ProfRunner(FM2ProfBase):
     __key_frictionweighingmethod = "FrictionweighingMethod"
     __key_skipmaps = "SkipMaps"
 
+    # Expected output files (used to check if output exists)
+    _output_files = [
+        "dflow1d/CrossSectionDefinitions.ini",  # D-Flow 1D geometry
+    ]
+
     def __init__(self, ini_file_path: Path | str = "") -> None:
         """Initialize the project.
 
@@ -84,8 +89,8 @@ class Fm2ProfRunner(FM2ProfBase):
             ini_file_path (Path | str): path to configuration file.
 
         """
+        self.version: str = get_version()
         self.fm_model_data: FmModelData = None
-        self._output_files: OutputFiles = OutputFiles()
 
         self.set_logger(self.create_logger())
 
@@ -172,7 +177,7 @@ class Fm2ProfRunner(FM2ProfBase):
     def _print_header(self) -> None:
         header_text = [
             "=" * 80,
-            f"FM2PROF version {__version__}",
+            f"FM2PROF version {get_version()}",
             f"Documentation: {self.__url__:>6}",
             f"Authors: {self.__authors__:>6}",
             f"Contact: {self.__contact__:>6}",
@@ -209,10 +214,11 @@ class Fm2ProfRunner(FM2ProfBase):
         # Step 3. Finalise and write output
         self.start_new_log_task("Finalizing")
         self._finalise_fm2prof(cross_sections)
-        self._print_log_report()
+        errors = self._print_log_report()
         self.finish_log_task()
 
-        return True
+        # Returns true if program finished without errors
+        return errors == 0
 
     def _initialise_fm2prof(self) -> None:
         """Load data, inifile."""
@@ -330,7 +336,9 @@ class Fm2ProfRunner(FM2ProfBase):
         self.set_logger_message(f"Export model input files to {output_dir}")
         self._write_output(cross_sections, output_dir)
 
-        # Generate output geojson
+        # Generate debug output
+        self._create_debug_output_if_not_exists(output_dir / "debug")
+
         try:
             export_mapfiles = self.get_inifile().get_parameter("ExportMapFiles")
         except KeyError:
@@ -338,16 +346,22 @@ class Fm2ProfRunner(FM2ProfBase):
             # We need a better solution for this (inifile.getparam?.. handle defaults there?)
             export_mapfiles = False
         if export_mapfiles:
-            self.set_logger_message(f"Export geojson output to {output_dir}")
-            self._generate_geojson_output(output_dir, cross_sections)
+            self.set_logger_message(f"Export geojson output to {output_dir}/debug")
+            self._generate_geojson_output(output_dir / "debug", cross_sections)
 
         # Export bounding boxes of cross-section control volumes
         try:
-            self._export_envelope(output_dir, cross_sections)
+            self._export_envelope(output_dir / "debug", cross_sections)
         except Exception as e_error:
             e_message = str(e_error)
             self.set_logger_message("Error while exporting bounding boxes", "error")
             self.set_logger_message(e_message, "error")
+
+    def _create_debug_output_if_not_exists(self, output_dir: Path) -> None:
+        """Create debug output directory if it does not exist."""
+        if not output_dir.exists():
+            output_dir.mkdir(parents=True, exist_ok=True)
+
 
     def _export_envelope(
         self,
@@ -656,7 +670,7 @@ class Fm2ProfRunner(FM2ProfBase):
             return None
         if created_css.get_number_of_faces() < 10:  # noqa: PLR2004
             self.set_logger_message(
-                "There are too little 2D points in control volume to construct cross-section",
+                "There are too few 2D points in control volume to construct cross-section",
                 "error",
             )
             return None
@@ -774,107 +788,27 @@ class Fm2ProfRunner(FM2ProfBase):
         if not cross_sections or not output_dir.exists():
             return
 
-        output_exporter = Export1DModelData(logger=self.get_logger())
-
-        # File paths
-        css_location_ini_file = output_dir.joinpath(
-            self._output_files.dimr_css_locations,
-        )
-        css_definitions_ini_file = output_dir.joinpath(
-            self._output_files.dimr_css_definitions,
-        )
-
-        # Legacy file formats
-        csv_geometry_file = output_dir.joinpath(self._output_files.sobek3_geometry)
-        csv_roughness_file = output_dir.joinpath(self._output_files.sobek3_roughness)
-
-        csv_geometry_test_file = output_dir.joinpath(self._output_files.test_geometry)
-        csv_volumes_file = output_dir.joinpath(self._output_files.fm2prof_volume)
-
-        # export fm1D format
+        # Export D-Hydro format
         try:
-            # Export locations
-            output_exporter.export_cross_section_locations(
-                cross_sections,
-                file_path=css_location_ini_file,
-            )
-
-            # Export definitions
-            output_exporter.export_geometry(
-                cross_sections,
-                file_path=css_definitions_ini_file,
-                fmt="dflow1d",
-            )
-
-            # Export roughness
-            sections = np.unique(
-                [s for css in cross_sections for s in css.friction_tables],
-            )
-            section_file_key_dict = {
-                "main": [self._output_files.dimr_roughness_main, "Main"],
-                "floodplain1": [
-                    self._output_files.dimr_roughness_floodplain1,
-                    "FloodPlain1",
-                ],
-                "floodplain2": [
-                    self._output_files.dimr_roughness_floodplain2,
-                    "FloodPlain2",
-                ],
-            }
-            for section in sections:
-                csv_roughness_ini_file = output_dir.joinpath(
-                    section_file_key_dict[section][0],
-                )
-                output_exporter.export_roughness(
-                    cross_sections,
-                    file_path=csv_roughness_ini_file,
-                    fmt="dflow1d",
-                    roughness_section=section_file_key_dict[section][1],
-                )
-
-        except Exception as e_info:
+            dhydro_exporter = ExporterFactory.create("dhydro", output_dir=output_dir / "dhydro")
+            dhydro_exporter.export_all(cross_sections)
+            self.set_logger_message("Successfully exported D-Hydro format files", "info")
+        except (ValueError, OSError, KeyError) as e_info:
             self.set_logger_message(
-                "An error was produced while exporting files to DIMR format,"
+                "An error was produced while exporting files to D-Hydro format,"
                 " not all output files might be exported. "
                 f"{e_info!s}",
                 level="error",
             )
 
-        # Eport SOBEK 3 format
+        # Export D-Flow 1D format
         try:
-            # Cross-sections
-            output_exporter.export_geometry(
-                cross_sections,
-                file_path=csv_geometry_file,
-                fmt="sobek3",
-            )
-
-            # Roughness
-            output_exporter.export_roughness(
-                cross_sections,
-                file_path=csv_roughness_file,
-                fmt="sobek3",
-            )
-        except Exception as e_info:
+            dflow1d_exporter = ExporterFactory.create("dflow1d", output_dir=output_dir / "dflow1d")
+            dflow1d_exporter.export_all(cross_sections)
+            self.set_logger_message("Successfully exported D-Flow 1D format files", "info")
+        except (ValueError, OSError, KeyError) as e_info:
             self.set_logger_message(
-                "An error was produced while exporting files to SOBEK format,"
-                " not all output files might be exported. "
-                f"{e_info!s}",
-                level="error",
-            )
-
-        # Other files:
-        try:
-            output_exporter.export_geometry(
-                cross_sections,
-                file_path=csv_geometry_test_file,
-                fmt="testformat",
-            )
-
-            output_exporter.export_volumes(cross_sections, file_path=csv_volumes_file)
-        except Exception as e_info:
-            self.set_logger_message(
-                "An error was produced while exporting files,"
+                "An error was produced while exporting files to D-Flow 1D format,"
                 " not all output files might be exported. "
                 f"{e_info!s}",
                 level="error",
@@ -955,10 +889,13 @@ class Fm2ProfRunner(FM2ProfBase):
             )
         return css
 
-    def _print_log_report(self) -> None:
-        ll = self.get_logformatter()._loglibrary
+    def _print_log_report(self) -> int:
+        """Print a report of the log with amount of warnings and errors and returns number of errors."""
+        ll = self.get_logformatter().get_loglibrary()
         self.set_logger_message(f"Warnings: {ll.get('WARNING')}")
         self.set_logger_message(f"Errors: {ll.get('ERROR')}")
+
+        return ll.get("ERROR")
 
     def _output_exists(self) -> bool:
         """Check whether output exists."""
