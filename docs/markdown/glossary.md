@@ -41,7 +41,7 @@ which is usefull for debugging input errors (see [Troubleshooting](troubleshooti
 </figure>
 
 
-## Region
+## Regions
 
 Regions are used to have some finer control over which 2D model
 output is assigned to which 1D cross-section. If no region are
@@ -65,9 +65,9 @@ a small cross-section non-physical constriction of the flow.
 </figure>
 
 
-## Section
+## Sections
 
-Section are used to divide the cross-section between floodplain and
+Sections are used to divide the cross-section between floodplain and
 main channel (e.g. the 'floodplain' section and the 'main channel' section). This distinction is only used to assign
 different roughness values to each section.
 
@@ -93,8 +93,6 @@ profound effect on stage-discharge relationships: as these levees
 overflow the compartments start flowing which leads to a retention
 effect. Such an effect cannot be modelled using regulare
 cross-sections. SOBEK therefore has a 'summerdike' functionality.
-
-
 
 ## Lakes
 

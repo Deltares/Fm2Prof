@@ -22,6 +22,21 @@ from colorama import Back, Fore, Style
 if TYPE_CHECKING:
     from fm2prof.IniFile import IniFile
 
+from importlib.metadata import PackageNotFoundError, version
+
+
+def get_version() -> str:
+    """Get the version of the FM2PROF package.
+
+    Returns:
+        str: The version string of the FM2PROF package.
+    """
+    try:
+        return version("fm2prof")
+    except PackageNotFoundError:
+        # Package is not installed
+        return "unknown"
+
 
 class TqdmLoggingHandler(logging.StreamHandler):
     """Logging handler for tqdm package."""

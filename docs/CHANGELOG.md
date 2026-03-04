@@ -1,6 +1,6 @@
 ## 2.5.1 (2026-03-03)
 
-This updates introduces support for the D-Hydro 1D file formats and expands user documentation. 
+This update introduces support for the D-Hydro 1D file formats and expands user documentation. 
 
 ### New Features
 
@@ -11,7 +11,7 @@ This updates introduces support for the D-Hydro 1D file formats and expands user
 - Removed support for sobek3 csv output format. Therefore, sobek 3.4 and earlier is no longer supported. 
 - Output formats are now put in separate output folders (output/dhydro, output/dflow1d and output/debug). Users may need to change automation scripts. 
 
-### Documentaton
+### Documentation
 - Added documentation on output formats to user manual
 - Restructured documentation navigation with dedicated utilities section and improved organization
 - Enhanced docstrings in GenerateCrossSectionLocationFile class with comprehensive examples and usage guidelines

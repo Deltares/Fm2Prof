@@ -27,7 +27,7 @@ class DHydroExporter(BaseExporter):
         """Return default D-Hydro (1D) output file configuration.
 
         Returns:
-            DFlow1DOutputFiles instance with default file names
+            DHydroOutputFiles instance with default file names
         """
         return DHydroOutputFiles()
 
@@ -73,9 +73,15 @@ class DHydroExporter(BaseExporter):
 
         # Map numeric section IDs to section names
         section_map = {
+            "main": "main",
+            "floodplain1": "floodplain1",
+            "floodplain2": "floodplain2",
             "1": "main",
             "2": "floodplain1",
             "3": "floodplain2",
+            1: "main",
+            2: "floodplain1",
+            3: "floodplain2",
         }
 
         # Export roughness for each section type

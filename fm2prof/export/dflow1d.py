@@ -73,12 +73,15 @@ class DFlow1DExporter(BaseExporter):
 
         # Map numeric section IDs to section names
         section_map = {
-            1: "main",
-            2: "floodplain1",
-            3: "floodplain2",
+            "main": "main",
+            "floodplain1": "floodplain1",
+            "floodplain2": "floodplain2",
             "1": "main",
             "2": "floodplain1",
             "3": "floodplain2",
+            1: "main",
+            2: "floodplain1",
+            3: "floodplain2",
         }
 
         # Export roughness for each section type
@@ -251,5 +254,5 @@ class DFlow1DExporter(BaseExporter):
                     "[Definition]\n"
                     f"\tbranchId              = {css.branch}\n"
                     f"\tchainage              = {css.chainage}\n"
-                    f"\tvalues                = {' '.join(f'{v:.4}' for v in table.friction)}\n\n",
+                    f"\tvalues                = {' '.join(f'{v:.4f}' for v in table.friction)}\n\n",
                 )

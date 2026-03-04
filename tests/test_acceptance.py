@@ -36,7 +36,6 @@ EXPECTED_DFLOW1D_FILES = [
     "CrossSectionLocations.ini",
     "CrossSectionDefinitions.ini",
     "roughness-Main.ini",
-    "roughness-FloodPlain1.ini",
     "volumes.csv",
 ]
 
@@ -45,7 +44,6 @@ EXPECTED_DHYDRO_FILES = [
     "crsloc.ini",
     "crsdef.ini",
     "roughness-Main.ini",
-    "roughness-FloodPlain1.ini",
     "volumes.csv",
 ]
 
@@ -59,7 +57,7 @@ class TestAcceptance:
 
         # 2. run case
         project = Project(inifile)
-
+        project.set_output_directory(project.get_output_directory() / case.get("name"))
         success = project.run(overwrite=True)
 
         # 3. verify output
@@ -94,6 +92,7 @@ class TestAcceptance:
 
         # 2. Run the project
         project = Project(inifile)
+        project.set_output_directory(project.get_output_directory() / case.get("name"))
         success = project.run(overwrite=True)
 
         # 3. Verify the project ran successfully

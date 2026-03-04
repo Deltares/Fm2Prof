@@ -640,7 +640,7 @@ class CrossSection(FM2ProfBase):
         self.flow_width = self._css_flow_width[reduced_index]
 
         self.set_logger_message(
-            "Cross-section reduced from {n_before_reduction} to {len(self.total_width)} points",
+            f"Cross-section reduced from {n_before_reduction} to {len(self.total_width)} points",
         )
 
         self._css_is_reduced = True

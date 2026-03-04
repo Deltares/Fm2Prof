@@ -440,7 +440,7 @@ class GenerateCrossSectionLocationFile(FM2ProfBase):
 
 
 class VisualiseOutput(FM2ProfBase):
-    """Visaulise output class."""
+    """Visualise output class."""
 
     __cssdeffile = "dflow1d/CrossSectionDefinitions.ini"
     __volumefile = "dflow1d/volumes.csv"

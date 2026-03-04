@@ -55,8 +55,8 @@ import tqdm
 from geojson import Feature, FeatureCollection, Polygon
 from scipy.spatial import ConvexHull
 
-from fm2prof import __version__, mask_output_file, nearest_neighbour
-from fm2prof.common import FM2ProfBase
+from fm2prof import mask_output_file, nearest_neighbour
+from fm2prof.common import FM2ProfBase, get_version
 from fm2prof.cross_section import CrossSection, CrossSectionHelpers
 from fm2prof.data_import import FMDataImporter, FmModelData, ImportInputFiles
 from fm2prof.export import ExporterFactory
@@ -89,6 +89,7 @@ class Fm2ProfRunner(FM2ProfBase):
             ini_file_path (Path | str): path to configuration file.
 
         """
+        self.version: str = get_version()
         self.fm_model_data: FmModelData = None
 
         self.set_logger(self.create_logger())
@@ -176,7 +177,7 @@ class Fm2ProfRunner(FM2ProfBase):
     def _print_header(self) -> None:
         header_text = [
             "=" * 80,
-            f"FM2PROF version {__version__}",
+            f"FM2PROF version {get_version()}",
             f"Documentation: {self.__url__:>6}",
             f"Authors: {self.__authors__:>6}",
             f"Contact: {self.__contact__:>6}",
@@ -669,7 +670,7 @@ class Fm2ProfRunner(FM2ProfBase):
             return None
         if created_css.get_number_of_faces() < 10:  # noqa: PLR2004
             self.set_logger_message(
-                "There are too little 2D points in control volume to construct cross-section",
+                "There are too few 2D points in control volume to construct cross-section",
                 "error",
             )
             return None
