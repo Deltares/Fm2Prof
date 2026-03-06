@@ -52,21 +52,6 @@ class IniFile(FM2ProfBase):
     __input_debug_key = "debug"
     __output_key = "output"
     __output_directory_key = "OutputDirectory"
-    __ini_keys = {  # noqa:RUF012
-        "map_file": "2dmapoutput",
-        "css_file": "crosssectionlocationfile",
-        "region_file": "regionpolygonfile",
-        "section_file": "sectionpolygonfile",
-        "export_mapfiles": "exportmapfiles",
-        "css_selection": "cssselection",
-        "sdfloodplainbase": "sdfloodplainbase",
-        "sdstorage": "sdstorage",
-        "transitionheight_sd": "transitionheight_sd",
-        "number_of_css_points": "number_of_css_points",
-        "minimum_width": "minimum_width",
-        "default_section": "defaultsection",
-        "default_region": "defaultregion",
-    }
 
     _output_dir = None
     _input_file_paths = None

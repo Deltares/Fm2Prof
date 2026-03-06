@@ -1,6 +1,13 @@
 name: ci
 
-on: [push]
+on:
+  workflow_dispatch:    # Manual trigger
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
 
 jobs:
   CI:
@@ -15,6 +22,8 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          # For PRs, checkout the actual commit, not a merge commit
+          ref: ${{ github.event.pull_request.head.sha || github.ref }}
 
       - name: Set up Python
         uses: actions/setup-python@v5

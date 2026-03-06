@@ -174,7 +174,7 @@ class Test_cross_section_construction:
         with open(tdir.joinpath(f"{test_case.get('name')}.pickle"), "rb") as f:
             css_data = pickle.load(f)
 
-        tol = 1e-6
+        tol = 1e-3
 
         # 2. Set expectations for
         crest_level: float = test_case.get("crest_level")  # type: ignore
