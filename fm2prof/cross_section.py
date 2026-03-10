@@ -68,16 +68,7 @@ class CrossSectionHelpers(FM2ProfBase):
             bool: TRUE if succesful, FALSE if not. Does not raise exception.
 
         """
-        try:
-            return self._interpolate_friction_across_cross_sections(cross_section_list)
-        except Exception:
-            self.set_logger_message(
-                "There was an error while making friction tables",
-                "error",
-            )
-            for line in traceback.format_exc().splitlines():
-                self.set_logger_message(line, "debug")
-            return False
+        return self._interpolate_friction_across_cross_sections(cross_section_list)
 
     def _interpolate_friction_across_cross_sections(
         self,
@@ -215,22 +206,6 @@ class CrossSection(FM2ProfBase):
         # data structures
         self.__output_face_list = []
         self.__output_edge_list = []
-
-    @property
-    def alluvial_width(self) -> int:
-        """Get alluvial width."""
-        for key in ["1", "main", "Main"]:
-            if key in self.section_widths:
-                return self.section_widths[key]
-        return 0
-
-    @property
-    def nonalluvial_width(self) -> int:
-        """Get non-alluvial width."""
-        for key in ["2", "floodplain", "FloodPlain1"]:
-            if key in self.section_widths:
-                return self.section_widths[key]
-        return 0
 
     @property
     def face_points_list(self) -> list:
@@ -410,6 +385,11 @@ class CrossSection(FM2ProfBase):
 
     def check_geometry_requirements(self) -> None:
         """Perform check on cross-section such that it hold up to requirements."""
+        # round z values to 4 decimals to avoid numerical issues (e.g. multiple zeroes at the bottom of the cross-section)
+        self._css_z = np.round(self._css_z, 4)
+        self._css_total_width = np.round(self._css_total_width, 4)
+        self._css_flow_width = np.round(self._css_flow_width, 4)
+
         # Remove multiple zeroes in the bottom of the cross-section
         self._css_index_of_first_nonzero = self._check_remove_duplicate_zeroes()
         self._css_total_width = self._check_remove_zero_widths(self._css_total_width)
@@ -1445,13 +1425,18 @@ class CrossSection(FM2ProfBase):
         - total width of all sections should be equal to the flow width
 
         """
+        # round section widths to 4 decimals
+        for section in self.section_widths:
+            self.section_widths[section] = round(self.section_widths[section], 4)
+
+        # perform checks
         self._check_section_widths_greater_than_minimum_width()
         self._check_section_widths_equal_to_flow_width()
 
     def _check_section_widths_equal_to_flow_width(self) -> None:
         """Check whether total width of all sections is equal to the flow width.
 
-        This is not expected ot be true from the input files, since
+        This is not expected to be true from the input files, since
         the initial section widths are computed based on the area assigned to each section.
         However, part of the area might be 'storage' area that does not contribute to flow and
         therefore do not contribute to roughness. Section widths are therefore only defined for
@@ -1465,16 +1450,13 @@ class CrossSection(FM2ProfBase):
             total_section_width += width
 
         # Compute difference between flow width and total width of all sections
-        dif = self.flow_width[-1] - total_section_width
-
-        if dif == 0:
-            return
+        dif = np.round(self.flow_width[-1] - total_section_width, 4)
 
         # If the total section width is smaller than the flow width, increase the main section width width the difference
-        if dif > 0:
+        if dif >= 0:
             self.section_widths["main"] += dif
             self.set_logger_message(
-                f"Section widths were smaller than flow width."
+                f"Section widths were smaller than flow width. "
                 f"Increased main section width by {dif:.2f} m",
                 "info",
             )
@@ -1485,8 +1467,9 @@ class CrossSection(FM2ProfBase):
         for section in ["floodplain2", "floodplain1", "main"]:
             if self.section_widths[section] > 0:
                 reduction = min(self.section_widths[section], -dif)
-                self.section_widths[section] -= reduction
-                dif += reduction
+                self.section_widths[section] = round(self.section_widths[section]
+                - reduction, 4)
+                dif = round(dif + reduction, 4)
                 self.set_logger_message(
                     f"Section widths were larger than flow width. "
                     f"Reduced {section} section width by {reduction:.2f} m",
@@ -1503,13 +1486,13 @@ class CrossSection(FM2ProfBase):
         if dif >= 0:
             return
 
-        # If main section width is smaller than minimum profile width, increase main section width and decrease floodplain1 width
+        # If main section width is smaller than minimum profile width, increase main section width
+        # and decrease floodplain1 width
         self.section_widths["main"] -= dif
-        self.section_widths["floodplain1"] += dif
         self.set_logger_message(
-                f"Main section width was smaller than minimum profile width, "
-                f"increased main section width by {-1*(dif):.2f}",
-                "info",
+            f"Main section width was smaller than minimum profile width, "
+            f"increased main section width by {-1*(dif):.2f}",
+            "info",
             )
         return
 

@@ -732,7 +732,7 @@ class Fm2ProfRunner(FM2ProfBase):
         cross_section.assign_roughness()
         self.set_logger_message("Computed roughness", "info")
 
-        # Check if roughness information conforms to the requirements of the output formats
+        # Check if roughness conforms to the requirements of the output formats
         cross_section.check_section_width_requirements()
         return cross_section
 

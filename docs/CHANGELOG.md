@@ -5,11 +5,12 @@ This update introduces support for the D-Hydro 1D file formats and expands user 
 ### New Features
 
 - Added support for D-Hydro 1D as output file format. 
+- Roughness sections are now strictly checked with the flow width: the total width of the sections whould be equal to the maximum flow width. If not, the section widths are corrected to conform to this requirements. This strict adherence is necessary, because D-Hydro enforces a strict requirement. 
 
 ### Breaking changes
 
 - Removed support for sobek3 csv output format. Therefore, sobek 3.4 and earlier is no longer supported. 
-- Output formats are now put in separate output folders (output/dhydro, output/dflow1d and output/debug). Users may need to change automation scripts. 
+- Output formats are now put in separate output folders (output/dhydro, output/dflow1d and output/debug). Users may need to update automation scripts. 
 
 ### Documentation
 - Added documentation on output formats to user manual
