@@ -216,13 +216,6 @@ class CrossSection(FM2ProfBase):
         self.__output_face_list = []
         self.__output_edge_list = []
 
-        self._section_map = {
-            "1": "main",
-            "2": "floodplain1",
-            "3": "floodplain2",
-            "-999": "main",
-        }
-
     @property
     def alluvial_width(self) -> int:
         """Get alluvial width."""
@@ -288,7 +281,7 @@ class CrossSection(FM2ProfBase):
             ]
             # map missing value numbers to
             if NODATA in data.to_numpy():
-                self.set_logger_message(r"Missing data found in {name}", "warning")
+                self.set_logger_message(rf"Missing data found in {name}", "warning")
             data[data == NODATA] = np.nan
             return data
 
@@ -415,7 +408,7 @@ class CrossSection(FM2ProfBase):
         # (apparently entries can be float32)
         self._css_z = np.array(self._css_z, dtype=np.dtype("float64"))
 
-    def check_requirements(self) -> None:
+    def check_geometry_requirements(self) -> None:
         """Perform check on cross-section such that it hold up to requirements."""
         # Remove multiple zeroes in the bottom of the cross-section
         self._css_index_of_first_nonzero = self._check_remove_duplicate_zeroes()
@@ -976,8 +969,12 @@ class CrossSection(FM2ProfBase):
     def _compute_section_widths(self) -> None:
         """Compute sections widths by dividing the area assigned to a section by the length of the cross-section.
 
-        If the sum of the section widths is smaller than the flow width, the
-        width is increase proportionally
+        This method also checks for unassigned area (area that is not assigned
+        to any section in the input files) and adds it to the main section.
+        This method may return section widths that are not consistent with
+        requirements of 1D geometry - e.g. a larger total width than the
+        maximum width of the geometry, or a very small width that may lead
+        to numerical instability. 
         """
         unassigned_area = sum(self._fm_data["area"][self._fm_data["section"] == NODATA])
         if unassigned_area > 0:
@@ -987,8 +984,8 @@ class CrossSection(FM2ProfBase):
                 "warning",
             )
 
-        for section in [1, 2, 3]:
-            if section == 1:
+        for section in ["main", "floodplain1", "floodplain2"]:
+            if section == "main":
                 section_area = (
                     np.sum(self._fm_data["area"][self._fm_data["section"] == section])
                     + unassigned_area
@@ -998,11 +995,7 @@ class CrossSection(FM2ProfBase):
                     np.sum(self._fm_data["area"][self._fm_data["section"] == section])
                     / self.length
                 )
-            self.section_widths[self._section_map[str(section)]] = section_area
-
-        # Finally, the sum of section width should be greater or equal to the flow width
-        self._check_section_widths_greater_than_flow_width()
-        self._check_section_widths_greater_than_minimum_width()
+            self.section_widths[section] = section_area
 
     def _compute_floodplain_base(self) -> None:
         """Set the self.floodplain_base attribute.
@@ -1434,6 +1427,7 @@ class CrossSection(FM2ProfBase):
         err_msg = f"method argument, {method}, not understood. Choose between 1 or 2."
         raise ValueError(err_msg)
 
+
     def _check_total_width_greater_than_flow_width(self) -> None:
         """If total width is smaller than flow width, set flow width to total width."""
         mask = self._css_flow_width > self._css_total_width
@@ -1443,42 +1437,82 @@ class CrossSection(FM2ProfBase):
             "debug",
         )
 
-    def _check_section_widths_greater_than_flow_width(self) -> None:
+    def check_section_width_requirements(self) -> None:
+        """Check whether section widths meet requirements of 1D geometry.
+
+        The following requirements are checked:
+        - 'main' section width should be greater than minimum profile width
+        - total width of all sections should be equal to the flow width
+
+        """
+        self._check_section_widths_greater_than_minimum_width()
+        self._check_section_widths_equal_to_flow_width()
+
+    def _check_section_widths_equal_to_flow_width(self) -> None:
+        """Check whether total width of all sections is equal to the flow width.
+
+        This is not expected ot be true from the input files, since
+        the initial section widths are computed based on the area assigned to each section.
+        However, part of the area might be 'storage' area that does not contribute to flow and
+        therefore do not contribute to roughness. Section widths are therefore only defined for
+        the 'flow' area. The sum of sections width should be equal to the flow width.
+        If this is not the case, we reduce the widths of the floodplain sections (if they exist)
+        first and main section second such that the sum of section widths is equal to the flow width.
+        """
+        # Compute total width of all sections
         total_section_width = 0
         for width in self.section_widths.values():
             total_section_width += width
 
+        # Compute difference between flow width and total width of all sections
         dif = self.flow_width[-1] - total_section_width
+
+        if dif == 0:
+            return
+
+        # If the total section width is smaller than the flow width, increase the main section width width the difference
         if dif > 0:
             self.section_widths["main"] += dif
             self.set_logger_message(
+                f"Section widths were smaller than flow width."
                 f"Increased main section width by {dif:.2f} m",
-                "warning",
+                "info",
             )
+            return
 
-    def _check_section_widths_greater_than_minimum_width(self) -> bool:
-        """Check section widths that are greater than the minimum width.
+        # if dif < 0, first reduce floodplain2, then floodplain 1, then main until
+        # total section width is equal to flow width
+        for section in ["floodplain2", "floodplain1", "main"]:
+            if self.section_widths[section] > 0:
+                reduction = min(self.section_widths[section], -dif)
+                self.section_widths[section] -= reduction
+                dif += reduction
+                self.set_logger_message(
+                    f"Section widths were larger than flow width. "
+                    f"Reduced {section} section width by {reduction:.2f} m",
+                    "info",
+                )
+            if dif >= 0:
+                break
 
-        Main section width must be greater than minimum profile width, or it is ignored by SOBEK 3.
-        """
+    def _check_section_widths_greater_than_minimum_width(self) -> None:
+        """Check section widths that are greater than the minimum width."""
+        # Compute difference between main section width and minimum profile width
         dif = self.section_widths["main"] - self._css_flow_width[0]
+        # If main section width is greater than minimum profile width, return True
+        if dif >= 0:
+            return
 
-        # cm accuracy, and at least 10 cm difference
-        # TODO: decide and implement some accuracy, e.g. 1e-3.
-        # rounding errors may still lead to problems if main==flow width [0]
-        # in sobek
-        tol = 0.10
-        dif = math.floor(dif * 100) / 100
-
-        if (dif - tol) < 0:
-            self.section_widths["main"] -= dif - tol
-            self.section_widths["floodplain1"] += dif - tol
-            self.set_logger_message(
-                f"Increased main section width by {-1*(dif-tol):.2f}",
-                "warning",
+        # If main section width is smaller than minimum profile width, increase main section width and decrease floodplain1 width
+        self.section_widths["main"] -= dif
+        self.section_widths["floodplain1"] += dif
+        self.set_logger_message(
+                f"Main section width was smaller than minimum profile width, "
+                f"increased main section width by {-1*(dif):.2f}",
+                "info",
             )
-            return True
-        return False
+        return
+
 
     def get_parameter(self, key: str) -> str | bool | int | float | None:
         """Retrieve parameter from ini file."""
