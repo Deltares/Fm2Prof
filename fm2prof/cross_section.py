@@ -985,7 +985,7 @@ class CrossSection(FM2ProfBase):
         """
         tolerance = self.get_inifile().get_parameter("sdfloodplainbase")
         # Mean bed level in section 2 (floodplain)
-        floodplain_mask = self._fm_data.get("section") == 2  # noqa: PLR2004
+        floodplain_mask = self._fm_data.get("section") == "floodplain1"
         if floodplain_mask.sum():
             mean_floodplain_elevation = np.nanmean(
                 self._fm_data["bedlevel"][floodplain_mask],
@@ -1011,7 +1011,7 @@ class CrossSection(FM2ProfBase):
         else:
             self.floodplain_base = self.crest_level - tolerance
             self.set_logger_message(
-                f"No Floodplain found, floodplain defaults to {self.crest_level - tolerance}",
+                f"No floodplain found, floodplain base level set to {self.crest_level - tolerance}",
             )
 
     def _identify_lakes(self, waterdepth: pd.DataFrame) -> np.ndarray:
