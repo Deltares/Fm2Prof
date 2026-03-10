@@ -1,0 +1,68 @@
+\documentclass[git]{deltares_manual}
+\usepackage{adjustbox}
+
+%------------------------------------------------------------------------------
+\newcommand{\fmprof}{\textrm{FM2Prof}\xspace}
+\newcommand{\fmprofversion}{2.4.0}
+\hypersetup
+{
+    pdfauthor   = {Deltares},
+    pdftitle    = {\fmprof},
+    pdfkeywords = {Release Notes \fmprof}
+}
+
+\begin{document}
+    \pagestyle{empty}
+    \includepdf[pages=1, offset=72 -70]{cover/fm2prof-omslagen_RN.pdf} % links-rechts past precies
+    \cleardoublepage
+
+    \title{\fmprof \fmprofversion}
+    \subtitle{}
+    \manualtype{Release Notes}
+
+    \version{\the\year.\the\month}
+
+    \author{Koen Berends}
+
+    \setgitdirectory{./../../.git}
+    \deltarestitle
+
+    \chapter{Introduction}\label{ch:introduction}
+
+    \section{Release contents}\label{sec:release-contents}
+
+    \begin{tabular}{ll}
+        Description: & \fmprof \\
+        Version: & \fmprofversion \\
+        Status: & release
+    \end{tabular}
+
+    \fbox{%
+        \parbox{\textwidth}{%
+            \fmprof~\fmprofversion <<>>
+            <<ADD ANY DISCLAIMER OR IMPORTANT NOTICE HERE IF NEEDED>>
+            .}}
+
+    \section{Installation}\label{sec:installation}
+    \fmprof is distributed as a plain zip-file.
+    The installation procedure is described in the \fmprof, User Manual.
+
+    \section {Documentation list}\label{sec:documentation-list}
+    The following documentation is distributed with this release:
+
+    \begin{enumerate}
+        \item \fmprof, Release notes (this document)
+        \item \fmprof, User Manual
+    \end{enumerate}
+
+    \chapter{Release summary}\label{ch:release-summary}
+
+
+    \section{Version \fmprofversion}\label{sec:version-fmprofversion}
+
+    \pagestyle{empty} % will omit the footer (page info). This is still better than the footer also on the extra page after / behind the cover
+    %\cleardoublepage % will
+    \mbox{}
+    \includepdf[pages=1, offset=75 0]{cover/fm2prof-omslagen_achterzijde.pdf}
+
+\end{document}
