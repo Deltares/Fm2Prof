@@ -716,8 +716,8 @@ class Fm2ProfRunner(FM2ProfBase):
                 "info",
             )
 
-        # Perform sanity check on cross-section
-        cross_section.check_requirements()
+        # Check if geometry conforms to the requirements of the output formats
+        cross_section.check_geometry_requirements()
 
         # Reduce number of points in cross-section
         return self._reduce_css_points(cross_section)
@@ -732,6 +732,8 @@ class Fm2ProfRunner(FM2ProfBase):
         cross_section.assign_roughness()
         self.set_logger_message("Computed roughness", "info")
 
+        # Check if roughness conforms to the requirements of the output formats
+        cross_section.check_section_width_requirements()
         return cross_section
 
     def _create_new_cross_section(self, css_data: dict) -> CrossSection | None:

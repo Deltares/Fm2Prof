@@ -167,6 +167,52 @@ class Test_cross_section_construction:
         assert all([abs(css_z[i] - css._css_z[i]) < tol for i in range(len(css_z))])
         assert all([abs(css_total_volume[i] - css._css_total_volume[i]) < tol for i in range(len(css_total_volume))])
 
+    def test_assign_roughness(self):
+        # 1. Set up test data
+        test_case: dict = test_cases[0]
+        tdir = TestUtils.get_local_test_data_dir(css_test_dir)
+        with open(tdir.joinpath(f"{test_case.get('name')}.pickle"), "rb") as f:
+            css_data = pickle.load(f)
+
+        # 2. Run test
+        css = CrossSection(data=css_data)
+        css.build_geometry()
+        css.reduce_points()
+        css.assign_roughness()
+
+        # 3. Verify final expectations
+
+        # assert there are two roughness tables, one for the main section and one for the floodplain
+        assert "main" in css.friction_tables
+        assert "floodplain1" in css.friction_tables
+        assert "floodplain2" not in css.friction_tables
+
+    def test_check_section_width_requirements(self):
+        # 1. Set up test data
+        test_case: dict = test_cases[0]
+        tdir = TestUtils.get_local_test_data_dir(css_test_dir)
+        with open(tdir.joinpath(f"{test_case.get('name')}.pickle"), "rb") as f:
+            css_data = pickle.load(f)
+
+        # 2. Run test
+        css = CrossSection(data=css_data)
+        css.build_geometry()
+        css.check_geometry_requirements()
+        css.reduce_points()
+        css.assign_roughness()
+
+        css.check_section_width_requirements()
+
+        # Assert that there is a main section width
+        assert css.section_widths["main"] > 0
+
+        # assert that the main section width is greater than the total width at the lowest point (which is the first point in css_total_volume)
+        assert css.section_widths["main"] - css.flow_width[0]
+
+        # assert that total sections width is equal to the flow width
+        sum_of_section_width = sum(css.section_widths.values())
+        assert sum_of_section_width == css.flow_width[-1]
+
     def test_calculate_correction(self):
         # 1. Set up test data
         test_case: dict = test_cases[0]
