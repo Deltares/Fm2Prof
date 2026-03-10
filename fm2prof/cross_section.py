@@ -1494,7 +1494,6 @@ class CrossSection(FM2ProfBase):
             f"increased main section width by {-1*(dif):.2f}",
             "info",
             )
-        return
 
 
     def get_parameter(self, key: str) -> str | bool | int | float | None:
