@@ -12,11 +12,6 @@ on:
 permissions:
   contents: write
 
-env:
-  SVN_USERNAME: ${{ secrets.SVN_USERNAME }}
-  SVN_PASSWORD: ${{ secrets.SVN_PASSWORD }}
-  SVN_REPO_URL: ${{ secrets.SVN_REPO_URL }}
-
 jobs:
   generate-latex:
     runs-on: ubuntu-latest
@@ -61,39 +56,42 @@ jobs:
         run: |
           uv pip list
 
-      - name: Install Subversion
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y subversion
+      - name: Checkout Deltares LaTeX styles from internal GitHub repo
+        uses: actions/checkout@v4
+        with:
+          repository: Deltares/LatexInstallation
+          token: ${{ secrets.GITHUB_TOKEN }}
+          path: temp_latex
 
-      - name: Checkout Deltares LaTeX styles from SVN
+      - name: Copy Deltares LaTeX styles to source directory
         run: |
           cd docs/end-user-docs
 
-          # Checkout SVN repository with error handling
-          if ! svn checkout --username "${{ secrets.SVN_USERNAME }}" --password "${{ secrets.SVN_PASSWORD }}" --non-interactive --trust-server-cert "${{ secrets.SVN_REPO_URL }}" temp_svn; then
-            echo "::error::Failed to checkout SVN repository"
-            exit 1
-          fi
-
           # List available directories for debugging
-          echo "Available LaTeX directories in SVN:"
-          ls -la temp_svn/templates/latex/tex/latex/ || echo "Directory structure different than expected"
+          echo "Available LaTeX directories in GitHub repo:"
+          ls -la ../../temp_latex/templates/latex/tex/latex/ || echo "Directory structure different than expected"
 
           # Copy Deltares styles with error handling
-          if [ -d "temp_svn/templates/latex/tex/latex/deltares" ]; then
-            cp -r temp_svn/templates/latex/tex/latex/deltares/* source/ || echo "::warning::Failed to copy deltares styles"
+          if [ -d "../../temp_latex/templates/latex/tex/latex/deltares" ]; then
+            cp -r ../../temp_latex/templates/latex/tex/latex/deltares/* source/
+            echo "✓ Copied deltares styles"
+          else
+            echo "::warning::deltares styles directory not found"
           fi
 
-          if [ -d "temp_svn/templates/latex/tex/latex/nomentbl/deltares" ]; then
-            cp -r temp_svn/templates/latex/tex/latex/nomentbl/deltares/* source/ || echo "::warning::Failed to copy nomentbl styles"
+          if [ -d "../../temp_latex/templates/latex/tex/latex/nomentbl/deltares" ]; then
+            cp -r ../../temp_latex/templates/latex/tex/latex/nomentbl/deltares/* source/
+            echo "✓ Copied nomentbl styles"
+          else
+            echo "::warning::nomentbl styles directory not found"
           fi
 
-          if [ -d "temp_svn/templates/latex/bibtex/bst/deltares" ]; then
-            cp -r temp_svn/templates/latex/bibtex/bst/deltares/* source/ || echo "::warning::Failed to copy bibtex styles"
+          if [ -d "../../temp_latex/templates/latex/bibtex/bst/deltares" ]; then
+            cp -r ../../temp_latex/templates/latex/bibtex/bst/deltares/* source/
+            echo "✓ Copied bibtex styles"
+          else
+            echo "::warning::bibtex styles directory not found"
           fi
-
-          rm -rf temp_svn
 
       - name: Generate LaTeX from Markdown (user_docs)
         run: |
