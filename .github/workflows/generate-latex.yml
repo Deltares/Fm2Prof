@@ -69,18 +69,18 @@ jobs:
 
           # List available directories for debugging
           echo "Available LaTeX directories in GitHub repo:"
-          ls -la ../../temp_latex/templates/latex/tex/latex/ || echo "Directory structure different than expected"
+          ls -la ../../temp_latex/MiKTeX/tex/latex/ || echo "Directory structure different than expected"
 
           # Copy Deltares styles with error handling
-          if [ -d "../../temp_latex/templates/latex/tex/latex/deltares" ]; then
-            cp -r ../../temp_latex/templates/latex/tex/latex/deltares/* source/
+          if [ -d "../../temp_latex/MiKTeX/tex/latex/deltares" ]; then
+            cp -r ../../temp_latex/MiKTeX/tex/latex/deltares/* source/
             echo "✓ Copied deltares styles"
           else
             echo "::warning::deltares styles directory not found"
           fi
 
-          if [ -d "../../temp_latex/templates/latex/tex/latex/nomentbl/deltares" ]; then
-            cp -r ../../temp_latex/templates/latex/tex/latex/nomentbl/deltares/* source/
+          if [ -d "../../temp_latex/MiKTeX/tex/latex/nomentbl/deltares" ]; then
+            cp -r ../../temp_latex/MiKTeX/tex/latex/nomentbl/deltares/* source/
             echo "✓ Copied nomentbl styles"
           else
             echo "::warning::nomentbl styles directory not found"
