@@ -24,12 +24,12 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           ref: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_branch || github.ref }}
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: '3.11'
 
@@ -40,7 +40,7 @@ jobs:
           pandoc --version
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v4
+        uses: astral-sh/setup-uv@v7
         with:
           enable-cache: true
           cache-dependency-glob: uv.lock
@@ -57,7 +57,7 @@ jobs:
           uv pip list
 
       - name: Checkout Deltares LaTeX styles from internal GitHub repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           repository: Deltares/LatexInstallation
           token: ${{ secrets.LATEX_REPO_TOKEN }}
