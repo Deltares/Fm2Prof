@@ -60,7 +60,7 @@ jobs:
         uses: actions/checkout@v6
         with:
           repository: Deltares/LatexInstallation
-          token: ${{ secrets.LATEX_REPO_TOKEN }}
+          token: ${{ secrets.LATEX_REP_TOKEN }}
           path: temp_latex
 
       - name: Copy Deltares LaTeX styles to source directory
