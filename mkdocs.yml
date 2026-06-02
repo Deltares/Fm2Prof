@@ -112,7 +112,6 @@ nav:
       - API: tech_docs/api.md
     - Contributing: 
       - dev_docs/contributing.md
-      - dev_docs/release.md
     - Changelog: CHANGELOG.md
 markdown_extensions:
   - admonition

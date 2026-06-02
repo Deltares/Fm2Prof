@@ -99,6 +99,11 @@ jobs:
             --input docs/user_docs \
             --output docs/end_user_docs/source
 
+      - name: Generate LaTeX from Markdown (changelog)
+        run: |
+           uv run pandoc -o docs/end_user_docs/source/changelog.tex \ 
+           docs/CHANGELOG.md
+
       - name: Install LaTeX
         run: |
           sudo apt-get update

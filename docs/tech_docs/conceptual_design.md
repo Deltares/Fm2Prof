@@ -32,7 +32,7 @@ unique region. They are used to determine what 2D points are assigned to which c
 
 ### Section polygon file
 
-The section polygon file (*Dutch: gebiedsvakken*) is provided in the configuration and should be a valid [MultiPolygon geojson file](api/#fm2prof.polygon_file.MultiPolygon). If a polygon file is provided, FM2PROF will perform an `inpolygon` algorithm during initialisation and write the results to a `.section_cache.json` file which is placed in the same directory as the 2D map file. This can take up to 30 minutes for a sizable river. If a cache file is already present and valid, it will be read instead. A cache file is invalidated if the 2D input has changed since the cache was created. 
+The section polygon file (*Dutch: gebiedsvakken*) is provided in the configuration and should be a valid [MultiPolygon geojson file](api.md#fm2prof.polygon_file.MultiPolygon). If a polygon file is provided, FM2PROF will perform an `inpolygon` algorithm during initialisation and write the results to a `.section_cache.json` file which is placed in the same directory as the 2D map file. This can take up to 30 minutes for a sizable river. If a cache file is already present and valid, it will be read instead. A cache file is invalidated if the 2D input has changed since the cache was created. 
 
 [Sections](glossary.md#sections) are used to divide the cross-section between floodplain and main channel (e.g. the 'floodplain' section and the 'main channel' section). This distinction is only used to assign different roughness values to each section. 
 

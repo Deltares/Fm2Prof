@@ -37,7 +37,7 @@
 {
     pdfauthor   = {Deltares},
     pdftitle    = {\fmprof},
-    pdfkeywords = {User Manual \fmprof}
+    pdfkeywords = {Release notes \fmprof}
 }
 
 \begin{document}
@@ -47,7 +47,7 @@
 
     \title{\fmprof}
     \subtitle{}
-    \manualtype{User Manual}
+    \manualtype{Release notes}
     \distribution{Geschikt voor: \newline \phantom{M} \fmprof \fmprofversion~(of hoger)}
     \version{\the\year.\the\month}
 
@@ -61,24 +61,8 @@
 
     \input{overview}
 
-
-    \section{Version and compatibility}\label{sec:versie-en-compatibiliteit}
-    This is the manual for FM2PROF version \fmprofversion. 
-
-    \section{Full documentation}
-    The PDF version of this manual does not provide all information. For the 
-    full documentation, including helpful Notebooks and examples, please 
-    visit to \url{https://deltares.github.io/Fm2Prof/latest/}. 
-
-    \chapter{Installation}\label{ch:installatie}
-    \input{installation}
-
-    \chapter{Tutorial}\label{ch:quickstart}
-    \input{quickstart}
-
-    %%\chapter{Files and settings}\label{ch:command-line-interface}
-    %%\input{output_files}
-    %%\input{configuration}
+    \chapter{Release notes}\label{ch:release-notes}
+    \input{changelog}
     
     \pagestyle{empty} % will omit the footer (page info). This is still better than the footer also on the extra page after / behind the cover
     %\cleardoublepage % will

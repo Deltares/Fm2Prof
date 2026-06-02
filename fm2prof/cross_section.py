@@ -2,9 +2,7 @@
 
 from __future__ import annotations
 
-import math
 import pickle
-import traceback
 from functools import reduce
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -1015,11 +1013,11 @@ class CrossSection(FM2ProfBase):
             )
 
     def _identify_lakes(self, waterdepth: pd.DataFrame) -> np.ndarray:
-        """Determine whether a 2D cell should be marked as [Lake](glossary.md#Lakes).
+        """Determine whether a 2D cell should be marked as [Lake](glossary.md#lakes).
 
         Cells are marked as lake if the following conditions are both met:
-        - the waterdepth on timestep [LakeTimeSteps](configuration.md#exec-1--laketimesteps) is positive
-        - the waterdepth on timestep [LakeTimeSteps](configuration.md#exec-1--laketimesteps) is at least
+        - the waterdepth on timestep [LakeTimeSteps](../user_docs/configuration.md) is positive
+        - the waterdepth on timestep [LakeTimeSteps](../user_docs/configuration.md) is at least
         1 cm higher than the waterlevel on timestep 0.
 
         Next, the following steps are taken
@@ -1157,9 +1155,9 @@ class CrossSection(FM2ProfBase):
         **`max_method`**
         A cell is considered flowing if the velocity magnitude is more than the average
         of the three higher flow velocities per outputmap multiplied by the
-        [`relative velocity threshold`](configuration.md#exec-1--relativevelocitythreshold) OR
+        [`relative velocity threshold`](../user_docs/configuration.md#exec-1--relativevelocitythreshold) OR
         if the flow velocity meets the absolute threshold [`absolute velocity threshold`]
-        (configuration.md#exec-1--absolutevelocitythreshold)
+        (../user_docs/configuration.md#exec-1--absolutevelocitythreshold)
 
         **`mean_method`**
         Not recommended. Legacy method.
