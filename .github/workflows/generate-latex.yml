@@ -96,8 +96,8 @@ jobs:
       - name: Generate LaTeX from Markdown (user_docs)
         run: |
            uv run ddocs markdown-to-latex \
-            --input docs/markdown \
-            --output docs/end-user-docs/source
+            --input docs/user_docs \
+            --output docs/end_user_docs/source
 
       - name: Install LaTeX
         run: |
@@ -117,22 +117,22 @@ jobs:
 
       - name: Build PDF documentation with version
         run: |
-          cd docs/end-user-docs
+          cd docs/end_user_docs
           ./build_pdf.sh
 
       - name: List generated files
         run: |
           echo "Generated LaTeX files:"
-          find docs/end-user-docs/source -name "*.tex" -type f
+          find docs/end_user_docs/source -name "*.tex" -type f
           echo ""
           echo "Generated PDF files:"
-          find docs/end-user-docs/source -name "*.pdf" -type f
+          find docs/end_user_docs/source -name "*.pdf" -type f
 
       - name: Upload PDF artifact
         uses: actions/upload-artifact@v4
         with:
           name: Documentations
-          path: docs/end-user-docs/source/*.pdf
+          path: docs/end_user_docs/source/*.pdf
           retention-days: 3
 
       - name: Get release tag
@@ -155,6 +155,6 @@ jobs:
         with:
           tag_name: ${{ steps.get_tag.outputs.tag }}
           files: |
-            docs/end-user-docs/source/*.pdf
+            docs/end_user_docs/source/*.pdf
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

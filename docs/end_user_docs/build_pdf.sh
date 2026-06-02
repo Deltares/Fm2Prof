@@ -50,16 +50,18 @@ for TEX_FILE in "${TEX_FILES[@]}"; do
         cp "$TEX_FILE" "${TEX_FILE}.bak"
         
         # Replace the version line
-        sed -i.tmp "s/\\\\newcommand{\\\\fmprofversion}{.*}/\\\\newcommand{\\\\fmprofversion}{$VERSION}/" "$TEX_FILE"
-        
+        sed -i 's/\r//' "$TEX_FILE"
+        sed -i 's/\\newcommand{\\fmprofversion}{[^}]*}/\\newcommand{\\fmprofversion}{'"$VERSION"'}/' "$TEX_FILE"
+
         # Remove the .tmp file created by sed on some systems
         rm -f "${TEX_FILE}.tmp"
         
         # Verify the replacement
-        if grep -q "\\newcommand{\\fmprofversion}{$VERSION}" "$TEX_FILE"; then
+        if grep -q "\\newcommand{\\\\fmprofversion}{$VERSION}" "$TEX_FILE"; then
             echo -e "${GREEN}✓ Version updated to $VERSION in $TEX_FILE${NC}"
         else
             echo -e "${RED}✗ Failed to update version in $TEX_FILE${NC}"
+            
             # Restore backup
             mv "${TEX_FILE}.bak" "$TEX_FILE"
             exit 1
