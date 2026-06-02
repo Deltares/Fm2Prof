@@ -86,8 +86,8 @@ jobs:
             echo "::warning::nomentbl styles directory not found"
           fi
 
-          if [ -d "../../temp_latex/templates/latex/bibtex/bst/deltares" ]; then
-            cp -r ../../temp_latex/templates/latex/bibtex/bst/deltares/* source/
+          if [ -d "../../temp_latex/MiKTeX/bibtex/bst/deltares/" ]; then
+            cp -r ../../temp_latex/MiKTeX/bibtex/bst/deltares/* source/
             echo "✓ Copied bibtex styles"
           else
             echo "::warning::bibtex styles directory not found"
@@ -96,7 +96,7 @@ jobs:
       - name: Generate LaTeX from Markdown (user_docs)
         run: |
            uv run ddocs markdown-to-latex \
-            --input docs/mkdocs/user_docs \
+            --input docs/markdown \
             --output docs/end-user-docs/source
 
       - name: Install LaTeX
@@ -112,27 +112,19 @@ jobs:
 
           pdflatex --version
 
-      - name: Compile PDF with pdflatex and bibtex
+      - name: Make build script executable
+        run: chmod +x docs/end-user-docs/build_pdf.sh
+
+      - name: Build PDF documentation with version
         run: |
-          cd docs/end-user-docs/source
-          pdflatex fm2prof_user_manual.tex
-          pdflatex fm2prof-release-notes.tex
-          # Run bibtex if citations exist, otherwise skip
-          if grep -q '\\citation' fm2prof_user_manual.aux 2>/dev/null; then
-            bibtex fm2prof_user_manual
-            bibtex fm2prof-release-notes
-          else
-            echo "No citations found, skipping bibtex"
-          fi
-          pdflatex fm2prof_user_manual.tex
-          pdflatex fm2prof-release-notes.tex
-          pdflatex fm2prof_user_manual.tex
-          pdflatex fm2prof-release-notes.tex
+          cd docs/end-user-docs
+          ./build_pdf.sh
 
       - name: List generated files
         run: |
           echo "Generated LaTeX files:"
           find docs/end-user-docs/source -name "*.tex" -type f
+          echo ""
           echo "Generated PDF files:"
           find docs/end-user-docs/source -name "*.pdf" -type f
 

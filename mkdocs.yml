@@ -86,36 +86,33 @@ extra_css:
 
 nav:
     - Home: index.md
-    - Guides:
-        - release procedures: guides/release.md
     - User Manual:
-      - Overview: markdown/overview.md
-      - Installation: markdown/installation.md
-      - Quickstart: markdown/quickstart.md
-      - Output files: markdown/output_files.md
-      - Analysing results: 
+      - Overview: user_docs/overview.md
+      - Installation: user_docs/installation.md
+      - Quickstart: user_docs/quickstart.md
+      - Files and Settings:
+        - user_docs/configuration.md
+        - user_docs/output_files.md
+      - Advanced use: 
+        - user_docs/troubleshooting.md
         - notebooks/cross_section_data.ipynb
-        - markdown/troubleshooting.md
       - Utilities: 
         - Generate CrossSection Location file:
-          - markdown/utils/GenerateCrossSectionsLocations.md
+          - user_docs/utils/GenerateCrossSectionsLocations.md
         - Compare 1D and 2D model results:
-          - markdown/utils/compare1d2d.md
+          - user_docs/utils/compare1d2d.md
           - Example: notebooks/compare1d2d.ipynb
         - VisualiseOutput:
-          - markdown/utils/visualiseoutput.md
+          - user_docs/utils/visualiseoutput.md
           - notebooks/VisualiseOutput.ipynb
-      - Files and Settings:
-        - markdown/configuration.md
-        - Files:
-          - markdown/files/2DMapOutput.md
-          - markdown/files/branch_rule_file.md
     - Technical Manual:
-      - Methodology: markdown/conceptual_design.md
-      - Important concepts: markdown/glossary.md
-      - Numerical methods: markdown/numerical_methods.md
-      - API: markdown/api.md
-    - Contributing: markdown/contributing.md
+      - Methodology: tech_docs/conceptual_design.md
+      - Important concepts: tech_docs/glossary.md
+      - Numerical methods: tech_docs/numerical_methods.md
+      - API: tech_docs/api.md
+    - Contributing: 
+      - dev_docs/contributing.md
+      - dev_docs/release.md
     - Changelog: CHANGELOG.md
 markdown_extensions:
   - admonition

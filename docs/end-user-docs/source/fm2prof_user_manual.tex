@@ -31,7 +31,7 @@
 
 %------------------------------------------------------------------------------
 \newcommand{\fmprof}{\textrm{FM2Prof}\xspace}
-\newcommand{\fmprofversion}{2.4.0}
+\newcommand{\fmprofversion}{xxx}
 
 \hypersetup
 {
@@ -57,26 +57,24 @@
     \deltarestitle
 
 
-    \chapter{Introductie}\label{ch:introductie}
+    \chapter{Introduction}\label{ch:introductie}
+
+    \input{overview}
 
 
+    \section{Version and compatibility}\label{sec:versie-en-compatibiliteit}
+    This is the manual for FM2PROF version \fmprofversion. 
 
-    \section{Versie en compatibiliteit}\label{sec:versie-en-compatibiliteit}
+    \chapter{Installation}\label{ch:installatie}
+    \input{installation}
 
+    \chapter{Tutorial}\label{ch:installatie}
+    \input{quickstart}
 
-    \section {Documentatie}\label{sec:documentatie}
-    De volgende documentatie komt mee met deze release:
-
-    \chapter{Installatie}\label{ch:installatie}
-
-    %\input{installation-zip-file}
-
-
-    \chapter{Command Line Interface}\label{ch:command-line-interface}
-
-    %\input{cli}
-
-
+    \chapter{Files and settings}\label{ch:command-line-interface}
+    %%\input{output_files}
+    %%\input{configuration}
+    
     \pagestyle{empty} % will omit the footer (page info). This is still better than the footer also on the extra page after / behind the cover
     %\cleardoublepage % will
     \mbox{}

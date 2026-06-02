@@ -16,6 +16,8 @@
 /tests/test_data/compare1d2d/rijn-j22_6-v1a2/output/**
 testIni.ini
 *_cache.json
+# notebooks
+**.ipynb_checkpoints**
 # pixi environments
 .pixi/*
 !.pixi/config.toml
