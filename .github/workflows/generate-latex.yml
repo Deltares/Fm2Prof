@@ -65,7 +65,7 @@ jobs:
 
       - name: Copy Deltares LaTeX styles to source directory
         run: |
-          cd docs/end-user-docs
+          cd docs/end_user_docs
 
           # List available directories for debugging
           echo "Available LaTeX directories in GitHub repo:"
@@ -113,7 +113,7 @@ jobs:
           pdflatex --version
 
       - name: Make build script executable
-        run: chmod +x docs/end-user-docs/build_pdf.sh
+        run: chmod +x docs/end_user_docs/build_pdf.sh
 
       - name: Build PDF documentation with version
         run: |
