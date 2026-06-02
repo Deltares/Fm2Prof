@@ -101,8 +101,7 @@ jobs:
 
       - name: Generate LaTeX from Markdown (changelog)
         run: |
-           uv run pandoc -o docs/end_user_docs/source/changelog.tex \ 
-           docs/CHANGELOG.md
+           uv run pandoc -o docs/end_user_docs/source/changelog.tex docs/CHANGELOG.md
 
       - name: Install LaTeX
         run: |
