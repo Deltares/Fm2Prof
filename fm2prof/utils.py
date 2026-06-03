@@ -1168,7 +1168,7 @@ class PlotStyles:
             )
 
             return fig, lgd
-        return fig, handles, labels
+        return fig, [handles, labels]
 
 
 class ModelOutputReader(FM2ProfBase):
