@@ -57,7 +57,7 @@ jobs:
           uv pip list
 
       - name: Checkout Deltares LaTeX styles from internal GitHub repo
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
           repository: Deltares/LatexInstallation
           token: ${{ secrets.LATEX_REP_TOKEN }}
@@ -95,13 +95,13 @@ jobs:
 
       - name: Generate LaTeX from Markdown (user_docs)
         run: |
-           uv run ddocs markdown-to-latex \
+           .venv/bin/ddocs markdown-to-latex \
             --input docs/user_docs \
             --output docs/end_user_docs/source
 
       - name: Generate LaTeX from Markdown (changelog)
         run: |
-           uv run pandoc -o docs/end_user_docs/source/changelog.tex docs/CHANGELOG.md
+           .venv/bin/pandoc -o docs/end_user_docs/source/changelog.tex docs/CHANGELOG.md
 
       - name: Install LaTeX
         run: |
