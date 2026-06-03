@@ -9,12 +9,13 @@ on:
   release:              # Trigger on manual release creation
     types: [created, published]
 
-permissions:
-  contents: write
+
 
 jobs:
-  generate-latex:
+  build-pdf:
     runs-on: ubuntu-latest
+    permissions: 
+      contents: read # ← unprivileged - only read access needed for build
     # Only run if triggered by workflow_dispatch, release, pull_request, or if workflow_run completed successfully
     if: |
       github.event_name == 'workflow_dispatch' ||
@@ -139,6 +140,17 @@ jobs:
           path: docs/end_user_docs/source/*.pdf
           retention-days: 3
 
+  upload_to_release:
+    runs-on: ubuntu-latest
+    needs: build-pdf
+    permissions:
+      contents: write # priviliged, has write access. 
+    steps:
+      - name: Download PDF artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: Documentations
+          path: pdfs/
       - name: Get release tag
         id: get_tag
         if: github.event_name == 'release' || github.event_name == 'workflow_run'
