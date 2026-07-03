@@ -2,10 +2,6 @@ name: Generate LaTeX Documentation
 
 on:
   workflow_dispatch:    # Manual trigger
-  workflow_run:         # Auto-trigger when release.yml completes
-    workflows: ["Automated release workflow"]
-    types:
-      - completed
   release:              # Trigger on manual release creation
     types: [created, published]
 
@@ -17,9 +13,7 @@ jobs:
     # Only run if triggered by workflow_dispatch, release, pull_request, or if workflow_run completed successfully
     if: |
       github.event_name == 'workflow_dispatch' ||
-      github.event_name == 'release' ||
-      github.event_name == 'pull_request' ||
-      (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success')
+      github.event_name == 'release'
 
     steps:
       - name: Checkout repository
