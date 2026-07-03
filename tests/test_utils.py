@@ -3,14 +3,60 @@ import shutil
 from datetime import datetime
 from pathlib import Path
 
+import matplotlib.pyplot as plt
 import pytest
+from matplotlib.legend import Legend
 
 from fm2prof import Project
-from fm2prof.utils import Compare1D2D, GenerateCrossSectionLocationFile, VisualiseOutput
+from fm2prof.utils import Compare1D2D, GenerateCrossSectionLocationFile, PlotStyles, VisualiseOutput
 from tests.TestUtils import TestUtils
 
 _root_output_dir = None
 
+@pytest.fixture
+def simple_figure():
+    """Create a simple figure with a single plot for testing."""
+    fig, ax = plt.subplots()
+    ax.plot([1, 2, 3], [1, 2, 3], label="test line")
+    yield fig
+    plt.close(fig)
+
+class TestPlotStylesApply:
+    def test_use_legend_true_returns_legend_object(self, simple_figure):
+        """When use_legend=True, second return value should be a Legend object."""
+        fig, lgd = PlotStyles.apply(fig=simple_figure, use_legend=True)
+        assert isinstance(lgd, Legend)
+
+    def test_use_legend_false_returns_list(self, simple_figure):
+        """When use_legend=False, second return value should be a list."""
+        fig, result = PlotStyles.apply(fig=simple_figure, use_legend=False)
+        assert isinstance(result, list)
+
+    def test_use_legend_false_returns_list_of_handles_and_labels(self, simple_figure):
+        """When use_legend=False, returned list should contain [handles, labels]."""
+        fig, result = PlotStyles.apply(fig=simple_figure, use_legend=False)
+        assert len(result) == 2  # [handles, labels]
+        handles, labels = result
+        assert isinstance(handles, list)
+        assert isinstance(labels, list)
+
+    def test_use_legend_false_labels_match_plot_labels(self, simple_figure):
+        """When use_legend=False, labels in result should match plot labels."""
+        fig, result = PlotStyles.apply(fig=simple_figure, use_legend=False)
+        _, labels = result
+        assert "test line" in labels
+
+    def test_first_return_value_is_always_figure(self, simple_figure):
+        """First return value should always be a Figure, regardless of use_legend."""
+        from matplotlib.figure import Figure
+        fig_true, _ = PlotStyles.apply(fig=simple_figure, use_legend=True)
+        assert isinstance(fig_true, Figure)
+
+        fig2, ax2 = plt.subplots()
+        ax2.plot([1, 2], [1, 2], label="test")
+        fig_false, _ = PlotStyles.apply(fig=fig2, use_legend=False)
+        assert isinstance(fig_false, Figure)
+        plt.close(fig2)
 
 class Test_GenerateCrossSectionLocationFile:
     def test_given_networkdefinitionfile_cssloc_file_is_generated(self, tmp_path: Path):

@@ -130,4 +130,4 @@ All `outputFiles` are written to the `output` directory specified in the FM2PROF
 After generating output it is important to check whether everything went
 well. See the following links to learn more about available tools:
 
-- [Inspection cross-sections using a notebook](../../notebooks/cross_section_data)
+- [Inspection cross-sections using a notebook](../notebooks/cross_section_data)

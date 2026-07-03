@@ -82,7 +82,7 @@ class GenerateCrossSectionLocationFile(FM2ProfBase):
     A [`CrossSectionInputFile`](../configuration.md) is a file that contains the locations of cross-sections
     as X,Y coordinates, the lengths of each cross-section and the branch and offset/chainage on which
     they are located. For a conceptual overview of how this data is used in FM2PROF, see
-    [Control Volumes](../glossary.md#control-volume).
+    [Control Volumes](../../tech_docs/glossary.md#control-volume).
 
     This is a vitally important file for FM2PROF, as it defines not only where the cross-sections are
     located, but also how 2D volumes are mapped to 1D widths. This utility helps to generate a
@@ -116,7 +116,7 @@ class GenerateCrossSectionLocationFile(FM2ProfBase):
 
     This optional file is used to exclude certain computational points from being
     used as the location of a cross-section. This is particularly useful
-    when smaller branches connect to a major branch, see [Troubleshooting](troubleshooting.md).
+    when smaller branches connect to a major branch, see [Troubleshooting](../troubleshooting.md).
 
     The branch_rule_file is a comma-separated file with the following syntax:
 
@@ -1168,7 +1168,7 @@ class PlotStyles:
             )
 
             return fig, lgd
-        return fig, handles, labels
+        return fig, [handles, labels]
 
 
 class ModelOutputReader(FM2ProfBase):

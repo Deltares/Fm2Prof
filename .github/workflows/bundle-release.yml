@@ -54,10 +54,10 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Copy existing PDFs from docs/end-user-docs
+      - name: Copy existing PDFs from docs/end_user_docs
         run: |
-          echo "Copying existing PDFs from docs/end-user-docs/source..."
-          cp docs/end-user-docs/*.pdf bundle/docs/ 2>/dev/null || echo "No PDFs found in source directory"
+          echo "Copying existing PDFs from docs/end_user_docs/source..."
+          cp docs/end_user_docs/*.pdf bundle/docs/ 2>/dev/null || echo "No PDFs found in source directory"
           echo "PDFs copied to bundle/docs:"
           ls -lh bundle/docs/
 
