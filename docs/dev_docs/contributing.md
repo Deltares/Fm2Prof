@@ -35,7 +35,7 @@ With a supported environment manager installed, set up your development environm
 
 ## Style & documentation conventions
 
-We use [ruff](https://github.com/astral-sh/ruff) for linting and code formatting. 
+The projects uses [ruff](https://github.com/astral-sh/ruff) for linting and code formatting. 
 Documentation is based on [mkdocs](https://www.mkdocs.org/) and [mkdocstringds](https://mkdocstrings.github.io/#:~:text=mkdocstrings.%20Automatic%20documentation%20from%20sources,%20for). Numpy, sphinx and google-style
 docstrings are supported, but when writing new code please use [Google-style docstring syntax](https://mkdocstrings.github.io/griffe/docstrings/#google-style)
 
@@ -62,22 +62,23 @@ unless all tests are passing. To run tests locally, use `pytest`:
 
 ## Deploying
 
-### Locally build executable (optional)
-
-To build a local version of an FM2PROF executable, run:
-
-`uv run pyinstaller FM2PROF_WINDOWS.spec`
-
-!!! note
-
-    Executables are no longer automatically made since fm2prof was published on pypi 
-
-
 ### How to make a new release
 
-Publishing a new release takes some steps. 
+Releases follow a manual procedure detailed below. 
 
-#### Tag your version
+#### Update the version number
+
+The version number is updated in `pyproject.toml`
+
+``` toml
+[project]
+name = "fm2prof"
+version = "2.5.1"
+```
+
+The project uses regular [Semantic versioning](https://semver.org/) in `pyproject` and the online documentation, but uses the `v` prefix for github tags and releases. 
+
+#### Create a new tag
 After merging a PR to `master`, first make a new tag. Using version `v2.3.0` as an example, 
 a tag can be made via the terminal:
 
@@ -86,8 +87,10 @@ git tag v2.3.0
 ```
 #### Make a new release
 
-Use Github interface to draft a new release using the appropriate. Document all changes since the previous version. 
-If possible, refer to Github Issues. 
+Use Github interface to draft a new release. Document all changes since the previous version. 
+When possible, refer to Github Issues. 
+
+A pdf version of the documentation should be automatically uploaded to the release from the `generate_latex.yml` workflow. 
 
 #### Update the documentation
 We use [mike](https://github.com/jimporter/mike) as a pre-processor for `mkdocs`. To update the documentation
