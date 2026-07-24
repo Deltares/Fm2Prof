@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import warnings
+
 # import from standard library
 from pathlib import Path
 
@@ -20,6 +22,11 @@ class FMDataImporter(FM2ProfBase):
 
     def __init__(self, file_path: Path | str) -> None:
         """Initialize the FMDataImporter."""
+        warnings.warn(
+            "FMDataImporter is deprecated. Use ImporterFactory.create('dflowfm', file_path) instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         super().__init__()
         self.set_logger_message("FMDataImporter initialized", "debug")
         self.file_path = Path(file_path)
@@ -189,14 +196,15 @@ class FmModelData:
     ) -> None:
         """Instantiate a FmModelData object.
 
-        Args:
-            time_dependent_data (pd.DataFrame): _description_
-            time_independent_data (pd.DataFrame): _description_
-            edge_data (dict): _description_
-            node_coordinates (pd.DataFrame): _description_
-            css_data_dictionary (dict): _description_
+        .. deprecated::
+            Use :class:`fm2prof.imports.ModelData` instead.
 
         """
+        warnings.warn(
+            "FmModelData is deprecated. Use fm2prof.imports.ModelData instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         self.time_dependent_data = time_dependent_data
         self.time_independent_data = time_independent_data
         self.edge_data = edge_data

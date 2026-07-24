@@ -58,8 +58,9 @@ from scipy.spatial import ConvexHull
 from fm2prof import mask_output_file, nearest_neighbour
 from fm2prof.common import FM2ProfBase, get_version
 from fm2prof.cross_section import CrossSection, CrossSectionHelpers
-from fm2prof.data_import import FMDataImporter, FmModelData, ImportInputFiles
+from fm2prof.data_import import ImportInputFiles
 from fm2prof.export import ExporterFactory
+from fm2prof.imports import ImporterFactory, ModelData
 from fm2prof.ini_file import ConfigurationFileError, IniFile
 from fm2prof.polygon_file import GridPointsInPolygonResults, PolygonError, RegionPolygon, SectionPolygon
 
@@ -90,7 +91,7 @@ class Fm2ProfRunner(FM2ProfBase):
 
         """
         self.version: str = get_version()
-        self.fm_model_data: FmModelData = None
+        self.fm_model_data: ModelData = None
 
         self.set_logger(self.create_logger())
 
@@ -417,12 +418,11 @@ class Fm2ProfRunner(FM2ProfBase):
 
         # Read FM map file
         self.set_logger_message("Reading FM Map file")
-        (
-            time_independent_data,
-            edge_data,
-            node_coordinates,
-            time_dependent_data,
-        ) = FMDataImporter(res_file).import_dflow2d()
+        fm_model_data = ImporterFactory.create("dflowfm", res_file).import_data()
+        time_independent_data = fm_model_data.time_independent_data
+        edge_data = fm_model_data.edge_data
+        node_coordinates = fm_model_data.node_coordinates
+        time_dependent_data = fm_model_data.time_dependent_data
 
         # Load locations and names of cross-sections
         self.set_logger_message("Reading css file")
@@ -486,12 +486,13 @@ class Fm2ProfRunner(FM2ProfBase):
             time_independent_data["section"] = gridpoints_in_sections.faces_in_polygon
             edge_data["section"] = gridpoints_in_sections.edges_in_polygon
 
-        self.fm_model_data = FmModelData(
+        self.fm_model_data = ModelData(
             time_dependent_data=time_dependent_data,
             time_independent_data=time_independent_data,
             edge_data=edge_data,
             node_coordinates=node_coordinates,
             css_data_dictionary=cssdata,
+            source="dflowfm",
         )
 
 
@@ -625,7 +626,7 @@ class Fm2ProfRunner(FM2ProfBase):
     def _generate_cross_section(
         self,
         css_data: dict,
-        fm_model_data: FmModelData,
+        fm_model_data: ModelData,
     ) -> CrossSection:
         """Generate a cross section and configures its values based.
 
