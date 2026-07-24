@@ -1,0 +1,87 @@
+\documentclass[git]{deltares_manual}
+\usepackage{listings}
+\usepackage{xcolor}
+% Configure listings to preserve hyphens and equals signs literally
+
+\definecolor{codebackground}{RGB}{248,248,248}
+\definecolor{codeframe}{RGB}{220,220,220}
+\definecolor{codekeyword}{RGB}{0,0,255}
+\definecolor{codecomment}{RGB}{0,128,0}
+\definecolor{codestring}{RGB}{163,21,21}
+
+\lstset{
+    basicstyle=\ttfamily\small,
+    backgroundcolor=\color{codebackground},
+    frame=single,
+    framesep=3pt,
+    frameround=tttt,                    % Round corners: tttt = all corners
+    rulecolor=\color{codeframe},
+    columns=fullflexible,
+    keepspaces=true,
+    showstringspaces=false,
+    breaklines=true,
+    breakatwhitespace=true,     % Break only at whitespace
+    postbreak=\mbox{\textcolor{red}{$\hookrightarrow$}\space},
+    literate={-}{{-}}1 {=}{{=}}1,
+    xleftmargin=1em,
+    xrightmargin=1em,
+    aboveskip=1em,
+    belowskip=1em,
+}
+
+%------------------------------------------------------------------------------
+\newcommand{\fmprof}{\textrm{FM2Prof}\xspace}
+\newcommand{\fmprofversion}{2.5.1}
+
+\hypersetup
+{
+    pdfauthor   = {Deltares},
+    pdftitle    = {\fmprof},
+    pdfkeywords = {User Manual \fmprof}
+}
+
+\begin{document}
+    \pagestyle{empty}
+    \includepdf[pages=1, offset=72 -70]{cover/fm2prof-omslagen_UM.pdf} % links-rechts past precies
+    \cleardoublepage
+
+    \title{\fmprof}
+    \subtitle{}
+    \manualtype{User Manual}
+    \distribution{Geschikt voor: \newline \phantom{M} \fmprof \fmprofversion~(of hoger)}
+    \version{\the\year.\the\month}
+
+    \author{Koen Berends}
+
+    \setgitdirectory{./../../.git}
+    \deltarestitle
+
+
+    \chapter{Introduction}\label{ch:introductie}
+
+    \input{overview}
+
+
+    \section{Version and compatibility}\label{sec:versie-en-compatibiliteit}
+    This is the manual for FM2PROF version \fmprofversion. 
+
+    \section{Full documentation}
+    The PDF version of this manual does not provide all information. For the 
+    full documentation, including helpful Notebooks and examples, please 
+    visit to \url{https://deltares.github.io/Fm2Prof/latest/}. 
+
+    \chapter{Installation}\label{ch:installatie}
+    \input{installation}
+
+    \chapter{Tutorial}\label{ch:quickstart}
+    \input{quickstart}
+
+    %%\chapter{Files and settings}\label{ch:command-line-interface}
+    %%\input{output_files}
+    %%\input{configuration}
+    
+    \pagestyle{empty} % will omit the footer (page info). This is still better than the footer also on the extra page after / behind the cover
+    %\cleardoublepage % will
+    \mbox{}
+    \includepdf[pages=1, offset=75 0]{cover/fm2prof-omslagen_achterzijde.pdf}
+\end{document}
