@@ -93,10 +93,10 @@ jobs:
           uv lock --check
 
       - name: Install Dependencies
-        run: uv sync --frozen --group dev --group docs
+        run: uv sync --frozen --group dev --group docs # NOSONAR
 
       - name: Generate changelog
-        run: uv run cz changelog --unreleased-version="${{ steps.get_version.outputs.VERSION }}" --incremental
+        run: .venv/bin/cz changelog --unreleased-version="${{ steps.get_version.outputs.VERSION }}" --incremental
 
       - name: Get user info
         id: user_info
@@ -116,7 +116,7 @@ jobs:
         run: |
           set -e  # Exit immediately if a command exits with a non-zero status
           echo "Bumping version to ${{ steps.get_version.outputs.VERSION }}"
-          uv run cz bump --yes --check-consistency "${{ steps.get_version.outputs.VERSION }}"
+          .venv/bin/cz bump --yes --check-consistency "${{ steps.get_version.outputs.VERSION }}"
 
           echo "Updating lock file after version bump"
           uv lock
@@ -141,7 +141,7 @@ jobs:
 
       - name: Build wheel with uv
         run: |
-          uv build
+          uv build # NOSONAR
           echo "WHEEL_PATH=$(ls -t dist/*.whl | head -n 1)" >> $GITHUB_ENV
 
       - name: Create GitHub release

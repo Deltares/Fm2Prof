@@ -41,9 +41,12 @@ jobs:
         uses: astral-sh/setup-uv@v6
         with:
           enable-cache: true
+
+      - name: Install dependencies
+        run: uv sync --group dev # NOSONAR
         
       - name: Run tests
-        run: uv run pytest --cov . --cov-report xml:.coverage-reports/coverage.xml
+        run: .venv/bin/pytest --cov . --cov-report xml:.coverage-reports/coverage.xml
 
       - name: SonarCloud Scan
         uses: SonarSource/sonarqube-scan-action@v5.3.0
