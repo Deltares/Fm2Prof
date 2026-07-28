@@ -3,144 +3,193 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
+from dataclasses import dataclass, field, fields
 from pathlib import Path
-from typing import TYPE_CHECKING
 
 import numpy as np
 import pandas as pd
 
 from fm2prof.common import FM2ProfBase
 
-if TYPE_CHECKING:
-    pass
+
+def _ndarray_setattr(obj: object, name: str, value: object) -> None:
+    """Coerce value to np.ndarray using dtype declared in field metadata."""
+    for f in fields(obj.__class__):
+        if f.name == name:
+            dtype = f.metadata.get("dtype")
+            if dtype is not None:
+                value = np.asarray(value, dtype=dtype)
+            break
+    object.__setattr__(obj, name, value)
+
+
+@dataclass
+class FaceGeometry:
+    """Geometric properties of 2D mesh faces (cells). All arrays have length N_faces."""
+
+    x:        np.ndarray = field(metadata={"dtype": float})   # face centroid x-coordinate [m]
+    y:        np.ndarray = field(metadata={"dtype": float})   # face centroid y-coordinate [m]
+    area:     np.ndarray = field(metadata={"dtype": float})   # face area [m2]
+    bedlevel: np.ndarray = field(metadata={"dtype": float})   # bed level [m+NAP]
+    section:  np.ndarray = field(metadata={"dtype": object})  # section classification (main/floodplain)
+    region:   np.ndarray = field(metadata={"dtype": object})  # region label → cross-section name
+    islake:   np.ndarray = field(metadata={"dtype": bool})    # True if face belongs to a lake
+    sclass:   np.ndarray = field(metadata={"dtype": object})  # cross-section class label for selection
+
+    def __setattr__(self, name: str, value: object) -> None:
+        _ndarray_setattr(self, name, value)
+
+
+@dataclass
+class EdgeGeometry:
+    """Geometric properties of 2D mesh edges (flow links). All arrays have length N_edges."""
+
+    x:          np.ndarray = field(metadata={"dtype": float})   # edge centroid x-coordinate [m]
+    y:          np.ndarray = field(metadata={"dtype": float})   # edge centroid y-coordinate [m]
+    section:    np.ndarray = field(metadata={"dtype": object})  # section classification per edge
+    region:     np.ndarray = field(metadata={"dtype": object})  # region classification per edge
+    sclass:     np.ndarray = field(metadata={"dtype": object})  # cross-section class label for selection
+    edge_nodes: np.ndarray = field(metadata={"dtype": int})     # node indices per edge, shape (N_edges, 2)
+    edge_faces: np.ndarray | None = None  # face indices per edge, shape (N_edges, 2)
+
+    def __setattr__(self, name: str, value: object) -> None:
+        if name == "edge_faces":
+            object.__setattr__(self, name, np.asarray(value) if value is not None else None)
+        else:
+            _ndarray_setattr(self, name, value)
+
+
+@dataclass
+class HydraulicData:
+    """Time-dependent hydraulic results. Shape (N_timesteps, N_faces) unless noted."""
+
+    waterlevel: np.ndarray = field(metadata={"dtype": float})  # water surface level [m+NAP]
+    waterdepth: np.ndarray = field(metadata={"dtype": float})  # water depth [m]
+    velocity_x: np.ndarray = field(metadata={"dtype": float})  # x-component depth-averaged velocity [m/s]
+    velocity_y: np.ndarray = field(metadata={"dtype": float})  # y-component depth-averaged velocity [m/s]
+    chezy_edge: np.ndarray = field(metadata={"dtype": float})  # Chezy roughness on edges [m0.5/s]
+
+    def __setattr__(self, name: str, value: object) -> None:
+        _ndarray_setattr(self, name, value)
+
+
+@dataclass
+class CrossSectionData:
+    """Definition of a single cross-section location from the 1D model."""
+
+    name: str
+    """Unique cross-section identifier."""
+
+    length: float
+    """Representative length [m]."""
+
+    location: tuple[float, float]
+    """(x, y) coordinates of the cross-section."""
+
+    branch_id: str
+    """Branch identifier in the 1D network."""
+
+    offset: float
+    """Offset along the branch [m]."""
 
 
 class ModelData:
-    """Generalized model data container, source-agnostic.
+    """Source-agnostic container for all data required to generate 1D cross-sections.
 
-    Stores all data read from a 2D model, regardless of the source format.
-    Replaces the format-specific FmModelData class.
+    ``geometry`` is always required. ``edges`` and ``hydraulics`` are optional
+    to support future use cases where only geometric data is available
+    (e.g. mesh inspection, dry-run validation).
+
+    Attributes:
+        geometry:       Required. Geometric properties of 2D mesh faces.
+        cross_sections: Required. Ordered list of cross-section definitions.
+        source:         Required. Format identifier, e.g. ``'dflowfm'``.
+        edges:          Optional. Geometric properties of 2D mesh edges.
+        hydraulics:     Optional. Time-dependent hydraulic results.
+
     """
-
-    time_dependent_data: dict | None = None
-    time_independent_data: pd.DataFrame | None = None
-    edge_data: dict | None = None
-    node_coordinates: pd.DataFrame | None = None
-    css_data_list: list | None = None
-    source: str = ""
 
     def __init__(
         self,
-        time_dependent_data: dict,
-        time_independent_data: pd.DataFrame,
-        edge_data: dict,
-        node_coordinates: pd.DataFrame,
-        css_data_dictionary: dict,
-        source: str = "",
+        geometry: FaceGeometry,
+        cross_sections: list[CrossSectionData],
+        source: str,
+        edges: EdgeGeometry | None = None,
+        hydraulics: HydraulicData | None = None,
     ) -> None:
-        """Instantiate a ModelData object.
-
-        Args:
-            time_dependent_data: Time-dependent data (e.g. water levels, velocities).
-            time_independent_data: Time-independent data on faces (e.g. section allocation).
-            edge_data: Time-independent data on flow links.
-            node_coordinates: Node coordinates.
-            css_data_dictionary: Cross-section data dictionary.
-            source: Identifier of the source format (e.g. 'dflowfm').
-
-        """
-        self.time_dependent_data = time_dependent_data
-        self.time_independent_data = time_independent_data
-        self.edge_data = edge_data
-        self.node_coordinates = node_coordinates
-        self.css_data_list = self.get_ordered_css_list(css_data_dictionary)
+        self.geometry = geometry
+        self.cross_sections = cross_sections
         self.source = source
+        self.edges = edges
+        self.hydraulics = hydraulics
 
-    @staticmethod
-    def get_ordered_css_list(css_data_dict: dict[str, str]) -> list[dict[str, str]]:
-        """Return an ordered list where every element represents a Cross Section structure.
+    @property
+    def has_hydraulics(self) -> bool:
+        """Return True if hydraulic data is available."""
+        return self.hydraulics is not None
 
-        Args:
-            css_data_dict: Dictionary ordered by the keys.
-
-        Returns:
-            List where every element contains a dictionary to create a Cross Section.
-
-        """
-        if not css_data_dict or not isinstance(css_data_dict, dict):
-            return []
-
-        number_of_css = len(css_data_dict[next(iter(css_data_dict))])
-        css_dict_keys = css_data_dict.keys()
-        css_dict_values = css_data_dict.values()
-        return [
-            dict(
-                zip(
-                    css_dict_keys,
-                    [value[idx] for value in css_dict_values if idx < len(value)],
-                ),
-            )
-            for idx in range(number_of_css)
-        ]
+    @property
+    def has_edges(self) -> bool:
+        """Return True if edge geometry data is available."""
+        return self.edges is not None
 
     def get_selection(self, css_name: str) -> dict:
-        """Create a dictionary that holds all the 2D data for the cross-section with name 'css_name'.
+        """Return all 2D data for cross-section ``css_name``.
 
         Args:
-            css_name: Name of the cross-section.
+            css_name: Name of the cross-section to select.
 
         Returns:
-            Dictionary with all 2D data for the given cross-section.
+            Dictionary with all available 2D data for the cross-section.
+            Keys for edges and hydraulics are omitted if those are not available.
+
+        Raises:
+            ValueError: If hydraulics are required but not available.
 
         """
-        dti = self.time_independent_data
-        dtd = self.time_dependent_data
-        edge_data = self.edge_data
+        g = self.geometry
+        mask_face = g.sclass == css_name
+        face_idx = np.where(mask_face)[0]
 
-        x = dti["x"][dti["sclass"] == css_name]
-        y = dti["y"][dti["sclass"] == css_name]
-        area = dti["area"][dti["sclass"] == css_name]
-        region = dti["region"][dti["sclass"] == css_name]
-        islake = dti["islake"][dti["sclass"] == css_name]
-        waterdepth = dtd["waterdepth"][dti["sclass"] == css_name]
-        waterlevel = dtd["waterlevel"][dti["sclass"] == css_name]
-        vx = dtd["velocity_x"][dti["sclass"] == css_name]
-        vy = dtd["velocity_y"][dti["sclass"] == css_name]
-        face_section = dti["section"][dti["sclass"] == css_name]
-        chezy = dtd["chezy_edge"][edge_data["sclass"] == css_name]
-
-        try:
-            edge_faces = edge_data["edge_faces"][edge_data["sclass"] == css_name]
-        except KeyError:
-            edge_faces = None
-
-        edge_x = edge_data["x"][edge_data["sclass"] == css_name]
-        edge_y = edge_data["y"][edge_data["sclass"] == css_name]
-        edge_section = np.array(edge_data["section"])[edge_data["sclass"] == css_name]
-
-        bedlevel = dti["bedlevel"][dti["sclass"] == css_name]
-
-        velocity = (vx**2 + vy**2) ** 0.5
-        waterlevel[waterdepth == 0] = np.nan
-
-        return {
-            "x": x,
-            "y": y,
-            "area": area,
-            "bedlevel": bedlevel,
-            "waterdepth": waterdepth,
-            "waterlevel": waterlevel,
-            "velocity": velocity,
-            "section": face_section,
-            "chezy": chezy,
-            "region": region,
-            "islake": islake,
-            "edge_faces": edge_faces,
-            "edge_x": edge_x,
-            "edge_y": edge_y,
-            "edge_section": edge_section,
+        result = {
+            "x":        pd.Series(g.x[mask_face],        index=face_idx),
+            "y":        pd.Series(g.y[mask_face],        index=face_idx),
+            "area":     pd.Series(g.area[mask_face],     index=face_idx),
+            "bedlevel": pd.Series(g.bedlevel[mask_face], index=face_idx),
+            "section":  pd.Series(g.section[mask_face],  index=face_idx),
+            "region":   pd.Series(g.region[mask_face],   index=face_idx),
+            "islake":   pd.Series(g.islake[mask_face],   index=face_idx),
         }
 
+        if self.has_hydraulics:
+            h = self.hydraulics
+            waterdepth = pd.DataFrame(h.waterdepth[mask_face], index=face_idx)
+            waterlevel = pd.DataFrame(h.waterlevel[mask_face].copy(), index=face_idx)
+            waterlevel[waterdepth == 0] = np.nan
+            vx = h.velocity_x[mask_face]
+            vy = h.velocity_y[mask_face]
+
+            result.update({
+                "waterdepth": waterdepth,
+                "waterlevel": waterlevel,
+                "velocity":   pd.DataFrame((vx**2 + vy**2) ** 0.5, index=face_idx),
+            })
+
+        if self.has_edges:
+            e = self.edges
+            mask_edge = e.sclass == css_name
+            result.update({
+                "edge_x":       e.x[mask_edge],
+                "edge_y":       e.y[mask_edge],
+                "edge_section": e.section[mask_edge],
+                "edge_faces":   e.edge_faces[mask_edge] if e.edge_faces is not None else None,
+            })
+
+        if self.has_hydraulics and self.has_edges:
+            mask_edge = self.edges.sclass == css_name
+            result["chezy"] = pd.DataFrame(self.hydraulics.chezy_edge[mask_edge])
+
+        return result
 
 class BaseImporter(FM2ProfBase, ABC):
     """Abstract base class for all format-specific importers.

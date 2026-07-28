@@ -7,6 +7,7 @@ import inspect
 import io
 import json
 import os
+from dataclasses import dataclass
 from pathlib import Path
 from pydoc import locate
 from typing import TYPE_CHECKING, Any
@@ -16,6 +17,23 @@ from fm2prof.common import FM2ProfBase
 if TYPE_CHECKING:
     from collections.abc import Generator, Mapping
     from logging import Logger
+
+
+@dataclass
+class InputFiles:
+    """Convenience container for all FM2PROF input file paths."""
+
+    map_file: Path | str
+    """Path to the 2D model map output file (e.g. ``*_map.nc``)."""
+
+    css_file: Path | str
+    """Path to the cross-section location file."""
+
+    region_file: Path | str | None
+    """Path to the region polygon file, or ``None`` if not specified."""
+
+    section_file: Path | str | None
+    """Path to the section polygon file, or ``None`` if not specified."""
 
 class ConfigurationFileError(Exception):
     """Raised when config file is not up to snot."""
@@ -183,6 +201,23 @@ class IniFile(FM2ProfBase):
             str: string of path to input file
         """
         return self._get_from_configuration("input", file_name)
+
+    def get_input_files(self) -> InputFiles:
+        """Return all input file paths as a single :class:`InputFiles` object.
+
+        Returns:
+            InputFiles: convenience container with all input file paths.
+        """
+        def _optional(key: str) -> Path | None:
+            value = self.get_input_file(key)
+            return Path(value) if value else None
+
+        return InputFiles(
+            map_file=Path(self.get_input_file("2DMapOutput")),
+            css_file=Path(self.get_input_file("CrossSectionLocationFile")),
+            region_file=_optional("RegionPolygonFile"),
+            section_file=_optional("SectionPolygonFile"),
+        )
 
     def get_parameter(self, key: str) -> str | bool | int | float | None:
         """Use this method to return a parameter value.

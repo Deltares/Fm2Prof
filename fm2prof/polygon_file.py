@@ -52,11 +52,13 @@ class PolygonError(Exception):
         self.message = message
         super().__init__(self.message)
 
+
 class GridPointsInPolygonResults(NamedTuple):
     """Named tuple for grid points in polygon results."""
 
     faces_in_polygon: list[str]
     edges_in_polygon: list[str]
+
 
 class Polygon:
     """Polygon class.

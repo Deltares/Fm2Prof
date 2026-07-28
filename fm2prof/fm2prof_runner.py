@@ -50,19 +50,18 @@ from pathlib import Path
 
 import geojson
 import numpy as np
-import pandas as pd
 import tqdm
 from geojson import Feature, FeatureCollection, Polygon
 from scipy.spatial import ConvexHull
 
-from fm2prof import mask_output_file, nearest_neighbour
+from fm2prof import mask_output_file
 from fm2prof.common import FM2ProfBase, get_version
 from fm2prof.cross_section import CrossSection, CrossSectionHelpers
-from fm2prof.data_import import ImportInputFiles
+from fm2prof.data_preprocessing import build_model_data
 from fm2prof.export import ExporterFactory
-from fm2prof.imports import ImporterFactory, ModelData
-from fm2prof.ini_file import ConfigurationFileError, IniFile
-from fm2prof.polygon_file import GridPointsInPolygonResults, PolygonError, RegionPolygon, SectionPolygon
+from fm2prof.imports import ModelData
+from fm2prof.ini_file import ConfigurationFileError, IniFile, InputFiles
+from fm2prof.polygon_file import PolygonError
 
 
 class InitializationError(Exception):
@@ -83,7 +82,7 @@ class Fm2ProfRunner(FM2ProfBase):
     ]
 
     def __init__(self, ini_file_path: Path | str = "") -> None:
-        """Initialize the project.
+        """Initialize the project and load configuration.
 
         Args:
         ----
@@ -91,7 +90,7 @@ class Fm2ProfRunner(FM2ProfBase):
 
         """
         self.version: str = get_version()
-        self.fm_model_data: ModelData = None
+        self.model_data: ModelData = None
 
         self.set_logger(self.create_logger())
 
@@ -221,40 +220,37 @@ class Fm2ProfRunner(FM2ProfBase):
         # Returns true if program finished without errors
         return errors == 0
 
-    def _initialise_fm2prof(self) -> None:
+    def _initialise_fm2prof(self) -> bool:
         """Load data, inifile."""
         ini_file: IniFile = self.get_inifile()
         raise_file_not_found: bool = False
 
-        # shorter local variables
-        map_file = ini_file.get_input_file(self.__map_key)
-        css_file = ini_file.get_input_file(self.__css_key)
-        region_file = ini_file.get_input_file("RegionPolygonFile")
-        section_file = ini_file.get_input_file("SectionPolygonFile")
+        input_files: InputFiles = ini_file.get_input_files()
 
         # Check if mandatory input exists
-        if not Path(map_file).is_file():
+        if not Path(input_files.map_file).is_file():
             self.set_logger_message(
-                f"File for {self.__map_key} not found at {map_file}",
+                f"File for {self.__map_key} not found at {input_files.map_file}",
                 "error",
             )
             raise_file_not_found = True
-        if not Path(css_file).is_file():
+        if not Path(input_files.css_file).is_file():
             self.set_logger_message(
-                f"File for {self.__css_key} not found at {css_file}",
+                f"File for {self.__css_key} not found at {input_files.css_file}",
                 "error",
             )
             raise_file_not_found = True
         if raise_file_not_found:
             raise InitializationError
 
-        # Read FM model data
+        # Preprocess the data
         try:
-            self._set_fm_model_data(
-                map_file,
-                css_file,
-                region_file,
-                section_file,
+            self.model_data = build_model_data(
+                input_files,
+                source="dflowfm",
+                default_region=ini_file.get_parameter("DefaultRegion"),
+                default_section=ini_file.get_parameter("DefaultSection"),
+                logger=self.get_logger(),
             )
         except PolygonError as e:
             self.set_logger_message(f"Error during initialisation: {e}", "error")
@@ -269,10 +265,9 @@ class Fm2ProfRunner(FM2ProfBase):
             )
             raise InitializationError
 
-        # print goodbye
-        ntsteps: int = self.fm_model_data.time_dependent_data.get("waterlevel").shape[1]
-        nfaces: int = self.fm_model_data.time_dependent_data.get("waterlevel").shape[0]
-        nedges: int = self.fm_model_data.edge_data.get("x").shape[0]
+        ntsteps: int = self.model_data.hydraulics.waterlevel.shape[1]
+        nfaces: int = self.model_data.hydraulics.waterlevel.shape[0]
+        nedges: int = self.model_data.edges.x.shape[0]
         self.set_logger_message("finished reading FM and cross-sectional data data")
         self.set_logger_message(
             f"Number of: timesteps ({ntsteps}), "
@@ -283,49 +278,42 @@ class Fm2ProfRunner(FM2ProfBase):
 
         return success
 
-    def _validate_config_after_initalization(self) -> bool:
-        """Perform validation checks on config file.
+    def _generate_cross_section_list(self) -> list[CrossSection]:
+        """Generate cross sections based on the given model_data.
 
-        Returns True if all checks succesfull, False if check fails.
+        Returns:
+        -------
+            (list): List of generated cross sections
+
         """
-        success: bool = True
+        cross_sections = []
+        if not self.model_data:
+            return cross_sections
 
-        self.set_logger_message("Validating settings", "Info")
+        # Preprocess css from model_data so it's easier to handle it.
+        css_data_list = self.model_data.css_data_list
 
-        # Check if skipmaps is lower than maximum amount of maps
-        nsteps: int = self.fm_model_data.time_dependent_data.get("waterlevel").shape[1]
-        skipmap: int = self.get_inifile().get_parameter(self.__key_skipmaps)
+        # Set the number of cross-section for progress bar
+        css_selection = self._get_css_range(number_of_css=len(css_data_list))
+        self.get_logformatter().set_number_of_iterations(len(css_selection) + 1)
+        selected_list = np.array(css_data_list)[css_selection]
 
-        if skipmap >= nsteps:
-            self.set_logger_message(
-                f"""You are attempting to skip more than  available timesteps.
-                ({self.__key_skipmaps} = {skipmap}, available maps in output file:
-                 {nsteps}). Modify the value of {self.__key_skipmaps}
-                in your configuration file to fix this error.""",
-                level="error",
+        # Generate cross-sections one by one
+        pbar = tqdm.tqdm(total=len(selected_list))
+        for i, css_data in enumerate(selected_list):
+            self.start_new_log_task(
+                f"{css_data.get('id')}  ({i}/{len(selected_list)})",
+                pbar=pbar,
             )
-            success = False
-        elif skipmap > nsteps / 2:
-            self.set_logger_message(
-                f"""You are skipping more than half of available timesteps.
-                    ({self.__key_skipmaps} = {skipmap}, available maps in output file: {nsteps})""",
-                level="warning",
+            generated_cross_section = self._generate_cross_section(
+                css_data,
+                self.model_data,
             )
+            if generated_cross_section is not None:
+                cross_sections.append(generated_cross_section)
+            pbar.update(1)
 
-        # Check if edge/face data is available
-        if (
-            "edge_faces" not in self.fm_model_data.edge_data
-            and self.get_inifile().get_parameter(self.__key_frictionweighingmethod) == 1
-        ):
-            self.set_logger_message(
-                "Friction weighing set to 1 (area-weighted average"
-                "but FM map file does contain the *edge_faces* keyword."
-                "Area weighting is not possible. Defaulting to simple unweighted"
-                "averaging",
-                level="warning",
-            )
-
-        return success
+        return cross_sections
 
     def _finalise_fm2prof(self, cross_sections: list[CrossSection]) -> None:
         """Write to output, perform checks."""
@@ -358,11 +346,54 @@ class Fm2ProfRunner(FM2ProfBase):
             self.set_logger_message("Error while exporting bounding boxes", "error")
             self.set_logger_message(e_message, "error")
 
+    def _validate_config_after_initalization(self) -> bool:
+        """Perform validation checks on config file.
+
+        Returns True if all checks succesful, False if check fails.
+        """
+        success: bool = True
+
+        self.set_logger_message("Validating settings", "Info")
+
+        # Check if skipmaps is lower than maximum amount of maps
+        nsteps: int = self.model_data.hydraulics.waterlevel.shape[1]
+        skipmap: int = self.get_inifile().get_parameter(self.__key_skipmaps)
+
+        if skipmap >= nsteps:
+            self.set_logger_message(
+                f"""You are attempting to skip more than  available timesteps.
+                ({self.__key_skipmaps} = {skipmap}, available maps in output file:
+                 {nsteps}). Modify the value of {self.__key_skipmaps}
+                in your configuration file to fix this error.""",
+                level="error",
+            )
+            success = False
+        elif skipmap > nsteps / 2:
+            self.set_logger_message(
+                f"""You are skipping more than half of available timesteps.
+                    ({self.__key_skipmaps} = {skipmap}, available maps in output file: {nsteps})""",
+                level="warning",
+            )
+
+        # Check if edge/face data is available
+        if (
+            self.model_data.edges.edge_faces is None
+            and self.get_inifile().get_parameter(self.__key_frictionweighingmethod) == 1
+        ):
+            self.set_logger_message(
+                "Friction weighing set to 1 (area-weighted average"
+                "but FM map file does contain the *edge_faces* keyword."
+                "Area weighting is not possible. Defaulting to simple unweighted"
+                "averaging",
+                level="warning",
+            )
+
+        return success
+
     def _create_debug_output_if_not_exists(self, output_dir: Path) -> None:
         """Create debug output directory if it does not exist."""
         if not output_dir.exists():
             output_dir.mkdir(parents=True, exist_ok=True)
-
 
     def _export_envelope(
         self,
@@ -391,160 +422,6 @@ class Fm2ProfRunner(FM2ProfBase):
                 self.set_logger_message(f"No Hull Exported For {css.name}")
         with Path(output_dir).joinpath("cross_section_volumes.geojson").open("w") as f:
             geojson.dump(FeatureCollection(css_hulls), f, indent=2)
-
-    def _set_fm_model_data(
-        self,
-        res_file: str | Path,
-        css_file: str | Path,
-        region_file: str | Path,
-        section_file: str | Path,
-    ) -> tuple:
-        """Read input files for 'FM2PROF'.
-
-        See documentation for file format descriptions.
-
-        Args:
-            res_file (str | Path): path to FlowFM map netcfd file (*_map.nc)
-            css_file (str | Path): path to cross-section definition file
-            region_file (str | Path): path to region polygon file
-            section_file (str | Path): path to section polygon file
-
-        Returns:
-            tuple: Tuple containing time dependent data, time independent data, edge data, node coordinates,
-            and cross section data.
-
-        """
-        ini_file = self.get_inifile()
-
-        # Read FM map file
-        self.set_logger_message("Reading FM Map file")
-        fm_model_data = ImporterFactory.create("dflowfm", res_file).import_data()
-        time_independent_data = fm_model_data.time_independent_data
-        edge_data = fm_model_data.edge_data
-        node_coordinates = fm_model_data.node_coordinates
-        time_dependent_data = fm_model_data.time_dependent_data
-
-        # Load locations and names of cross-sections
-        self.set_logger_message("Reading css file")
-        importer = ImportInputFiles(logger=self.get_logger())
-        cssdata = importer.css_file(css_file)
-
-        # Read region & section polygon files
-        self.set_logger_message("Reading polygon files")
-
-        regions = RegionPolygon(region_file,
-                                logger=self.get_logger(),
-                                default_value=ini_file.get_parameter("DefaultRegion")) if region_file else None
-        sections = SectionPolygon(section_file,
-                                  logger=self.get_logger(),
-                                  default_value=ini_file.get_parameter("DefaultSection")) if section_file else None
-
-        # Assign 2D points to cross-sections
-        if regions is None:
-            self.set_logger_message(
-                "All 2D points assigned to the same region and classifying points to cross-sections",
-            )
-            time_independent_data, edge_data = nearest_neighbour.classify_without_regions(
-                cssdata,
-                time_independent_data,
-                edge_data,
-            )
-        else:
-            self.set_logger_message("Assigning 2D points to regions using Region Polygon")
-            # do in-polygon
-            gridpoints_in_regions: GridPointsInPolygonResults = regions.get_gridpoints_in_polygon(res_file)
-            time_independent_data["region"] = gridpoints_in_regions.faces_in_polygon
-            edge_data["region"] = gridpoints_in_regions.edges_in_polygon
-
-            # Determine in which region the cross-sections are
-            css_regions = regions.get_points_in_polygon(cssdata["xy"], property_name="region")
-
-            # do nearest_neighbour.classify_with_regions
-            time_independent_data, edge_data = nearest_neighbour.classify_with_regions(
-                cssdata,
-                time_independent_data,
-                edge_data,
-                css_regions,
-            )
-
-        # Classify sections
-        if sections is None:
-            self.set_logger_message("Assigning point to sections without polygons")
-            edge_data = self._classify_roughness_sections_by_variance(
-                edge_data,
-                time_dependent_data["chezy_edge"],
-            )
-            time_independent_data = self._classify_roughness_sections_by_variance(
-                time_independent_data,
-                time_dependent_data["chezy_mean"],
-            )
-        else:
-            self.set_logger_message("Assigning 2D points to sections using Section Polygon")
-            # do in-polygon
-            gridpoints_in_sections: GridPointsInPolygonResults = sections.get_gridpoints_in_polygon(res_file)
-
-            time_independent_data["section"] = gridpoints_in_sections.faces_in_polygon
-            edge_data["section"] = gridpoints_in_sections.edges_in_polygon
-
-        self.fm_model_data = ModelData(
-            time_dependent_data=time_dependent_data,
-            time_independent_data=time_independent_data,
-            edge_data=edge_data,
-            node_coordinates=node_coordinates,
-            css_data_dictionary=cssdata,
-            source="dflowfm",
-        )
-
-
-    def _classify_roughness_sections_by_variance(
-        self,
-        data: pd.DataFrame | dict,
-        variable: pd.DataFrame,
-    ) -> pd.DataFrame | dict:
-        """Classify the region into main channel and floodplain based on roughness.
-
-        It is used when the user does not specify a section polygon.
-
-        This method assumes that the main channel is much deeper than the floodplain. Therefore,
-        the Chézy values will be higher than those in the floodplain. The objective is now to
-        define a split-value that minimizes the variance of the split sets.
-
-        .. note::
-            Variance reduction classification is method often used in decision tree learning,
-            e.g. see https://en.wikipedia.org/wiki/Decision_tree_learning#Variance_reduction
-            for more information.
-
-        """
-        # Get chezy values at last timestep
-        end_values = variable.T.iloc[-1].to_numpy()
-        key = "section"
-        threshold_no_variance = 2 # this means that all end values are very close together, so do not split
-
-        # Find split point (chezy value) by variance minimisation
-        split_candidates = np.arange(min(end_values), max(end_values), 1)
-        if len(split_candidates) < threshold_no_variance:
-            data[key][:] = 1
-        else:
-            variance_list = [
-                np.max(
-                    [
-                        np.var(end_values[end_values > split]),
-                        np.var(end_values[end_values <= split]),
-                    ],
-                )
-                for split in split_candidates
-            ]
-            splitpoint = split_candidates[np.nanargmin(variance_list)]
-
-            # High chezy values are assigned to section number '1' (Main channel)
-            # Low chezy values are assigned to section number '2' (Flood plain)
-            if isinstance(data, pd.DataFrame):
-                data.loc[end_values > splitpoint, key] = 1
-                data.loc[end_values <= splitpoint, key] = 2
-            else:
-                data[key][end_values > splitpoint] = 1
-                data[key][end_values <= splitpoint] = 2
-        return data
 
     def _generate_geojson_output(self, output_dir: str, cross_sections: list) -> None:
         """Generate geojson file based on cross sections.
@@ -577,43 +454,6 @@ class Fm2ProfRunner(FM2ProfBase):
                     level="error",
                 )
 
-    def _generate_cross_section_list(self) -> list[CrossSection]:
-        """Generate cross sections based on the given fm_model_data.
-
-        Returns:
-        -------
-            (list): List of generated cross sections
-
-        """
-        cross_sections = []
-        if not self.fm_model_data:
-            return cross_sections
-
-        # Preprocess css from fm_model_data so it's easier to handle it.
-        css_data_list = self.fm_model_data.css_data_list
-
-        # Set the number of cross-section for progress bar
-        css_selection = self._get_css_range(number_of_css=len(css_data_list))
-        self.get_logformatter().set_number_of_iterations(len(css_selection) + 1)
-        selected_list = np.array(css_data_list)[css_selection]
-
-        # Generate cross-sections one by one
-        pbar = tqdm.tqdm(total=len(selected_list))
-        for i, css_data in enumerate(selected_list):
-            self.start_new_log_task(
-                f"{css_data.get('id')}  ({i}/{len(selected_list)})",
-                pbar=pbar,
-            )
-            generated_cross_section = self._generate_cross_section(
-                css_data,
-                self.fm_model_data,
-            )
-            if generated_cross_section is not None:
-                cross_sections.append(generated_cross_section)
-            pbar.update(1)
-
-        return cross_sections
-
     def _get_css_range(self, number_of_css: int) -> np.array:
         """Parse the CssSelection keyword from the inifile."""
         css_selection = self.get_inifile().get_parameter("CssSelection")
@@ -626,7 +466,7 @@ class Fm2ProfRunner(FM2ProfBase):
     def _generate_cross_section(
         self,
         css_data: dict,
-        fm_model_data: ModelData,
+        model_data: ModelData,
     ) -> CrossSection:
         """Generate a cross section and configures its values based.
 
@@ -635,13 +475,13 @@ class Fm2ProfRunner(FM2ProfBase):
         Args:
         ----
             css_data (dict): Dictionary of data for the current cross section.
-            fm_model_data (FmModelData): Data to assign to the new cross section
+            model_data (FmModelData): Data to assign to the new cross section
 
         Raises:
         ------
             Exception: If no css_data is given.
             Exception: If no input_param_dict is given.
-            Exception: If no fm_model_data is given.
+            Exception: If no model_data is given.
 
         Returns:
         -------
@@ -656,7 +496,7 @@ class Fm2ProfRunner(FM2ProfBase):
         if not css_name:
             css_name = "new_cross_section"
 
-        if fm_model_data is None:
+        if model_data is None:
             err_msg = f"No FM data given for new cross section {css_name}"
             raise ValueError(err_msg)
 
@@ -765,7 +605,7 @@ class Fm2ProfRunner(FM2ProfBase):
             return None
 
         # Get remainig data
-        css_data["fm_data"] = self.fm_model_data.get_selection(css_data.get("id"))
+        css_data["model_data"] = self.model_data.get_selection(css_data.get("id"))
 
         if self.get_inifile().get_parameter("ExportCSSData"):
             output_dir = Path(self.get_inifile().get_output_directory())
@@ -777,7 +617,6 @@ class Fm2ProfRunner(FM2ProfBase):
             inifile=self.get_inifile(),
             data=css_data,
         )
-
 
     def _write_output(self, cross_sections: list, output_dir: Path) -> None:
         """Export all cross sections to the necessary file formats.
