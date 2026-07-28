@@ -1,9 +1,12 @@
 from pathlib import Path
 
 import numpy as np
+import pandas as pd
+import pytest
 
-from fm2prof.imports import ModelData
+from fm2prof.imports import ImporterFactory, ModelData
 from fm2prof.imports.base import CrossSectionData, FaceGeometry
+from fm2prof.imports.csv_elevation import CsvElevationImporter
 from fm2prof.imports.dflowfm import DFlowFMImporter
 from tests.TestUtils import TestUtils, skipwhenexternalsmissing
 
@@ -91,3 +94,68 @@ class TestFmModelData:
     def test_has_hydraulics_false_when_not_provided(self):
         model_data = ModelData(geometry=self._make_geometry(), cross_sections=[], source="dflowfm")
         assert model_data.has_hydraulics is False
+
+
+class TestCsvElevationImporter:
+
+    CSV_FILE = "cases/case_20_only_elevation/data/mlnbk_triangles.csv"
+
+    @pytest.fixture
+    def csv_file(self):
+        return TestUtils.get_local_test_file(self.CSV_FILE)
+
+    @pytest.fixture
+    def model_data(self, csv_file) -> ModelData:
+        return CsvElevationImporter(csv_file).import_data()
+
+    def test_factory_creates_csv_elevation_importer(self, csv_file):
+        """ImporterFactory should resolve 'csv_elevation' to CsvElevationImporter."""
+        importer = ImporterFactory.create("csv_elevation", csv_file)
+        assert isinstance(importer, CsvElevationImporter)
+
+    def test_model_data_is_returned(self, model_data):
+        """Import_data should return a ModelData instance."""
+        assert isinstance(model_data, ModelData)
+
+    def test_source_is_csv_elevation(self, model_data):
+        """Source identifier should be 'csv_elevation'."""
+        assert model_data.source == CsvElevationImporter.SOURCE
+
+    def test_face_geometry_is_populated(self, model_data):
+        """Geometry should contain face data with positive length."""
+        assert model_data.geometry is not None
+        assert len(model_data.geometry.x) > 0
+
+    def test_face_geometry_x_y_are_finite_floats(self, model_data):
+        """Coordinates x and y should be finite float arrays."""
+        assert model_data.geometry.x.dtype == float
+        assert model_data.geometry.y.dtype == float
+        assert np.all(np.isfinite(model_data.geometry.x))
+        assert np.all(np.isfinite(model_data.geometry.y))
+
+    def test_face_geometry_bedlevel_is_populated(self, model_data):
+        """Field bedlevel should be a float array of the same length as x."""
+        assert len(model_data.geometry.bedlevel) == len(model_data.geometry.x)
+
+    def test_face_geometry_area_is_populated(self, model_data):
+        """Field area should be a float array of the same length as x."""
+        assert len(model_data.geometry.area) == len(model_data.geometry.x)
+
+    def test_no_edge_data(self, model_data):
+        """Edge geometry should not be present for a CSV elevation source."""
+        assert model_data.edges is None
+        assert not model_data.has_edges
+
+    def test_no_hydraulic_data(self, model_data):
+        """Hydraulic data should not be present for a CSV elevation source."""
+        assert model_data.hydraulics is None
+        assert not model_data.has_hydraulics
+
+    def test_missing_column_raises_value_error(self, tmp_path):
+        """A CSV without required columns should raise ValueError."""
+        bad_csv = tmp_path / "bad.csv"
+        pd.DataFrame({"POINT_X": [1.0], "POINT_Y": [2.0]}).to_csv(bad_csv, index=False)
+
+        importer = CsvElevationImporter(bad_csv)
+        with pytest.raises(ValueError, match="missing required columns"):
+            importer.import_data()

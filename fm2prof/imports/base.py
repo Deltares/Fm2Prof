@@ -149,7 +149,7 @@ class ModelData:
         """
         g = self.geometry
         mask_face = g.sclass == css_name
-        face_idx = np.where(mask_face)[0]
+        face_idx = np.nonzero(mask_face)[0]
 
         result = {
             "x":        pd.Series(g.x[mask_face],        index=face_idx),

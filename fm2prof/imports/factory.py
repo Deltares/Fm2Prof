@@ -16,7 +16,7 @@ class ImporterFactory:
 
     """
 
-    _supported_sources = ("dflowfm",)
+    _supported_sources = ("dflowfm", "csv_elevation")
 
     @staticmethod
     def create(source: str, file_path: Path | str) -> BaseImporter:
@@ -33,12 +33,14 @@ class ImporterFactory:
             NotImplementedError: If the source format is not supported.
 
         """
-        from fm2prof.imports.dflowfm import DFlowFMImporter  # noqa: PLC0415 - avoid circular imports
+        from fm2prof.imports.csv_elevation import CsvElevationImporter  # noqa: PLC0415
+        from fm2prof.imports.dflowfm import DFlowFMImporter  # noqa: PLC0415
 
         source_lower = source.lower()
 
         importers = {
             "dflowfm": DFlowFMImporter,
+            "csv_elevation": CsvElevationImporter,
         }
 
         if source_lower not in importers:
