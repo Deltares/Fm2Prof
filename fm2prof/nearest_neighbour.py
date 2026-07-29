@@ -98,7 +98,7 @@ def get_centre_values(
 
     return centre_depth[0], centre_level[0]
 
-def _get_class_tree(xy: np.ndarray, c: np.ndarray) -> KNeighborsClassifier:
+def get_class_tree(xy: np.ndarray, c: np.ndarray) -> KNeighborsClassifier:
     """Get a k-nearest neighbour classifier for given xy and class c.
 
     Parameters
@@ -111,4 +111,8 @@ def _get_class_tree(xy: np.ndarray, c: np.ndarray) -> KNeighborsClassifier:
     neigh = KNeighborsClassifier(n_neighbors=1)
     neigh.fit(xy, c)
     return neigh
+
+
+# Keep private alias for backwards compatibility within this module
+_get_class_tree = get_class_tree
 
