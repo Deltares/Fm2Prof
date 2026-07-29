@@ -101,7 +101,7 @@ docs = { features = ["docs"], solve-group = "default" }
 [tool.pixi.tasks]
 
 [tool.uv.sources]
-deltares-hms-docs = { git = "https://github.com/Deltares-research/doc_utils.git", branch = "latex-templates" }
+deltares-hms-docs = { git = "https://github.com/Deltares-research/doc_utils.git"}
 
 [tool.coverage.run]
 branch = true
