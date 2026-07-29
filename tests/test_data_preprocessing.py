@@ -1,4 +1,5 @@
 import numpy as np
+import pytest
 
 from fm2prof.data_preprocessing import build_model_data
 from fm2prof.ini_file import InputFiles
@@ -6,6 +7,18 @@ from tests.TestUtils import TestUtils
 
 
 class TestClassification:
+
+    @pytest.fixture(autouse=True)
+    def clear_polygon_caches(self):
+        """Delete any cached region/section classification files before each test.
+
+        Cache files are placed next to the map file and have the pattern
+        ``<mapfile>.region_cache.json`` and ``<mapfile>.section_cache.json``.
+        Removing them ensures each test run performs a fresh classification.
+        """
+        cache_dir = TestUtils.get_local_test_file("cases/case_02_compound/Data/2DModelOutput")
+        for cache_file in cache_dir.glob("*_cache.json"):
+            cache_file.unlink(missing_ok=True)
 
     def test_region_polygon_assigns_all_faces_to_poly1(self):
         """All 2D faces should be assigned to region 'poly1' for case_02_compound_with_region."""
