@@ -16,7 +16,7 @@ dependencies = [
     "Shapely~=2.0",
     "click~=8.1",
     "matplotlib>=3.8.0,<4",
-    "typer>=0.9.0,<0.10",
+    "typer>=0.12.0",
     "tqdm>=4.64.0,<5",
     "notebook>=7.1.2,<8",
     "pip>=25.1.1",
@@ -28,13 +28,14 @@ dependencies = [
 [dependency-groups]
 dev = [
     "pytest-cov>=4.1.0,<5",
-    "pytest>=8.1.1,<9",
+    "pytest>=9",
     "pyinstaller>=6.5.0,<7",
     "ipywidgets>=8.1.2,<9",
     "ipympl>=0.9.3,<0.10",
     "markdown-exec[ansi]>=1.8.0,<2",
     "ruff>=0.6.3,<0.7",
     "pytest-mock>=3.14.0,<4",
+    "pip-audit>=2.7.0",
 ]
 docs = [
     "mike>=2.0.0,<3",
@@ -101,7 +102,7 @@ docs = { features = ["docs"], solve-group = "default" }
 [tool.pixi.tasks]
 
 [tool.uv.sources]
-deltares-hms-docs = { git = "https://github.com/Deltares-research/doc_utils.git", branch = "latex-templates" }
+deltares-hms-docs = { git = "https://github.com/Deltares-research/doc_utils.git"}
 
 [tool.coverage.run]
 branch = true

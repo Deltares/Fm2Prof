@@ -38,7 +38,7 @@ import shapely
 from meshkernel import GeometryList, MeshKernel, ProjectionType
 
 from fm2prof.common import FM2ProfBase
-from fm2prof.data_import import FMDataImporter
+from fm2prof.imports import ImporterFactory
 
 if TYPE_CHECKING:
     from logging import Logger
@@ -52,11 +52,13 @@ class PolygonError(Exception):
         self.message = message
         super().__init__(self.message)
 
+
 class GridPointsInPolygonResults(NamedTuple):
     """Named tuple for grid points in polygon results."""
 
     faces_in_polygon: list[str]
     edges_in_polygon: list[str]
+
 
 class Polygon:
     """Polygon class.
@@ -289,7 +291,7 @@ class MultiPolygon(FM2ProfBase):
         mk = MeshKernel(projection=ProjectionType.CARTESIAN)
         mesh2d_input = mk.mesh2d_get()
 
-        fmdata = FMDataImporter(res_file)
+        fmdata = ImporterFactory.create("dflowfm", res_file)
         mesh2d_input.node_x = fmdata.get_variable("mesh2d_node_x")
         mesh2d_input.node_y = fmdata.get_variable("mesh2d_node_y")
         mesh2d_input.edge_nodes = fmdata.get_variable("mesh2d_edge_nodes").flatten() - 1
