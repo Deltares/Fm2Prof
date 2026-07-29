@@ -63,8 +63,8 @@ class DFlowFMImporter(BaseImporter):
             Variable data as numpy array.
 
         """
-        grid = xr.open_dataset(self.file_path, engine="netcdf4")
-        return grid[var_name].to_numpy()
+        with xr.open_dataset(self.file_path, engine="netcdf4") as grid:
+            return grid[var_name].to_numpy()
 
     def import_data(self) -> ModelData:
         """Import data from a D-Flow FM map file and return a ModelData object.
@@ -102,9 +102,9 @@ class DFlowFMImporter(BaseImporter):
             area=     np.array(map_file.variables["mesh2d_flowelem_ba"]),
             bedlevel= np.array(map_file.variables["mesh2d_flowelem_bl"]),
             # classification fields — populated later by fm2prof_runner
-            section=  np.array(["main"] * n_faces, dtype="U99"),
-            region=   np.array([""]     * n_faces, dtype="U99"),
-            sclass=   np.array([""]     * n_faces, dtype="U99"),
+            section=  np.array(["main"] * n_faces, dtype="object"),
+            region=   np.array([""]     * n_faces, dtype="object"),
+            sclass=   np.array([""]     * n_faces, dtype="object"),
             islake=   np.zeros(n_faces, dtype=bool),
         )
 

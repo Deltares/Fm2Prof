@@ -122,6 +122,7 @@ class ModelData:
         self.source = source
         self.edges = edges
         self.hydraulics = hydraulics
+        self.css_data_list: list[dict] = []
 
     @property
     def has_hydraulics(self) -> bool:
