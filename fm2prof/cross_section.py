@@ -225,7 +225,54 @@ class CrossSection(FM2ProfBase):
         raise ValueError(err_msg)
 
     # Public functions
-    def build_geometry(self) -> None:  # noqa: PLR0915
+    def build_geometry(self) -> None:
+        """ """
+
+        # the cssdata is a dict, not a nice object, so we need to infer some stuff
+        if "waterdepth" in self._model_data:
+            self._build_geometry_from_hydraulic_data()
+        else:
+            self._build_geometry_from_elevation()
+
+    def _build_geometry_from_elevation(self) -> None:
+        """Build 1D cross-section geometry from bed level and area data only.
+
+        No hydraulic data is required. Starting from the highest bed level,
+        cumulative wet area and corresponding width are computed at each level step.
+        """
+        bedlevel: np.ndarray = self._model_data.get("bedlevel").to_numpy()
+        area: np.ndarray = self._model_data.get("area").to_numpy()
+
+        lowest_level = np.nanmin(bedlevel)
+
+        # Work from highest to lowest bed level
+        levels = np.sort(np.unique(bedlevel))[::-1]
+
+        css_z = []
+        css_total_width = []
+
+        for level in levels:
+            # All faces whose bed level is at or below the current level are wet
+            wet_mask = bedlevel <= level
+            cumulative_area = np.nansum(area[wet_mask])
+            depth = level - lowest_level
+
+            css_z.append(depth)
+            css_total_width.append(cumulative_area / self.length)
+
+        # Reverse so z increases (depth 0 = lowest point, depth max = highest)
+        self._css_z = np.array(css_z[::-1], dtype=np.float64)
+        self._css_total_width = np.array(css_total_width[::-1], dtype=np.float64)
+
+        # No hydraulic data — flow width equals total width
+        self._css_flow_width = self._css_total_width.copy()
+
+        # Shift z so that the lowest point is at 0, then offset by the actual bed level
+        self._css_z = lowest_level + self._css_z
+
+        return None
+
+    def _build_geometry_from_hydraulic_data(self) -> None:  # noqa: PLR0915
         """Build 1D geometrical cross-section from 2D data.
 
         The 2D data is set on initalisation of the `CrossSection` object.

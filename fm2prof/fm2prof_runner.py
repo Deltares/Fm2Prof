@@ -325,8 +325,9 @@ class Fm2ProfRunner(FM2ProfBase):
 
     def _finalise_fm2prof(self, cross_sections: list[CrossSection]) -> None:
         """Write to output, perform checks."""
-        self.set_logger_message("Interpolating roughness")
-        CrossSectionHelpers().interpolate_friction_across_cross_sections(cross_sections)
+        if self.model_data.has_edges & self.model_data.has_hydraulics:
+            self.set_logger_message("Interpolating roughness")
+            CrossSectionHelpers().interpolate_friction_across_cross_sections(cross_sections)
 
         # Export cross sections
         output_dir = self.get_inifile().get_output_directory()
@@ -456,7 +457,8 @@ inferred but set to default values.""")
             cross_sections (list): List of Cross Sections.
 
         """
-        for pointtype in ["face", "edge"]:
+        pointtypes = ["face", "edge"] if self.model_data.has_edges else ["face"]
+        for pointtype in pointtypes:
             output_file_path = Path(output_dir) / f"{pointtype}_output.geojson"
             try:
                 node_points = [
@@ -472,7 +474,7 @@ inferred but set to default values.""")
                 self.set_logger_message("Done", level="debug")
             except Exception as e_info:
                 self.set_logger_message(
-                    ("Error while generation .geojson file,"
+                    ("Error while generating .geojson file,"
                      f"at {output_file_path}"
                      f"Reason: {e_info!s}"),
                     level="error",
@@ -491,7 +493,7 @@ inferred but set to default values.""")
         self,
         css_data: dict,
         model_data: ModelData,
-    ) -> CrossSection:
+    ) -> CrossSection | None:
         """Generate a cross section and configures its values based.
 
         on the input parameter dictionary
@@ -521,7 +523,7 @@ inferred but set to default values.""")
             css_name = "new_cross_section"
 
         if model_data is None:
-            err_msg = f"No FM data given for new cross section {css_name}"
+            err_msg = f"No model data given for new cross section {css_name}"
             raise ValueError(err_msg)
 
         # Create cross section
@@ -542,11 +544,13 @@ inferred but set to default values.""")
 
         self.set_logger_message("Initiated new cross-section", "info")
         self._build_cross_section_geometry(cross_section=created_css)
-        self._build_cross_section_roughness(cross_section=created_css)
+        if self.model_data.has_edges & self.model_data.has_hydraulics:
+            self._build_cross_section_roughness(cross_section=created_css)
 
         # if self.get_inifile().get_parameter('ExportMapFiles'):
         created_css.set_face_output_list()
-        created_css.set_edge_output_list()
+        if self.model_data.has_edges:
+            created_css.set_edge_output_list()
 
         if created_css is not None:
             self.finish_log_task()
@@ -572,12 +576,12 @@ inferred but set to default values.""")
         cross_section.build_geometry()
 
         # 2D Volume Correction (SummerDike option)
-        if self.get_inifile().get_parameter("SDCorrection"):
+        if self.get_inifile().get_parameter("SDCorrection") & self.model_data.has_hydraulics:
             self.set_logger_message("Starting correction", "debug")
             cross_section = self._perform_2D_volume_correction(cross_section)
         else:
             self.set_logger_message(
-                "SD Correction not enable in configuration file, skipping",
+                "SD Correction not enabled in configuration file or no hydraulics in model data, skipping",
                 "info",
             )
 
@@ -657,7 +661,10 @@ inferred but set to default values.""")
         # Export D-Hydro format
         try:
             dhydro_exporter = ExporterFactory.create("dhydro", output_dir=output_dir / "dhydro")
-            dhydro_exporter.export_all(cross_sections)
+            if self.model_data.has_hydraulics & self.model_data.has_edges:
+                dhydro_exporter.export_all(cross_sections)
+            else:
+                dhydro_exporter.export_geometry(cross_sections)
             self.set_logger_message("Successfully exported D-Hydro format files", "info")
         except (ValueError, OSError, KeyError) as e_info:
             self.set_logger_message(
@@ -670,7 +677,10 @@ inferred but set to default values.""")
         # Export D-Flow 1D format
         try:
             dflow1d_exporter = ExporterFactory.create("dflow1d", output_dir=output_dir / "dflow1d")
-            dflow1d_exporter.export_all(cross_sections)
+            if self.model_data.has_hydraulics & self.model_data.has_edges:
+                dflow1d_exporter.export_all(cross_sections)
+            else:
+                dflow1d_exporter.export_geometry(cross_sections)
             self.set_logger_message("Successfully exported D-Flow 1D format files", "info")
         except (ValueError, OSError, KeyError) as e_info:
             self.set_logger_message(

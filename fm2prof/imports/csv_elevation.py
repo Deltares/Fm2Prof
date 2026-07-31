@@ -16,8 +16,8 @@ class CsvElevationImporter(BaseImporter):
     Expected columns:
         - ``POINT_X``:   face centroid x-coordinate [m]
         - ``POINT_Y``:   face centroid y-coordinate [m]
-        - ``POINT_Z``:   bed level [m+NAP]
-        - ``Shape_Area``: face area [m²]
+        - ``Z``:   bed level [m+NAP]
+        - ``POLY_AREA``: face area [m²]
 
     This source only contains geometry — no edge or hydraulic data is available.
     ``ModelData.edges`` and ``ModelData.hydraulics`` will be ``None``.
@@ -27,8 +27,8 @@ class CsvElevationImporter(BaseImporter):
 
     COLUMN_X        = "POINT_X"
     COLUMN_Y        = "POINT_Y"
-    COLUMN_BEDLEVEL = "POINT_Z"
-    COLUMN_AREA     = "Shape_Area"
+    COLUMN_BEDLEVEL = "Z"
+    COLUMN_AREA     = "POLY_AREA"
 
     REQUIRED_COLUMNS: ClassVar[set[str]] = {COLUMN_X, COLUMN_Y, COLUMN_BEDLEVEL, COLUMN_AREA}
 
