@@ -29,6 +29,13 @@ cases = [{
         "total_width": [20, 80],
         "levels": [0, 2],
     }},
+    {
+    "name": "case_20_elevation_only",
+    "inifile": "cases/case_20_only_elevation/fm2prof_config.ini ",
+    "expected_cross_section": {
+        "total_width": [20, 80],
+        "levels": [0, 2],
+    }},
 ]
 
 # Expected D-Flow 1D output files
