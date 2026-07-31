@@ -31,7 +31,7 @@ cases = [{
     }},
     {
     "name": "case_20_elevation_only",
-    "inifile": "cases/case_20_only_elevation/fm2prof_config.ini ",
+    "inifile": "cases/case_20_only_elevation/fm2prof_config.ini",
     "expected_cross_section": {
         "total_width": [0.50, 1.21, 4.53, 15.59, 21.87, 23.51, 24.17, 24.37, 25.09, 25.32, 25.33, 26.02, 26.68, 27.29, 29.10, 30.96, 31.86, 32.94, 33.62, 33.74],
         "levels":      [0.00, 0.12, 0.23,  0.44,  0.70,  0.85,  1.16,  1.92,  2.21,  2.48,  3.27,  3.73,  3.76,  4.00,  4.14,  4.49,  4.85,  4.86,  4.99,  5.36],
