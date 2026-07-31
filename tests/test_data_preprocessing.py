@@ -76,12 +76,12 @@ _PREPROCESSING_CASES = [
     pytest.param(
         {
             "map_file":    "cases/case_20_only_elevation/data/mlnbk_triangles.csv",
-            "css_file":    "cases/case_20_only_elevation/model/CrossSectionLocations.xyz",
+            "css_file":    "cases/case_20_only_elevation/model/CrossSectionLocations.ini",
             "region_file": None,
             "section_file": None,
         },
         id="case_20_elevation_only",
-        marks=[pytest.mark.xfail(reason="CSV elevation source not yet fully supported in build_model_data")],
+        #marks=[pytest.mark.xfail(reason="CSV elevation source not yet fully supported in build_model_data")],
     ),
 ]
 
