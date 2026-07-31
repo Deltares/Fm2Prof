@@ -6,6 +6,32 @@ from pathlib import Path
 
 from fm2prof.imports.base import BaseImporter
 
+_EXTENSION_TO_SOURCE: dict[str, str] = {
+    ".nc":  "dflowfm",
+    ".csv": "csv_elevation",
+}
+
+
+def detect_source(map_file: Path | str) -> str:
+    """Infer the importer source from the map file extension.
+
+    Args:
+        map_file: Path to the 2D map output file.
+
+    Returns:
+        Source identifier string (e.g. ``'dflowfm'``, ``'csv_elevation'``).
+
+    Raises:
+        ValueError: If the file extension is not recognised.
+
+    """
+    suffix = Path(map_file).suffix.lower()
+    if suffix not in _EXTENSION_TO_SOURCE:
+        supported = ", ".join(_EXTENSION_TO_SOURCE.keys())
+        msg = f"Cannot infer source from file extension '{suffix}'. Supported extensions: {supported}"
+        raise ValueError(msg)
+    return _EXTENSION_TO_SOURCE[suffix]
+
 
 class ImporterFactory:
     """Factory for creating format-specific importers.

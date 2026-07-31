@@ -11,6 +11,6 @@ Example:
 """
 
 from fm2prof.imports.base import BaseImporter, ModelData
-from fm2prof.imports.factory import ImporterFactory
+from fm2prof.imports.factory import ImporterFactory, detect_source
 
-__all__ = ["BaseImporter", "ImporterFactory", "ModelData"]
+__all__ = ["BaseImporter", "ImporterFactory", "ModelData", "detect_source"]

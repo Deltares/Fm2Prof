@@ -247,7 +247,6 @@ class Fm2ProfRunner(FM2ProfBase):
         try:
             self.model_data = build_model_data(
                 input_files,
-                source="dflowfm",
                 default_region=ini_file.get_parameter("DefaultRegion"),
                 default_section=ini_file.get_parameter("DefaultSection"),
                 logger=self.get_logger(),

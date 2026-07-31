@@ -8,6 +8,7 @@ from fm2prof.imports import ImporterFactory, ModelData
 from fm2prof.imports.base import CrossSectionData, FaceGeometry
 from fm2prof.imports.csv_elevation import CsvElevationImporter
 from fm2prof.imports.dflowfm import DFlowFMImporter
+from fm2prof.imports.factory import detect_source
 from tests.TestUtils import TestUtils, skipwhenexternalsmissing
 
 
@@ -159,3 +160,37 @@ class TestCsvElevationImporter:
         importer = CsvElevationImporter(bad_csv)
         with pytest.raises(ValueError, match="missing required columns"):
             importer.import_data()
+
+
+class TestDetectSource:
+
+    def test_nc_file_detected_as_dflowfm(self, tmp_path):
+        """A .nc file should be detected as 'dflowfm'."""
+        nc_file = tmp_path / "FlowFM_map.nc"
+        nc_file.touch()
+        assert detect_source(nc_file) == "dflowfm"
+
+    def test_csv_file_detected_as_csv_elevation(self, tmp_path):
+        """A .csv file should be detected as 'csv_elevation'."""
+        csv_file = tmp_path / "elevation.csv"
+        csv_file.touch()
+        assert detect_source(csv_file) == "csv_elevation"
+
+    def test_extension_matching_is_case_insensitive(self, tmp_path):
+        """Extension matching should be case-insensitive."""
+        nc_file = tmp_path / "FlowFM_map.NC"
+        nc_file.touch()
+        assert detect_source(nc_file) == "dflowfm"
+
+    def test_unsupported_extension_raises_value_error(self, tmp_path):
+        """An unrecognised extension should raise ValueError."""
+        unknown_file = tmp_path / "model.xyz"
+        unknown_file.touch()
+        with pytest.raises(ValueError, match="Cannot infer source"):
+            detect_source(unknown_file)
+
+    def test_accepts_string_path(self, tmp_path):
+        """detect_source should accept a plain string path."""
+        nc_file = tmp_path / "map.nc"
+        nc_file.touch()
+        assert detect_source(str(nc_file)) == "dflowfm"
