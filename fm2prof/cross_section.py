@@ -128,9 +128,9 @@ class CrossSection(FM2ProfBase):
         logger: Logger | None = None,
         inifile: IniFile | None = None,
     ) -> None:
-        """Derive cross-sections from fm_data (2D model results).
+        """Derive cross-sections from model_data (2D model results).
 
-        See docs how to acquire fm_data and how to prepare a proper 2D model.
+        See docs how to acquire model_data and how to prepare a proper 2D model.
 
 
         Args:
@@ -147,7 +147,7 @@ class CrossSection(FM2ProfBase):
 
         if not all(
             key in data
-            for key in ["id", "length", "xy", "branchid", "chainage", "fm_data"]
+            for key in ["id", "length", "xy", "branchid", "chainage", "model_data"]
         ):
             err_msg = "Input data does not have all required keys"
             raise KeyError(err_msg)
@@ -158,7 +158,7 @@ class CrossSection(FM2ProfBase):
         self.location = data.get("xy")  # (x,y)
         self.branch = data.get("branchid")  # name of 1D branch for cross-section
         self.chainage = data.get("chainage")  # offset from beginning of branch
-        self._fm_data: dict = data.get("fm_data")  # dictionary with fmdata
+        self._model_data: dict = data.get("model_data")  # dictionary with fmdata
 
         # Cross-section geometry
         self.z = []
@@ -225,7 +225,54 @@ class CrossSection(FM2ProfBase):
         raise ValueError(err_msg)
 
     # Public functions
-    def build_geometry(self) -> None:  # noqa: PLR0915
+    def build_geometry(self) -> None:
+        """ """
+
+        # the cssdata is a dict, not a nice object, so we need to infer some stuff
+        if "waterdepth" in self._model_data:
+            self._build_geometry_from_hydraulic_data()
+        else:
+            self._build_geometry_from_elevation()
+
+    def _build_geometry_from_elevation(self) -> None:
+        """Build 1D cross-section geometry from bed level and area data only.
+
+        No hydraulic data is required. Starting from the highest bed level,
+        cumulative wet area and corresponding width are computed at each level step.
+        """
+        bedlevel: np.ndarray = self._model_data.get("bedlevel").to_numpy()
+        area: np.ndarray = self._model_data.get("area").to_numpy()
+
+        lowest_level = np.nanmin(bedlevel)
+
+        # Work from highest to lowest bed level
+        levels = np.sort(np.unique(bedlevel))[::-1]
+
+        css_z = []
+        css_total_width = []
+
+        for level in levels:
+            # All faces whose bed level is at or below the current level are wet
+            wet_mask = bedlevel <= level
+            cumulative_area = np.nansum(area[wet_mask])
+            depth = level - lowest_level
+
+            css_z.append(depth)
+            css_total_width.append(cumulative_area / self.length)
+
+        # Reverse so z increases (depth 0 = lowest point, depth max = highest)
+        self._css_z = np.array(css_z[::-1], dtype=np.float64)
+        self._css_total_width = np.array(css_total_width[::-1], dtype=np.float64)
+
+        # No hydraulic data — flow width equals total width
+        self._css_flow_width = self._css_total_width.copy()
+
+        # Shift z so that the lowest point is at 0, then offset by the actual bed level
+        self._css_z = lowest_level + self._css_z
+
+        return None
+
+    def _build_geometry_from_hydraulic_data(self) -> None:  # noqa: PLR0915
         """Build 1D geometrical cross-section from 2D data.
 
         The 2D data is set on initalisation of the `CrossSection` object.
@@ -243,12 +290,12 @@ class CrossSection(FM2ProfBase):
            _css_flow_width
 
         """
-        fm_data: dict = self._fm_data
+        model_data: dict = self._model_data
 
         # Unpack FM data
         def get_timeseries(name: str) -> np.array:
-            """Return data from fm_data after applying the skip_maps and checking for missing numbers."""
-            data = fm_data[name].iloc[
+            """Return data from model_data after applying the skip_maps and checking for missing numbers."""
+            data = model_data[name].iloc[
                 :,
                 self.get_parameter(self.__cs_parameter_skip_maps) :,
             ]
@@ -262,8 +309,8 @@ class CrossSection(FM2ProfBase):
         waterdepth = get_timeseries("waterdepth")
         velocity = get_timeseries("velocity")
 
-        area = fm_data["area"]
-        bedlevel = fm_data["bedlevel"]
+        area = model_data["area"]
+        bedlevel = model_data["bedlevel"]
 
         # Convert area to a matrix for matrix operations
         # (much more efficient than for-loops)
@@ -278,8 +325,8 @@ class CrossSection(FM2ProfBase):
         self.set_logger_message("Retrieving centre point values")
         (centre_depth, centre_level) = nearest_neighbour.get_centre_values(
             self.location,
-            fm_data["x"],
-            fm_data["y"],
+            model_data["x"],
+            model_data["y"],
             waterdepth,
             waterlevel,
         )
@@ -548,7 +595,7 @@ class CrossSection(FM2ProfBase):
 
     def get_number_of_faces(self) -> int:
         """Return the number of 2D faces within control volume."""
-        return len(self._fm_data.get("x"))
+        return len(self._model_data.get("x"))
 
     def get_number_of_vertices(self) -> int:
         """Return the current number of geometry vertices."""
@@ -618,7 +665,7 @@ class CrossSection(FM2ProfBase):
 
     def set_face_output_list(self) -> None:
         """Generate a list of output mask points based on their values in the mask."""
-        fm_data = self._fm_data
+        model_data = self._model_data
 
         # Properties keys
         cross_section_id_key = "cross_section_id"
@@ -629,12 +676,12 @@ class CrossSection(FM2ProfBase):
 
         try:
             # Normalize np arrays to list for correct access
-            x_coords = fm_data.get("x").tolist()
-            y_coords = fm_data.get("y").tolist()
-            region_list = fm_data.get("region").tolist()
-            section_list = fm_data.get("section").tolist()
-            bedlevel_list = fm_data.get("bedlevel").tolist()
-            is_lake_mask_list = fm_data.get("islake").tolist()
+            x_coords = model_data.get("x").tolist()
+            y_coords = model_data.get("y").tolist()
+            region_list = model_data.get("region").tolist()
+            section_list = model_data.get("section").tolist()
+            bedlevel_list = model_data.get("bedlevel").tolist()
+            is_lake_mask_list = model_data.get("islake").tolist()
 
             # Assume same length for x and y coords.
             for i in range(len(x_coords)):
@@ -672,7 +719,7 @@ class CrossSection(FM2ProfBase):
 
         writes to self.__output_mask_list
         """
-        fm_data = self._fm_data
+        model_data = self._model_data
 
         # Properties keys
         cross_section_id_key = "cross_section_id"
@@ -680,9 +727,9 @@ class CrossSection(FM2ProfBase):
 
         try:
             # Normalize np arrays to list for correct access
-            x_coords = fm_data.get("edge_x").tolist()
-            y_coords = fm_data.get("edge_y").tolist()
-            section_list = fm_data.get("edge_section").tolist()
+            x_coords = model_data.get("edge_x").tolist()
+            y_coords = model_data.get("edge_y").tolist()
+            section_list = model_data.get("edge_section").tolist()
             # Assume same length for x and y coords.
             for i in range(len(x_coords)):
                 mask_properties = {
@@ -886,15 +933,15 @@ class CrossSection(FM2ProfBase):
 
     def _build_roughness_tables(self) -> None:
         # Find roughness tables for each section
-        chezy_fm = self._fm_data.get("chezy").iloc[
+        chezy_fm = self._model_data.get("chezy").iloc[
             :,
             self.get_parameter(self.__cs_parameter_skip_maps) :,
         ]
 
-        sections = np.unique(self._fm_data.get("edge_section"))
+        sections = np.unique(self._model_data.get("edge_section"))
 
         for section in sections:
-            chezy_section = chezy_fm[self._fm_data["edge_section"] == section]
+            chezy_section = chezy_fm[self._model_data["edge_section"] == section]
             if self.get_parameter(self.__cs_parameter_Frictionweighing) == 0:
                 friction = self._friction_weighing_simple(chezy_section)
             elif self.get_parameter(self.__cs_parameter_Frictionweighing) == 1:
@@ -934,9 +981,9 @@ class CrossSection(FM2ProfBase):
         # Remove chezy where zero
         link_chezy = link_chezy.replace(0, np.nan)
         # efs are the two faces the edge connects to
-        efs = self._fm_data["edge_faces"][self._fm_data["edge_section"] == section]
+        efs = self._model_data["edge_faces"][self._model_data["edge_section"] == section]
         # compute the mean area for the two connecting faces
-        link_area = [self._fm_data.get("area_full").reindex(ef).mean() for ef in efs]
+        link_area = [self._model_data.get("area_full").reindex(ef).mean() for ef in efs]
         # the weight of one link is defined as the sum of the linked areas
         link_weight = link_area / np.sum(link_area)
 
@@ -954,7 +1001,7 @@ class CrossSection(FM2ProfBase):
         maximum width of the geometry, or a very small width that may lead
         to numerical instability. 
         """
-        unassigned_area = sum(self._fm_data["area"][self._fm_data["section"] == NODATA])
+        unassigned_area = sum(self._model_data["area"][self._model_data["section"] == NODATA])
         if unassigned_area > 0:
             self.set_logger_message(
                 f"{unassigned_area} m2 was not assigned to any section in input files, and"
@@ -965,12 +1012,12 @@ class CrossSection(FM2ProfBase):
         for section in ["main", "floodplain1", "floodplain2"]:
             if section == "main":
                 section_area = (
-                    np.sum(self._fm_data["area"][self._fm_data["section"] == section])
+                    np.sum(self._model_data["area"][self._model_data["section"] == section])
                     + unassigned_area
                 ) / self.length
             else:
                 section_area = (
-                    np.sum(self._fm_data["area"][self._fm_data["section"] == section])
+                    np.sum(self._model_data["area"][self._model_data["section"] == section])
                     / self.length
                 )
             self.section_widths[section] = section_area
@@ -983,10 +1030,10 @@ class CrossSection(FM2ProfBase):
         """
         tolerance = self.get_inifile().get_parameter("sdfloodplainbase")
         # Mean bed level in section 2 (floodplain)
-        floodplain_mask = self._fm_data.get("section") == "floodplain1"
+        floodplain_mask = self._model_data.get("section") == "floodplain1"
         if floodplain_mask.sum():
             mean_floodplain_elevation = np.nanmean(
-                self._fm_data["bedlevel"][floodplain_mask],
+                self._model_data["bedlevel"][floodplain_mask],
             )
 
             # Tolerance. Base level must at least be some below the crest to prevent
@@ -1288,8 +1335,8 @@ class CrossSection(FM2ProfBase):
             _fm_total_volume
 
         """
-        bedlevel = self._fm_data.get("bedlevel").to_numpy()
-        cell_area = self._fm_data.get("area").to_numpy()
+        bedlevel = self._model_data.get("bedlevel").to_numpy()
+        cell_area = self._model_data.get("area").to_numpy()
         flow_area_at_z0 = self._fm_flow_area[0]
         lowest_level_of_css = (
             centre_level[0] - centre_depth[0]

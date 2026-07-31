@@ -7,6 +7,7 @@ import inspect
 import io
 import json
 import os
+from dataclasses import dataclass
 from pathlib import Path
 from pydoc import locate
 from typing import TYPE_CHECKING, Any
@@ -16,6 +17,23 @@ from fm2prof.common import FM2ProfBase
 if TYPE_CHECKING:
     from collections.abc import Generator, Mapping
     from logging import Logger
+
+
+@dataclass
+class InputFiles:
+    """Convenience container for all FM2PROF input file paths."""
+
+    map_file: Path | str
+    """Path to the 2D model map output file (e.g. ``*_map.nc``)."""
+
+    css_file: Path | str
+    """Path to the cross-section location file."""
+
+    region_file: Path | str | None
+    """Path to the region polygon file, or ``None`` if not specified."""
+
+    section_file: Path | str | None
+    """Path to the section polygon file, or ``None`` if not specified."""
 
 class ConfigurationFileError(Exception):
     """Raised when config file is not up to snot."""
@@ -183,6 +201,23 @@ class IniFile(FM2ProfBase):
             str: string of path to input file
         """
         return self._get_from_configuration("input", file_name)
+
+    def get_input_files(self) -> InputFiles:
+        """Return all input file paths as a single :class:`InputFiles` object.
+
+        Returns:
+            InputFiles: convenience container with all input file paths.
+        """
+        def _optional(key: str) -> Path | None:
+            value = self.get_input_file(key)
+            return Path(value) if value else None
+
+        return InputFiles(
+            map_file=Path(self.get_input_file("2DMapOutput")),
+            css_file=Path(self.get_input_file("CrossSectionLocationFile")),
+            region_file=_optional("RegionPolygonFile"),
+            section_file=_optional("SectionPolygonFile"),
+        )
 
     def get_parameter(self, key: str) -> str | bool | int | float | None:
         """Use this method to return a parameter value.
@@ -427,19 +462,24 @@ class IniFile(FM2ProfBase):
                     "warning",
                 )
 
-    def _get_valid_output_dir(self, output_dir: str) -> Path:
+    def _get_valid_output_dir(self, output_dir: str | Path) -> Path:
         """Get a normalized output directory path. Creates it if not yet exists.
 
+        Relative paths are resolved relative to the ini file's directory (or CWD if no
+        ini file is loaded), so the directory is created at the correct location.
+        The returned path is stored as-is (relative); ``get_output_directory`` will
+        resolve it against the ini file root when it is retrieved.
+
         Args:
-            output_dir (str): Relative path to the configuration file.
+            output_dir (str | Path): Path to the output directory, possibly relative.
 
         Returns:
-            _Path: Valid output directory path.
+            Path: The (possibly relative) output directory path.
         """
         output_dir = Path(output_dir)
-        if output_dir.exists():
-            return output_dir
-        output_dir.mkdir()
+        resolved = self._file_dir / output_dir if not output_dir.is_absolute() else output_dir
+        if not resolved.exists():
+            resolved.mkdir(parents=True, exist_ok=True)
         return output_dir
 
     @property
