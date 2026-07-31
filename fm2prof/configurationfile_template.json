@@ -11,7 +11,7 @@
   	},
   	"CrossSectionLocationFile": {
 	    "type": "str",
-	    "hint": ".csv or .txt file (, as delimiter) that contains four columns: X_coordinate,Y_coordinate,BranchName,Length,Chainage.",
+	    "hint": "delimited text file that contains four columns: X_coordinate,Y_coordinate,BranchName,Length,Chainage.",
 	    "value": "",
 		"optional": false
   	},
