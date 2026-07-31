@@ -92,6 +92,7 @@ nav:
       - Quickstart: user_docs/quickstart.md
       - Files and Settings:
         - user_docs/configuration.md
+        - user_docs/input_files.md
         - user_docs/output_files.md
       - Advanced use: 
         - user_docs/troubleshooting.md

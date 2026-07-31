@@ -5,23 +5,27 @@
   	{
     "2DMapOutput": {
 	    "type": "str",
-	    "hint": "Output file from FM2D model (.net file)",
-	    "value": "" 
+	    "hint": "Supported input file containing 2D data (*.nc, *.csv)",
+	    "value": "",
+		"optional": false
   	},
   	"CrossSectionLocationFile": {
 	    "type": "str",
 	    "hint": ".csv or .txt file (, as delimiter) that contains four columns: X_coordinate,Y_coordinate,BranchName,Length,Chainage.",
-	    "value": "" 
+	    "value": "",
+		"optional": false
   	},
 	"RegionPolygonFile": {
 	    "type": "str",
 	    "hint": "User defined polygons in json format",
-	    "value": "" 
+	    "value": "",
+		"optional": true
   	},
     "SectionPolygonFile": {
 	    "type": "str",
 	    "hint": "User defined polygons in json format",
-	    "value": "" 
+	    "value": "",
+		"optional": true
 	 }
   },
   "parameters": {
