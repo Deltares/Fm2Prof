@@ -264,9 +264,18 @@ class Fm2ProfRunner(FM2ProfBase):
             )
             raise InitializationError
 
-        ntsteps: int = self.model_data.hydraulics.waterlevel.shape[1]
-        nfaces: int = self.model_data.hydraulics.waterlevel.shape[0]
-        nedges: int = self.model_data.edges.x.shape[0]
+        if self.model_data.has_hydraulics:
+            ntsteps: int = self.model_data.hydraulics.waterlevel.shape[1]
+            nfaces: int = self.model_data.hydraulics.waterlevel.shape[0]
+        else:
+            ntsteps:int = 0
+            nfaces: int = self.model_data.geometry.x.shape[0]
+
+        if self.model_data.has_edges:
+            nedges: int = self.model_data.edges.x.shape[0]
+        else:
+            nedges: int = 0
+
         self.set_logger_message("finished reading FM and cross-sectional data data")
         self.set_logger_message(
             f"Number of: timesteps ({ntsteps}), "
@@ -354,27 +363,21 @@ class Fm2ProfRunner(FM2ProfBase):
 
         self.set_logger_message("Validating settings", "Info")
 
-        # Check if skipmaps is lower than maximum amount of maps
-        nsteps: int = self.model_data.hydraulics.waterlevel.shape[1]
-        skipmap: int = self.get_inifile().get_parameter(self.__key_skipmaps)
+        if self.model_data.has_hydraulics:
+            success = self._validate_skipmaps_is_lower_than_available_maps()
+        else:
+            self.set_logger_message("""Running FM2PROF without
+hydraulic data in `GIS2PROF` mode. See documentation for more information""")
 
-        if skipmap >= nsteps:
-            self.set_logger_message(
-                f"""You are attempting to skip more than  available timesteps.
-                ({self.__key_skipmaps} = {skipmap}, available maps in output file:
-                 {nsteps}). Modify the value of {self.__key_skipmaps}
-                in your configuration file to fix this error.""",
-                level="error",
-            )
-            success = False
-        elif skipmap > nsteps / 2:
-            self.set_logger_message(
-                f"""You are skipping more than half of available timesteps.
-                    ({self.__key_skipmaps} = {skipmap}, available maps in output file: {nsteps})""",
-                level="warning",
-            )
+        if self.model_data.has_edges:
+            success = self._validate_edge_face_in_file()
+        else:
+            self.set_logger_message("""Running FM2PROF without edge data. Roughness will not be
+inferred but set to default values.""")
 
-        # Check if edge/face data is available
+        return success
+
+    def _validate_edge_face_in_file(self) -> bool:
         if (
             self.model_data.edges.edge_faces is None
             and self.get_inifile().get_parameter(self.__key_frictionweighingmethod) == 1
@@ -387,7 +390,29 @@ class Fm2ProfRunner(FM2ProfBase):
                 level="warning",
             )
 
-        return success
+        return True
+
+    def _validate_skipmaps_is_lower_than_available_maps(self) -> bool:
+        """Check if skipmaps is lower than maximum amount of maps."""
+        nsteps: int = self.model_data.hydraulics.waterlevel.shape[1]
+        skipmap: int = self.get_inifile().get_parameter(self.__key_skipmaps)
+
+        if skipmap >= nsteps:
+            self.set_logger_message(
+                f"""You are attempting to skip more than  available timesteps.
+                ({self.__key_skipmaps} = {skipmap}, available maps in output file:
+                 {nsteps}). Modify the value of {self.__key_skipmaps}
+                in your configuration file to fix this error.""",
+                level="error",
+            )
+            return False
+        elif skipmap > nsteps / 2:
+            self.set_logger_message(
+                f"""You are skipping more than half of available timesteps.
+                    ({self.__key_skipmaps} = {skipmap}, available maps in output file: {nsteps})""",
+                level="warning",
+            )
+        return True
 
     def _create_debug_output_if_not_exists(self, output_dir: Path) -> None:
         """Create debug output directory if it does not exist."""
