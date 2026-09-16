@@ -44,10 +44,26 @@ cases = [{
         "crsloc.ini",
         "crsdef.ini",
     ]},
+    {
+    "name": "case_20_geotif",
+    "inifile": "cases/case_20_only_elevation/fm2prof_config_geotif.ini",
+    "expected_cross_section": {
+        "total_width": [0.50, 1.21, 4.53, 15.59, 21.87, 23.51, 24.17, 24.37, 25.09, 25.32, 25.33, 26.02, 26.68, 27.29, 29.10, 30.96, 31.86, 32.94, 33.62, 33.74],
+        "levels":      [0.00, 0.12, 0.23,  0.44,  0.70,  0.85,  1.16,  1.92,  2.21,  2.48,  3.27,  3.73,  3.76,  4.00,  4.14,  4.49,  4.85,  4.86,  4.99,  5.36],
+    },
+    "expected_dflow1d_files": [
+        "CrossSectionLocations.ini",
+        "CrossSectionDefinitions.ini",
+    ],
+    "expected_dhydro_files": [
+        "crsloc.ini",
+        "crsdef.ini",
+    ]},
 ]
 
 # Subset used for idealised cross-section comparison (excludes elevation-only case)
-cases_idealised = [c for c in cases if c["name"] != "case_20_elevation_only"]
+cases_idealised = [c for c in cases if "case_02" in c["name"]]
+cases_elevation_only = [c for c in cases if "case_20" in c["name"]]
 
 # Expected D-Flow 1D output files
 EXPECTED_DFLOW1D_FILES = [
@@ -114,9 +130,9 @@ class TestAcceptance:
 
         assert max_lvl_error < tolerated_max_level_error
 
-    def test_elevation_only_css_matches_expectations(self):
+    @pytest.mark.parametrize("case", cases_elevation_only)
+    def test_elevation_only_css_matches_expectations(self, case):
         """Test that the elevation-only case produces a cross-section matching the expected vectors exactly."""
-        case = next(c for c in cases if c["name"] == "case_20_elevation_only")
         inifile = TestUtils.get_local_test_file(case.get("inifile"))
 
         # Run case

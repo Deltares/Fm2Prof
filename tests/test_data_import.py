@@ -7,6 +7,7 @@ import pytest
 from fm2prof.imports import ImporterFactory, ModelData
 from fm2prof.imports.base import CrossSectionData, FaceGeometry
 from fm2prof.imports.csv_elevation import CsvElevationImporter
+from fm2prof.imports.geotif import GeoTifImporter
 from fm2prof.imports.dflowfm import DFlowFMImporter
 from fm2prof.imports.factory import detect_source
 from tests.TestUtils import TestUtils, skipwhenexternalsmissing
@@ -161,6 +162,39 @@ class TestCsvElevationImporter:
         with pytest.raises(ValueError, match="missing required columns"):
             importer.import_data()
 
+
+class TestGeoTifImporter:
+
+    TIF_FILE = "cases/case_20_only_elevation/data/mlnbk_tif.tif"
+
+    @pytest.fixture
+    def tif_file(self):
+        return TestUtils.get_local_test_file(self.TIF_FILE)
+
+    @pytest.fixture
+    def model_data(self, tif_file) -> ModelData:
+        return GeoTifImporter(tif_file).import_data()
+
+    def test_factory_creates_csv_elevation_importer(self, tif_file):
+        """ImporterFactory should resolve 'geotif' to GeoTifImporter."""
+        importer = ImporterFactory.create("geotif", tif_file)
+        assert isinstance(importer, GeoTifImporter)
+
+    def test_model_data_is_returned(self, model_data):
+        """Import_data should return a ModelData instance."""
+        assert isinstance(model_data, ModelData)
+
+    def test_face_geometry_is_populated(self, model_data):
+        """Geometry should contain face data with positive length."""
+        assert model_data.geometry is not None
+        assert len(model_data.geometry.x) > 0
+
+    def test_face_geometry_x_y_are_finite_floats(self, model_data):
+        """Coordinates x and y should be finite float arrays."""
+        assert model_data.geometry.x.dtype == float
+        assert model_data.geometry.y.dtype == float
+        assert np.all(np.isfinite(model_data.geometry.x))
+        assert np.all(np.isfinite(model_data.geometry.y))
 
 class TestDetectSource:
 

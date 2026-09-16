@@ -23,6 +23,8 @@ dependencies = [
     "colorama>=0.4.6",
     "meshkernel>=8.1.2",
     "xarray>=2025.6.1",
+    "tifffile>=2026.3.3",
+    "imagecodecs>=2026.1.14",
 ]
 
 [dependency-groups]
