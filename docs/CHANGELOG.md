@@ -1,3 +1,17 @@
+## 2.6.0 (2026-09-25)
+
+The 2.6 release cycle introduces support for DEM-only input, make various quality-of-life improvemenets and expands user documentation. 
+
+### New Features
+
+- Added support for GeoTIFF DEM (Digital Elevation Model) data
+- Added support for CSV DEM data 
+
+### Maintenance
+- Major refactor of the import modules. 
+- Security & bug fixes
+
+
 ## 2.5.1 (2026-03-03)
 
 This update introduces support for the D-Hydro 1D file formats and expands user documentation. 
