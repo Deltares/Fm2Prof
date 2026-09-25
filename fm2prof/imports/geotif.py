@@ -97,12 +97,6 @@ class GeoTifImporter(BaseImporter):
         nodata_value = None
         if TAG_GDAL_NODATA in tif.pages[0].tags:
             nodata_str = tif.pages[0].tags[TAG_GDAL_NODATA].value
-            try:
-                nodata_value = float(nodata_str)
-            except ValueError:
-                self.set_logger_message(
-                    f"Could not convert GDAL NoData value '{nodata_str}' to float.",
-                    "warning"
-                )
+            nodata_value = float(nodata_str)
 
         return nodata_value
