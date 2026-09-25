@@ -1,0 +1,13 @@
+[data-md-color-scheme="deltares"] {
+    --md-primary-fg-color:        #0a28a3;    
+  }
+  [data-md-color-scheme="slate"] {
+    --md-primary-fg-color:        #14151a;    
+  }
+
+/* Indentation. */
+div.doc-contents:not(.first) {
+  padding-left: 25px;
+  border-left: 4px solid rgba(230, 230, 230);
+  margin-bottom: 80px;
+}

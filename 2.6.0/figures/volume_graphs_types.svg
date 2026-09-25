@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   inkscape:version="1.0 (4035a4fb49, 2020-05-01)"
+   sodipodi:docname="volume_graphs_types.svg"
+   id="svg8"
+   version="1.1"
+   viewBox="0 0 130.44911 107.63719"
+   height="107.63719mm"
+   width="130.44911mm">
+  <defs
+     id="defs2" />
+  <sodipodi:namedview
+     inkscape:window-maximized="1"
+     inkscape:window-y="-8"
+     inkscape:window-x="-8"
+     inkscape:window-height="1027"
+     inkscape:window-width="1920"
+     fit-margin-bottom="0"
+     fit-margin-right="0"
+     fit-margin-left="0"
+     fit-margin-top="0"
+     showgrid="false"
+     inkscape:document-rotation="0"
+     inkscape:current-layer="layer1"
+     inkscape:document-units="mm"
+     inkscape:cy="275.23411"
+     inkscape:cx="276.37067"
+     inkscape:zoom="0.98994949"
+     inkscape:pageshadow="2"
+     inkscape:pageopacity="0.0"
+     borderopacity="1.0"
+     bordercolor="#666666"
+     pagecolor="#ffffff"
+     id="base" />
+  <metadata
+     id="metadata5">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     transform="translate(-23.393005,-35.954576)"
+     id="layer1"
+     inkscape:groupmode="layer"
+     inkscape:label="Layer 1">
+    <path
+       id="path10"
+       d="M 72.82757,83.532738 H 28.22638 v -20.78869 c 0,-16.441965 0,-19.087798 0,-19.087798"
+       style="fill:none;stroke:#000000;stroke-width:0.765;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+    <path
+       style="fill:none;stroke:#000000;stroke-width:0.765;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       d="M 71.52627,143.20927 H 26.92508 v -20.7887 c 0,-16.44197 0,-19.0878 0,-19.0878"
+       id="path14" />
+    <path
+       id="path22"
+       d="M 130.01133,142.83972 H 85.410129 v -20.7887 c 0,-16.44197 0,-19.0878 0,-19.0878"
+       style="fill:none;stroke:#000000;stroke-width:0.765;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+    <text
+       transform="rotate(-90)"
+       id="text851"
+       y="26.423311"
+       x="-60.110603"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:4.23333px;line-height:1.25;font-family:ETBembo;-inkscape-font-specification:ETBembo;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.143361"
+       xml:space="preserve"><tspan
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:4.23333px;font-family:Arial;-inkscape-font-specification:Arial;stroke-width:0.143361"
+         y="26.423311"
+         x="-60.110603"
+         id="tspan849"
+         sodipodi:role="line">Volume</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:4.23333px;line-height:1.25;font-family:ETBembo;-inkscape-font-specification:ETBembo;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.143361"
+       x="51.819408"
+       y="87.94072"
+       id="text855"><tspan
+         sodipodi:role="line"
+         id="tspan853"
+         x="51.819408"
+         y="87.94072"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:4.23333px;font-family:Arial;-inkscape-font-specification:Arial;stroke-width:0.143361">Water level</tspan></text>
+    <text
+       id="text867"
+       y="39.477768"
+       x="35.921169"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.28183px;line-height:1.25;font-family:ETBembo;-inkscape-font-specification:ETBembo;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.0820455"
+       xml:space="preserve"><tspan
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:Arial;-inkscape-font-specification:Arial;stroke-width:0.0820455"
+         y="39.477768"
+         x="35.921169"
+         id="tspan865"
+         sodipodi:role="line">Rectangular</tspan></text>
+    <path
+       style="fill:none;stroke:#000000;stroke-width:0.765;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       d="M 130.28226,83.532738 H 85.681065 v -20.78869 c 0,-16.441965 0,-19.087798 0,-19.087798"
+       id="path873" />
+    <path
+       id="path12"
+       d="M 28.22638,83.532738 68.575338,51.782739"
+       style="fill:none;stroke:#2a00ff;stroke-width:0.4;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:0.907631" />
+    <path
+       sodipodi:nodetypes="cc"
+       style="fill:none;stroke:#2a00ff;stroke-width:0.4;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:0.907631"
+       d="m 26.92508,143.20927 c 22.06126,-3.45649 32.79315,-16.28902 40.34896,-31.75001"
+       id="path16" />
+    <path
+       id="path24"
+       d="m 85.410129,142.83972 c 11.91935,-1.86749 20.531591,-6.47191 27.122571,-12.74907 0.65568,-0.62447 -0.0316,-6.08469 0.58538,-6.74121 4.65983,-4.95881 8.62867,-7.30599 12.64102,-12.25973"
+       style="fill:none;stroke:#2a00ff;stroke-width:0.4;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:0.907631"
+       sodipodi:nodetypes="cssc" />
+    <path
+       sodipodi:nodetypes="cc"
+       style="fill:none;stroke:#2a00ff;stroke-width:0.4;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:0.907631"
+       d="M 85.681065,83.532738 107.55704,66.318855"
+       id="path875" />
+    <path
+       id="path885"
+       d="M 107.55704,66.318855 121.58881,44.790179"
+       style="fill:none;stroke:#2a00ff;stroke-width:0.4;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:0.907631"
+       sodipodi:nodetypes="cc" />
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.28183px;line-height:1.25;font-family:ETBembo;-inkscape-font-specification:ETBembo;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.0820455"
+       x="102.30646"
+       y="38.343838"
+       id="text889"><tspan
+         sodipodi:role="line"
+         id="tspan887"
+         x="102.30646"
+         y="38.343838"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:Arial;-inkscape-font-specification:Arial;stroke-width:0.0820455">Compound</tspan></text>
+    <text
+       id="text2935"
+       y="98.334839"
+       x="42.128372"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.28183px;line-height:1.25;font-family:ETBembo;-inkscape-font-specification:ETBembo;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.0820455"
+       xml:space="preserve"><tspan
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:Arial;-inkscape-font-specification:Arial;stroke-width:0.0820455"
+         y="98.334839"
+         x="42.128372"
+         id="tspan2933"
+         sodipodi:role="line">Trapezoidal shape</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.28183px;line-height:1.25;font-family:ETBembo;-inkscape-font-specification:ETBembo;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.0820455"
+       x="85.914001"
+       y="97.686104"
+       id="text2967"><tspan
+         sodipodi:role="line"
+         id="tspan2965"
+         x="85.914001"
+         y="97.686104"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:Arial;-inkscape-font-specification:Arial;stroke-width:0.0820455">Trapezoidal with compartimentalised floodplain</tspan></text>
+  </g>
+</svg>
