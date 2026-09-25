@@ -22,7 +22,7 @@ import numpy as np
 
 from fm2prof import nearest_neighbour
 from fm2prof.data_import import ImportInputFiles
-from fm2prof.imports import ImporterFactory
+from fm2prof.imports import ImporterFactory, detect_source
 from fm2prof.polygon_file import GridPointsInPolygonResults, RegionPolygon, SectionPolygon
 
 if TYPE_CHECKING:
@@ -36,7 +36,6 @@ if TYPE_CHECKING:
 
 def build_model_data(
     input_files: InputFiles,
-    source: str = "dflowfm",
     *,
     default_region: str = "",
     default_section: str = "main",
@@ -45,8 +44,8 @@ def build_model_data(
     """Load, classify and assemble all 2D model data into a ModelData instance.
 
     This function is the single entry point for the initialisation pipeline.
-    It is source-agnostic: pass ``source="dflowfm"`` (or any supported source)
-    and the appropriate importer is selected automatically.
+    The source format is inferred automatically from the map file extension
+    (``.nc`` → ``dflowfm``, ``.csv`` → ``csv_elevation``).
 
     Steps performed:
         1. Import 2D map file via :class:`~fm2prof.imports.ImporterFactory`.
@@ -57,7 +56,6 @@ def build_model_data(
 
     Args:
         input_files:     Container with paths to all required input files.
-        source:          Source format identifier. Default: ``"dflowfm"``.
         default_region:  Default region label when no region polygon is given.
         default_section: Default section label when no section polygon is given.
         logger:          Optional logger instance for status messages.
@@ -79,10 +77,10 @@ def build_model_data(
 
     # 1. Read input files
     model_data, cssdata, regions, sections = _read_input_files(
-        input_files, source, default_region, default_section, _logger,
+        input_files, default_region, default_section, _logger,
     )
 
-    # 2 Classify faces and edges to cross-sections
+    # 2 Classify faces and edges (if present) to cross-sections
     if regions is None:
         _log("Classifying 2D points to cross-sections (no region polygon)")
         model_data = _classify_cross_sections_without_regions(model_data, cssdata)
@@ -91,7 +89,13 @@ def build_model_data(
         model_data = _classify_cross_sections_using_regions(model_data, cssdata, regions, input_files)
 
     # 3. Classify sections
-    model_data = _classify_to_sections(model_data, sections, input_files.map_file)
+    if sections is None:
+        if model_data.has_hydraulics:
+            model_data = _classify_sections_without_polygon_by_hydraulics(model_data)
+        else:
+            model_data = _set_sections_to_default(model_data)
+    else:
+        model_data = _classify_sections_using_polygon(model_data, sections, input_files.map_file)
 
     # 4. Attach cross-section definitions toi the ModelData object
     if cssdata and isinstance(cssdata, dict):
@@ -108,12 +112,12 @@ def build_model_data(
 
 def _read_input_files(
     input_files: InputFiles,
-    source: str,
     default_region: str,
     default_section: str,
     logger: Logger,
 ) -> tuple:
     """Import map file, css locations and polygon files."""
+    source = detect_source(input_files.map_file)
     model_data: ModelData = ImporterFactory.create(source, input_files.map_file).import_data()
 
     importer = ImportInputFiles()
@@ -133,13 +137,17 @@ def _read_input_files(
 
 def _classify_cross_sections_without_regions(model_data:ModelData, cssdata: dict) -> ModelData:
     """Classify without regions — called when no region file is present."""
+    # Build nearest neighbour tree
     neigh = nearest_neighbour.get_class_tree(cssdata["xy"], cssdata["id"])
+    # Classify faces
     model_data.geometry.sclass = neigh.predict(
         np.array([model_data.geometry.x, model_data.geometry.y]).T,
     )
-    model_data.edges.sclass = neigh.predict(
-        np.array([model_data.edges.x, model_data.edges.y]).T,
-    )
+    # Classify edges, if present
+    if model_data.has_edges:
+        model_data.edges.sclass = neigh.predict(
+            np.array([model_data.edges.x, model_data.edges.y]).T,
+        )
 
     return model_data
 
@@ -147,12 +155,16 @@ def _classify_cross_sections_using_regions(model_data: ModelData, cssdata: dict,
     """Classify using region polygons — called when a region file is present."""
     gridpoints_in_regions: GridPointsInPolygonResults = regions.get_gridpoints_in_polygon(input_files.map_file)
     model_data.geometry.region = gridpoints_in_regions.faces_in_polygon
-    model_data.edges.region = gridpoints_in_regions.edges_in_polygon
+
+    if model_data.has_edges:
+        model_data.edges.region = gridpoints_in_regions.edges_in_polygon
 
     css_regions = regions.get_points_in_polygon(cssdata["xy"], property_name="region")
 
     model_data.geometry.sclass = model_data.geometry.region.copy()
-    model_data.edges.sclass = model_data.edges.region.copy()
+    if model_data.has_edges:
+        model_data.edges.sclass = model_data.edges.region.copy()
+
     for region in np.unique(model_data.geometry.region):
         css_xy = cssdata["xy"][np.array(css_regions) == region]
         css_id = cssdata["id"][np.array(css_regions) == region]
@@ -163,31 +175,37 @@ def _classify_cross_sections_using_regions(model_data: ModelData, cssdata: dict,
         model_data.geometry.sclass[node_mask] = neigh.predict(
             np.array([model_data.geometry.x[node_mask], model_data.geometry.y[node_mask]]).T,
         )
-        edge_mask = model_data.edges.region == region
-        model_data.edges.sclass[edge_mask] = neigh.predict(
-            np.array([model_data.edges.x[edge_mask], model_data.edges.y[edge_mask]]).T,
-        )
+        if model_data.has_edges:
+            edge_mask = model_data.edges.region == region
+            model_data.edges.sclass[edge_mask] = neigh.predict(
+                np.array([model_data.edges.x[edge_mask], model_data.edges.y[edge_mask]]).T,
+            )
 
     return model_data
 
-
-def _classify_to_sections(model_data: ModelData, sections: SectionPolygon, map_file: Path) -> ModelData:
+def _classify_sections_without_polygon_by_hydraulics(model_data: ModelData) -> ModelData:
     """Classify 2D faces and edges to roughness sections."""
-    if sections is None:
+    if model_data.has_edges:
         model_data.edges.section    = classify_sections_by_variance(
             model_data.edges.section, model_data.hydraulics.chezy_edge,
         )
-        model_data.geometry.section = classify_sections_by_variance(
-            model_data.geometry.section, model_data.hydraulics.waterlevel,
-        )
-    else:
-        gridpoints: GridPointsInPolygonResults = sections.get_gridpoints_in_polygon(map_file)
-        model_data.geometry.section = gridpoints.faces_in_polygon
+    model_data.geometry.section = classify_sections_by_variance(
+        model_data.geometry.section, model_data.hydraulics.waterlevel,
+    )
+
+    return model_data
+
+def _classify_sections_using_polygon(model_data: ModelData, sections: SectionPolygon, map_file: Path) -> ModelData:
+    gridpoints: GridPointsInPolygonResults = sections.get_gridpoints_in_polygon(map_file)
+    model_data.geometry.section = gridpoints.faces_in_polygon
+    if model_data.has_edges:
         model_data.edges.section    = gridpoints.edges_in_polygon
 
     return model_data
 
-
+def _set_sections_to_default(model_data: ModelData):
+    model_data.geometry.section[:] = "main"
+    return model_data
 
 def classify_sections_by_variance(
     section: np.ndarray,

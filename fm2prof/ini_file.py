@@ -462,19 +462,24 @@ class IniFile(FM2ProfBase):
                     "warning",
                 )
 
-    def _get_valid_output_dir(self, output_dir: str) -> Path:
+    def _get_valid_output_dir(self, output_dir: str | Path) -> Path:
         """Get a normalized output directory path. Creates it if not yet exists.
 
+        Relative paths are resolved relative to the ini file's directory (or CWD if no
+        ini file is loaded), so the directory is created at the correct location.
+        The returned path is stored as-is (relative); ``get_output_directory`` will
+        resolve it against the ini file root when it is retrieved.
+
         Args:
-            output_dir (str): Relative path to the configuration file.
+            output_dir (str | Path): Path to the output directory, possibly relative.
 
         Returns:
-            _Path: Valid output directory path.
+            Path: The (possibly relative) output directory path.
         """
         output_dir = Path(output_dir)
-        if output_dir.exists():
-            return output_dir
-        output_dir.mkdir()
+        resolved = self._file_dir / output_dir if not output_dir.is_absolute() else output_dir
+        if not resolved.exists():
+            resolved.mkdir(parents=True, exist_ok=True)
         return output_dir
 
     @property

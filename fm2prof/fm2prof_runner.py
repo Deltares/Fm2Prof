@@ -247,7 +247,6 @@ class Fm2ProfRunner(FM2ProfBase):
         try:
             self.model_data = build_model_data(
                 input_files,
-                source="dflowfm",
                 default_region=ini_file.get_parameter("DefaultRegion"),
                 default_section=ini_file.get_parameter("DefaultSection"),
                 logger=self.get_logger(),
@@ -265,9 +264,18 @@ class Fm2ProfRunner(FM2ProfBase):
             )
             raise InitializationError
 
-        ntsteps: int = self.model_data.hydraulics.waterlevel.shape[1]
-        nfaces: int = self.model_data.hydraulics.waterlevel.shape[0]
-        nedges: int = self.model_data.edges.x.shape[0]
+        if self.model_data.has_hydraulics:
+            ntsteps: int = self.model_data.hydraulics.waterlevel.shape[1]
+            nfaces: int = self.model_data.hydraulics.waterlevel.shape[0]
+        else:
+            ntsteps:int = 0
+            nfaces: int = self.model_data.geometry.x.shape[0]
+
+        if self.model_data.has_edges:
+            nedges: int = self.model_data.edges.x.shape[0]
+        else:
+            nedges: int = 0
+
         self.set_logger_message("finished reading FM and cross-sectional data data")
         self.set_logger_message(
             f"Number of: timesteps ({ntsteps}), "
@@ -317,8 +325,9 @@ class Fm2ProfRunner(FM2ProfBase):
 
     def _finalise_fm2prof(self, cross_sections: list[CrossSection]) -> None:
         """Write to output, perform checks."""
-        self.set_logger_message("Interpolating roughness")
-        CrossSectionHelpers().interpolate_friction_across_cross_sections(cross_sections)
+        if self.model_data.has_edges & self.model_data.has_hydraulics:
+            self.set_logger_message("Interpolating roughness")
+            CrossSectionHelpers().interpolate_friction_across_cross_sections(cross_sections)
 
         # Export cross sections
         output_dir = self.get_inifile().get_output_directory()
@@ -355,27 +364,21 @@ class Fm2ProfRunner(FM2ProfBase):
 
         self.set_logger_message("Validating settings", "Info")
 
-        # Check if skipmaps is lower than maximum amount of maps
-        nsteps: int = self.model_data.hydraulics.waterlevel.shape[1]
-        skipmap: int = self.get_inifile().get_parameter(self.__key_skipmaps)
+        if self.model_data.has_hydraulics:
+            success = self._validate_skipmaps_is_lower_than_available_maps()
+        else:
+            self.set_logger_message("""Running FM2PROF without
+hydraulic data in `GIS2PROF` mode. See documentation for more information""")
 
-        if skipmap >= nsteps:
-            self.set_logger_message(
-                f"""You are attempting to skip more than  available timesteps.
-                ({self.__key_skipmaps} = {skipmap}, available maps in output file:
-                 {nsteps}). Modify the value of {self.__key_skipmaps}
-                in your configuration file to fix this error.""",
-                level="error",
-            )
-            success = False
-        elif skipmap > nsteps / 2:
-            self.set_logger_message(
-                f"""You are skipping more than half of available timesteps.
-                    ({self.__key_skipmaps} = {skipmap}, available maps in output file: {nsteps})""",
-                level="warning",
-            )
+        if self.model_data.has_edges:
+            success = self._validate_edge_face_in_file()
+        else:
+            self.set_logger_message("""Running FM2PROF without edge data. Roughness will not be
+inferred but set to default values.""")
 
-        # Check if edge/face data is available
+        return success
+
+    def _validate_edge_face_in_file(self) -> bool:
         if (
             self.model_data.edges.edge_faces is None
             and self.get_inifile().get_parameter(self.__key_frictionweighingmethod) == 1
@@ -388,7 +391,29 @@ class Fm2ProfRunner(FM2ProfBase):
                 level="warning",
             )
 
-        return success
+        return True
+
+    def _validate_skipmaps_is_lower_than_available_maps(self) -> bool:
+        """Check if skipmaps is lower than maximum amount of maps."""
+        nsteps: int = self.model_data.hydraulics.waterlevel.shape[1]
+        skipmap: int = self.get_inifile().get_parameter(self.__key_skipmaps)
+
+        if skipmap >= nsteps:
+            self.set_logger_message(
+                f"""You are attempting to skip more than  available timesteps.
+                ({self.__key_skipmaps} = {skipmap}, available maps in output file:
+                 {nsteps}). Modify the value of {self.__key_skipmaps}
+                in your configuration file to fix this error.""",
+                level="error",
+            )
+            return False
+        elif skipmap > nsteps / 2:
+            self.set_logger_message(
+                f"""You are skipping more than half of available timesteps.
+                    ({self.__key_skipmaps} = {skipmap}, available maps in output file: {nsteps})""",
+                level="warning",
+            )
+        return True
 
     def _create_debug_output_if_not_exists(self, output_dir: Path) -> None:
         """Create debug output directory if it does not exist."""
@@ -432,7 +457,8 @@ class Fm2ProfRunner(FM2ProfBase):
             cross_sections (list): List of Cross Sections.
 
         """
-        for pointtype in ["face", "edge"]:
+        pointtypes = ["face", "edge"] if self.model_data.has_edges else ["face"]
+        for pointtype in pointtypes:
             output_file_path = Path(output_dir) / f"{pointtype}_output.geojson"
             try:
                 node_points = [
@@ -448,7 +474,7 @@ class Fm2ProfRunner(FM2ProfBase):
                 self.set_logger_message("Done", level="debug")
             except Exception as e_info:
                 self.set_logger_message(
-                    ("Error while generation .geojson file,"
+                    ("Error while generating .geojson file,"
                      f"at {output_file_path}"
                      f"Reason: {e_info!s}"),
                     level="error",
@@ -467,7 +493,7 @@ class Fm2ProfRunner(FM2ProfBase):
         self,
         css_data: dict,
         model_data: ModelData,
-    ) -> CrossSection:
+    ) -> CrossSection | None:
         """Generate a cross section and configures its values based.
 
         on the input parameter dictionary
@@ -497,7 +523,7 @@ class Fm2ProfRunner(FM2ProfBase):
             css_name = "new_cross_section"
 
         if model_data is None:
-            err_msg = f"No FM data given for new cross section {css_name}"
+            err_msg = f"No model data given for new cross section {css_name}"
             raise ValueError(err_msg)
 
         # Create cross section
@@ -518,11 +544,13 @@ class Fm2ProfRunner(FM2ProfBase):
 
         self.set_logger_message("Initiated new cross-section", "info")
         self._build_cross_section_geometry(cross_section=created_css)
-        self._build_cross_section_roughness(cross_section=created_css)
+        if self.model_data.has_edges & self.model_data.has_hydraulics:
+            self._build_cross_section_roughness(cross_section=created_css)
 
         # if self.get_inifile().get_parameter('ExportMapFiles'):
         created_css.set_face_output_list()
-        created_css.set_edge_output_list()
+        if self.model_data.has_edges:
+            created_css.set_edge_output_list()
 
         if created_css is not None:
             self.finish_log_task()
@@ -548,12 +576,12 @@ class Fm2ProfRunner(FM2ProfBase):
         cross_section.build_geometry()
 
         # 2D Volume Correction (SummerDike option)
-        if self.get_inifile().get_parameter("SDCorrection"):
+        if self.get_inifile().get_parameter("SDCorrection") & self.model_data.has_hydraulics:
             self.set_logger_message("Starting correction", "debug")
             cross_section = self._perform_2D_volume_correction(cross_section)
         else:
             self.set_logger_message(
-                "SD Correction not enable in configuration file, skipping",
+                "SD Correction not enabled in configuration file or no hydraulics in model data, skipping",
                 "info",
             )
 
@@ -633,7 +661,10 @@ class Fm2ProfRunner(FM2ProfBase):
         # Export D-Hydro format
         try:
             dhydro_exporter = ExporterFactory.create("dhydro", output_dir=output_dir / "dhydro")
-            dhydro_exporter.export_all(cross_sections)
+            if self.model_data.has_hydraulics & self.model_data.has_edges:
+                dhydro_exporter.export_all(cross_sections)
+            else:
+                dhydro_exporter.export_geometry(cross_sections)
             self.set_logger_message("Successfully exported D-Hydro format files", "info")
         except (ValueError, OSError, KeyError) as e_info:
             self.set_logger_message(
@@ -646,7 +677,10 @@ class Fm2ProfRunner(FM2ProfBase):
         # Export D-Flow 1D format
         try:
             dflow1d_exporter = ExporterFactory.create("dflow1d", output_dir=output_dir / "dflow1d")
-            dflow1d_exporter.export_all(cross_sections)
+            if self.model_data.has_hydraulics & self.model_data.has_edges:
+                dflow1d_exporter.export_all(cross_sections)
+            else:
+                dflow1d_exporter.export_geometry(cross_sections)
             self.set_logger_message("Successfully exported D-Flow 1D format files", "info")
         except (ValueError, OSError, KeyError) as e_info:
             self.set_logger_message(
