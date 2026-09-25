@@ -226,8 +226,7 @@ class CrossSection(FM2ProfBase):
 
     # Public functions
     def build_geometry(self) -> None:
-        """ """
-
+        """Builds 1D cross-section geometry."""
         # the cssdata is a dict, not a nice object, so we need to infer some stuff
         if "waterdepth" in self._model_data:
             self._build_geometry_from_hydraulic_data()
@@ -257,6 +256,10 @@ class CrossSection(FM2ProfBase):
             cumulative_area = np.nansum(area[wet_mask])
             depth = level - lowest_level
 
+            # only append if the level does not yet exist
+            if (len(css_z) > 0) and (depth == css_z[-1]):
+                continue
+
             css_z.append(depth)
             css_total_width.append(cumulative_area / self.length)
 
@@ -270,7 +273,8 @@ class CrossSection(FM2ProfBase):
         # Shift z so that the lowest point is at 0, then offset by the actual bed level
         self._css_z = lowest_level + self._css_z
 
-        return None
+        # No roughness data, so set main section to total width
+        self.section_widths["main"] = self._css_total_width.max()
 
     def _build_geometry_from_hydraulic_data(self) -> None:  # noqa: PLR0915
         """Build 1D geometrical cross-section from 2D data.
@@ -925,7 +929,8 @@ class CrossSection(FM2ProfBase):
             "message": opt["message"],
         }
 
-    def _check_increasing_order(self, list_points: list) -> list:
+    def _check_increasing_order(self, list_points: np.ndarray) -> np.ndarray:
+        list_points = list_points.copy()
         for i in range(1, len(list_points)):
             if list_points[i] <= list_points[i - 1]:
                 list_points[i] = list_points[i - 1] + 0.001

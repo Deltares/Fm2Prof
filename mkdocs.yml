@@ -95,6 +95,7 @@ nav:
         - user_docs/output_files.md
         - user_docs/configuration.md
       - Advanced use: 
+        - user_docs/2d_simulation.md
         - user_docs/troubleshooting.md
         - notebooks/cross_section_data.ipynb
       - Utilities: 
@@ -120,7 +121,11 @@ markdown_extensions:
   - attr_list
   - md_in_html
   - pymdownx.details
-  - pymdownx.superfences
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
   - pymdownx.tabbed:
       alternate_style: true
   - pymdownx.highlight:
@@ -131,7 +136,6 @@ markdown_extensions:
   - pymdownx.snippets:
       check_paths: true
       base_path: [docs/snippets, "."]
-  - pymdownx.superfences
 extra:
   version:
     provider: mike

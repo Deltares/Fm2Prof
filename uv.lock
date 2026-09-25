@@ -568,7 +568,7 @@ wheels = [
 
 [[package]]
 name = "fm2prof"
-version = "2.5.1"
+version = "2.6.0a0"
 source = { editable = "." }
 dependencies = [
     { name = "click" },

@@ -76,7 +76,7 @@ class GeoTifImporter(BaseImporter):
             x =        xv[valid_mask],
             y =        yv[valid_mask],
             bedlevel = raster_data[valid_mask],
-            area =     x_spacing*y_spacing*np.ones(n_faces),
+            area =     x_spacing*-y_spacing*np.ones(n_faces),
             # classification fields — populated later by the preprocessing pipeline
             section =  np.array(["main"]      * n_faces, dtype=object),
             region =   np.array([""]          * n_faces, dtype=object),

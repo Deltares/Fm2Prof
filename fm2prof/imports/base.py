@@ -13,12 +13,15 @@ from fm2prof.common import FM2ProfBase
 
 
 def _ndarray_setattr(obj: object, name: str, value: object) -> None:
-    """Coerce value to np.ndarray using dtype declared in field metadata."""
+    """Coerce value to np.ndarray using dtype (and optional rounding precision) declared in field metadata."""
     for f in fields(obj.__class__):
         if f.name == name:
             dtype = f.metadata.get("dtype")
             if dtype is not None:
                 value = np.asarray(value, dtype=dtype)
+            precision = f.metadata.get("precision")
+            if precision is not None:
+                value = np.round(value, precision)
             break
     object.__setattr__(obj, name, value)
 
@@ -29,8 +32,8 @@ class FaceGeometry:
 
     x:        np.ndarray = field(metadata={"dtype": float})   # face centroid x-coordinate [m]
     y:        np.ndarray = field(metadata={"dtype": float})   # face centroid y-coordinate [m]
-    area:     np.ndarray = field(metadata={"dtype": float})   # face area [m2]
-    bedlevel: np.ndarray = field(metadata={"dtype": float})   # bed level [m+NAP]
+    area:     np.ndarray = field(metadata={"dtype": float, "precision": 4})   # face area [m2]
+    bedlevel: np.ndarray = field(metadata={"dtype": float, "precision": 4})   # bed level [m+NAP]
     section:  np.ndarray = field(metadata={"dtype": object})  # section classification (main/floodplain)
     region:   np.ndarray = field(metadata={"dtype": object})  # region label → cross-section name
     islake:   np.ndarray = field(metadata={"dtype": bool})    # True if face belongs to a lake

@@ -97,7 +97,7 @@ def build_model_data(
     else:
         model_data = _classify_sections_using_polygon(model_data, sections, input_files.map_file)
 
-    # 4. Attach cross-section definitions toi the ModelData object
+    # 4. Attach cross-section definitions to the ModelData object
     if cssdata and isinstance(cssdata, dict):
         n = len(cssdata[next(iter(cssdata))])
         keys = cssdata.keys()
