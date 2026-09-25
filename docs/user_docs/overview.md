@@ -1,3 +1,12 @@
 # Overview
 
-FM2PROF is a tool that bridges the gap between detailed 2D hydrodynamic models and efficient 1D hydraulic models by automatically extracting cross-sectional geometry and roughness parameters from 2D FlowFM simulation results. Unlike approaches based purely on Digital Elevation Models (DEMs), FM2PROF uses actual flow patterns from \ 2D simulations to distinguish between active flow zones and dead zones, compute effective friction values that account for complex hydraulic behaviour, and generate storage-conveyance relationships that accurately represent real-world conditions. You provide [cross-section locations](configuration.md#crosssectionlocationfile) and 2D model results (FlowFM map files), and FM2PROF generates [output files](output_files.md) compatible with D-Flow 1D (SOBEK 3) and D-Hydro modelling platforms. To get started, see the [installation guide](installation.md) and [quick start tutorial](quickstart.md), or explore the [configuration options](configuration.md) to customise the extraction process for your specific modelling needs.
+FM2PROF is a tool to generate 1D cross-sectional information from 2D data. It supports two modes:
+
+1. Elevation only mode by providing a DEM
+2. Hydraulic mode by providing a 2D hydrodynamic simulation. 
+
+In the second mode, FM2PROF uses flow patterns from the 2D simulation to distinguish between active flow zones and dead zones, compute effective friction values, and generate storage-conveyance relationships that accurately downscale 2D dynamics to a 1D model. 
+
+FM2PROF uses a nearest-neighbour approach to assign 2D information to 1D locations. Finer grain control over this assignment is possible (but optional) by providing polygons. 
+
+To get started, see the [installation guide](installation.md) and [quick start tutorial](quickstart.md), or explore the [configuration options](configuration.md) to customise the extraction process for your specific modelling needs.
