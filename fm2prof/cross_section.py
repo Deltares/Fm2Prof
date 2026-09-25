@@ -434,7 +434,7 @@ class CrossSection(FM2ProfBase):
 
     def check_geometry_requirements(self) -> None:
         """Perform check on cross-section such that it hold up to requirements."""
-        # round z values to 4 decimals to avoid numerical issues (e.g. multiple zeroes at the bottom of the cross-section)
+        # round z values to 2 decimals to avoid numerical issues (e.g. multiple zeroes at the bottom of the cross-section)
         self._css_z = np.round(self._css_z, 4)
         self._css_total_width = np.round(self._css_total_width, 4)
         self._css_flow_width = np.round(self._css_flow_width, 4)
