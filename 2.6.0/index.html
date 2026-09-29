@@ -50,7 +50,7 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="You have a 2D model, but also need a faster 1D model for  time-restricted tasks or heavy computation. Don't built one from scratch - emulate it! FM2PROF  is a python package that helps you generate 1D  geometry and friction informed by hydraulic information from 2D models. ">
+        <meta name="description" content="FM2PROF is a python package that generates  geometry and friction for 1D hydraulic models  from 2D hydraulic models and DEM data. ">
       
       
       
@@ -142,6 +142,11 @@
     <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
     <label class="md-overlay" for="__drawer"></label>
     <div data-md-component="skip">
+      
+        
+        <a href="#installation" class="md-skip">
+          Skip to content
+        </a>
       
     </div>
     <div data-md-component="announce">
@@ -440,7 +445,6 @@
   <section class="mdx-container">
     <div class="md-grid md-typeset">
       <div class="mdx-hero">
-
         <!-- Hero image -->
          <!--
         <div class="mdx-hero__image">
@@ -456,7 +460,7 @@
         <!-- Hero content -->
         <div class="mdx-hero__content">
           <h1>From 2D to 1D with a click</h1>
-          <p>You have a 2D model, but also need a faster 1D model for  time-restricted tasks or heavy computation. Don't built one from scratch - emulate it! FM2PROF  is a python package that helps you generate 1D  geometry and friction informed by hydraulic information from 2D models. </p>
+          <p>FM2PROF is a python package that generates  geometry and friction for 1D hydraulic models  from 2D hydraulic models and DEM data. </p>
           <a
             href="user_docs/overview/"
             title="Overview"
@@ -472,6 +476,35 @@
             Changelog
           </a>
         </div>
+        <article class="mdx-hero__content md-typeset">
+          <h1 id="installation">Installation</h1>
+<div class="tabbed-set tabbed-alternate" data-tabs="1:2"><input checked="checked" id="__tabbed_1_1" name="__tabbed_1" type="radio" /><input id="__tabbed_1_2" name="__tabbed_1" type="radio" /><div class="tabbed-labels"><label for="__tabbed_1_1">uv</label><label for="__tabbed_1_2">pip</label></div>
+<div class="tabbed-content">
+<div class="tabbed-block">
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>uv<span class="w"> </span>add<span class="w"> </span>fm2prof
+</span></code></pre></div>
+</div>
+<div class="tabbed-block">
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>pip<span class="w"> </span>install<span class="w"> </span>fm2prof
+</span></code></pre></div>
+</div>
+</div>
+</div>
+<h1 id="whats-new">What's New</h1>
+<h2 id="260a-2026-09-25">2.6.0a (2026-09-25)</h2>
+<p>** This is a pre-release **</p>
+<p>The 2.6 release cycle introduces support for DEM-only input, make various quality-of-life improvements and expands user documentation. </p>
+<h3 id="new-features">New Features</h3>
+<ul>
+<li>Added support for GeoTIFF DEM (Digital Elevation Model) data</li>
+<li>Added support for CSV DEM data </li>
+</ul>
+<h3 id="maintenance">Maintenance</h3>
+<ul>
+<li>Major refactor of the import modules. </li>
+<li>Security &amp; bug fixes</li>
+</ul>
+        </article>
       </div>
     </div>
   </section>
@@ -529,6 +562,8 @@
       
       <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
       
+      
+        
       
       
       <a href="." class="md-nav__link md-nav__link--active">
