@@ -1,12 +1,9 @@
 site_name: FM2PROF
 site_dir: documentation
 site_description: >-
-  You have a 2D model, but also need a faster 1D model for 
-  time-restricted tasks or heavy computation. Don't built
-  one from scratch - emulate it! FM2PROF 
-  is a python package that helps you generate 1D 
-  geometry and friction informed by hydraulic information
-  from 2D models. 
+  FM2PROF is a python package that generates 
+  geometry and friction for 1D hydraulic models 
+  from 2D hydraulic models and DEM data. 
 theme:
   name: material
   custom_dir: docs

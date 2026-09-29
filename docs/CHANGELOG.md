@@ -1,6 +1,8 @@
-## 2.6.0 (2026-09-25)
+<!-- --8<-- [start:latest] -->
+## 2.6.0a (2026-09-25)
+** This is a pre-release **
 
-The 2.6 release cycle introduces support for DEM-only input, make various quality-of-life improvemenets and expands user documentation. 
+The 2.6 release cycle introduces support for DEM-only input, make various quality-of-life improvements and expands user documentation. 
 
 ### New Features
 
@@ -10,7 +12,7 @@ The 2.6 release cycle introduces support for DEM-only input, make various qualit
 ### Maintenance
 - Major refactor of the import modules. 
 - Security & bug fixes
-
+<!-- --8<-- [end:latest] -->
 
 ## 2.5.1 (2026-03-03)
 
