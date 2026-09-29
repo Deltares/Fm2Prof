@@ -9,6 +9,7 @@ from fm2prof.imports.base import BaseImporter
 _EXTENSION_TO_SOURCE: dict[str, str] = {
     ".nc":  "dflowfm",
     ".csv": "csv_elevation",
+    ".tif": "geotif",
 }
 
 
@@ -42,7 +43,7 @@ class ImporterFactory:
 
     """
 
-    _supported_sources = ("dflowfm", "csv_elevation")
+    _supported_sources = ("dflowfm", "csv_elevation", "geotif")
 
     @staticmethod
     def create(source: str, file_path: Path | str) -> BaseImporter:
@@ -61,12 +62,14 @@ class ImporterFactory:
         """
         from fm2prof.imports.csv_elevation import CsvElevationImporter  # noqa: PLC0415
         from fm2prof.imports.dflowfm import DFlowFMImporter  # noqa: PLC0415
+        from fm2prof.imports.geotif import GeoTifImporter  # noqa: PLC0415
 
         source_lower = source.lower()
 
         importers = {
             "dflowfm": DFlowFMImporter,
             "csv_elevation": CsvElevationImporter,
+            "geotif": GeoTifImporter
         }
 
         if source_lower not in importers:

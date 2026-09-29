@@ -10,7 +10,7 @@ import os
 from dataclasses import dataclass
 from pathlib import Path
 from pydoc import locate
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Optional
 
 from fm2prof.common import FM2ProfBase
 
@@ -64,7 +64,7 @@ class IniFile(FM2ProfBase):
 
     """
 
-    _file: Path = None
+    _file: Path = Optional[Path]
     __input_files_key = "input"
     __input_parameters_key = "parameters"
     __input_debug_key = "debug"
@@ -275,7 +275,7 @@ class IniFile(FM2ProfBase):
         """Use this method to set a key/value pair to the configuration."""
         self._set_config_value(section, key, value)
 
-    def _set_config_value(self, section: str, key: str, value: Any) -> None:  # noqa: ANN401
+    def _set_config_value(self, section: str, key: str, value: Any) -> bool:  # noqa: ANN401
         """Use this method to set a input files the configuration.
 
         Args:
@@ -431,7 +431,7 @@ class IniFile(FM2ProfBase):
                 "warning",
             )
 
-    def _get_key_from_template(self, section: str, key: str) -> list[str, type]:
+    def _get_key_from_template(self, section: str, key: str) -> tuple[str, type]:
         """Return list of lower case keys from default configuration files."""
         sectiondict = self._ini_template.get("sections").get(section)
         for entry in sectiondict:
@@ -439,7 +439,7 @@ class IniFile(FM2ProfBase):
                 return (entry, locate(sectiondict[entry].get("type")))
         # If not returned by now, key must be unknown
         self.set_logger_message(f"{key} is not a known key", "warning")
-        return [None, KeyError]
+        return (None, KeyError)
 
     def _extract_output_dir(self, supplied_ini: Mapping[str, list]) -> None:
         """Extract and validates output directory.

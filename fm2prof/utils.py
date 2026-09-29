@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import ast
 import locale
+import textwrap
 import warnings
 from collections import namedtuple
 from datetime import datetime, timedelta
@@ -666,8 +667,15 @@ class VisualiseOutput(FM2ProfBase):
             ]
 
             self._plot_geometry(css, axs[0], reference_geometry)
-            self._plot_volume(css, axs[1])
-            self._plot_roughness(css, axs[2], reference_roughness)
+            # These files may not exist if fm2prof runs in elevation only mode (gis2prof)
+            if self.files["volumes"].is_file():
+                self._plot_volume(css, axs[1])
+            else:
+                self._plot_no_data_message(axs[1], "No volume information available in elevation-only mode")
+            if self.files["roughnessMain"].is_file():
+                self._plot_roughness(css, axs[2], reference_roughness)
+            else:
+                self._plot_no_data_message(axs[2], "No roughness information available in elevation-only mode")
 
             fig, lgd = self._set_plot_style(fig)
 
@@ -787,10 +795,12 @@ class VisualiseOutput(FM2ProfBase):
         levels = np.append(css["levels"][0], np.array(css["levels"]))
         mainsectionwidth = css["mainsectionwidth"]
         fp1sectionwidth = css["fp1sectionwidth"]
+        z_waterlevel_independent = None
 
         # Get the water level where water level independent computation takes over
         # this is the lowest level where there is 2D information on volumes
-        z_waterlevel_independent = self._get_lowest_water_level_in_2d(css)
+        if self.files["volumes"].is_file():
+            z_waterlevel_independent = self._get_lowest_water_level_in_2d(css)
 
         # Plot cross-section geometry
         for side in [-1, 1]:
@@ -819,13 +829,14 @@ class VisualiseOutput(FM2ProfBase):
         )
 
         # Plot water level indepentent line
-        ax.plot(
-            tw - 0.5 * max(tw),
-            [z_waterlevel_independent] * len(levels),
-            linestyle="--",
-            color="m",
-            label="Lowest water level in 2D",
-        )
+        if z_waterlevel_independent is not None:
+            ax.plot(
+                tw - 0.5 * max(tw),
+                [z_waterlevel_independent] * len(levels),
+                linestyle="--",
+                color="m",
+                label="Lowest water level in 2D",
+            )
 
         h.set_label("Storage")
 
@@ -917,6 +928,22 @@ class VisualiseOutput(FM2ProfBase):
         ax.set_title("Volume graph")
         ax.set_xlabel("Water level [m]")
         ax.set_ylabel("Volume [m$^3$]")
+
+    @staticmethod
+    def _plot_no_data_message(ax: Axes, message: str, wrap_width: int = 30) -> None:
+        """Display a centered, manually wrapped message on an axis when no data is available to plot."""
+        wrapped_message = "\n".join(textwrap.wrap(message, width=wrap_width))
+        ax.text(
+            0.5,
+            0.5,
+            wrapped_message,
+            transform=ax.transAxes,
+            ha="center",
+            va="center",
+            fontsize=10,
+        )
+        ax.set_xticks([])
+        ax.set_yticks([])
 
     def _plot_roughness(self, css: dict, ax: Axes, reference_roughness: tuple) -> None:
         levels, values = self.get_roughness_info_for_css(css["id"], rtype="roughnessMain")

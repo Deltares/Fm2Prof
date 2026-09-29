@@ -1,12 +1,9 @@
 site_name: FM2PROF
 site_dir: documentation
 site_description: >-
-  You have a 2D model, but also need a faster 1D model for 
-  time-restricted tasks or heavy computation. Don't built
-  one from scratch - emulate it! FM2PROF 
-  is a python package that helps you generate 1D 
-  geometry and friction informed by hydraulic information
-  from 2D models. 
+  FM2PROF is a python package that generates 
+  geometry and friction for 1D hydraulic models 
+  from 2D hydraulic models and DEM data. 
 theme:
   name: material
   custom_dir: docs
@@ -91,10 +88,11 @@ nav:
       - Installation: user_docs/installation.md
       - Quickstart: user_docs/quickstart.md
       - Files and Settings:
-        - user_docs/configuration.md
         - user_docs/input_files.md
         - user_docs/output_files.md
+        - user_docs/configuration.md
       - Advanced use: 
+        - user_docs/2d_simulation.md
         - user_docs/troubleshooting.md
         - notebooks/cross_section_data.ipynb
       - Utilities: 
@@ -120,7 +118,11 @@ markdown_extensions:
   - attr_list
   - md_in_html
   - pymdownx.details
-  - pymdownx.superfences
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
   - pymdownx.tabbed:
       alternate_style: true
   - pymdownx.highlight:
@@ -131,7 +133,6 @@ markdown_extensions:
   - pymdownx.snippets:
       check_paths: true
       base_path: [docs/snippets, "."]
-  - pymdownx.superfences
 extra:
   version:
     provider: mike
