@@ -3,6 +3,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 import pytest
+import tifffile
 
 from fm2prof.imports import ImporterFactory, ModelData
 from fm2prof.imports.base import CrossSectionData, FaceGeometry
@@ -195,6 +196,98 @@ class TestGeoTifImporter:
         assert model_data.geometry.y.dtype == float
         assert np.all(np.isfinite(model_data.geometry.x))
         assert np.all(np.isfinite(model_data.geometry.y))
+
+    @pytest.mark.parametrize("layout", ["tiles", "strips"])
+    @pytest.mark.parametrize("nodata", [-9999.0, -3.4028234663852886e38, float("nan"), None])
+    def test_reads_segments_in_row_order_without_full_raster(self, tmp_path, monkeypatch, layout, nodata):
+        raster = np.arange(19 * 35, dtype=np.float32).reshape(19, 35) / 7
+        raster[::3, 1::4] = np.nan
+        if nodata is not None and not np.isnan(nodata):
+            raster[1::2, ::3] = nodata
+
+        tags = [
+            (33550, "d", 3, (2.5, 3.0, 0), False),
+            (33922, "d", 6, (0, 0, 0, 100, 200, 0), False),
+        ]
+        if nodata is not None:
+            tags.append((42113, "s", 0, str(nodata), False))
+        path = tmp_path / "elevation.tif"
+        layout_args = {"tile": (16, 16)} if layout == "tiles" else {"rowsperstrip": 3}
+        tifffile.imwrite(path, raster, compression="deflate", extratags=tags, **layout_args)
+
+        def reject_full_read(*args, **kwargs):
+            raise AssertionError("Full raster or coordinate grid was allocated")
+
+        monkeypatch.setattr(tifffile.TiffFile, "asarray", reject_full_read)
+        monkeypatch.setattr(tifffile.TiffPage, "asarray", reject_full_read)
+        monkeypatch.setattr(np, "meshgrid", reject_full_read)
+        model = GeoTifImporter(path).import_data()
+
+        valid = ~np.isnan(raster)
+        if nodata is not None and not np.isnan(nodata):
+            valid &= raster != nodata
+        rows, cols = np.nonzero(valid)
+        geometry = model.geometry
+        np.testing.assert_array_equal(geometry.x, 100 + cols * 2.5)
+        np.testing.assert_array_equal(geometry.y, 200 - rows * 3.0)
+        np.testing.assert_array_equal(geometry.bedlevel, np.round(raster[valid].astype(float), 4))
+        np.testing.assert_array_equal(geometry.area, np.full(len(rows), 7.5))
+        assert np.all(geometry.section == "main")
+        assert np.all(geometry.region == "")
+        assert np.all(geometry.sclass == "")
+        assert not np.any(geometry.islake)
+        assert model.source == "geotif"
+        assert model.cross_sections == []
+        assert model.edges is None
+        assert model.hydraulics is None
+
+    def test_all_nodata_produces_empty_geometry(self, tmp_path):
+        path = tmp_path / "empty.tif"
+        tags = [
+            (33550, "d", 3, (1, 1, 0), False),
+            (33922, "d", 6, (0, 0, 0, 10, 20, 0), False),
+            (42113, "s", 0, "-9999", False),
+        ]
+        tifffile.imwrite(path, np.full((4, 5), -9999, dtype=np.float32), extratags=tags, rowsperstrip=2)
+        geometry = GeoTifImporter(path).import_data().geometry
+        for field in ("x", "y", "bedlevel", "area", "section", "region", "sclass", "islake"):
+            assert len(getattr(geometry, field)) == 0
+
+    @pytest.mark.parametrize("nodata", [None, -9999.0])
+    def test_sparse_tiles_use_nodata_or_zero(self, tmp_path, nodata):
+        path = tmp_path / "sparse.tif"
+        tags = [
+            (33550, "d", 3, (1, 1, 0), False),
+            (33922, "d", 6, (0, 0, 0, 10, 20, 0), False),
+        ]
+        if nodata is not None:
+            tags.append((42113, "s", 0, str(nodata), False))
+        first = np.ones((16, 16), dtype=np.float32)
+        last = np.full((16, 16), 2, dtype=np.float32)
+        tifffile.imwrite(
+            path,
+            data=iter([first.tobytes(), b"", b"", last.tobytes()]),
+            shape=(32, 32),
+            dtype=np.float32,
+            tile=(16, 16),
+            extratags=tags,
+        )
+        expected = np.full((32, 32), 0 if nodata is None else nodata, dtype=np.float32)
+        expected[:16, :16] = first
+        expected[16:, 16:] = last
+        valid = np.ones_like(expected, dtype=bool) if nodata is None else expected != nodata
+        rows, cols = np.nonzero(valid)
+
+        geometry = GeoTifImporter(path).import_data().geometry
+        np.testing.assert_array_equal(geometry.x, 10 + cols)
+        np.testing.assert_array_equal(geometry.y, 20 - rows)
+        np.testing.assert_array_equal(geometry.bedlevel, expected[valid])
+
+    def test_rejects_multiband_raster(self, tmp_path):
+        path = tmp_path / "multiband.tif"
+        tifffile.imwrite(path, np.zeros((16, 16, 3), dtype=np.uint8), photometric="rgb")
+        with pytest.raises(ValueError, match="two-dimensional, single-band"):
+            GeoTifImporter(path).import_data()
 
 class TestDetectSource:
 

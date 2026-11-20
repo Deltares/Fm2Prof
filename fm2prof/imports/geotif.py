@@ -1,102 +1,116 @@
-"""CSV elevation importer for face geometry data."""
+"""GeoTIFF elevation importer for face geometry data."""
 
 from __future__ import annotations
 
-from typing import ClassVar
+from typing import TYPE_CHECKING
 
 import numpy as np
-import pandas as pd
-from tifffile import TiffFile, imread
+from tifffile import TiffFile, TiffPage
 
 from fm2prof.imports.base import BaseImporter, FaceGeometry, ModelData
 
-# Geotif tag constants (from the GeoTIFF specification)
-TAG_MODEL_PIXEL_SCALE  = 33550 # Pixel size in each raster space axis
-TAG_MODEL_TIEPOINT     = 33922 # Maps raster (row, col) → model (x, y) space
-TAG_GEO_DIRECTORY_KEY  = 34735 # index of "GeoKeys" (the actual CRS/projection metadata)
-TAG_GEO_DOUBLE_PARAMS  = 34736 # Double-precision values referenced by GeoKeys
-TAG_GEO_ASCII_PARAMS   = 34737 # String values referenced by GeoKeys
-TAG_GDAL_NODATA        = 42113 # GDAL-specific (not part of official GeoTIFF spec) — encodes the NoData value as an ASCII string
+if TYPE_CHECKING:
+    from collections.abc import Iterator
+
+TAG_MODEL_PIXEL_SCALE = 33550
+TAG_MODEL_TIEPOINT = 33922
+TAG_GDAL_NODATA = 42113
+RASTER_DIMENSIONS = 2
+
+
+def _blocks(page: TiffPage, nodata: float | None) -> Iterator[tuple[int, int, np.ndarray]]:
+    """Yield cropped TIFF strips or tiles in raster order."""
+    n_rows, n_cols = page.shape
+    for segment, position, shape in page.segments(maxworkers=1):
+        row, col = position[2:4]
+        height = min(shape[1], n_rows - row)
+        width = min(shape[2], n_cols - col)
+        if segment is None:
+            data = np.full((height, width), 0 if nodata is None else nodata, dtype=page.dtype)
+        else:
+            data = segment[0, :height, :width, 0]
+        yield row, col, data
+
+
+def _valid_cells(data: np.ndarray, nodata: float | None) -> np.ndarray:
+    valid = ~np.isnan(data)
+    if nodata is not None and not np.isnan(nodata):
+        valid &= data != nodata
+    return valid
 
 
 class GeoTifImporter(BaseImporter):
-    """Importer for geotif files"""
+    """Importer for GeoTIFF elevation rasters."""
 
     SOURCE = "geotif"
 
     def import_data(self) -> ModelData:
-        """Import data from a geotif file.
+        """Import geometry from a single-band GeoTIFF.
 
         Returns:
-            :class:`~fm2prof.imports.base.ModelData` with ``geometry`` populated.
-            ``edges`` and ``hydraulics`` are ``None``.
+            Model data containing face geometry and no edges or hydraulics.
 
         Raises:
-            ValueError: If any required columns are missing from the CSV.
+            ValueError: If the raster is not two-dimensional or lacks georeferencing tags.
         """
         self.set_logger_message(f"Reading geotif file: {self.file_path}")
 
         with TiffFile(self.file_path) as tif:
+            page = tif.pages[0]
+            if len(page.shape) != RASTER_DIMENSIONS or tif.series[0].shape != page.shape:
+                msg = "GeoTIFF must contain a two-dimensional, single-band raster."
+                raise ValueError(msg)
 
-            # Get the NoData value if present
-            nodata_value = self._get_nodata_value(tif)
+            nodata = self._get_nodata_value(tif)
+            if TAG_MODEL_PIXEL_SCALE not in page.tags or TAG_MODEL_TIEPOINT not in page.tags:
+                msg = "GeoTIFF is missing required georeferencing tags (PixelScale or TiePoints)."
+                raise ValueError(msg)
 
-            # Get pixel scale and tie points for georeferencing
-            pixel_scale = None
-            tie_points = None
-            if TAG_MODEL_PIXEL_SCALE in tif.pages[0].tags:
-                pixel_scale = tif.pages[0].tags[TAG_MODEL_PIXEL_SCALE].value
-            if TAG_MODEL_TIEPOINT in tif.pages[0].tags:
-                tie_points = tif.pages[0].tags[TAG_MODEL_TIEPOINT].value
+            pixel_scale = page.tags[TAG_MODEL_PIXEL_SCALE].value
+            tie_points = page.tags[TAG_MODEL_TIEPOINT].value
+            x_origin, y_origin = tie_points[3:5]
+            x_spacing, y_spacing = pixel_scale[0], -pixel_scale[1]
 
-            # construct x, y vectors
-            if pixel_scale is None or tie_points is None:
-                raise ValueError("GeoTIFF is missing required georeferencing tags (PixelScale or TiePoints).")
+            # Count per row first so tiles can be written directly in row-major order.
+            row_counts = np.zeros(page.shape[0], dtype=np.int64)
+            for row, _, data in _blocks(page, nodata):
+                row_counts[row : row + data.shape[0]] += np.count_nonzero(_valid_cells(data, nodata), axis=1)
 
-            x_origin = tie_points[3]
-            y_origin = tie_points[4]
-            x_spacing = pixel_scale[0]
-            y_spacing = -pixel_scale[1] # tag stores positive magnitude; convert to signed north-up convention
+            n_faces = int(row_counts.sum())
+            row_offsets = np.cumsum(row_counts) - row_counts
+            x = np.empty(n_faces, dtype=float)
+            y = np.empty(n_faces, dtype=float)
+            bedlevel = np.empty(n_faces, dtype=float)
 
-            # Read the raster data
-            raster_data = tif.asarray()
+            for row, col, data in _blocks(page, nodata):
+                rows, cols = np.nonzero(_valid_cells(data, nodata))
+                counts = np.bincount(rows, minlength=data.shape[0])
+                block_offsets = np.cumsum(counts) - counts
+                indices = row_offsets[row + rows] + np.arange(len(rows)) - block_offsets[rows]
+                x[indices] = x_origin + (col + cols) * x_spacing
+                y[indices] = y_origin + (row + rows) * y_spacing
+                bedlevel[indices] = data[rows, cols]
+                row_offsets[row : row + data.shape[0]] += counts
 
-            n_rows, n_cols = raster_data.shape
-            x_coords = x_origin + np.arange(n_cols) * x_spacing
-            y_coords = y_origin + np.arange(n_rows) * y_spacing
-
-            # Create a meshgrid of coordinates
-            xv, yv = np.meshgrid(x_coords, y_coords)
-
-            # Discard all no-data values using a mask for valid numbers
-            valid_mask = raster_data != nodata_value
-            n_faces = valid_mask.sum()
-
-            geometry = FaceGeometry(
-            x =        xv[valid_mask],
-            y =        yv[valid_mask],
-            bedlevel = raster_data[valid_mask],
-            area =     x_spacing*-y_spacing*np.ones(n_faces),
-            # classification fields — populated later by the preprocessing pipeline
-            section =  np.array(["main"]      * n_faces, dtype=object),
-            region =   np.array([""]          * n_faces, dtype=object),
-            sclass =   np.array([""]          * n_faces, dtype=object),
-            islake =   np.zeros(n_faces,        dtype=bool),
-            )
-
-            return ModelData(
-                geometry=geometry,
-                cross_sections=[],
-                source=self.SOURCE,
-                edges=None,
-                hydraulics=None,
-            )
-
+        geometry = FaceGeometry(
+            x=x,
+            y=y,
+            bedlevel=bedlevel,
+            area=np.full(n_faces, x_spacing * -y_spacing),
+            section=np.full(n_faces, "main", dtype=object),
+            region=np.full(n_faces, "", dtype=object),
+            sclass=np.full(n_faces, "", dtype=object),
+            islake=np.zeros(n_faces, dtype=bool),
+        )
+        return ModelData(
+            geometry=geometry,
+            cross_sections=[],
+            source=self.SOURCE,
+            edges=None,
+            hydraulics=None,
+        )
 
     def _get_nodata_value(self, tif: TiffFile) -> float | None:
-        nodata_value = None
         if TAG_GDAL_NODATA in tif.pages[0].tags:
-            nodata_str = tif.pages[0].tags[TAG_GDAL_NODATA].value
-            nodata_value = float(nodata_str)
-
-        return nodata_value
+            return float(tif.pages[0].tags[TAG_GDAL_NODATA].value)
+        return None
