@@ -40,6 +40,18 @@ A CSV source contains geometry only — no hydraulic results are available, whic
 
 A `*.geotif` raster file, following common GeoTIFF conventions.
 
+The importer reads single-band rasters by TIFF tile or strip, rather than loading
+the entire raster or creating full coordinate grids. Pixels matching the
+GeoTIFF NoData tag and NaN pixels are excluded; without a NoData tag, all
+non-NaN pixels are retained. Pixel coordinates follow the existing pixel-scale
+and tiepoint convention. The raster is read twice to preserve row order.
+
+Memory is still proportional to the number of valid pixels because FM2PROF
+stores each one as a model face, and later processing can require additional
+memory. Reading also requires memory for a decoded tile or strip; a TIFF stored
+as one large strip may therefore still require substantial memory. Retiling a
+large raster can reduce this temporary overhead.
+
 ## Cross-section locations
 
 A file defining the 1D cross-section locations onto which the 2D data is projected. Each record specifies a unique identifier, representative length, branch identifier, chainage, and (x, y) coordinates.
